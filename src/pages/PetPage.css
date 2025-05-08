@@ -1,0 +1,33 @@
+.petPage {
+  padding: 1rem;
+  text-align: center;
+}
+.petHero {
+  /* responsive rules */
+  width: 100%;           /* take the full content width */
+  max-width: 90vw;       /* but never wider than the viewport */
+  max-height: 70vh;      /* optional: keep it from pushing the bars off‑screen */
+  height: auto;
+  display: block;
+  margin: 0 auto;        /* center horizontally */
+}
+.needBigSection {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+/* bigger bars */
+.needBig {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.needBigEmoji { font-size: 1.4rem; }
+.needBigWrap  { flex: 1; display: flex; align-items: center; gap: 0.3rem; }
+.needBigWrap progress { width: 100%; height: 10px; }
+.needBigLabel { font-weight: 600; }
+.needBigDesc  { font-style: italic; font-size: 0.8rem; }
+.needBigNum   { opacity: 0.7; font-size: 0.75rem; }
