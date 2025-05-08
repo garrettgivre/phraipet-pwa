@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { ref, onValue, set } from "firebase/database";
 import { db } from "./firebase";
@@ -6,7 +6,6 @@ import type { Pet, Need } from "./types";
 
 import Header from "./components/Header";
 import NavBar from "./components/NavBar";
-import { useLocation } from "react-router-dom";
 import PetPage from "./pages/PetPage";
 
 import "./App.css";
@@ -77,33 +76,11 @@ const bands: Record<Exclude<Need, "spirit">, { upTo: number; label: string }[]> 
 const descriptor = (need: Exclude<Need, "spirit">, value: number) =>
   bands[need].find((b) => value <= b.upTo)?.label ?? "";
 
-/* ---------- component ---------- */
-
-export default function App() {
-  const [pet, setPet] = useState<Pet | null>(null);
+/* ---------- shell that needs router context ------ */
+function AppShell({ pet }: { pet: Pet | null }) {
   const location = useLocation();
   const hideHeader = location.pathname === "/pet";
 
-  /* live Firebase listener */
-  useEffect(() => {
-    const petRef = ref(db, `pets/${PET_ID}`);
-    return onValue(petRef, (snap) => {
-      if (snap.exists()) setPet(snap.val() as Pet);
-      else {
-        const starter: Pet = {
-          hunger: 100,
-          happiness: 100,
-          cleanliness: 100,
-          affection: 100,
-          spirit: 100,
-          pose: "neutral",
-        };
-        set(petRef, starter);
-      }
-    });
-  }, []);
-
-  /* assemble data for header */
   const needInfo =
     pet === null
       ? []
@@ -122,11 +99,9 @@ export default function App() {
         }));
 
   return (
-    <BrowserRouter>
-      {/* fixed top header, except on /pet */}
+    <>
       {!hideHeader && <Header pet={pet} needInfo={needInfo} />}
-    
-      {/* blank page body for now */}
+
       <div className="pageBody">
         <Routes>
           <Route path="/" element={<p style={{ textAlign: "center" }}>Welcome!</p>} />
@@ -136,8 +111,37 @@ export default function App() {
         </Routes>
       </div>
 
-      {/* fixed bottom nav */}
       <NavBar />
+    </>
+  );
+}
+
+/* ---------- top‑level component ------------------- */
+export default function App() {
+  const [pet, setPet] = useState<Pet | null>(null);
+
+  /* live Firebase listener */
+  useEffect(() => {
+    const petRef = ref(db, `pets/sharedPet`);
+    return onValue(petRef, (snap) => {
+      if (snap.exists()) setPet(snap.val() as Pet);
+      else {
+        const starter: Pet = {
+          hunger: 100,
+          happiness: 100,
+          cleanliness: 100,
+          affection: 100,
+          spirit: 100,
+          pose: "neutral",
+        };
+        set(petRef, starter);
+      }
+    });
+  }, []);
+
+  return (
+    <BrowserRouter>
+      <AppShell pet={pet} />
     </BrowserRouter>
   );
 }
