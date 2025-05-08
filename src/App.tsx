@@ -12,7 +12,6 @@ import "./App.css";
 
 /* ---------- descriptor bands ---------- */
 
-const _PET_ID = "sharedPet"; // unused – keeps TS happy
 
 const bands: Record<Exclude<Need, "spirit">, { upTo: number; label: string }[]> = {
   hunger: [
