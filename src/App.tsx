@@ -6,6 +6,8 @@ import type { Pet, Need } from "./types";
 
 import Header from "./components/Header";
 import NavBar from "./components/NavBar";
+import { useLocation } from "react-router-dom";
+import PetPage from "./pages/PetPage";
 
 import "./App.css";
 
@@ -79,6 +81,8 @@ const descriptor = (need: Exclude<Need, "spirit">, value: number) =>
 
 export default function App() {
   const [pet, setPet] = useState<Pet | null>(null);
+  const location = useLocation();
+  const hideHeader = location.pathname === "/pet";
 
   /* live Firebase listener */
   useEffect(() => {
@@ -92,6 +96,7 @@ export default function App() {
           cleanliness: 100,
           affection: 100,
           spirit: 100,
+          pose: "neutral",
         };
         set(petRef, starter);
       }
@@ -118,16 +123,16 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      {/* fixed top header */}
-      <Header pet={pet} needInfo={needInfo} />
-
+      {/* fixed top header, except on /pet */}
+      {!hideHeader && <Header pet={pet} needInfo={needInfo} />}
+    
       {/* blank page body for now */}
       <div className="pageBody">
         <Routes>
           <Route path="/" element={<p style={{ textAlign: "center" }}>Welcome!</p>} />
           <Route path="/explore" element={<p style={{ textAlign: "center" }}>Explore soon…</p>} />
           <Route path="/play" element={<p style={{ textAlign: "center" }}>Play soon…</p>} />
-          <Route path="/pet" element={<p style={{ textAlign: "center" }}>Pet page soon…</p>} />
+          <Route path="/pet" element={<PetPage pet={pet} needInfo={needInfo} />} />
         </Routes>
       </div>
 
