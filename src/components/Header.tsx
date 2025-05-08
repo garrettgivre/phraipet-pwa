@@ -49,12 +49,12 @@ export default function Header({
         {/* circle avatar */}
         <div className="avatar">
           <img
-            src="/slime.png"
+            src="/pet/neutral.png"
             alt="pet"
             onError={(e) => (e.currentTarget.style.display = "none")}
           />
           <span className="avatarFallback" role="img" aria-label="slime">
-            🐣
+            🥚
           </span>
         </div>
 
