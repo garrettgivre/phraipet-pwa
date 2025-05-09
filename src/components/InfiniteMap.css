@@ -1,19 +1,19 @@
 .mapScroller {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(3, auto);
+  grid-template-rows: repeat(3, auto);
   width: 100%;
-  height: 100%;           /* will fill its parent FixedMapLayer */
-  overflow-x: auto;       /* horizontal swipe */
-  overflow-y: hidden;     /* no vertical scroll */
-  scrollbar-width: none;  
+  height: 100%;
+  overflow: auto;            /* now both axes */
+  scrollbar-width: none;
 }
 .mapScroller::-webkit-scrollbar {
   display: none;
 }
 
-.mapScroller img {
-  flex: 0 0 auto;         /* keep each tile at intrinsic width */
-  height: 100%;           /* fill container height */
+.mapTile {
   width: auto;
+  height: 100%;              /* fill vertical container */
   user-select: none;
   pointer-events: none;
 }
