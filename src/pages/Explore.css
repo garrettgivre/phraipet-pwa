@@ -1,5 +1,0 @@
-/* Viewport minus header & nav */
-.exploreViewport {
-  height: 100%;
-  overflow: hidden;      /* no vertical scroll */
-}

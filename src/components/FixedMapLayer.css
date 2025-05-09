@@ -1,0 +1,21 @@
+/* heights MUST match your actual header & nav CSS */
+:root {
+  --header-h: 60px;  /* adjust if header taller */
+  --nav-h:    64px;  /* adjust if nav bar taller */
+}
+
+/* this div sits fixed under header, above nav */
+.fixedMapLayer {
+  position: fixed;
+  top: var(--header-h);
+  bottom: var(--nav-h);
+  left: 0;
+  right: 0;
+  overflow-x: auto;  /* horizontal swipe */
+  overflow-y: hidden;
+}
+
+/* make the scroller fill this layer (no vertical scroll) */
+.fixedMapLayer .mapScroller {
+  height: 100%;
+}
