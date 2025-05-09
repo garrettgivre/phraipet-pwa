@@ -100,14 +100,14 @@ function AppShell({ pet }: { pet: Pet | null }) {
 
   return (
     <>
-      {!hideHeader && <Header pet={pet} needInfo={needInfo} />}
+      {!hideHeader && <Header pet={pet} />}    {/* no more needInfo prop */}
 
       <div className="pageBody">
         <Routes>
           <Route path="/"        element={<p style={{ textAlign: "center" }}>Welcome!</p>} />
           <Route path="/explore" element={<Explore />} />   {/* ← this line */}
            <Route path="/play"    element={<p style={{ textAlign: "center" }}>Play soon…</p>} />
-          <Route path="/pet"     element={<PetPage pet={pet} needInfo={needInfo} />} />
+          <Route path="/pet" element={<PetPage pet={pet} needInfo={needInfo} />} />
         </Routes>
       </div>
 

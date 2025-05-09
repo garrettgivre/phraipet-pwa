@@ -1,81 +1,88 @@
-import type { Need, Pet } from "../types";
+import type { Pet, Need } from "../types";
 import "./Header.css";
-
-/* ---------- mini need bar ---------- */
-export function NeedMini({
-  emoji,
-  value,
-  desc,
-  min,
-  max,
-}: {
-  emoji: string;
-  value: number;
-  desc: string;
-  min: number;
-  max: number;
-}) {
-  const barVal = value - min;
-  const barMax = max - min;
-  return (
-    <div className="needMini">
-      <span className="needEmoji">{emoji}</span>
-      <div className="needBarWrap">
-        <progress max={barMax} value={barVal} />
-        <span className="needDesc">{desc}</span>
-      </div>
-    </div>
-  );
-}
 
 interface NeedInfo {
   need: Need;
   emoji: string;
   value: number;
-  desc: string;
+  min: number;
+  max: number;
 }
 
-/* ---------- header ---------- */
-export default function Header({
-  pet,
-  needInfo,
-}: {
-  pet: Pet | null;
-  needInfo: NeedInfo[];
-}) {
+/** Renders one emoji inside a circular progress ring */
+function NeedCircle({ emoji, value, min, max }: NeedInfo) {
+  const radius = 20;           // outer circle radius
+  const stroke = 4;            // ring thickness
+  const normalizedRadius = radius - stroke * 2;
+  const circumference = normalizedRadius * 2 * Math.PI;
+  const percent = Math.max(0, Math.min(1, (value - min) / (max - min)));
+  const dashOffset = circumference * (1 - percent);
+
+  return (
+    <div className="needCircle">
+      <svg height={radius * 2} width={radius * 2}>
+        <circle
+          stroke="#eee"
+          fill="transparent"
+          strokeWidth={stroke}
+          r={normalizedRadius}
+          cx={radius}
+          cy={radius}
+        />
+        <circle
+          stroke="#4caf50"
+          fill="transparent"
+          strokeWidth={stroke}
+          strokeLinecap="round"
+          strokeDasharray={`${circumference} ${circumference}`}
+          strokeDashoffset={dashOffset}
+          r={normalizedRadius}
+          cx={radius}
+          cy={radius}
+        />
+      </svg>
+      <div className="needEmoji">{emoji}</div>
+    </div>
+  );
+}
+
+export default function Header({ pet }: { pet: Pet | null }) {
+  const min = -30, max = 120;
+  const needs: NeedInfo[] = pet
+    ? ([
+        { need: "hunger",     emoji: "🍕", value: pet.hunger,     min, max },
+        { need: "cleanliness",emoji: "🧼", value: pet.cleanliness,min, max },
+        { need: "happiness",  emoji: "🎲", value: pet.happiness,  min, max },
+        { need: "affection",  emoji: "🤗", value: pet.affection,  min, max },
+        { need: "spirit",     emoji: "✨", value: pet.spirit,     min, max },
+      ] as const).map(n => ({ ...n }))
+    : [];
+
   return (
     <>
       <header className="header">
-        {/* circle avatar */}
         <div className="avatar">
           <img
-            src="/pet/neutral.png"
+            src="/pet/Neutral.png"
             alt="pet"
-            onError={(e) => (e.currentTarget.style.display = "none")}
+            onError={e => { e.currentTarget.style.display = "none"; }}
           />
-          <span className="avatarFallback" role="img" aria-label="slime">
-            🥚
-          </span>
+          <span className="avatarFallback" role="img" aria-label="slime">🐣</span>
         </div>
 
-        {/* list of compact need bars */}
-        {pet && (
-          <div className="needList">
-            {needInfo.map((n) => (
-              <NeedMini
-                key={n.need}
-                emoji={n.emoji}
-                value={n.value}
-                desc={n.desc}
-                min={-30}
-                max={120}
-              />
-            ))}
-          </div>
-        )}
+        <div className="needList">
+          {needs.map((n) => (
+            <NeedCircle
+              key={n.need}
+              need={n.need}
+              emoji={n.emoji}
+              value={n.value}
+              min={n.min}
+              max={n.max}
+            />
+          ))}
+        </div>
       </header>
-
-      {/* thin line under header */}
       <hr className="divider" />
     </>
   );
