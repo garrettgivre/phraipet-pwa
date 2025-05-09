@@ -104,11 +104,10 @@ function AppShell({ pet }: { pet: Pet | null }) {
 
       <div className="pageBody">
         <Routes>
-          <Route path="/" element={<p style={{ textAlign: "center" }}>Welcome!</p>} />
-          <Route path="/explore" element={<p style={{ textAlign: "center" }}>Explore soon…</p>} />
-          <Route path="/play" element={<p style={{ textAlign: "center" }}>Play soon…</p>} />
-          <Route path="/pet" element={<PetPage pet={pet} needInfo={needInfo} />} />
-          <Route path="/explore" element={<Explore />} />
+          <Route path="/"        element={<p style={{ textAlign: "center" }}>Welcome!</p>} />
+          <Route path="/explore" element={<Explore />} />   {/* ← this line */}
+           <Route path="/play"    element={<p style={{ textAlign: "center" }}>Play soon…</p>} />
+          <Route path="/pet"     element={<PetPage pet={pet} needInfo={needInfo} />} />
         </Routes>
       </div>
 
