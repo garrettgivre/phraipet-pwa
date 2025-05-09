@@ -1,15 +1,15 @@
 import InfiniteMap from "./InfiniteMap";
+import type { MapLocation } from "./InfiniteMap";
 import "./FixedMapLayer.css";
 
-/**
- * Fills everything between header and nav (whose
- * heights we define with CSS variables) and lets
- * the user scroll horizontally forever.
- */
-export default function FixedMapLayer() {
+interface FixedMapLayerProps {
+  locations?: MapLocation[];
+}
+
+export default function FixedMapLayer({ locations = [] }: FixedMapLayerProps) {
   return (
     <div className="fixedMapLayer">
-      <InfiniteMap />
+      <InfiniteMap locations={locations} />
     </div>
   );
 }

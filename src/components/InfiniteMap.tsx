@@ -1,18 +1,20 @@
 import { useEffect, useRef } from "react";
 import "./InfiniteMap.css";
 
-/** Named export of the location type */
+/** 
+ * Type-only export of a map marker spec 
+ */
 export type MapLocation = {
   id: string;
-  x: number;          // pixel offset from left of single map image
-  y: number;          // pixel offset from top of image
-  icon: string;       // path to your marker icon
+  x: number;         // pixel offset from left of one map image
+  y: number;         // pixel offset from top of one map image
+  icon: string;      // e.g. "/icons/pink-dot.png"
   onClick?: () => void;
 };
 
-type InfiniteMapProps = {
+interface InfiniteMapProps {
   locations?: MapLocation[];
-};
+}
 
 export default function InfiniteMap({ locations = [] }: InfiniteMapProps) {
   const scrollerRef = useRef<HTMLDivElement>(null);
@@ -23,6 +25,7 @@ export default function InfiniteMap({ locations = [] }: InfiniteMapProps) {
     const scroller = scrollerRef.current;
     if (!scroller) return;
 
+    // Measure image width & jump to middle copy
     const img = new Image();
     img.src = IMG_SRC;
     img.onload = () => {
@@ -30,6 +33,7 @@ export default function InfiniteMap({ locations = [] }: InfiniteMapProps) {
       scroller.scrollLeft = img.width;
     };
 
+    // Wrap-around logic
     const onScroll = () => {
       const W = imgWidthRef.current;
       if (scroller.scrollLeft <= 0) scroller.scrollLeft = W;
