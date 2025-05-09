@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from "react";
+import { useRef, useEffect } from "react";
 import "./InfiniteMap.css";
 
 export default function InfiniteMap() {
@@ -6,9 +6,6 @@ export default function InfiniteMap() {
   const pos = useRef({ x: 0, y: 0 });
   const dragging = useRef(false);
   const last = useRef({ x: 0, y: 0 });
-
-  // Update background position on state change
-  const [, setTick] = useState(0);
 
   useEffect(() => {
     const c = containerRef.current;
@@ -18,6 +15,7 @@ export default function InfiniteMap() {
       dragging.current = true;
       last.current = { x: e.clientX, y: e.clientY };
       c.setPointerCapture(e.pointerId);
+      c.style.cursor = "grabbing";
     };
 
     const onMove = (e: PointerEvent) => {
@@ -27,14 +25,13 @@ export default function InfiniteMap() {
       last.current = { x: e.clientX, y: e.clientY };
       pos.current.x += dx;
       pos.current.y += dy;
-      // wrap within [0, imageSize) if you know image dimensions,
-      // but background-repeat will handle infinite tiling for us.
       c.style.backgroundPosition = `${pos.current.x}px ${pos.current.y}px`;
     };
 
     const onUp = (e: PointerEvent) => {
       dragging.current = false;
       c.releasePointerCapture(e.pointerId);
+      c.style.cursor = "grab";
     };
 
     c.addEventListener("pointerdown", onDown);
