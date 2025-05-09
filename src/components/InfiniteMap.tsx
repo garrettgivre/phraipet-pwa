@@ -1,33 +1,39 @@
 import { useEffect, useRef } from "react";
 import "./InfiniteMap.css";
 
-/**
- * Shows three copies of the same map side‑by‑side and
- * keeps resetting scrollLeft so the user can swipe forever.
- */
-const IMG_SRC = "/maps/world.png"; // put your image here
+/** Named export of the location type */
+export type MapLocation = {
+  id: string;
+  x: number;          // pixel offset from left of single map image
+  y: number;          // pixel offset from top of image
+  icon: string;       // path to your marker icon
+  onClick?: () => void;
+};
 
-function InfiniteMap() {
+type InfiniteMapProps = {
+  locations?: MapLocation[];
+};
+
+export default function InfiniteMap({ locations = [] }: InfiniteMapProps) {
   const scrollerRef = useRef<HTMLDivElement>(null);
+  const imgWidthRef = useRef(0);
+  const IMG_SRC = "/maps/world.png";
 
   useEffect(() => {
     const scroller = scrollerRef.current;
     if (!scroller) return;
 
-    // Once the image loads, jump to the middle copy
     const img = new Image();
     img.src = IMG_SRC;
     img.onload = () => {
-      const singleWidth = img.width;
-      scroller.scrollLeft = singleWidth;
+      imgWidthRef.current = img.width;
+      scroller.scrollLeft = img.width;
     };
 
-    // When user hits either edge, teleport back to the middle copy
     const onScroll = () => {
-      const totalW = scroller.scrollWidth;
-      const singleW = totalW / 3;
-      if (scroller.scrollLeft <= 0) scroller.scrollLeft = singleW;
-      if (scroller.scrollLeft >= singleW * 2) scroller.scrollLeft = singleW;
+      const W = imgWidthRef.current;
+      if (scroller.scrollLeft <= 0) scroller.scrollLeft = W;
+      else if (scroller.scrollLeft >= W * 2) scroller.scrollLeft = W;
     };
 
     scroller.addEventListener("scroll", onScroll);
@@ -36,12 +42,30 @@ function InfiniteMap() {
 
   return (
     <div className="mapScroller" ref={scrollerRef}>
-      {/* three identical copies */}
-      <img src={IMG_SRC} alt="world map" draggable={false} />
-      <img src={IMG_SRC} alt="" aria-hidden="true" draggable={false} />
-      <img src={IMG_SRC} alt="" aria-hidden="true" draggable={false} />
+      {[0, 1, 2].map((tileIdx) => (
+        <div key={tileIdx} className="mapFrame">
+          <img
+            src={IMG_SRC}
+            alt="world map"
+            draggable={false}
+            className="mapImage"
+          />
+          {locations.map((loc) => (
+            <img
+              key={`${loc.id}-${tileIdx}`}
+              src={loc.icon}
+              draggable={false}
+              className="mapMarker"
+              style={{
+                left: loc.x + tileIdx * imgWidthRef.current,
+                top: loc.y,
+              }}
+              onClick={loc.onClick}
+              alt=""
+            />
+          ))}
+        </div>
+      ))}
     </div>
   );
 }
-
-export default InfiniteMap;
