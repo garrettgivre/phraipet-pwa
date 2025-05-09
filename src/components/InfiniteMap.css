@@ -1,32 +1,19 @@
-/* src/components/InfiniteMap.css */
-
 .mapScroller {
   display: flex;
   width: 100%;
-  height: 100%;         /* fill the fixedMapLayer */
-  overflow-x: auto;     /* horizontal pan */
-  overflow-y: hidden;
-  scrollbar-width: none;
+  height: 100%;           /* will fill its parent FixedMapLayer */
+  overflow-x: auto;       /* horizontal swipe */
+  overflow-y: hidden;     /* no vertical scroll */
+  scrollbar-width: none;  
 }
 .mapScroller::-webkit-scrollbar {
   display: none;
 }
 
-.mapFrame {
-  position: relative;
-  flex: 0 0 auto;       /* each tile keeps its natural width */
-}
-
-.mapImage {
-  display: block;
-  height: 100%;         /* match container height */
+.mapScroller img {
+  flex: 0 0 auto;         /* keep each tile at intrinsic width */
+  height: 100%;           /* fill container height */
   width: auto;
-}
-
-.mapMarker {
-  position: absolute;
-  width: 24px;
-  height: 24px;
-  transform: translate(-50%, -50%);
-  cursor: pointer;
+  user-select: none;
+  pointer-events: none;
 }
