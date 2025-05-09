@@ -1,19 +1,21 @@
-.mapScroller {
-  display: grid;
-  grid-template-columns: repeat(3, auto);
-  grid-template-rows: repeat(3, auto);
-  width: 100%;
-  height: 100%;
-  overflow: auto;            /* now both axes */
+.mapContainer {
+  position: absolute;
+  top: var(--header-h);
+  bottom: var(--nav-h);
+  left: 0; right: 0;
+  overflow: scroll;      /* allow both axes */
   scrollbar-width: none;
 }
-.mapScroller::-webkit-scrollbar {
+.mapContainer::-webkit-scrollbar {
   display: none;
 }
 
-.mapTile {
+.tile {
+  position: absolute;
   width: auto;
-  height: 100%;              /* fill vertical container */
-  user-select: none;
+  height: auto;
+  min-width: 100%;       /* each tile covers the full width */
+  min-height: 100%;      /* and full height */
   pointer-events: none;
+  user-select: none;
 }

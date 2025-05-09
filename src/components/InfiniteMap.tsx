@@ -4,46 +4,47 @@ import "./InfiniteMap.css";
 const IMG_SRC = "/maps/world.png";
 
 export default function InfiniteMap() {
-  const scrollerRef = useRef<HTMLDivElement>(null);
-  const imgSizeRef = useRef<{ w: number; h: number }>({ w: 0, h: 0 });
+  const containerRef = useRef<HTMLDivElement>(null);
+  const sizeRef = useRef<{ w: number; h: number }>({ w: 0, h: 0 });
 
   useEffect(() => {
-    const scroller = scrollerRef.current;
-    if (!scroller) return;
+    const c = containerRef.current;
+    if (!c) return;
 
-    // Load image to measure its width & height
     const img = new Image();
     img.src = IMG_SRC;
     img.onload = () => {
-      imgSizeRef.current = { w: img.width, h: img.height };
-      // Start centered on the middle tile
-      scroller.scrollLeft = img.width;
-      scroller.scrollTop = img.height;
+      sizeRef.current = { w: img.width, h: img.height };
+      // center on the middle tile
+      c.scrollLeft = img.width;
+      c.scrollTop = img.height;
     };
 
     const onScroll = () => {
-      const { w, h } = imgSizeRef.current;
-      if (scroller.scrollLeft <= 0) scroller.scrollLeft = w;
-      else if (scroller.scrollLeft >= w * 2) scroller.scrollLeft = w;
-      if (scroller.scrollTop <= 0) scroller.scrollTop = h;
-      else if (scroller.scrollTop >= h * 2) scroller.scrollTop = h;
+      const { w, h } = sizeRef.current;
+      if (c.scrollLeft <= 0) c.scrollLeft = w;
+      else if (c.scrollLeft >= w * 2) c.scrollLeft = w;
+      if (c.scrollTop <= 0) c.scrollTop = h;
+      else if (c.scrollTop >= h * 2) c.scrollTop = h;
     };
 
-    scroller.addEventListener("scroll", onScroll);
-    return () => scroller.removeEventListener("scroll", onScroll);
+    c.addEventListener("scroll", onScroll);
+    return () => c.removeEventListener("scroll", onScroll);
   }, []);
 
   return (
-    <div className="mapScroller" ref={scrollerRef}>
-      {[0, 1, 2].map((row) =>
+    <div className="mapContainer" ref={containerRef}>
+      {[0, 1, 2].flatMap((row) =>
         [0, 1, 2].map((col) => (
           <img
             key={`${row}-${col}`}
             src={IMG_SRC}
-            alt="world map"
-            draggable={false}
-            className="mapTile"
-            style={{ gridRow: row + 1, gridColumn: col + 1 }}
+            alt=""
+            className="tile"
+            style={{
+              top: row * sizeRef.current.h,
+              left: col * sizeRef.current.w,
+            }}
           />
         ))
       )}
