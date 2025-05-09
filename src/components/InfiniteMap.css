@@ -1,21 +1,10 @@
-.mapContainer {
+.panContainer {
   position: absolute;
-  top:    var(--header-h);
+  top: var(--header-h);
   bottom: var(--nav-h);
-  left:   0;
-  right:  0;
-  overflow: auto;            /* scroll both axes */
-  background-image: url("/maps/world.png");
-  background-repeat: repeat;
-  background-position: center;
-  scrollbar-width: none;
+  left: 0; right: 0;
+  background: url("/maps/world.png") repeat;
+  touch-action: none;           /* allow smooth pointer dragging */
+  cursor: grab;
 }
-.mapContainer::-webkit-scrollbar {
-  display: none;
-}
-
-/* spacer is exactly 3× container size */
-.mapSpacer {
-  width: 300%;
-  height: 300%;
-}
+/* While dragging, cursor changes automatically via browser default */
