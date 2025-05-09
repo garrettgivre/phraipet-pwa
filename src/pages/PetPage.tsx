@@ -1,12 +1,18 @@
-import type { Pet, Need } from "../types";
+// src/pages/PetPage.tsx
+import type { Need } from "../types";
 import "./PetPage.css";
 
+interface NeedInfo {
+  need: Need;
+  emoji: string;
+  value: number;
+  desc: string;
+}
+
 export default function PetPage({
-  pet,
   needInfo,
 }: {
-  pet: Pet | null;
-  needInfo: { need: Need; emoji: string; value: number; desc: string }[];
+  needInfo: NeedInfo[];
 }) {
   return (
     <div className="petPage">

@@ -102,7 +102,7 @@ function AppShell({ pet }: { pet: Pet | null }) {
       <div className="pageBody">
         <Routes>
           {/* Pet is now the root page */}
-          <Route path="/" element={<PetPage pet={pet} needInfo={needInfo} />} />
+          <Route path="/" element={<PetPage needInfo={needInfo} />} />
           <Route path="/explore" element={<Explore />} />
           <Route path="/play" element={<Play />} />
         </Routes>
