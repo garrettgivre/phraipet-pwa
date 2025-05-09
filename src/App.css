@@ -1,6 +1,6 @@
 :root {
-  --header-h: 60px;  /* actual pixel height of your header */
-  --nav-h:    64px;  /* actual height of bottom nav bar */
+  --header-h: 56px;   /* change these two numbers only if you want new sizes */
+  --nav-h:    48px;
 }
 .pageBody {
   padding-top:   var(--header-h);
@@ -10,6 +10,4 @@
   overflow-y: hidden;   /* no vertical scroll */
 }
 body { overflow-x: hidden; }
-html, body {
-  overflow-x: hidden;   /* page width is now fixed to 100 vw */
-}
+html, body { overflow-x: hidden; margin: 0; }

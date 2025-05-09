@@ -1,59 +1,28 @@
-/* src/components/Header.css */
-
 .header {
-  position: fixed;          /* pin to viewport top */
-  height: var(50);
+  position: fixed;            /* stay at top */
   top: 0;
   left: 0;
   right: 0;
+  height: var(--header-h);
 
-  /* 👉 horizontal row: avatar | needs */
   display: flex;
-  align-items: center;      /* vertically center avatar + bars */
+  align-items: center;        /* vertically center content */
   gap: 0.6rem;
+  padding: 0 1rem;            /* horizontal padding only */
 
-  padding: 0rem;
-  background: #ffffffee;    /* slight opacity */
-  backdrop-filter: blur(4px);
-  z-index: 100;             /* sit above body & nav */
-}
-
-/* --- avatar --- */
-.avatar {
-  width: 60px;
-  height: 60px;
-  flex: 0 0 60px;           /* fixed width so bars never wrap under */
-  border-radius: 50%;
-  overflow: hidden;
-  background: #f0f0f0;
-}
-.avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-.avatarFallback {
-  width: 100%;
-  height: 100%;
-  font-size: 2rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  background: #ffffff;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+  z-index: 100;
 }
 
-/* --- need bars --- */
-.needList {
-  display: flex;
-  flex-direction: column;   /* stack bars vertically */
-  gap: 0.3rem;
-  flex: 1;                  /* take remaining horizontal space */
-  min-width: 0;             /* let progress bars shrink on small screens */
-}
-.needMini  { display: flex; align-items: center; gap: 0.4rem; }
-.needEmoji { font-size: 1rem; }
-.needBarWrap { display: flex; align-items: center; gap: 0.3rem; flex: 1; }
-.needBarWrap progress { width: 100%; height: 6px; }
-.needDesc { font-size: 0.7rem; white-space: nowrap; }
+/* avatar + need bars same as before … */
+.avatar        { width:40px;height:40px;border-radius:50%;overflow:hidden;background:#f2f2f2;flex:0 0 40px; }
+.avatar img    { width:100%;height:100%;object-fit:cover; }
+.avatarFallback{ width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:1.5rem; }
 
-/* thin line below header */
-.divider { margin: 0; border: none; border-top: 1px solid #e3e3e3; }
+.needList      { display:flex;flex-direction:column;gap:0.25rem;flex:1;min-width:0; }
+.needMini      { display:flex;align-items:center;gap:0.35rem; }
+.needEmoji     { font-size:1rem; }
+.needBarWrap   { display:flex;align-items:center;gap:0.3rem;flex:1; }
+.needBarWrap progress{ width:100%;height:6px; }
+.needDesc      { font-size:0.7rem;white-space:nowrap; }
