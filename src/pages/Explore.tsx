@@ -7,9 +7,9 @@ const locations: MapLocation[] = [
     x: 600,
     y: 300,
     icon: "/icons/pink-dot.png",
-    onClick: () => alert("You clicked the first spot!")
+    onClick: () => alert("You clicked the first spot!"),
   },
-  // add more...
+  // add more locations here...
 ];
 
 export default function Explore() {
