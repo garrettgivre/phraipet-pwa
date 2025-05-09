@@ -1,7 +1,7 @@
 /* heights MUST match your actual header & nav CSS */
 :root {
-  --header-h: 60px;  /* adjust if header taller */
-  --nav-h:    64px;  /* adjust if nav bar taller */
+  --header-h: 50px;  /* adjust if header taller */
+  --nav-h:    30px;  /* adjust if nav bar taller */
 }
 
 /* this div sits fixed under header, above nav */

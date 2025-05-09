@@ -2,7 +2,7 @@
 
 .header {
   position: fixed;          /* pin to viewport top */
-  height: var(--header-h);
+  height: var(50);
   top: 0;
   left: 0;
   right: 0;
