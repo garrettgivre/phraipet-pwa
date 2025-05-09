@@ -13,5 +13,4 @@ export type Pet = {
   cleanliness: number;
   affection: number;
   spirit: number; // derived – don’t edit directly
-  pose: string; // "Neutral", "Happy", etc.
 };
