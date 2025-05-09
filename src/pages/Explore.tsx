@@ -1,3 +1,6 @@
+// src/pages/Explore.tsx
+import InfiniteMap from "../components/InfiniteMap";
+
 export default function Explore() {
-  return <p style={{ textAlign: "center" }}>Explore page – coming soon.</p>;
+  return <InfiniteMap />;
 }
