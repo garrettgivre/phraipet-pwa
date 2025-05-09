@@ -8,11 +8,9 @@ import Header from "./components/Header";
 import NavBar from "./components/NavBar";
 import PetPage from "./pages/PetPage";
 import Explore from "./pages/Explore";
+import Play from "./pages/Play";
 
 import "./App.css";
-
-/* ---------- descriptor bands ---------- */
-
 
 const bands: Record<Exclude<Need, "spirit">, { upTo: number; label: string }[]> = {
   hunger: [
@@ -76,10 +74,9 @@ const bands: Record<Exclude<Need, "spirit">, { upTo: number; label: string }[]> 
 const descriptor = (need: Exclude<Need, "spirit">, value: number) =>
   bands[need].find((b) => value <= b.upTo)?.label ?? "";
 
-/* ---------- shell that needs router context ------ */
 function AppShell({ pet }: { pet: Pet | null }) {
   const location = useLocation();
-  const hideHeader = location.pathname === "/pet";
+  const hideHeader = location.pathname === "/";
 
   const needInfo =
     pet === null
@@ -88,7 +85,7 @@ function AppShell({ pet }: { pet: Pet | null }) {
           { need: "hunger", emoji: "🍕", value: pet.hunger },
           { need: "cleanliness", emoji: "🧼", value: pet.cleanliness },
           { need: "happiness", emoji: "🎲", value: pet.happiness },
-          { need: "affection", emoji: "💖", value: pet.affection },
+          { need: "affection", emoji: "🤗", value: pet.affection },
           { need: "spirit", emoji: "✨", value: pet.spirit },
         ] as const).map((n) => ({
           ...n,
@@ -100,14 +97,14 @@ function AppShell({ pet }: { pet: Pet | null }) {
 
   return (
     <>
-      {!hideHeader && <Header pet={pet} />}    {/* no more needInfo prop */}
+      {!hideHeader && <Header pet={pet} />}
 
       <div className="pageBody">
         <Routes>
-          <Route path="/"        element={<p style={{ textAlign: "center" }}>Welcome!</p>} />
-          <Route path="/explore" element={<Explore />} />   {/* ← this line */}
-           <Route path="/play"    element={<p style={{ textAlign: "center" }}>Play soon…</p>} />
-          <Route path="/pet" element={<PetPage pet={pet} needInfo={needInfo} />} />
+          {/* Pet is now the root page */}
+          <Route path="/" element={<PetPage pet={pet} needInfo={needInfo} />} />
+          <Route path="/explore" element={<Explore />} />
+          <Route path="/play" element={<Play />} />
         </Routes>
       </div>
 
@@ -116,11 +113,9 @@ function AppShell({ pet }: { pet: Pet | null }) {
   );
 }
 
-/* ---------- top‑level component ------------------- */
 export default function App() {
   const [pet, setPet] = useState<Pet | null>(null);
 
-  /* live Firebase listener */
   useEffect(() => {
     const petRef = ref(db, `pets/sharedPet`);
     return onValue(petRef, (snap) => {
