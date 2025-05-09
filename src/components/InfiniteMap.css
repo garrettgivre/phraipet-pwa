@@ -1,10 +1,15 @@
 .panContainer {
   position: absolute;
-  top: var(--header-h);
-  bottom: var(--nav-h);
-  left: 0; right: 0;
+  top:    var(--header-h);    /* starts just below the header */
+  bottom: var(--nav-h);       /* ends just above the nav bar */
+  left:   0;
+  right:  0;
+
   background: url("/maps/world.png") repeat;
-  touch-action: none;           /* allow smooth pointer dragging */
+  background-position: center;
+  touch-action: none;
   cursor: grab;
+
+  /* remove any default padding/margin */
+  margin: 0;
 }
-/* While dragging, cursor changes automatically via browser default */
