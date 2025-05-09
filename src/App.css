@@ -3,5 +3,9 @@
   padding-bottom: 88px;             /* nav bar height + divider */
   min-height: 100dvh;
   box-sizing: border-box;
+    overflow-x: hidden;   /* clamp body to viewport width */
 }
 body { overflow-x: hidden; }
+html, body {
+  overflow-x: hidden;   /* page width is now fixed to 100 vw */
+}
