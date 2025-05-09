@@ -1,15 +1,15 @@
-.panContainer {
-  position: absolute;
-  top:    var(--header-h);    /* starts just below the header */
-  bottom: var(--nav-h);       /* ends just above the nav bar */
-  left:   0;
-  right:  0;
+ .panContainer {
+   position: absolute;
+   top:    var(--header-h);
+   bottom: var(--nav-h);
+   left:   0;
+   right:  0;
 
-  background: url("/maps/world.png") repeat;
-  background-position: center;
-  touch-action: none;
-  cursor: grab;
+   background: url("/maps/world.png") repeat;
+   background-position: center;
+   touch-action: none;
+   cursor: grab;
+   overflow: hidden;      /* disable native scrolling */
 
-  /* remove any default padding/margin */
-  margin: 0;
-}
+   margin: 0;
+ }
