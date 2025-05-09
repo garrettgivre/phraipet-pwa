@@ -1,4 +1,3 @@
-// src/types.ts
 export type Need =
   | "hunger"
   | "happiness"
@@ -12,5 +11,5 @@ export type Pet = {
   happiness: number;
   cleanliness: number;
   affection: number;
-  spirit: number; // derived – don’t edit directly
+  spirit: number;
 };
