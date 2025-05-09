@@ -1,9 +1,13 @@
+:root {
+  --header-h: 60px;  /* actual pixel height of your header */
+  --nav-h:    64px;  /* actual height of bottom nav bar */
+}
 .pageBody {
-  padding-top: 96px;                /* header height + divider */
-  padding-bottom: 88px;             /* nav bar height + divider */
-  min-height: 100dvh;
+  padding-top:   var(--header-h);
+  padding-bottom:var(--nav-h);
+  height: calc(100dvh - var(--header-h) - var(--nav-h));
   box-sizing: border-box;
-    overflow-x: hidden;   /* clamp body to viewport width */
+  overflow-y: hidden;   /* no vertical scroll */
 }
 body { overflow-x: hidden; }
 html, body {

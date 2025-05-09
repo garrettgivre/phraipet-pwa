@@ -1,5 +1,5 @@
 /* Viewport minus header & nav */
 .exploreViewport {
-  height: calc(100dvh - 96px - 88px); /* header 96 + nav 88 */
-  overflow: hidden;                   /* kill vertical scroll */
+  height: 100%;
+  overflow: hidden;      /* no vertical scroll */
 }
