@@ -131,7 +131,7 @@ export default function App() {
           cleanliness: 100,
           affection: 100,
           spirit: 100,
-          pose: "neutral",
+          pose: "Neutral",
         };
         set(petRef, starter);
       }
