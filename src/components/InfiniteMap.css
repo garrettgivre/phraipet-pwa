@@ -1,31 +1,27 @@
 .mapScroller {
   display: flex;
   width: 100%;
-  height: 100%;
-  overflow-x: auto;     /* horizontal pan */
-  overflow-y: hidden;   /* no vertical scroll */
+  height: 100%;          /* fill its parent (.fixedMapLayer) */
+  overflow-x: auto;      /* pan horizontally */
+  overflow-y: hidden;    /* no vertical scroll */
   scrollbar-width: none;
 }
 .mapScroller::-webkit-scrollbar {
   display: none;
 }
-
 .mapFrame {
   position: relative;
-  flex: 0 0 auto;       /* keep each map at its natural width */
+  flex: 0 0 auto;        /* keep each tile at its intrinsic width */
 }
-
 .mapImage {
   display: block;
-  height: 100%;         /* fill container height (set by wrapper) */
+  height: 100%;
   width: auto;
 }
-
 .mapMarker {
   position: absolute;
-  width: 24px;           /* icon size */
+  width: 24px;
   height: 24px;
-  transform: translate(-50%, -50%); /* center exactly at x,y */
+  transform: translate(-50%, -50%);
   cursor: pointer;
-  pointer-events: auto;  /* so clicks register */
 }
