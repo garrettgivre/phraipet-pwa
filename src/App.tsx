@@ -7,6 +7,7 @@ import type { Pet, Need } from "./types";
 import Header from "./components/Header";
 import NavBar from "./components/NavBar";
 import PetPage from "./pages/PetPage";
+import Explore from "./pages/Explore";
 
 import "./App.css";
 
@@ -107,6 +108,7 @@ function AppShell({ pet }: { pet: Pet | null }) {
           <Route path="/explore" element={<p style={{ textAlign: "center" }}>Explore soon…</p>} />
           <Route path="/play" element={<p style={{ textAlign: "center" }}>Play soon…</p>} />
           <Route path="/pet" element={<PetPage pet={pet} needInfo={needInfo} />} />
+          <Route path="/explore" element={<Explore />} />
         </Routes>
       </div>
 
