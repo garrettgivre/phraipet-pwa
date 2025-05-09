@@ -1,13 +1,20 @@
+/* src/App.css */
+
+/* prevent whole-page sideways scroll */
+html, body {
+  overflow-x: hidden;
+  margin: 0;
+}
+
+/* sizing variables */
 :root {
-  --header-h: 56px;   /* change these two numbers only if you want new sizes */
+  --header-h: 56px;
   --nav-h:    48px;
 }
+
+/* main content wrapper — no fixed height here! */
 .pageBody {
-  padding-top:   var(--header-h);
-  padding-bottom:var(--nav-h);
-  height: calc(100dvh - var(--header-h) - var(--nav-h));
-  box-sizing: border-box;
-  overflow-y: hidden;   /* no vertical scroll */
+  padding-top: var(--header-h);
+  padding-bottom: var(--nav-h);
+  /* remove any height or overflow here */
 }
-body { overflow-x: hidden; }
-html, body { overflow-x: hidden; margin: 0; }
