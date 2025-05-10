@@ -1,10 +1,17 @@
+// src/pages/Explore.tsx
 import { useNavigate } from "react-router-dom";
 import MapCanvas from "../components/MapCanvas";
 import type { Hotspot } from "../components/MapCanvas";
 
 const hotspots: Hotspot[] = [
-  { id: "v1", x: 175, y: 500, icon: "/icons/marker.png", route: "/v1" },
-  // add more...
+  {
+    id: "sunnybrook",
+    x: 350,
+    y: 300,
+    icon: "/icons/sunnybrook.png",
+    route: "/sunnybrook",
+  },
+  // …other hotspots…
 ];
 
 export default function Explore() {
