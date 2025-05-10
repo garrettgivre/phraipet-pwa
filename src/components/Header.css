@@ -1,19 +1,20 @@
 /* src/components/Header.css */
 
 .header {
-  margin-top: 0px; /* Pull header up under the logo */
+  margin-top: 0px;
   position: fixed;
   top: 0; left: 0; right: 0;
   height: 56px;
   display: flex;
   align-items: center;
+  justify-content: space-between; /* Added for proper coin counter placement */
   padding: 0 1rem;
   background: #fff;
   box-shadow: 0 2px 4px rgba(0,0,0,0.06);
   z-index: 10;
 }
 
-/* Avatar stays the same */
+/* Avatar Section */
 .avatar {
   width: 40px;
   height: 40px;
@@ -36,30 +37,26 @@
   font-size: 1.5rem;
 }
 
-/* 1. make the list horizontal */
+/* Horizontal Need List */
 .needList {
-  display: flex;           /* row by default */
-  align-items: center;     /* vertical centering */
+  display: flex;
+  align-items: center;
   gap: 0.75rem;
   margin-left: 1rem;
   flex: 1;
 }
 
-/* 2. each circle container */
+/* Need Circles */
 .needCircle {
   position: relative;
   width: 40px;
   height: 40px;
 }
-
-/* the gray background ring */
 .needCircle svg {
   transform: rotate(-90deg);
   width: 100%;
   height: 100%;
 }
-
-/* center the emoji INSIDE the ring */
 .needCircle .needEmoji {
   position: absolute;
   top: 0; left: 0;
@@ -71,9 +68,31 @@
   font-size: 1.2rem;
 }
 
-/* thin line underneath */
+/* Divider Line */
 .divider {
   margin: 0;
   border: none;
   border-top: 1px solid #e3e3e3;
+}
+
+/* Coin Counter (New Section) */
+.coin-counter {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  padding: 8px 12px;
+  border-radius: 20px;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s;
+}
+
+.coin-counter:hover {
+  transform: scale(1.05);
+}
+
+.coin-icon {
+  width: 24px;
+  height: 24px;
+  margin-right: 8px;
 }

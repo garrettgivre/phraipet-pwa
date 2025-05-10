@@ -1,33 +1,69 @@
-.petPage {
-  padding: 1rem;
-  text-align: center;
-}
-.petHero {
-  /* responsive rules */
-  width: 100%;           /* take the full content width */
-  max-width: 90vw;       /* but never wider than the viewport */
-  max-height: 70vh;      /* optional: keep it from pushing the bars off‑screen */
-  height: auto;
-  display: block;
-  margin: 0 auto;        /* center horizontally */
-}
-.needBigSection {
-  margin-top: 1.5rem;
+.petPageContainer {
   display: flex;
   flex-direction: column;
-  gap: 0.7rem;
-}
-/* bigger bars */
-.needBig {
-  display: flex;
   align-items: center;
-  gap: 0.5rem;
-  justify-content: center;
-  flex-wrap: wrap;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  background-color: #f0f8ff; /* Soft light blue background */
 }
-.needBigEmoji { font-size: 1.4rem; }
-.needBigWrap  { flex: 1; display: flex; align-items: center; gap: 0.3rem; }
-.needBigWrap progress { width: 100%; height: 10px; }
-.needBigLabel { font-weight: 600; }
-.needBigDesc  { font-style: italic; font-size: 0.8rem; }
-.needBigNum   { opacity: 0.7; font-size: 0.75rem; }
+
+.petSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 16px;
+}
+
+.petHero {
+  width: 200px;
+  height: auto;
+  margin-bottom: 24px;
+}
+
+.needBigSection {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+}
+
+.needBig {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 12px 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  width: 140px;
+}
+
+.needBigEmoji {
+  font-size: 32px;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.needBigWrap progress {
+  width: 100%;
+  height: 12px;
+  margin-bottom: 8px;
+}
+
+.needBigLabel {
+  font-weight: bold;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.needBigDesc {
+  font-size: 14px;
+  color: #555;
+  display: block;
+}
+
+.needBigNum {
+  font-size: 12px;
+  color: #999;
+}
+
+/* Inventory Section (uses Inventory.css from previous setup) */

@@ -118,6 +118,7 @@ function AppShell({ pet }: { pet: Pet | null }) {
         <Route path="/sunnybrook/SBMart" element={<SBMart />} />
         <Route path="/sunnybrook/SBStall" element={<SBStall />} />
         <Route path="/sunnybrook/SBToy" element={<SBToy />} />
+        <Route path="/inventory" element={<InventoryPage />} />
 
         <Route path="/" element={<PetPage needInfo={needInfo} />} />
         <Route path="/explore" element={<Explore />} />

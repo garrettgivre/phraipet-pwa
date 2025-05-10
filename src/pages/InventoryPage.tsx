@@ -1,16 +1,8 @@
-// src/pages/PetPage.tsx
+// src/pages/InventoryPage.tsx
 import { useState } from "react";
-import PetRoom from "../components/PetRoom";
 import Inventory from "../components/Inventory";
-import type { Need } from "../types";
-import "./PetPage.css";
-
-interface NeedInfo {
-  need: Need;
-  emoji: string;
-  value: number;
-  desc: string;
-}
+import PetRoom from "../components/PetRoom";
+import "./InventoryPage.css";
 
 type DecorItem = {
   src: string;
@@ -30,11 +22,13 @@ type InventoryItem = {
 const sampleInventory: InventoryItem[] = [
   { id: "floor1", name: "Wood Floor", type: "floor", src: "/assets/floors/wood.png" },
   { id: "wall1", name: "Starry Wall", type: "wall", src: "/assets/walls/starry.png" },
+  { id: "ceiling1", name: "Sky Ceiling", type: "ceiling", src: "/assets/ceilings/sky.png" },
   { id: "decor1", name: "Plant", type: "backDecor", src: "/assets/decorations/plant.png" },
+  { id: "decor2", name: "Rug", type: "frontDecor", src: "/assets/decorations/rug.png" },
   { id: "overlay1", name: "Sparkles", type: "overlay", src: "/assets/overlays/sparkles.png" }
 ];
 
-export default function PetPage({ needInfo }: { needInfo: NeedInfo[] }) {
+export default function InventoryPage() {
   const [roomLayers, setRoomLayers] = useState({
     floor: "/assets/floors/wood.png",
     wall: "/assets/walls/starry.png",
@@ -56,34 +50,13 @@ export default function PetPage({ needInfo }: { needInfo: NeedInfo[] }) {
   };
 
   return (
-    <div className="petPageContainer">
-      <PetRoom roomLayers={roomLayers} />
-
-      <div className="petSection">
-        <img
-          src="/pet/Neutral.png"
-          alt="pet large"
-          className="petHero"
-        />
-
-        <section className="needBigSection">
-          {needInfo.map((n) => (
-            <div key={n.need} className="needBig">
-              <span className="needBigEmoji">{n.emoji}</span>
-              <div className="needBigWrap">
-                <progress max={150} value={n.value + 30} />
-                <span className="needBigLabel">
-                  {n.need.charAt(0).toUpperCase() + n.need.slice(1)}
-                </span>
-                <span className="needBigDesc">{n.desc}</span>
-                <span className="needBigNum">({n.value})</span>
-              </div>
-            </div>
-          ))}
-        </section>
-      </div>
+    <div className="inventoryPage">
+      <h2 className="inventoryTitle">Inventory</h2>
 
       <Inventory items={sampleInventory} onEquip={handleEquip} />
+
+      <h3 className="previewTitle">Room Preview</h3>
+      <PetRoom roomLayers={roomLayers} />
     </div>
   );
 }
