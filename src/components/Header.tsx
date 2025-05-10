@@ -1,107 +1,60 @@
+// src/components/Header.tsx
 import { useNavigate } from "react-router-dom";
-import type { Pet, Need } from "../types";
 import "./Header.css";
 
 interface NeedInfo {
-  need: Need;
+  need: string;
   emoji: string;
-  value: number;
-  min: number;
-  max: number;
+  value: number; // 0 to 100
 }
 
-/** Renders one emoji inside a circular progress ring */
-function NeedCircle({ emoji, value, min, max }: NeedInfo) {
-  const radius = 20;
-  const stroke = 4;
-  const normalizedRadius = radius - stroke * 2;
-  const circumference = normalizedRadius * 2 * Math.PI;
-  const percent = Math.max(0, Math.min(1, (value - min) / (max - min)));
-  const dashOffset = circumference * (1 - percent);
-
-  return (
-    <div className="needCircle">
-      <svg height={radius * 2} width={radius * 2}>
-        <circle
-          stroke="#eee"
-          fill="transparent"
-          strokeWidth={stroke}
-          r={normalizedRadius}
-          cx={radius}
-          cy={radius}
-        />
-        <circle
-          stroke="#4caf50"
-          fill="transparent"
-          strokeWidth={stroke}
-          strokeLinecap="round"
-          strokeDasharray={`${circumference} ${circumference}`}
-          strokeDashoffset={dashOffset}
-          r={normalizedRadius}
-          cx={radius}
-          cy={radius}
-        />
-      </svg>
-      <div className="needEmoji">{emoji}</div>
-    </div>
-  );
-}
-
-export default function Header({ pet, coins = 100 }: { pet: Pet | null; coins?: number }) {
-  const min = -30;
-  const max = 120;
+export default function Header({
+  coins = 100,
+  petImage = "/pet/Neutral.png",
+  needs = []
+}: {
+  coins?: number;
+  petImage?: string;
+  needs?: NeedInfo[];
+}) {
   const navigate = useNavigate();
 
-  const needs: NeedInfo[] = pet
-    ? ([
-        { need: "hunger", emoji: "🍕", value: pet.hunger, min, max },
-        { need: "cleanliness", emoji: "🧼", value: pet.cleanliness, min, max },
-        { need: "happiness", emoji: "🎲", value: pet.happiness, min, max },
-        { need: "affection", emoji: "🤗", value: pet.affection, min, max },
-        { need: "spirit", emoji: "✨", value: pet.spirit, min, max },
-      ] as const)
-    : [];
-
   return (
-    <>
-      <header className="app-header">
-        <div className="leftSection">
-          {/* Pet Avatar */}
-          <div className="avatar">
-            <img
-              src="/pet/Neutral.png"
-              alt="pet"
-              onError={(e) => {
-                e.currentTarget.style.display = "none";
-              }}
-            />
-            <span className="avatarFallback" role="img" aria-label="slime">
-              🐣
-            </span>
-          </div>
+    <header className="app-header">
+      {/* Left: Pet Icon */}
+      <div className="pet-icon-wrapper">
+        <img src={petImage} alt="Pet" className="pet-icon" />
+      </div>
 
-          {/* Need Circles */}
-          <div className="needList">
-            {needs.map((n) => (
-              <NeedCircle
-                key={n.need}
-                need={n.need}
-                emoji={n.emoji}
-                value={n.value}
-                min={n.min}
-                max={n.max}
+      {/* Center: Needs Display */}
+      <div className="needs-wrapper">
+        {needs.map((n) => (
+          <div key={n.need} className="need-circle">
+            <svg viewBox="0 0 36 36" className="circular-chart">
+              <path
+                className="circle-bg"
+                d="M18 2.0845
+                   a 15.9155 15.9155 0 0 1 0 31.831
+                   a 15.9155 15.9155 0 0 1 0 -31.831"
               />
-            ))}
+              <path
+                className="circle"
+                strokeDasharray={`${n.value}, 100`}
+                d="M18 2.0845
+                   a 15.9155 15.9155 0 0 1 0 31.831
+                   a 15.9155 15.9155 0 0 1 0 -31.831"
+              />
+              <text x="18" y="20.35" className="emoji-text">{n.emoji}</text>
+            </svg>
           </div>
-        </div>
+        ))}
+      </div>
 
-        {/* Coin Counter */}
-        <div className="coinCounter" onClick={() => navigate("/inventory")}>
-          <img src="/assets/icons/coin.png" alt="Coins" className="coinIcon" />
-          <span>{coins}</span>
-        </div>
-      </header>
-      <hr className="divider" />
-    </>
+      {/* Right: Coin Counter */}
+      <div className="coin-counter" onClick={() => navigate("/inventory")}>
+        <img src="/assets/icons/coin.png" alt="Coins" className="coin-icon" />
+        <span>{coins}</span>
+      </div>
+    </header>
   );
 }
