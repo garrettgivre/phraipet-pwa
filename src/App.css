@@ -14,7 +14,7 @@ html, body {
 
 /* main content wrapper — no fixed height here! */
 .pageBody {
-  padding-top: var(--header-h);
-  padding-bottom: var(--nav-h);
-  /* remove any height or overflow here */
+  background: none;
+  margin: 0;
+  padding: 0;        /* the header/nav already pad space */
 }
