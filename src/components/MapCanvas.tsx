@@ -122,26 +122,36 @@ export default function MapCanvas({
   }, [hotspots, width, height]);
 
   const handleClick = (e: React.MouseEvent) => {
-    const canvas = canvasRef.current!;
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left - offset.current.x;
-    const y = e.clientY - rect.top - offset.current.y;
-    // hit‐test at 10% size
-    const iconScale = 0.1;
-    hotspots.forEach((hs) => {
-      const icon = icons.current[hs.id];
-      const iw = icon.width * iconScale;
-      const ih = icon.height * iconScale;
-      if (
-        x >= hs.x - iw / 2 &&
-        x <= hs.x + iw / 2 &&
-        y >= hs.y - ih &&
-        y <= hs.y
-      ) {
-        onNavigate(hs.route);
-      }
-    });
-  };
+  const canvas = canvasRef.current!;
+  const rect = canvas.getBoundingClientRect();
+
+  // raw click coords relative to infinite plane
+  const rawX = e.clientX - rect.left - offset.current.x;
+  const rawY = e.clientY - rect.top  - offset.current.y;
+
+  // map repeats every width/height — wrap click back into [0,width) × [0,height)
+  const wrapX = ((rawX % width) + width) % width;
+  const wrapY = ((rawY % height) + height) % height;
+
+  // scale factor for hit-testing (10% of icon natural size)
+  const iconScale = 0.1;
+
+  hotspots.forEach((hs) => {
+    const icon = icons.current[hs.id];
+    const iw = icon.width * iconScale;
+    const ih = icon.height * iconScale;
+
+    // check if the wrapped click falls over this hotspot
+    if (
+      wrapX >= hs.x - iw / 2 &&
+      wrapX <= hs.x + iw / 2 &&
+      wrapY >= hs.y - ih &&
+      wrapY <= hs.y
+    ) {
+      onNavigate(hs.route);
+    }
+  });
+};
 
   return (
     <canvas
