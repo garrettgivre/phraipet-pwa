@@ -9,7 +9,6 @@ import { ref, onValue, set } from "firebase/database";
 import { db } from "./firebase";
 import type { Pet, Need, NeedInfo } from "./types";
 
-import GlobalHeader from "./components/GlobalHeader";
 import Header from "./components/Header";
 import NavBar from "./components/NavBar";
 import PetPage from "./pages/PetPage";
@@ -106,8 +105,7 @@ function AppShell({ pet }: { pet: Pet | null }) {
   ];
 
   return (
-    <>
-      <GlobalHeader />
+    <>  
       {!hideHeader && <Header pet={pet} />}
 
       <Routes>
