@@ -3,6 +3,7 @@
   position: absolute;
   top: 0; bottom: 0; left: 0; right: 0;
   background: url("/maps/world.png") repeat;
+  background-size: auto 100%;      /* scale each tile to 100% container height */
   background-position: 0 0;
   touch-action: none;
   cursor: grab;
