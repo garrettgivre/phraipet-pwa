@@ -3,7 +3,7 @@ import MapCanvas from "../components/MapCanvas";
 import type { Hotspot } from "../components/MapCanvas";
 
 const hotspots: Hotspot[] = [
-  { id: "v1", x: 450, y: 500, icon: "/icons/marker.png", route: "/v1" },
+  { id: "v1", x: 250, y: 500, icon: "/icons/marker.png", route: "/v1" },
   // add more...
 ];
 
