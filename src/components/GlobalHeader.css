@@ -1,16 +1,22 @@
 .global-header {
   width: 100%;
-  background-color: #fff; /* Customize this if needed */
   text-align: center;
-  padding: 10px 0;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 0;
+  margin: 0;
   position: sticky;
   top: 0;
   z-index: 1000;
+  background: transparent;
 }
 
 .global-logo {
-  height: 100px;        /* Exact height */
-  max-height: 100px;    /* Prevents it from scaling larger */
-  object-fit: contain;  /* Keeps proportions */
+  height: 100px;
+  max-height: 100px;
+  width: auto;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto;
+  /* Overlap effect */
+  position: relative;
+  top: -15px;
 }
