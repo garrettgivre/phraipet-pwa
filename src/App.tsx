@@ -1,10 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-  BrowserRouter,
-  Routes,
-  Route,
-  useLocation,
-} from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ref, onValue, set } from "firebase/database";
 import { db } from "./firebase";
 import type { Pet, Need, NeedInfo } from "./types";
@@ -27,8 +22,7 @@ import InventoryPage from "./pages/InventoryPage";
 
 import "./App.css";
 
-
-/* ─── descriptor bands ───────────────────────────────────────────────── */
+/* ─── Descriptor Bands ───────────────────────────────────────────────── */
 
 const bands: Record<Exclude<Need, "spirit">, { upTo: number; label: string }[]> = {
   hunger: [
@@ -95,22 +89,26 @@ const descriptor = (need: Exclude<Need, "spirit">, value: number) =>
 /* ─── AppShell ──────────────────────────────────────────────────────── */
 
 function AppShell({ pet }: { pet: Pet | null }) {
-  const location = useLocation();
-  const hideHeader = location.pathname === "/";
-
   const needInfo: NeedInfo[] = pet === null ? [] : [
     { need: "hunger", emoji: "🍕", value: pet.hunger, desc: descriptor("hunger", pet.hunger) },
     { need: "cleanliness", emoji: "🧼", value: pet.cleanliness, desc: descriptor("cleanliness", pet.cleanliness) },
     { need: "happiness", emoji: "🎲", value: pet.happiness, desc: descriptor("happiness", pet.happiness) },
     { need: "affection", emoji: "🤗", value: pet.affection, desc: descriptor("affection", pet.affection) },
-    { need: "spirit", emoji: "✨", value: pet.spirit, desc: descriptor("happiness", pet.spirit) }, // Assuming spirit uses happiness descriptor
+    { need: "spirit", emoji: "✨", value: pet.spirit, desc: descriptor("happiness", pet.spirit) },
   ];
 
   return (
-    <>  
-      {!hideHeader && <Header pet={pet} />}
+    <>
+      {/* Always show header with pet info */}
+      <Header pet={pet} coins={100} />
 
       <Routes>
+        <Route path="/" element={<PetPage needInfo={needInfo} />} />
+        <Route path="/explore" element={<Explore />} />
+        <Route path="/play" element={<Play />} />
+        <Route path="/inventory" element={<InventoryPage />} />
+
+        {/* Sunnybrook Routes */}
         <Route path="/sunnybrook" element={<Sunnybrook />} />
         <Route path="/sunnybrook/Adoption" element={<SBAdoption />} />
         <Route path="/sunnybrook/SBClinic" element={<SBClinic />} />
@@ -120,13 +118,9 @@ function AppShell({ pet }: { pet: Pet | null }) {
         <Route path="/sunnybrook/SBMart" element={<SBMart />} />
         <Route path="/sunnybrook/SBStall" element={<SBStall />} />
         <Route path="/sunnybrook/SBToy" element={<SBToy />} />
-        <Route path="/inventory" element={<InventoryPage />} />
-
-        <Route path="/" element={<PetPage needInfo={needInfo} />} />
-        <Route path="/explore" element={<Explore />} />
-        <Route path="/play" element={<Play />} />
       </Routes>
 
+      {/* Always fixed at the bottom */}
       <NavBar />
     </>
   );
