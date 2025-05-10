@@ -16,7 +16,6 @@
   object-fit: contain;
   display: block;
   margin: 0 auto;
-  /* Overlap effect */
   position: relative;
-  top: -15px;
+  top: 0; /* Remove overlap from the logo itself */
 }
