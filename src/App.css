@@ -1,10 +1,19 @@
-html, body {
-  margin: 0;
-  padding: 0;
-  overflow: hidden;     /* never show page scrollbars */
+/* src/App.css */
+.pageBody {
+  /* only affects Pet & Play now */
+  padding-top: var(--header-h);
+  padding-bottom: var(--nav-h);
 }
 
-:root {
-  --header-h: 56px;
-  --nav-h:    48px;
+/* pan container still covers full gap */
+.panContainer {
+  position: absolute;
+  top: var(--header-h);
+  bottom: var(--nav-h);
+  left: 0; right: 0;
+  background: url("/maps/world.png") repeat;
+  background-position: 0 0;
+  touch-action: none;
+  cursor: grab;
+  overflow: hidden;
 }

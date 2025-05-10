@@ -1,5 +1,11 @@
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+// src/App.tsx
 import { useEffect, useState } from "react";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  useLocation,
+} from "react-router-dom";
 import { ref, onValue, set } from "firebase/database";
 import { db } from "./firebase";
 import type { Pet, Need } from "./types";
@@ -11,6 +17,8 @@ import Explore from "./pages/Explore";
 import Play from "./pages/Play";
 
 import "./App.css";
+
+/* ─── descriptor bands ───────────────────────────────────────────────── */
 
 const bands: Record<Exclude<Need, "spirit">, { upTo: number; label: string }[]> = {
   hunger: [
@@ -74,9 +82,11 @@ const bands: Record<Exclude<Need, "spirit">, { upTo: number; label: string }[]> 
 const descriptor = (need: Exclude<Need, "spirit">, value: number) =>
   bands[need].find((b) => value <= b.upTo)?.label ?? "";
 
+/* ─── Main routing shell ───────────────────────────────────────────────── */
+
 function AppShell({ pet }: { pet: Pet | null }) {
   const location = useLocation();
-  const hideHeader = location.pathname === "/";
+  const hideHeader = location.pathname === "/explore";
 
   const needInfo =
     pet === null
@@ -88,10 +98,12 @@ function AppShell({ pet }: { pet: Pet | null }) {
           { need: "affection", emoji: "🤗", value: pet.affection },
           { need: "spirit", emoji: "✨", value: pet.spirit },
         ] as const).map((n) => ({
-          ...n,
+          need: n.need,
+          emoji: n.emoji,
+          value: n.value,
           desc:
             n.need === "spirit"
-              ? descriptor("happiness", pet.spirit)
+              ? descriptor("happiness", n.value)
               : descriptor(n.need, n.value),
         }));
 
@@ -99,14 +111,25 @@ function AppShell({ pet }: { pet: Pet | null }) {
     <>
       {!hideHeader && <Header pet={pet} />}
 
-      <div className="pageBody">
-        <Routes>
-          {/* Pet is now the root page */}
-          <Route path="/" element={<PetPage needInfo={needInfo} />} />
-          <Route path="/explore" element={<Explore />} />
-          <Route path="/play" element={<Play />} />
-        </Routes>
-      </div>
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <div className="pageBody">
+              <PetPage needInfo={needInfo} />
+            </div>
+          }
+        />
+        <Route path="/explore" element={<Explore />} />
+        <Route
+          path="/play"
+          element={
+            <div className="pageBody">
+              <Play />
+            </div>
+          }
+        />
+      </Routes>
 
       <NavBar />
     </>
