@@ -1,13 +1,12 @@
-// src/components/InfiniteMap.tsx
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./InfiniteMap.css";
 
 /** Defines a clickable map hotspot */
 export type Hotspot = {
   id: string;
-  x: number;     // px from left of the map original
-  y: number;     // px from top of the map original
+  x: number;
+  y: number;
   icon: string;
   route: string;
 };
@@ -20,36 +19,28 @@ export default function InfiniteMap({
   const containerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const pos = useRef({ x: 0, y: 0 });
+  const [dragTick, setDragTick] = useState(0);  // force re-render
 
   useEffect(() => {
     const c = containerRef.current!;
     let dragging = false;
-    let lastX = 0,
-      lastY = 0;
+    let lastX = 0, lastY = 0;
 
     const onDown = (e: PointerEvent) => {
       e.preventDefault();
       dragging = true;
-      lastX = e.clientX;
-      lastY = e.clientY;
+      lastX = e.clientX; lastY = e.clientY;
       c.setPointerCapture(e.pointerId);
     };
-
     const onMove = (e: PointerEvent) => {
       if (!dragging) return;
       e.preventDefault();
-      const dx = e.clientX - lastX;
-      const dy = e.clientY - lastY;
-      lastX = e.clientX;
-      lastY = e.clientY;
-      pos.current.x += dx;
-      pos.current.y += dy;
-      // move the background
+      const dx = e.clientX - lastX, dy = e.clientY - lastY;
+      lastX = e.clientX; lastY = e.clientY;
+      pos.current.x += dx; pos.current.y += dy;
       c.style.backgroundPosition = `${pos.current.x}px ${pos.current.y}px`;
-      // trigger repaint so hotspots move (reading pos in render)
-      // could use forceUpdate, but inline style will read fresh pos
+      setDragTick((t) => t + 1);  // trigger React re-render
     };
-
     const onUp = (e: PointerEvent) => {
       dragging = false;
       c.releasePointerCapture(e.pointerId);
@@ -67,20 +58,18 @@ export default function InfiniteMap({
     };
   }, []);
 
-  const tiles = [-1, 0, 1];
-  // Capture current pos locally so renders use same values
+  // break reference so TS knows this uses dragTick
   const { x: offsetX, y: offsetY } = pos.current;
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
+  const vw = window.innerWidth, vh = window.innerHeight;
+  const tiles = [-1, 0, 1];
 
   return (
     <div className="panContainer" ref={containerRef}>
       {tiles.map((ty) =>
         tiles.map((tx) =>
           hotspots.map((hs) => {
-            // compute each hotspot’s on-screen position
             const left = hs.x + offsetX + tx * vw;
-            const top = hs.y + offsetY + ty * vh;
+            const top  = hs.y + offsetY + ty * vh;
             return (
               <button
                 key={`${hs.id}-${tx}-${ty}`}
