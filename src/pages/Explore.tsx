@@ -1,24 +1,20 @@
-import FixedMapLayer from "../components/FixedMapLayer";
-import type { Hotspot } from "../components/InfiniteMap";
-import markerIcon from "/icons/marker.png";
+import { useNavigate } from "react-router-dom";
+import MapCanvas from "../components/MapCanvas";
+import type { Hotspot } from "../components/MapCanvas";
 
 const hotspots: Hotspot[] = [
-  {
-    id: "location1",
-    x: 500,
-    y: 300,
-    icon: markerIcon,
-    route: "/location/1",
-  },
-  {
-    id: "location2",
-    x: 1200,
-    y: 450,
-    icon: markerIcon,
-    route: "/location/2",
-  },
+  { id: "v1", x: 500, y: 300, icon: "/icons/marker.png", route: "/v1" },
+  // add more...
 ];
 
 export default function Explore() {
-  return <FixedMapLayer hotspots={hotspots} />;
+  const navigate = useNavigate();
+  return (
+    <MapCanvas
+      width={1536}
+      height={1024}
+      hotspots={hotspots}
+      onNavigate={navigate}
+    />
+  );
 }
