@@ -4,8 +4,8 @@ import "./InfiniteMap.css";
 
 export type Hotspot = {
   id: string;
-  x: number;
-  y: number;
+  x: number;     // original pixel X on 1536x1024 map
+  y: number;     // original pixel Y
   icon: string;
   route: string;
 };
@@ -18,7 +18,7 @@ export default function InfiniteMap({
   const containerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
-  // State holds the current background offset
+  // background offsets
   const [{ bgX, bgY }, setBg] = useState({ bgX: 0, bgY: 0 });
 
   useEffect(() => {
@@ -29,20 +29,21 @@ export default function InfiniteMap({
     const onDown = (e: PointerEvent) => {
       e.preventDefault();
       dragging = true;
-      lastX = e.clientX; lastY = e.clientY;
+      lastX = e.clientX;
+      lastY = e.clientY;
       c.setPointerCapture(e.pointerId);
     };
     const onMove = (e: PointerEvent) => {
       if (!dragging) return;
       e.preventDefault();
-      const dx = e.clientX - lastX;
-      const dy = e.clientY - lastY;
-      lastX = e.clientX; lastY = e.clientY;
+      const dx = e.clientX - lastX, dy = e.clientY - lastY;
+      lastX = e.clientX;
+      lastY = e.clientY;
       setBg(({ bgX, bgY }) => ({ bgX: bgX + dx, bgY: bgY + dy }));
     };
-    const onUp = (e: PointerEvent) => {
+    const onUp = () => {
       dragging = false;
-      c.releasePointerCapture(e.pointerId);
+      c.releasePointerCapture(0 as any);
     };
 
     c.addEventListener("pointerdown", onDown);
@@ -57,7 +58,7 @@ export default function InfiniteMap({
     };
   }, []);
 
-  // On each render, apply the bgX/bgY to the container style
+  // apply background position
   useEffect(() => {
     const c = containerRef.current;
     if (c) {
@@ -65,7 +66,12 @@ export default function InfiniteMap({
     }
   }, [bgX, bgY]);
 
-  const vw = window.innerWidth, vh = window.innerHeight;
+  // compute scale and tile sizes
+  const vh = window.innerHeight;            // container height
+  const scale = vh / 1024;                  // image original height = 1024
+  const tileW = 1536 * scale;
+  const tileH = vh;                         // because background-size auto 100vh
+
   const tiles = [-1, 0, 1];
 
   return (
@@ -73,8 +79,8 @@ export default function InfiniteMap({
       {tiles.map((ty) =>
         tiles.map((tx) =>
           hotspots.map((hs) => {
-            const left = hs.x + bgX + tx * vw;
-            const top = hs.y + bgY + ty * vh;
+            const left = hs.x * scale + bgX + tx * tileW;
+            const top  = hs.y * scale + bgY + ty * tileH;
             return (
               <button
                 key={`${hs.id}-${tx}-${ty}`}
