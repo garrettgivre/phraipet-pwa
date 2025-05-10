@@ -1,8 +1,8 @@
 /* src/components/Header.css */
 
 .header {
-  margin-top: -15px; /* Pull header up under the logo */
-  position: relative;
+  margin-top: 0px; /* Pull header up under the logo */
+  position: fixed;
   top: 0; left: 0; right: 0;
   height: 56px;
   display: flex;
