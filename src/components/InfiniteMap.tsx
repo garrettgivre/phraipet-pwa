@@ -3,10 +3,11 @@ import { useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./InfiniteMap.css";
 
+/** Defines a clickable map hotspot */
 export type Hotspot = {
   id: string;
-  x: number;
-  y: number;
+  x: number;     // px from left of the map original
+  y: number;     // px from top of the map original
   icon: string;
   route: string;
 };
@@ -16,30 +17,39 @@ export default function InfiniteMap({
 }: {
   hotspots?: Hotspot[];
 }) {
-  const cRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const pos = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
-    const c = cRef.current!;
+    const c = containerRef.current!;
     let dragging = false;
-    let lastX = 0, lastY = 0;
+    let lastX = 0,
+      lastY = 0;
 
     const onDown = (e: PointerEvent) => {
       e.preventDefault();
       dragging = true;
-      lastX = e.clientX; lastY = e.clientY;
+      lastX = e.clientX;
+      lastY = e.clientY;
       c.setPointerCapture(e.pointerId);
     };
+
     const onMove = (e: PointerEvent) => {
       if (!dragging) return;
       e.preventDefault();
-      const dx = e.clientX - lastX, dy = e.clientY - lastY;
-      lastX = e.clientX; lastY = e.clientY;
-      pos.current.x += dx; pos.current.y += dy;
-      // directly move the background
+      const dx = e.clientX - lastX;
+      const dy = e.clientY - lastY;
+      lastX = e.clientX;
+      lastY = e.clientY;
+      pos.current.x += dx;
+      pos.current.y += dy;
+      // move the background
       c.style.backgroundPosition = `${pos.current.x}px ${pos.current.y}px`;
+      // trigger repaint so hotspots move (reading pos in render)
+      // could use forceUpdate, but inline style will read fresh pos
     };
+
     const onUp = (e: PointerEvent) => {
       dragging = false;
       c.releasePointerCapture(e.pointerId);
@@ -58,13 +68,19 @@ export default function InfiniteMap({
   }, []);
 
   const tiles = [-1, 0, 1];
+  // Capture current pos locally so renders use same values
+  const { x: offsetX, y: offsetY } = pos.current;
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+
   return (
-    <div className="panContainer" ref={cRef}>
+    <div className="panContainer" ref={containerRef}>
       {tiles.map((ty) =>
         tiles.map((tx) =>
           hotspots.map((hs) => {
-            const left = `calc(${hs.x}px + ${tx} * 100vw)`;
-            const top = `calc(${hs.y}px + ${ty} * 100vh)`;
+            // compute each hotspot’s on-screen position
+            const left = hs.x + offsetX + tx * vw;
+            const top = hs.y + offsetY + ty * vh;
             return (
               <button
                 key={`${hs.id}-${tx}-${ty}`}
