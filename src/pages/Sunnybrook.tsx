@@ -18,7 +18,7 @@ const buildingAreas: BuildingArea[] = [
     top: 10,    // % from top
     width: 20,  // % of container width
     height: 15, // % of container height
-    route: "/sunnybrook/clock",
+    route: "/Sunnybrook/SBClock",
   },
   {
     id: "SBClinic",
@@ -26,7 +26,7 @@ const buildingAreas: BuildingArea[] = [
     top: 12,
     width: 20,
     height: 15,
-    route: "/sunnybrook/clinic",
+    route: "/Sunnybrook/SBClinic",
   },
   {
     id: "SBStall",
@@ -34,7 +34,7 @@ const buildingAreas: BuildingArea[] = [
     top: 55,
     width: 25,
     height: 20,
-    route: "/sunnybrook/stall",
+    route: "/Sunnybrook/SBStall",
   },
   {
     id: "SBMart",
@@ -42,7 +42,7 @@ const buildingAreas: BuildingArea[] = [
     top: 55,
     width: 25,
     height: 20,
-    route: "/sunnybrook/mart",
+    route: "/Sunnybrook/SBMart",
   },
   {
     id: "SBToy",
@@ -50,7 +50,7 @@ const buildingAreas: BuildingArea[] = [
     top: 80,
     width: 25,
     height: 15,
-    route: "/sunnybrook/toy",
+    route: "/Sunnybrook/SBToy",
   },
   {
     id: "SBAdoption",
@@ -58,7 +58,7 @@ const buildingAreas: BuildingArea[] = [
     top: 80,
     width: 25,
     height: 15,
-    route: "/sunnybrook/adoption",
+    route: "/Sunnybrook/SBAdoption",
   },
   {
     id: "SBFurniture",
@@ -66,7 +66,7 @@ const buildingAreas: BuildingArea[] = [
     top: 35,
     width: 25,
     height: 20,
-    route: "/sunnybrook/furniture",
+    route: "/Sunnybrook/SBFurniture",
   },
   {
     id: "SBFountain",
@@ -74,7 +74,7 @@ const buildingAreas: BuildingArea[] = [
     top: 45,
     width: 20,
     height: 15,
-    route: "/sunnybrook/fountain",
+    route: "/Sunnybrook/SBFountain",
   },
 ];
 
