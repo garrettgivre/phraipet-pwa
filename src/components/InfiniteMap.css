@@ -2,6 +2,7 @@
   position: absolute;
   top: 0; bottom: 0; left: 0; right: 0;
 
+  /* ensure the map background moves with the same CSS vars */
   background: url("/maps/world.png") repeat;
   background-size: auto 100vh;
   background-position: var(--bg-x, 0px) var(--bg-y, 0px);
@@ -16,8 +17,7 @@
   position: absolute;
   width: 48px;
   height: 48px;
-  /* transform only for the image inside; wrapper positions itself */
-  pointer-events: auto;  /* only this wrapper captures click */
+  pointer-events: auto;
   background: transparent;
   border: none;
   padding: 0;
@@ -28,6 +28,7 @@
 .hotspot {
   width: 48px;
   height: 48px;
-  transform: translate(-50%, -100%); /* bottom-center align */
-  pointer-events: none; /* allow drags through to container */
+  /* bottom‐center align the icon */
+  transform: translate(-50%, -100%);
+  pointer-events: none;
 }

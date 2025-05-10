@@ -37,6 +37,7 @@ export default function InfiniteMap({
       const dx = e.clientX - lastX, dy = e.clientY - lastY;
       lastX = e.clientX; lastY = e.clientY;
       pos.current.x += dx; pos.current.y += dy;
+      // update both bg and hotspots in CSS
       c.style.setProperty("--bg-x", `${pos.current.x}px`);
       c.style.setProperty("--bg-y", `${pos.current.y}px`);
     };
@@ -57,7 +58,7 @@ export default function InfiniteMap({
     };
   }, []);
 
-  // render each hotspot in a 3×3 grid
+  // render 3×3 tiles of each hotspot
   const tiles = [-1, 0, 1];
   return (
     <div className="panContainer" ref={containerRef}>
@@ -65,7 +66,7 @@ export default function InfiniteMap({
         tiles.map((tx) =>
           hotspots.map((hs) => {
             const left = `calc(${hs.x}px + var(--bg-x, 0px) + ${tx} * 100vw)`;
-            const top = `calc(${hs.y}px + var(--bg-y, 0px) + ${ty} * 100vh)`;
+            const top  = `calc(${hs.y}px + var(--bg-y, 0px) + ${ty} * 100vh)`;
             return (
               <button
                 key={`${hs.id}-${tx}-${ty}`}
