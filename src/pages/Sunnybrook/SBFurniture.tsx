@@ -1,3 +1,4 @@
+// src/pages/Sunnybrook/SBFurniture.tsx
 import { useNavigate } from "react-router-dom";
 import "./BuildingPage.css";
 
@@ -13,13 +14,16 @@ export default function SBFurniture() {
       <div className="building-image-wrapper">
         <img
           src="/locations/sbfurniture-horizontal.png"
-          alt="Furniture Store"
+          alt="Sunnybrook Furniture Store"
           className="building-image"
         />
       </div>
       <div className="building-content">
         <p>
-          Chair
+          Step inside Sunnybrook’s Furniture Store, where each handcrafted piece
+          is imbued with local charm and sturdy craftsmanship. From cozy armchairs
+          to elegant dining sets, you’ll find something to suit every home.
+        </p>  {/* <-- Closing tag added here */}
       </div>
     </div>
   );
