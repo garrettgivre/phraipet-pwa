@@ -1,19 +1,22 @@
 .nav {
-  position: fixed;            /* stay at bottom */
+  position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  height: var(--nav-h);
-
+  height: 56px;               /* restore to 56px */
   display: flex;
-  align-items: center;        /* vertical center */
+  align-items: center;
   justify-content: space-evenly;
   background: #ffffff;
   box-shadow: 0 -2px 4px rgba(0,0,0,0.06);
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   font-weight: 600;
   z-index: 100;
 }
 
-.nav a           { text-decoration:none;color:#444;padding:0 0.5rem; }
-.nav a.active    { color:#0077ff; }
+/* divider above nav if you have one */
+.divider {
+  margin: 0;
+  border: none;
+  border-top: 1px solid #e3e3e3;
+}

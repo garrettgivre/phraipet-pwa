@@ -1,16 +1,11 @@
-/* fills exactly between header & nav */
-.fixedMapLayer {
-  position: fixed;
-  top:    var(--header-h);
-  bottom: var(--nav-h);
-  left: 0;
-  right:0;
-  overflow: hidden;      /* contain horizontal scroller */
+:root {
+  --header-h: 56px;
 }
 
-/* let the inner .mapScroller own horizontal scroll only */
-.fixedMapLayer .mapScroller {
-  height: 100%;
-  overflow-x: auto;
-  overflow-y: hidden;
+.fixedMapLayer {
+  position: absolute;
+  top: var(--header-h);
+  bottom: 56px;
+  left: 0;
+  right: 0;
 }
