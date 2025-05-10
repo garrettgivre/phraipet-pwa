@@ -3,18 +3,18 @@
   bottom: 0;
   left: 0;
   right: 0;
-  height: 56px;               /* restore to 56px */
+  height: 56px; /* Standard mobile navigation height */
   display: flex;
   align-items: center;
   justify-content: space-evenly;
   background: #ffffff;
-  box-shadow: 0 -2px 4px rgba(0,0,0,0.06);
+  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.06);
   font-size: 0.9rem;
   font-weight: 600;
   z-index: 10;
 }
 
-/* divider above nav if you have one */
+/* Divider if needed above the nav bar */
 .divider {
   margin: 0;
   border: none;

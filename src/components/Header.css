@@ -3,9 +3,9 @@
   justify-content: space-between;
   align-items: center;
   padding: 16px;
-  background: #ffd966; /* Neopets-style yellow */
+  background: #ffd966;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  height: 64px; /* Set a fixed height for easy sizing control */
+  height: 64px; /* Fixed header height */
 }
 
 .logo-title {
@@ -23,7 +23,6 @@
   cursor: pointer;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
   transition: transform 0.2s;
-  height: 100%;
 }
 
 .coin-counter:hover {
@@ -31,8 +30,8 @@
 }
 
 .coin-icon {
-  height: 100%; /* Match the vertical height of the header */
-  width: auto;  /* Maintain aspect ratio */
+  height: 32px; /* Matches header vertical space nicely */
+  width: auto;
   margin-right: 8px;
   object-fit: contain;
 }
