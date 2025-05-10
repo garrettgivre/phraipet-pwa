@@ -1,12 +1,13 @@
 :root {
-  --header-h: 56px;
+  --header-h: 56px;    /* your header height */
+  --nav-h:    56px;    /* your nav bar height – match NavBar.css */
 }
 
 .fixedMapLayer {
   position: absolute;
   top: var(--header-h);
-  bottom: 56px;     /* matches your nav bar height */
+  bottom: var(--nav-h);
   left: 0;
   right: 0;
-  overflow: hidden; /* contain the pan container */
+  overflow: hidden;    /* contain the panContainer */
 }
