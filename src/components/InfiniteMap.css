@@ -6,28 +6,23 @@
 
 .panContent {
   position: absolute;
-  width: 1536px;    /* original image width */
-  height: 1024px;   /* original image height */
-  will-change: transform;
+  width: 1536 * 3px;   /* will be auto-sized by children */
+  height: 1024 * 3px;
 }
 
-.mapLayer {
+.mapTile {
   position: absolute;
-  top: 0; left: 0;
   width: 1536px;
   height: 1024px;
-  background: url("/maps/world.png") repeat;
-  background-size: contain;
 }
 
 .hotspotWrapper {
   position: absolute;
   width: 48px; height: 48px;
   transform: translate(-50%, -100%);
-  background: transparent;
+  background: none;
   border: none;
-  padding: 0;
-  margin: 0;
+  padding: 0; margin: 0;
 }
 
 .hotspot {
