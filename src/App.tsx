@@ -86,7 +86,7 @@ const descriptor = (need: Exclude<Need, "spirit">, value: number) =>
 
 function AppShell({ pet }: { pet: Pet | null }) {
   const location = useLocation();
-  const hideHeader = location.pathname === "/explore";
+  const hideHeader = location.pathname === "/";
 
   const needInfo =
     pet === null

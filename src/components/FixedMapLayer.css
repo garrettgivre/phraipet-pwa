@@ -5,7 +5,8 @@
 .fixedMapLayer {
   position: absolute;
   top: var(--header-h);
-  bottom: 56px;
+  bottom: 56px;     /* matches your nav bar height */
   left: 0;
   right: 0;
+  overflow: hidden; /* contain the pan container */
 }

@@ -1,11 +1,17 @@
+/* src/components/InfiniteMap.css */
+
 .panContainer {
   position: absolute;
-  top: var(--header-h);
-  bottom: 56px;               /* match nav height */
+  top: 0;
+  bottom: 0;
   left: 0;
   right: 0;
+
+  /* your repeating map background */
   background: url("/maps/world.png") repeat;
   background-position: 0 0;
+
+  /* disable native scroll and enable pointer‐drag pan */
   touch-action: none;
   cursor: grab;
   overflow: hidden;
