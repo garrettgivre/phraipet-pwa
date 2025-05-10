@@ -1,14 +1,14 @@
+// src/components/InfiniteMap.tsx
 import { useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./InfiniteMap.css";
 
-/** Defines a clickable map hotspot */
 export type Hotspot = {
   id: string;
-  x: number;       // px from left of map background
-  y: number;       // px from top of map background
-  icon: string;    // URL/path to marker icon
-  route: string;   // React Router path to navigate
+  x: number;
+  y: number;
+  icon: string;
+  route: string;
 };
 
 export default function InfiniteMap({
@@ -16,12 +16,12 @@ export default function InfiniteMap({
 }: {
   hotspots?: Hotspot[];
 }) {
-  const containerRef = useRef<HTMLDivElement>(null);
+  const cRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const pos = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
-    const c = containerRef.current!;
+    const c = cRef.current!;
     let dragging = false;
     let lastX = 0, lastY = 0;
 
@@ -37,9 +37,8 @@ export default function InfiniteMap({
       const dx = e.clientX - lastX, dy = e.clientY - lastY;
       lastX = e.clientX; lastY = e.clientY;
       pos.current.x += dx; pos.current.y += dy;
-      // update both bg and hotspots in CSS
-      c.style.setProperty("--bg-x", `${pos.current.x}px`);
-      c.style.setProperty("--bg-y", `${pos.current.y}px`);
+      // directly move the background
+      c.style.backgroundPosition = `${pos.current.x}px ${pos.current.y}px`;
     };
     const onUp = (e: PointerEvent) => {
       dragging = false;
@@ -58,15 +57,14 @@ export default function InfiniteMap({
     };
   }, []);
 
-  // render 3×3 tiles of each hotspot
   const tiles = [-1, 0, 1];
   return (
-    <div className="panContainer" ref={containerRef}>
+    <div className="panContainer" ref={cRef}>
       {tiles.map((ty) =>
         tiles.map((tx) =>
           hotspots.map((hs) => {
-            const left = `calc(${hs.x}px + var(--bg-x, 0px) + ${tx} * 100vw)`;
-            const top  = `calc(${hs.y}px + var(--bg-y, 0px) + ${ty} * 100vh)`;
+            const left = `calc(${hs.x}px + ${tx} * 100vw)`;
+            const top = `calc(${hs.y}px + ${ty} * 100vh)`;
             return (
               <button
                 key={`${hs.id}-${tx}-${ty}`}
