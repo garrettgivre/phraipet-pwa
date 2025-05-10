@@ -4,9 +4,9 @@ import "./MapCanvas.css";
 
 export type Hotspot = {
   id: string;
-  x: number;   // original map pixel X
-  y: number;   // original map pixel Y
-  icon: string;
+  x: number;    // original map pixel X (on 1536×1024)
+  y: number;    // original map pixel Y
+  icon: string; // URL/path to marker icon
   route: string;
 };
 
@@ -16,8 +16,8 @@ export default function MapCanvas({
   hotspots = [],
   onNavigate,
 }: {
-  width: number;
-  height: number;
+  width: number;       // e.g. 1536
+  height: number;      // e.g. 1024
   hotspots?: Hotspot[];
   onNavigate: (route: string) => void;
 }) {
@@ -53,34 +53,39 @@ export default function MapCanvas({
       const { x: ox, y: oy } = offset.current;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // tile count
-      const cols = Math.ceil(canvas.width / width) + 1;
-      const rows = Math.ceil(canvas.height / height) + 1;
+      // tile count (+2 to cover edges)
+      const cols = Math.ceil(canvas.width / width) + 2;
+      const rows = Math.ceil(canvas.height / height) + 2;
 
-      // draw tiled map
-      for (let row = -1; row < rows; row++) {
-        for (let col = -1; col < cols; col++) {
+      // compute rounded modulo offsets
+      const modX = Math.round(ox % width);
+      const modY = Math.round(oy % height);
+
+      // draw tiled map at integer positions
+      for (let row = -1; row < rows - 1; row++) {
+        for (let col = -1; col < cols - 1; col++) {
+          const dx = col * width + modX;
+          const dy = row * height + modY;
           ctx.drawImage(
             mapImg.current,
-            col * width + (ox % width),
-            row * height + (oy % height),
+            Math.round(dx),
+            Math.round(dy),
             width,
             height
           );
         }
       }
 
-      // draw hotspots
+      // draw hotspots wrapped and scaled
       hotspots.forEach((hs) => {
         const icon = icons.current[hs.id];
         const px = hs.x + ox;
         const py = hs.y + oy;
+        // wrap into primary tile
         const sx = ((px % width) + width) % width;
         const sy = ((py % height) + height) % height;
-
         const iw = icon.width * iconScale;
         const ih = icon.height * iconScale;
-        // draw at 10% size, bottom-centered
         ctx.drawImage(icon, sx - iw / 2, sy - ih, iw, ih);
       });
     };
@@ -93,7 +98,8 @@ export default function MapCanvas({
     };
     const onMove = (e: PointerEvent) => {
       if (!dragging) return;
-      const dx = e.clientX - lastX, dy = e.clientY - lastY;
+      const dx = e.clientX - lastX,
+            dy = e.clientY - lastY;
       lastX = e.clientX;
       lastY = e.clientY;
       offset.current.x += dx;
@@ -110,8 +116,12 @@ export default function MapCanvas({
     canvas.addEventListener("pointerup", onUp);
     canvas.addEventListener("pointerleave", onUp);
 
-    // initial draw once map image loads
-    mapImg.current.onload = draw;
+    // initial draw when map loads
+    if (!mapImg.current.complete) {
+      mapImg.current.onload = draw;
+    } else {
+      draw();
+    }
 
     return () => {
       canvas.removeEventListener("pointerdown", onDown);
@@ -122,36 +132,30 @@ export default function MapCanvas({
   }, [hotspots, width, height]);
 
   const handleClick = (e: React.MouseEvent) => {
-  const canvas = canvasRef.current!;
-  const rect = canvas.getBoundingClientRect();
-
-  // raw click coords relative to infinite plane
-  const rawX = e.clientX - rect.left - offset.current.x;
-  const rawY = e.clientY - rect.top  - offset.current.y;
-
-  // map repeats every width/height — wrap click back into [0,width) × [0,height)
-  const wrapX = ((rawX % width) + width) % width;
-  const wrapY = ((rawY % height) + height) % height;
-
-  // scale factor for hit-testing (10% of icon natural size)
-  const iconScale = 0.1;
-
-  hotspots.forEach((hs) => {
-    const icon = icons.current[hs.id];
-    const iw = icon.width * iconScale;
-    const ih = icon.height * iconScale;
-
-    // check if the wrapped click falls over this hotspot
-    if (
-      wrapX >= hs.x - iw / 2 &&
-      wrapX <= hs.x + iw / 2 &&
-      wrapY >= hs.y - ih &&
-      wrapY <= hs.y
-    ) {
-      onNavigate(hs.route);
-    }
-  });
-};
+    const canvas = canvasRef.current!;
+    const rect = canvas.getBoundingClientRect();
+    // raw coords in infinite plane
+    const rawX = e.clientX - rect.left - offset.current.x;
+    const rawY = e.clientY - rect.top  - offset.current.y;
+    // wrap into primary tile
+    const wrapX = ((rawX % width) + width) % width;
+    const wrapY = ((rawY % height) + height) % height;
+    // hit-test at scaled size
+    const iconScale = 0.1;
+    hotspots.forEach((hs) => {
+      const icon = icons.current[hs.id];
+      const iw = icon.width * iconScale;
+      const ih = icon.height * iconScale;
+      if (
+        wrapX >= hs.x - iw / 2 &&
+        wrapX <= hs.x + iw / 2 &&
+        wrapY >= hs.y - ih &&
+        wrapY <= hs.y
+      ) {
+        onNavigate(hs.route);
+      }
+    });
+  };
 
   return (
     <canvas
@@ -160,6 +164,7 @@ export default function MapCanvas({
       height={window.innerHeight}
       style={{ display: "block" }}
       onClick={handleClick}
+      draggable={false}
     />
   );
 }
