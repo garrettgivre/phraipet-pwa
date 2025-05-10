@@ -1,10 +1,17 @@
-/* src/components/InfiniteMap.css */
 .panContainer {
   position: absolute;
-  top: 0; bottom: 0; left: 0; right: 0;
+  top:    0;      /* start at the very top */
+  bottom: 0;      /* end at the very bottom */
+  left:   0;
+  right:  0;
+
+  /* repeating, height‑scaled background */
   background: url("/maps/world.png") repeat;
-  background-size: auto 100%;      /* scale each tile to 100% container height */
+  background-size: auto 100vh;      /* height = viewport height */
   background-position: 0 0;
+
   touch-action: none;
   cursor: grab;
+  overflow: hidden;
+  z-index: 0;       /* sit beneath header/nav */
 }

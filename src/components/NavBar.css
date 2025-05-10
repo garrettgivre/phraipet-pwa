@@ -11,7 +11,7 @@
   box-shadow: 0 -2px 4px rgba(0,0,0,0.06);
   font-size: 0.9rem;
   font-weight: 600;
-  z-index: 100;
+  z-index: 10;
 }
 
 /* divider above nav if you have one */
