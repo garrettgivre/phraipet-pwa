@@ -16,6 +16,15 @@ import PetPage from "./pages/PetPage";
 import Explore from "./pages/Explore";
 import Play from "./pages/Play";
 import Sunnybrook from "./pages/Sunnybrook";
+import SBAdoption from "./pages/Sunnybrook/SBAdoption";
+import SBClinic from "./pages/Sunnybrook/SBClinic";
+import SBClock from "./pages/Sunnybrook/SBClock";
+import SBFountain from "./pages/Sunnybrook/SBFountain.tsx";
+import SBFurniture from "./pages/Sunnybrook/SBFurniture.tsx";
+import SBMart from "./pages/Sunnybrook/SBMart";
+import SBStall from "./pages/Sunnybrook/SBStall";
+import SBToy from "./pages/Sunnybrook/SBToy";
+
 
 import "./App.css";
 
@@ -114,6 +123,15 @@ function AppShell({ pet }: { pet: Pet | null }) {
 
       <Routes>
         <Route path="/sunnybrook" element={<Sunnybrook />} />
+        <Route path="/sunnybrook/Adoption" element={<SBAdoption />} />
+        <Route path="/sunnybrook/SBClinic" element={<SBClinic />} />
+        <Route path="/sunnybrook/SBClock" element={<SBClock />} />
+        <Route path="/sunnybrook/SBFountain" element={<SBFountain />} />
+        <Route path="/sunnybrook/SBFurniture" element={<SBFurniture />} />
+        <Route path="/sunnybrook/SBMart" element={<SBMart />} />
+        <Route path="/sunnybrook/SBStall" element={<SBStall />} />
+        <Route path="/sunnybrook/SBToy" element={<SBToy />} />
+        
         <Route
           path="/"
           element={
