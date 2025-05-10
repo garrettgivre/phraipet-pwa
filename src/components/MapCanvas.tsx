@@ -147,8 +147,8 @@ export default function MapCanvas({
       const iw = icon.width * iconScale;
       const ih = icon.height * iconScale;
       if (
-        wrapX >= hs.x - iw / 2 &&
-        wrapX <= hs.x + iw / 2 &&
+        wrapX >= hs.x - iw / 1 &&
+        wrapX <= hs.x + iw / 1 &&
         wrapY >= hs.y - ih &&
         wrapY <= hs.y
       ) {
