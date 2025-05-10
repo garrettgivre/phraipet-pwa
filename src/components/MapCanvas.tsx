@@ -1,13 +1,13 @@
+// src/components/MapCanvas.tsx
 import React, { useRef, useEffect } from "react";
 import "./MapCanvas.css";
 
-// export Hotspot as a type-only export
 export type Hotspot = {
   id: string;
-  x: number;     // original map pixel X
-  y: number;     // original map pixel Y
-  icon: string;  // URL or path
-  route: string; // route to navigate
+  x: number;   // original map pixel X
+  y: number;   // original map pixel Y
+  icon: string;
+  route: string;
 };
 
 export default function MapCanvas({
@@ -47,9 +47,14 @@ export default function MapCanvas({
     let lastX = 0,
       lastY = 0;
 
+    // scale factor for icons (50% of natural size)
+    const iconScale = 0.5;
+
     const draw = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
       const { x: ox, y: oy } = offset.current;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // tile count
       const cols = Math.ceil(canvas.width / width) + 1;
       const rows = Math.ceil(canvas.height / height) + 1;
 
@@ -73,7 +78,17 @@ export default function MapCanvas({
         const py = hs.y + oy;
         const sx = ((px % width) + width) % width;
         const sy = ((py % height) + height) % height;
-        ctx.drawImage(icon, sx - icon.width / 2, sy - icon.height);
+
+        const iw = icon.width * iconScale;
+        const ih = icon.height * iconScale;
+        // draw at half-size, bottom-centered
+        ctx.drawImage(
+          icon,
+          sx - iw / 2,
+          sy - ih,
+          iw,
+          ih
+        );
       });
     };
 
@@ -103,7 +118,7 @@ export default function MapCanvas({
     canvas.addEventListener("pointerup", onUp);
     canvas.addEventListener("pointerleave", onUp);
 
-    // initial draw
+    // initial draw once images are loaded
     mapImg.current.onload = draw;
 
     return () => {
@@ -121,10 +136,12 @@ export default function MapCanvas({
     const y = e.clientY - rect.top - offset.current.y;
     hotspots.forEach((hs) => {
       const icon = icons.current[hs.id];
+      const iw = icon.width * 0.5;
+      const ih = icon.height * 0.5;
       if (
-        x >= hs.x - icon.width / 2 &&
-        x <= hs.x + icon.width / 2 &&
-        y >= hs.y - icon.height &&
+        x >= hs.x - iw / 2 &&
+        x <= hs.x + iw / 2 &&
+        y >= hs.y - ih &&
         y <= hs.y
       ) {
         onNavigate(hs.route);
