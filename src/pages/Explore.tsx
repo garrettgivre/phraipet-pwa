@@ -1,7 +1,7 @@
-// src/pages/Explore.tsx
 import { useNavigate } from "react-router-dom";
 import MapCanvas from "../components/MapCanvas";
 import type { Hotspot } from "../components/MapCanvas";
+import "./Explore.css"; // Add this for any specific Explore page styling
 
 const hotspots: Hotspot[] = [
   {
@@ -11,17 +11,20 @@ const hotspots: Hotspot[] = [
     icon: "/icons/sunnybrook.png",
     route: "/sunnybrook",
   },
-  // …other hotspots…
+  // Add more hotspots here as needed
 ];
 
 export default function Explore() {
   const navigate = useNavigate();
+
   return (
-    <MapCanvas
-      width={1536}
-      height={1024}
-      hotspots={hotspots}
-      onNavigate={navigate}
-    />
+    <div className="explorePage">
+      <MapCanvas
+        width={1536}
+        height={1024}
+        hotspots={hotspots}
+        onNavigate={navigate}
+      />
+    </div>
   );
 }

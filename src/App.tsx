@@ -22,64 +22,32 @@ import InventoryPage from "./pages/InventoryPage";
 
 import "./App.css";
 
-/* ─── Descriptor Bands ───────────────────────────────────────────────── */
+/* ─── Descriptor Bands ──────────────────────────────────────────────── */
 
 const bands: Record<Exclude<Need, "spirit">, { upTo: number; label: string }[]> = {
   hunger: [
-    { upTo: -21, label: "Dying" },
-    { upTo: -11, label: "Starving" },
-    { upTo: -1, label: "Famished" },
-    { upTo: 14, label: "Very Hungry" },
-    { upTo: 29, label: "Hungry" },
-    { upTo: 44, label: "Not Hungry" },
-    { upTo: 59, label: "Fine" },
-    { upTo: 74, label: "Satiated" },
-    { upTo: 89, label: "Full Up" },
-    { upTo: 104, label: "Very Full" },
-    { upTo: 119, label: "Bloated" },
-    { upTo: 120, label: "Very Bloated" },
+    { upTo: -21, label: "Dying" }, { upTo: -11, label: "Starving" }, { upTo: -1, label: "Famished" },
+    { upTo: 14, label: "Very Hungry" }, { upTo: 29, label: "Hungry" }, { upTo: 44, label: "Not Hungry" },
+    { upTo: 59, label: "Fine" }, { upTo: 74, label: "Satiated" }, { upTo: 89, label: "Full Up" },
+    { upTo: 104, label: "Very Full" }, { upTo: 119, label: "Bloated" }, { upTo: 120, label: "Very Bloated" },
   ],
   happiness: [
-    { upTo: -21, label: "Miserable" },
-    { upTo: -11, label: "Sad" },
-    { upTo: -1, label: "Unhappy" },
-    { upTo: 14, label: "Dull" },
-    { upTo: 29, label: "Okay" },
-    { upTo: 44, label: "Content" },
-    { upTo: 59, label: "Happy" },
-    { upTo: 74, label: "Joyful" },
-    { upTo: 89, label: "Delighted" },
-    { upTo: 104, label: "Ecstatic" },
-    { upTo: 119, label: "Overjoyed" },
-    { upTo: 120, label: "Blissful" },
+    { upTo: -21, label: "Miserable" }, { upTo: -11, label: "Sad" }, { upTo: -1, label: "Unhappy" },
+    { upTo: 14, label: "Dull" }, { upTo: 29, label: "Okay" }, { upTo: 44, label: "Content" },
+    { upTo: 59, label: "Happy" }, { upTo: 74, label: "Joyful" }, { upTo: 89, label: "Delighted" },
+    { upTo: 104, label: "Ecstatic" }, { upTo: 119, label: "Overjoyed" }, { upTo: 120, label: "Blissful" },
   ],
   cleanliness: [
-    { upTo: -21, label: "Filthy" },
-    { upTo: -11, label: "Very Dirty" },
-    { upTo: -1, label: "Dirty" },
-    { upTo: 14, label: "Slightly Dirty" },
-    { upTo: 29, label: "Unkempt" },
-    { upTo: 44, label: "Decent" },
-    { upTo: 59, label: "Clean" },
-    { upTo: 74, label: "Very Clean" },
-    { upTo: 89, label: "Spotless" },
-    { upTo: 104, label: "Gleaming" },
-    { upTo: 119, label: "Pristine" },
-    { upTo: 120, label: "Radiant" },
+    { upTo: -21, label: "Filthy" }, { upTo: -11, label: "Very Dirty" }, { upTo: -1, label: "Dirty" },
+    { upTo: 14, label: "Slightly Dirty" }, { upTo: 29, label: "Unkempt" }, { upTo: 44, label: "Decent" },
+    { upTo: 59, label: "Clean" }, { upTo: 74, label: "Very Clean" }, { upTo: 89, label: "Spotless" },
+    { upTo: 104, label: "Gleaming" }, { upTo: 119, label: "Pristine" }, { upTo: 120, label: "Radiant" },
   ],
   affection: [
-    { upTo: -21, label: "Neglected" },
-    { upTo: -11, label: "Wary" },
-    { upTo: -1, label: "Distant" },
-    { upTo: 14, label: "Curious" },
-    { upTo: 29, label: "Friendly" },
-    { upTo: 44, label: "Affectionate" },
-    { upTo: 59, label: "Bonded" },
-    { upTo: 74, label: "Loyal" },
-    { upTo: 89, label: "Devoted" },
-    { upTo: 104, label: "Inseparable" },
-    { upTo: 119, label: "Loving" },
-    { upTo: 120, label: "Soulmates" },
+    { upTo: -21, label: "Neglected" }, { upTo: -11, label: "Wary" }, { upTo: -1, label: "Distant" },
+    { upTo: 14, label: "Curious" }, { upTo: 29, label: "Friendly" }, { upTo: 44, label: "Affectionate" },
+    { upTo: 59, label: "Bonded" }, { upTo: 74, label: "Loyal" }, { upTo: 89, label: "Devoted" },
+    { upTo: 104, label: "Inseparable" }, { upTo: 119, label: "Loving" }, { upTo: 120, label: "Soulmates" },
   ],
 };
 
@@ -89,38 +57,37 @@ const descriptor = (need: Exclude<Need, "spirit">, value: number) =>
 /* ─── AppShell ──────────────────────────────────────────────────────── */
 
 function AppShell({ pet }: { pet: Pet | null }) {
-  const needInfo: NeedInfo[] = pet === null ? [] : [
-    { need: "hunger", emoji: "🍕", value: pet.hunger, desc: descriptor("hunger", pet.hunger) },
-    { need: "cleanliness", emoji: "🧼", value: pet.cleanliness, desc: descriptor("cleanliness", pet.cleanliness) },
-    { need: "happiness", emoji: "🎲", value: pet.happiness, desc: descriptor("happiness", pet.happiness) },
-    { need: "affection", emoji: "🤗", value: pet.affection, desc: descriptor("affection", pet.affection) },
-    { need: "spirit", emoji: "✨", value: pet.spirit, desc: descriptor("happiness", pet.spirit) },
-  ];
+  const needInfo: NeedInfo[] = pet
+    ? [
+        { need: "hunger", emoji: "🍕", value: pet.hunger, desc: descriptor("hunger", pet.hunger) },
+        { need: "cleanliness", emoji: "🧼", value: pet.cleanliness, desc: descriptor("cleanliness", pet.cleanliness) },
+        { need: "happiness", emoji: "🎲", value: pet.happiness, desc: descriptor("happiness", pet.happiness) },
+        { need: "affection", emoji: "🤗", value: pet.affection, desc: descriptor("affection", pet.affection) },
+        { need: "spirit", emoji: "✨", value: pet.spirit, desc: descriptor("happiness", pet.spirit) },
+      ]
+    : [];
 
   return (
     <>
-      {/* Always show header with pet info */}
       <Header pet={pet} coins={100} />
-
-      <Routes>
-        <Route path="/" element={<PetPage needInfo={needInfo} />} />
-        <Route path="/explore" element={<Explore />} />
-        <Route path="/play" element={<Play />} />
-        <Route path="/inventory" element={<InventoryPage />} />
-
-        {/* Sunnybrook Routes */}
-        <Route path="/sunnybrook" element={<Sunnybrook />} />
-        <Route path="/sunnybrook/Adoption" element={<SBAdoption />} />
-        <Route path="/sunnybrook/SBClinic" element={<SBClinic />} />
-        <Route path="/sunnybrook/SBClock" element={<SBClock />} />
-        <Route path="/sunnybrook/SBFountain" element={<SBFountain />} />
-        <Route path="/sunnybrook/SBFurniture" element={<SBFurniture />} />
-        <Route path="/sunnybrook/SBMart" element={<SBMart />} />
-        <Route path="/sunnybrook/SBStall" element={<SBStall />} />
-        <Route path="/sunnybrook/SBToy" element={<SBToy />} />
-      </Routes>
-
-      {/* Always fixed at the bottom */}
+      <main style={{ paddingTop: "64px", paddingBottom: "72px" }}>
+        <Routes>
+          <Route path="/" element={<PetPage needInfo={needInfo} />} />
+          <Route path="/explore" element={<Explore />} />
+          <Route path="/play" element={<Play />} />
+          <Route path="/inventory" element={<InventoryPage />} />
+          {/* Sunnybrook Routes */}
+          <Route path="/sunnybrook" element={<Sunnybrook />} />
+          <Route path="/sunnybrook/Adoption" element={<SBAdoption />} />
+          <Route path="/sunnybrook/SBClinic" element={<SBClinic />} />
+          <Route path="/sunnybrook/SBClock" element={<SBClock />} />
+          <Route path="/sunnybrook/SBFountain" element={<SBFountain />} />
+          <Route path="/sunnybrook/SBFurniture" element={<SBFurniture />} />
+          <Route path="/sunnybrook/SBMart" element={<SBMart />} />
+          <Route path="/sunnybrook/SBStall" element={<SBStall />} />
+          <Route path="/sunnybrook/SBToy" element={<SBToy />} />
+        </Routes>
+      </main>
       <NavBar />
     </>
   );
@@ -134,8 +101,9 @@ export default function App() {
   useEffect(() => {
     const petRef = ref(db, `pets/sharedPet`);
     return onValue(petRef, (snap) => {
-      if (snap.exists()) setPet(snap.val() as Pet);
-      else {
+      if (snap.exists()) {
+        setPet(snap.val() as Pet);
+      } else {
         const starter: Pet = {
           hunger: 100,
           happiness: 100,

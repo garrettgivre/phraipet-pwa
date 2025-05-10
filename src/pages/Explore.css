@@ -1,0 +1,9 @@
+.explorePage {
+  padding-top: 64px; /* Account for fixed header */
+  padding-bottom: 72px; /* Account for fixed nav bar */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f0f8ff;
+  min-height: calc(100vh - 136px); /* Ensure full view height minus header and nav */
+}
