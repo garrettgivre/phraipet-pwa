@@ -1,20 +1,10 @@
-/* src/App.css */
-
-/* prevent whole-page sideways scroll */
 html, body {
-  overflow-x: hidden;
   margin: 0;
+  padding: 0;
+  overflow: hidden;     /* never show page scrollbars */
 }
 
-/* sizing variables */
 :root {
   --header-h: 56px;
   --nav-h:    48px;
-}
-
-/* main content wrapper — no fixed height here! */
-.pageBody {
-  background: none;
-  margin: 0;
-  padding: 0;        /* the header/nav already pad space */
 }
