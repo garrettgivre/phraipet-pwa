@@ -1,4 +1,3 @@
-// src/components/Header.tsx
 import { useNavigate } from "react-router-dom";
 import type { Pet, Need } from "../types";
 import "./Header.css";
@@ -65,17 +64,21 @@ export default function Header({ pet, coins = 100 }: { pet: Pet | null; coins?: 
   return (
     <>
       <header className="header">
+        {/* Pet Avatar */}
         <div className="avatar">
           <img
             src="/pet/Neutral.png"
             alt="pet"
-            onError={(e) => { e.currentTarget.style.display = "none"; }}
+            onError={(e) => {
+              e.currentTarget.style.display = "none";
+            }}
           />
           <span className="avatarFallback" role="img" aria-label="slime">
             🐣
           </span>
         </div>
 
+        {/* Need Circles */}
         <div className="needList">
           {needs.map((n) => (
             <NeedCircle
@@ -89,6 +92,7 @@ export default function Header({ pet, coins = 100 }: { pet: Pet | null; coins?: 
           ))}
         </div>
 
+        {/* Coin Counter */}
         <div className="coinCounter" onClick={() => navigate("/inventory")}>
           <img src="/assets/icons/coin.png" alt="Coins" className="coinIcon" />
           <span>{coins}</span>

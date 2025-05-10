@@ -30,6 +30,7 @@ type InventoryItem = {
 const sampleInventory: InventoryItem[] = [
   { id: "floor1", name: "Wood Floor", type: "floor", src: "/assets/floors/wood.png" },
   { id: "wall1", name: "Starry Wall", type: "wall", src: "/assets/walls/starry.png" },
+  { id: "ceiling1", name: "Sky Ceiling", type: "ceiling", src: "/assets/ceilings/sky.png" },
   { id: "decor1", name: "Plant", type: "backDecor", src: "/assets/decorations/plant.png" },
   { id: "overlay1", name: "Sparkles", type: "overlay", src: "/assets/overlays/sparkles.png" }
 ];
@@ -57,12 +58,14 @@ export default function PetPage({ needInfo }: { needInfo: NeedInfo[] }) {
 
   return (
     <div className="petPageContainer">
+      {/* Render the customizable room */}
       <PetRoom roomLayers={roomLayers} />
 
+      {/* Pet Status Section */}
       <div className="petSection">
         <img
           src="/pet/Neutral.png"
-          alt="pet large"
+          alt="Your Pet"
           className="petHero"
         />
 
@@ -83,6 +86,7 @@ export default function PetPage({ needInfo }: { needInfo: NeedInfo[] }) {
         </section>
       </div>
 
+      {/* Inventory Panel */}
       <Inventory items={sampleInventory} onEquip={handleEquip} />
     </div>
   );
