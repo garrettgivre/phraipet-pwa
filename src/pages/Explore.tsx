@@ -6,7 +6,7 @@ import type { Hotspot } from "../components/MapCanvas";
 const hotspots: Hotspot[] = [
   {
     id: "sunnybrook",
-    x: 275,
+    x: 175,
     y: 500,
     icon: "/icons/sunnybrook.png",
     route: "/sunnybrook",
