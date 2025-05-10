@@ -7,7 +7,7 @@ import {
 } from "react-router-dom";
 import { ref, onValue, set } from "firebase/database";
 import { db } from "./firebase";
-import type { Pet, Need } from "./types";
+import type { Pet, Need, NeedInfo } from "./types";
 
 import GlobalHeader from "./components/GlobalHeader";
 import Header from "./components/Header";
@@ -27,7 +27,7 @@ import SBToy from "./pages/Sunnybrook/SBToy";
 
 import "./App.css";
 
-/* ─── Descriptor Bands ───────────────────────────────────────────────── */
+/* ─── descriptor bands ───────────────────────────────────────────────── */
 
 const bands: Record<Exclude<Need, "spirit">, { upTo: number; label: string }[]> = {
   hunger: [
@@ -91,36 +91,25 @@ const bands: Record<Exclude<Need, "spirit">, { upTo: number; label: string }[]> 
 const descriptor = (need: Exclude<Need, "spirit">, value: number) =>
   bands[need].find((b) => value <= b.upTo)?.label ?? "";
 
-/* ─── Main Routing Shell ────────────────────────────────────────────── */
+/* ─── AppShell ──────────────────────────────────────────────────────── */
 
 function AppShell({ pet }: { pet: Pet | null }) {
   const location = useLocation();
   const hideHeader = location.pathname === "/";
 
- const needInfo =
-  pet === null
-    ? []
-    : ([
-        { need: "hunger", emoji: "🍕", value: pet.hunger },
-        { need: "cleanliness", emoji: "🧼", value: pet.cleanliness },
-        { need: "happiness", emoji: "🎲", value: pet.happiness },
-        { need: "affection", emoji: "🤗", value: pet.affection },
-        { need: "spirit", emoji: "✨", value: pet.spirit },
-      ] as const).map((n) => ({
-        need: n.need,
-        emoji: n.emoji,
-        value: n.value,
-        desc:
-          n.need === "spirit"
-            ? descriptor("happiness", n.value)
-            : descriptor(n.need, n.value),
-      }));
+  const needInfo: NeedInfo[] = pet === null ? [] : [
+    { need: "hunger", emoji: "🍕", value: pet.hunger, desc: descriptor("hunger", pet.hunger) },
+    { need: "cleanliness", emoji: "🧼", value: pet.cleanliness, desc: descriptor("cleanliness", pet.cleanliness) },
+    { need: "happiness", emoji: "🎲", value: pet.happiness, desc: descriptor("happiness", pet.happiness) },
+    { need: "affection", emoji: "🤗", value: pet.affection, desc: descriptor("affection", pet.affection) },
+    { need: "spirit", emoji: "✨", value: pet.spirit, desc: descriptor("happiness", pet.spirit) }, // Assuming spirit uses happiness descriptor
+  ];
 
   return (
     <>
       <GlobalHeader />
       {!hideHeader && <Header pet={pet} />}
-      
+
       <Routes>
         <Route path="/sunnybrook" element={<Sunnybrook />} />
         <Route path="/sunnybrook/Adoption" element={<SBAdoption />} />
@@ -132,7 +121,7 @@ function AppShell({ pet }: { pet: Pet | null }) {
         <Route path="/sunnybrook/SBStall" element={<SBStall />} />
         <Route path="/sunnybrook/SBToy" element={<SBToy />} />
 
-        <Route path="/" element={<PetPage />} />
+        <Route path="/" element={<PetPage needInfo={needInfo} />} />
         <Route path="/explore" element={<Explore />} />
         <Route path="/play" element={<Play />} />
       </Routes>
@@ -141,6 +130,8 @@ function AppShell({ pet }: { pet: Pet | null }) {
     </>
   );
 }
+
+/* ─── Main App ──────────────────────────────────────────────────────── */
 
 export default function App() {
   const [pet, setPet] = useState<Pet | null>(null);
