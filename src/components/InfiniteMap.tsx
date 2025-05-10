@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./InfiniteMap.css";
 
@@ -17,33 +17,28 @@ export default function InfiniteMap({
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
-  const pos = useRef({ x: 0, y: 0 });
-  const [_dragTick, setDragTick] = useState(0);
+
+  // State holds the current background offset
+  const [{ bgX, bgY }, setBg] = useState({ bgX: 0, bgY: 0 });
 
   useEffect(() => {
     const c = containerRef.current!;
     let dragging = false;
-    let lastX = 0,
-      lastY = 0;
+    let lastX = 0, lastY = 0;
 
     const onDown = (e: PointerEvent) => {
       e.preventDefault();
       dragging = true;
-      lastX = e.clientX;
-      lastY = e.clientY;
+      lastX = e.clientX; lastY = e.clientY;
       c.setPointerCapture(e.pointerId);
     };
     const onMove = (e: PointerEvent) => {
       if (!dragging) return;
       e.preventDefault();
-      const dx = e.clientX - lastX,
-        dy = e.clientY - lastY;
-      lastX = e.clientX;
-      lastY = e.clientY;
-      pos.current.x += dx;
-      pos.current.y += dy;
-      c.style.backgroundPosition = `${pos.current.x}px ${pos.current.y}px`;
-      setDragTick((t) => t + 1);
+      const dx = e.clientX - lastX;
+      const dy = e.clientY - lastY;
+      lastX = e.clientX; lastY = e.clientY;
+      setBg(({ bgX, bgY }) => ({ bgX: bgX + dx, bgY: bgY + dy }));
     };
     const onUp = (e: PointerEvent) => {
       dragging = false;
@@ -62,19 +57,24 @@ export default function InfiniteMap({
     };
   }, []);
 
-  // Incorporate dragTick as the key to force full re-render
-  const { x: offsetX, y: offsetY } = pos.current;
-  const vw = window.innerWidth,
-    vh = window.innerHeight;
+  // On each render, apply the bgX/bgY to the container style
+  useEffect(() => {
+    const c = containerRef.current;
+    if (c) {
+      c.style.backgroundPosition = `${bgX}px ${bgY}px`;
+    }
+  }, [bgX, bgY]);
+
+  const vw = window.innerWidth, vh = window.innerHeight;
   const tiles = [-1, 0, 1];
 
   return (
-    <div className="panContainer" ref={containerRef} key={_dragTick}>
+    <div className="panContainer" ref={containerRef}>
       {tiles.map((ty) =>
         tiles.map((tx) =>
           hotspots.map((hs) => {
-            const left = hs.x + offsetX + tx * vw;
-            const top = hs.y + offsetY + ty * vh;
+            const left = hs.x + bgX + tx * vw;
+            const top = hs.y + bgY + ty * vh;
             return (
               <button
                 key={`${hs.id}-${tx}-${ty}`}
