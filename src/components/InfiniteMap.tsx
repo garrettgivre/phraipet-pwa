@@ -1,43 +1,44 @@
-// src/components/InfiniteMap.tsx
 import { useRef, useEffect } from "react";
 import "./InfiniteMap.css";
 
 export default function InfiniteMap() {
-  const containerRef = useRef<HTMLDivElement>(null);
+  const cRef = useRef<HTMLDivElement>(null);
+  const pos = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
-    const c = containerRef.current;
+    const c = cRef.current;
     if (!c) return;
+    let dragging = false;
+    let lastX=0, lastY=0;
 
-    c.style.overflow = "hidden";
-
-    const onDown = (evt: PointerEvent) => {
-      evt.preventDefault();
-      c.setPointerCapture(evt.pointerId);
-      c.style.cursor = "grabbing";
+    const down = (e: PointerEvent) => {
+      dragging = true;
+      lastX = e.clientX; lastY = e.clientY;
+      c.setPointerCapture(e.pointerId);
     };
-    const onMove = (evt: PointerEvent) => {
-      evt.preventDefault();
-      // your drag‑to‑pan logic here…
+    const move = (e: PointerEvent) => {
+      if (!dragging) return;
+      const dx = e.clientX - lastX, dy = e.clientY - lastY;
+      lastX = e.clientX; lastY=e.clientY;
+      pos.current.x += dx; pos.current.y += dy;
+      c.style.backgroundPosition = `${pos.current.x}px ${pos.current.y}px`;
     };
-    const onUp = (evt: PointerEvent) => {
-      evt.preventDefault();
-      c.releasePointerCapture(evt.pointerId);
-      c.style.cursor = "grab";
+    const up = (e: PointerEvent) => {
+      dragging = false;
+      c.releasePointerCapture(e.pointerId);
     };
 
-    c.addEventListener("pointerdown", onDown);
-    c.addEventListener("pointermove", onMove);
-    c.addEventListener("pointerup", onUp);
-    c.addEventListener("pointerleave", onUp);
-
+    c.addEventListener("pointerdown", down);
+    c.addEventListener("pointermove", move);
+    c.addEventListener("pointerup", up);
+    c.addEventListener("pointerleave", up);
     return () => {
-      c.removeEventListener("pointerdown", onDown);
-      c.removeEventListener("pointermove", onMove);
-      c.removeEventListener("pointerup", onUp);
-      c.removeEventListener("pointerleave", onUp);
+      c.removeEventListener("pointerdown", down);
+      c.removeEventListener("pointermove", move);
+      c.removeEventListener("pointerup", up);
+      c.removeEventListener("pointerleave", up);
     };
   }, []);
 
-  return <div className="panContainer" ref={containerRef} />;
+  return <div className="panContainer" ref={cRef} />;
 }

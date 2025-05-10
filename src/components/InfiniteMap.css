@@ -1,16 +1,9 @@
+/* src/components/InfiniteMap.css */
 .panContainer {
   position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  right: 0;
-
-  /* repeating world map background */
+  top: 0; bottom: 0; left: 0; right: 0;
   background: url("/maps/world.png") repeat;
   background-position: 0 0;
-
-  /* pointer‐drag only */
   touch-action: none;
   cursor: grab;
-  overflow: hidden;
 }
