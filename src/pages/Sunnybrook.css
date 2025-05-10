@@ -1,0 +1,18 @@
+/* src/pages/Sunnybrook.css */
+
+.sunnybrook-container {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  cursor: pointer; /* indicate tappable to go back */
+}
+
+.sunnybrook-image {
+  max-height: 100vh;
+  width: auto;
+  display: block;
+}
