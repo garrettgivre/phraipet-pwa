@@ -15,6 +15,7 @@ import NavBar from "./components/NavBar";
 import PetPage from "./pages/PetPage";
 import Explore from "./pages/Explore";
 import Play from "./pages/Play";
+import Sunnybrook from "./pages/Sunnybrook";
 
 import "./App.css";
 
@@ -112,6 +113,7 @@ function AppShell({ pet }: { pet: Pet | null }) {
       {!hideHeader && <Header pet={pet} />}
 
       <Routes>
+        <Route path="/sunnybrook" element={<Sunnybrook />} />
         <Route
           path="/"
           element={
