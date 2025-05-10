@@ -1,4 +1,3 @@
-// src/App.tsx
 import { useEffect, useState } from "react";
 import {
   BrowserRouter,
@@ -10,6 +9,7 @@ import { ref, onValue, set } from "firebase/database";
 import { db } from "./firebase";
 import type { Pet, Need } from "./types";
 
+import GlobalHeader from "./components/GlobalHeader";
 import Header from "./components/Header";
 import NavBar from "./components/NavBar";
 import PetPage from "./pages/PetPage";
@@ -97,40 +97,30 @@ function AppShell({ pet }: { pet: Pet | null }) {
   const location = useLocation();
   const hideHeader = location.pathname === "/";
 
-  const needInfo =
-    pet === null
-      ? []
-      : ([
-          { need: "hunger", emoji: "🍕", value: pet.hunger },
-          { need: "cleanliness", emoji: "🧼", value: pet.cleanliness },
-          { need: "happiness", emoji: "🎲", value: pet.happiness },
-          { need: "affection", emoji: "🤗", value: pet.affection },
-          { need: "spirit", emoji: "✨", value: pet.spirit },
-        ] as const).map((n) => ({
-          need: n.need,
-          emoji: n.emoji,
-          value: n.value,
-          desc:
-            n.need === "spirit"
-              ? descriptor("happiness", n.value)
-              : descriptor(n.need, n.value),
-        }));
+ const needInfo =
+  pet === null
+    ? []
+    : ([
+        { need: "hunger", emoji: "🍕", value: pet.hunger },
+        { need: "cleanliness", emoji: "🧼", value: pet.cleanliness },
+        { need: "happiness", emoji: "🎲", value: pet.happiness },
+        { need: "affection", emoji: "🤗", value: pet.affection },
+        { need: "spirit", emoji: "✨", value: pet.spirit },
+      ] as const).map((n) => ({
+        need: n.need,
+        emoji: n.emoji,
+        value: n.value,
+        desc:
+          n.need === "spirit"
+            ? descriptor("happiness", n.value)
+            : descriptor(n.need, n.value),
+      }));
 
   return (
     <>
-      {/* Global Logo */}
-      <img
-        src="/logo.png"
-        alt="Phraipets Logo"
-        style={{
-          height: "100px",
-          display: "block",
-          margin: "0 auto",
-        }}
-      />
-
+      <GlobalHeader />
       {!hideHeader && <Header pet={pet} />}
-
+      
       <Routes>
         <Route path="/sunnybrook" element={<Sunnybrook />} />
         <Route path="/sunnybrook/Adoption" element={<SBAdoption />} />
@@ -142,23 +132,9 @@ function AppShell({ pet }: { pet: Pet | null }) {
         <Route path="/sunnybrook/SBStall" element={<SBStall />} />
         <Route path="/sunnybrook/SBToy" element={<SBToy />} />
 
-        <Route
-          path="/"
-          element={
-            <div className="pageBody">
-              <PetPage needInfo={needInfo} />
-            </div>
-          }
-        />
+        <Route path="/" element={<PetPage />} />
         <Route path="/explore" element={<Explore />} />
-        <Route
-          path="/play"
-          element={
-            <div className="pageBody">
-              <Play />
-            </div>
-          }
-        />
+        <Route path="/play" element={<Play />} />
       </Routes>
 
       <NavBar />
