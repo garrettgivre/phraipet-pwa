@@ -1,81 +1,19 @@
-/* src/components/Header.css */
-
-.header {
-  margin-top: 0px;
-  position: fixed;
-  top: 0; left: 0; right: 0;
-  height: 56px;
+.app-header {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  justify-content: space-between; /* Added for proper coin counter placement */
-  padding: 0 1rem;
-  background: #fff;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.06);
-  z-index: 10;
+  padding: 16px;
+  background: #ffd966; /* Neopets-style yellow */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  height: 64px; /* Set a fixed height for easy sizing control */
 }
 
-/* Avatar Section */
-.avatar {
-  width: 40px;
-  height: 40px;
-  flex: 0 0 40px;
-  border-radius: 50%;
-  overflow: hidden;
-  background: #f2f2f2;
-}
-.avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-.avatarFallback {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.5rem;
+.logo-title {
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
 }
 
-/* Horizontal Need List */
-.needList {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin-left: 1rem;
-  flex: 1;
-}
-
-/* Need Circles */
-.needCircle {
-  position: relative;
-  width: 40px;
-  height: 40px;
-}
-.needCircle svg {
-  transform: rotate(-90deg);
-  width: 100%;
-  height: 100%;
-}
-.needCircle .needEmoji {
-  position: absolute;
-  top: 0; left: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.2rem;
-}
-
-/* Divider Line */
-.divider {
-  margin: 0;
-  border: none;
-  border-top: 1px solid #e3e3e3;
-}
-
-/* Coin Counter (New Section) */
 .coin-counter {
   display: flex;
   align-items: center;
@@ -85,6 +23,7 @@
   cursor: pointer;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
   transition: transform 0.2s;
+  height: 100%;
 }
 
 .coin-counter:hover {
@@ -92,7 +31,8 @@
 }
 
 .coin-icon {
-  width: 24px;
-  height: 24px;
+  height: 100%; /* Match the vertical height of the header */
+  width: auto;  /* Maintain aspect ratio */
   margin-right: 8px;
+  object-fit: contain;
 }
