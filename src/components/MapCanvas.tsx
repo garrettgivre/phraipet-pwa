@@ -44,11 +44,10 @@ export default function MapCanvas({
     const canvas = canvasRef.current!;
     const ctx = canvas.getContext("2d")!;
     let dragging = false;
-    let lastX = 0,
-      lastY = 0;
+    let lastX = 0, lastY = 0;
 
-    // scale factor for icons (50% of natural size)
-    const iconScale = 0.5;
+    // scale hotspots to 10%
+    const iconScale = 0.1;
 
     const draw = () => {
       const { x: ox, y: oy } = offset.current;
@@ -81,14 +80,8 @@ export default function MapCanvas({
 
         const iw = icon.width * iconScale;
         const ih = icon.height * iconScale;
-        // draw at half-size, bottom-centered
-        ctx.drawImage(
-          icon,
-          sx - iw / 2,
-          sy - ih,
-          iw,
-          ih
-        );
+        // draw at 10% size, bottom-centered
+        ctx.drawImage(icon, sx - iw / 2, sy - ih, iw, ih);
       });
     };
 
@@ -100,8 +93,7 @@ export default function MapCanvas({
     };
     const onMove = (e: PointerEvent) => {
       if (!dragging) return;
-      const dx = e.clientX - lastX,
-        dy = e.clientY - lastY;
+      const dx = e.clientX - lastX, dy = e.clientY - lastY;
       lastX = e.clientX;
       lastY = e.clientY;
       offset.current.x += dx;
@@ -118,7 +110,7 @@ export default function MapCanvas({
     canvas.addEventListener("pointerup", onUp);
     canvas.addEventListener("pointerleave", onUp);
 
-    // initial draw once images are loaded
+    // initial draw once map image loads
     mapImg.current.onload = draw;
 
     return () => {
@@ -134,10 +126,12 @@ export default function MapCanvas({
     const rect = canvas.getBoundingClientRect();
     const x = e.clientX - rect.left - offset.current.x;
     const y = e.clientY - rect.top - offset.current.y;
+    // hit‐test at 10% size
+    const iconScale = 0.1;
     hotspots.forEach((hs) => {
       const icon = icons.current[hs.id];
-      const iw = icon.width * 0.5;
-      const ih = icon.height * 0.5;
+      const iw = icon.width * iconScale;
+      const ih = icon.height * iconScale;
       if (
         x >= hs.x - iw / 2 &&
         x <= hs.x + iw / 2 &&
