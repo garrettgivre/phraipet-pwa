@@ -11,11 +11,11 @@ export default function InfiniteMap() {
     const c = containerRef.current;
     if (!c) return;
 
-    // Ensure no native scrollbars
-    c.style.overflow = "hidden";
+    // Remove centering—start at top-left (0,0)
+    // c.style.backgroundPosition = "0px 0px";
 
     const onDown = (e: PointerEvent) => {
-      e.preventDefault();               // <-- stop any default touch/scroll
+      e.preventDefault();
       dragging.current = true;
       last.current = { x: e.clientX, y: e.clientY };
       c.setPointerCapture(e.pointerId);
@@ -24,7 +24,7 @@ export default function InfiniteMap() {
 
     const onMove = (e: PointerEvent) => {
       if (!dragging.current) return;
-      e.preventDefault();               // <-- suppress default drag scroll
+      e.preventDefault();
       const dx = e.clientX - last.current.x;
       const dy = e.clientY - last.current.y;
       last.current = { x: e.clientX, y: e.clientY };
@@ -34,7 +34,7 @@ export default function InfiniteMap() {
     };
 
     const onUp = (e: PointerEvent) => {
-      e.preventDefault();               // <-- also prevent any release inertia
+      e.preventDefault();
       dragging.current = false;
       c.releasePointerCapture(e.pointerId);
       c.style.cursor = "grab";
