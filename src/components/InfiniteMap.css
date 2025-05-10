@@ -1,22 +1,29 @@
 /* src/components/InfiniteMap.css */
+
 .panContainer {
   position: absolute;
-  top: 0; bottom: 0; left: 0; right: 0;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+
+  /* repeating world map background, height‑scaled */
   background: url("/maps/world.png") repeat;
   background-size: auto 100vh;
-  background-position: 0 0;
+  background-position: var(--bg-x, 0px) var(--bg-y, 0px);
+
   touch-action: none;
   cursor: grab;
   overflow: hidden;
   z-index: 0;
 }
 
-/* hotspot icon styling */
 .hotspot {
   position: absolute;
-  width: 32px;
-  height: 32px;
-  transform: translate(-50%, -100%); /* center bottom of icon at point */
+  width: 48px;
+  height: 48px;
+  /* position the icon so its bottom‑center aligns at the point */
+  transform: translate(-50%, -100%);
   cursor: pointer;
-  z-index: 2;                         /* above the map */
+  z-index: 2;
 }
