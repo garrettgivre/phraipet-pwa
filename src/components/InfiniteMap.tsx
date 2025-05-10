@@ -1,4 +1,3 @@
-// src/components/InfiniteMap.tsx
 import { useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./InfiniteMap.css";
@@ -6,10 +5,10 @@ import "./InfiniteMap.css";
 /** Defines a clickable map hotspot */
 export type Hotspot = {
   id: string;
-  x: number;       // px from left of the map background
-  y: number;       // px from top of the map background
-  icon: string;    // URL or path to your marker icon
-  route: string;   // React Router path to navigate to when clicked
+  x: number;       // px from left of map background
+  y: number;       // px from top of map background
+  icon: string;    // URL/path to marker icon
+  route: string;   // React Router path to navigate
 };
 
 export default function InfiniteMap({
@@ -45,7 +44,6 @@ export default function InfiniteMap({
       lastY = e.clientY;
       pos.current.x += dx;
       pos.current.y += dy;
-      // Update CSS variables for background & hotspot positioning
       c.style.setProperty("--bg-x", `${pos.current.x}px`);
       c.style.setProperty("--bg-y", `${pos.current.y}px`);
     };
@@ -59,7 +57,6 @@ export default function InfiniteMap({
     c.addEventListener("pointermove", onMove);
     c.addEventListener("pointerup", onUp);
     c.addEventListener("pointerleave", onUp);
-
     return () => {
       c.removeEventListener("pointerdown", onDown);
       c.removeEventListener("pointermove", onMove);
@@ -70,18 +67,20 @@ export default function InfiniteMap({
 
   return (
     <div className="panContainer" ref={containerRef}>
-      {hotspots.map((hs) => (
-        <img
-          key={hs.id}
-          src={hs.icon}
-          className="hotspot"
-          style={{
-            transform: `translate(calc(${hs.x}px + var(--bg-x, 0px)), calc(${hs.y}px + var(--bg-y, 0px)))`,
-          }}
-          onClick={() => navigate(hs.route)}
-          alt=""
-        />
-      ))}
+      {hotspots.map((hs) => {
+        const leftCalc = `calc(${hs.x}px + var(--bg-x, 0px))`;
+        const topCalc = `calc(${hs.y}px + var(--bg-y, 0px))`;
+        return (
+          <button
+            key={hs.id}
+            className="hotspotWrapper"
+            style={{ left: leftCalc, top: topCalc }}
+            onClick={() => navigate(hs.route)}
+          >
+            <img src={hs.icon} className="hotspot" alt="" />
+          </button>
+        );
+      })}
     </div>
   );
 }
