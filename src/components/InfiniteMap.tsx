@@ -1,26 +1,23 @@
-import { useRef, useState, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./InfiniteMap.css";
 
 export type Hotspot = {
   id: string;
-  x: number;
-  y: number;
+  x: number;  // original pixel X on 1536×1024
+  y: number;  // original pixel Y
   icon: string;
   route: string;
 };
 
-export default function InfiniteMap({
-  hotspots = [],
-}: {
-  hotspots?: Hotspot[];
-}) {
-  const contentRef = useRef<HTMLDivElement>(null);
+export default function InfiniteMap({ hotspots = [] }: { hotspots?: Hotspot[] }) {
+  const refContainer = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
-  const [offset, setOffset] = useState({ x: 0, y: 0 });
+
+  const [{ bgX, bgY }, setBg] = useState({ bgX: 0, bgY: 0 });
 
   useEffect(() => {
-    const c = contentRef.current!;
+    const c = refContainer.current!;
     let dragging = false;
     let lastX = 0, lastY = 0;
 
@@ -35,11 +32,10 @@ export default function InfiniteMap({
       e.preventDefault();
       const dx = e.clientX - lastX, dy = e.clientY - lastY;
       lastX = e.clientX; lastY = e.clientY;
-      setOffset(({ x, y }) => ({ x: x + dx, y: y + dy }));
+      setBg(({ bgX, bgY }) => ({ bgX: bgX + dx, bgY: bgY + dy }));
     };
-    const onUp = (e: PointerEvent) => {
+    const onUp = () => {
       dragging = false;
-      c.releasePointerCapture(e.pointerId);
     };
 
     c.addEventListener("pointerdown", onDown);
@@ -54,47 +50,35 @@ export default function InfiniteMap({
     };
   }, []);
 
+  // update CSS vars
+  useEffect(() => {
+    const c = refContainer.current;
+    if (c) {
+      c.style.setProperty("--bg-x", `${bgX}px`);
+      c.style.setProperty("--bg-y", `${bgY}px`);
+    }
+  }, [bgX, bgY]);
+
   // compute scale
   const vh = window.innerHeight;
   const scale = vh / 1024;
-  const tileW = 1536, tileH = 1024;
-  const tiles = [-1, 0, 1];
 
   return (
-    <div className="panContainer">
-      <div
-        className="panContent"
-        ref={contentRef}
-        style={{
-          transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`,
-          transformOrigin: "top left",
-        }}
-      >
-        {/* 3×3 tiled images */}
-        {tiles.map((ty) =>
-          tiles.map((tx) => (
-            <img
-              key={`tile-${tx}-${ty}`}
-              src="/maps/world.png"
-              className="mapTile"
-              style={{ left: tx * tileW, top: ty * tileH }}
-              draggable={false}
-            />
-          ))
-        )}
-
-        {/* hotspots in original coordinates */}
-        {hotspots.map((hs) => (
-          <button
+    <div className="panContainer" ref={refContainer}>
+      {hotspots.map((hs) => {
+        const left = hs.x * scale + bgX;
+        const top  = hs.y * scale + bgY;
+        return (
+          <img
             key={hs.id}
-            className="hotspotWrapper"
-            style={{ left: hs.x, top: hs.y }}
+            src={hs.icon}
+            className="hotspot"
+            style={{ left, top }}
             onClick={() => navigate(hs.route)}
-          >
-            <img src={hs.icon} className="hotspot" alt="" />
-          </button>
-        ))}
-      </div>
+            alt=""
+          />
+        );
+      })}
     </div>
   );
 }

@@ -1,31 +1,22 @@
 .panContainer {
   position: absolute;
   top: 0; bottom: 0; left: 0; right: 0;
+  
+  /* repeat the map seamlessly */
+  background: url("/maps/world.png") repeat;
+  background-size: auto 100vh;  /* height fills container */
+  background-position: var(--bg-x, 0px) var(--bg-y, 0px);
+
+  touch-action: none;
+  cursor: grab;
   overflow: hidden;
 }
 
-.panContent {
-  position: absolute;
-  width: 1536 * 3px;   /* will be auto-sized by children */
-  height: 1024 * 3px;
-}
-
-.mapTile {
-  position: absolute;
-  width: 1536px;
-  height: 1024px;
-}
-
-.hotspotWrapper {
-  position: absolute;
-  width: 48px; height: 48px;
-  transform: translate(-50%, -100%);
-  background: none;
-  border: none;
-  padding: 0; margin: 0;
-}
-
 .hotspot {
-  width: 48px; height: 48px;
-  pointer-events: none;
+  position: absolute;
+  width: 48px;
+  height: 48px;
+  transform: translate(-50%, -100%);
+  pointer-events: auto;
+  cursor: pointer;
 }
