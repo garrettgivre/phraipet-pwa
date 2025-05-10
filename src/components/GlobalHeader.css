@@ -1,0 +1,16 @@
+.global-header {
+  width: 100%;
+  background-color: #fff; /* Customize this if needed */
+  text-align: center;
+  padding: 10px 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.global-logo {
+  height: 100px;        /* Exact height */
+  max-height: 100px;    /* Prevents it from scaling larger */
+  object-fit: contain;  /* Keeps proportions */
+}
