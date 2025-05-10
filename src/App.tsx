@@ -23,8 +23,10 @@ import SBFurniture from "./pages/Sunnybrook/SBFurniture";
 import SBMart from "./pages/Sunnybrook/SBMart";
 import SBStall from "./pages/Sunnybrook/SBStall";
 import SBToy from "./pages/Sunnybrook/SBToy";
+import InventoryPage from "./pages/InventoryPage";
 
 import "./App.css";
+
 
 /* ─── descriptor bands ───────────────────────────────────────────────── */
 
