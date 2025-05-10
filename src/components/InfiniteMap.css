@@ -1,34 +1,36 @@
 .panContainer {
   position: absolute;
   top: 0; bottom: 0; left: 0; right: 0;
-
-  /* ensure the map background moves with the same CSS vars */
-  background: url("/maps/world.png") repeat;
-  background-size: auto 100vh;
-  background-position: var(--bg-x, 0px) var(--bg-y, 0px);
-
-  touch-action: none;
-  cursor: grab;
   overflow: hidden;
-  z-index: 0;
+}
+
+.panContent {
+  position: absolute;
+  width: 1536px;    /* original image width */
+  height: 1024px;   /* original image height */
+  will-change: transform;
+}
+
+.mapLayer {
+  position: absolute;
+  top: 0; left: 0;
+  width: 1536px;
+  height: 1024px;
+  background: url("/maps/world.png") repeat;
+  background-size: contain;
 }
 
 .hotspotWrapper {
   position: absolute;
-  width: 48px;
-  height: 48px;
-  pointer-events: auto;
+  width: 48px; height: 48px;
+  transform: translate(-50%, -100%);
   background: transparent;
   border: none;
   padding: 0;
   margin: 0;
-  z-index: 3;
 }
 
 .hotspot {
-  width: 48px;
-  height: 48px;
-  /* bottom‐center align the icon */
-  transform: translate(-50%, -100%);
+  width: 48px; height: 48px;
   pointer-events: none;
 }

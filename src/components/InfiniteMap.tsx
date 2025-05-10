@@ -4,7 +4,7 @@ import "./InfiniteMap.css";
 
 export type Hotspot = {
   id: string;
-  x: number;    // pixel on 1536×1024
+  x: number;
   y: number;
   icon: string;
   route: string;
@@ -16,11 +16,14 @@ export default function InfiniteMap({
   hotspots?: Hotspot[];
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
-  const [{ bgX, bgY }, setBg] = useState({ bgX: 0, bgY: 0 });
+
+  // track translation in px
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
-    const c = containerRef.current!;
+    const c = contentRef.current!;
     let dragging = false;
     let lastX = 0, lastY = 0;
 
@@ -35,7 +38,7 @@ export default function InfiniteMap({
       e.preventDefault();
       const dx = e.clientX - lastX, dy = e.clientY - lastY;
       lastX = e.clientX; lastY = e.clientY;
-      setBg(({ bgX, bgY }) => ({ bgX: bgX + dx, bgY: bgY + dy }));
+      setOffset(({ x, y }) => ({ x: x + dx, y: y + dy }));
     };
     const up = (e: PointerEvent) => {
       dragging = false;
@@ -54,38 +57,37 @@ export default function InfiniteMap({
     };
   }, []);
 
-  // apply background position
-  useEffect(() => {
-    const c = containerRef.current;
-    if (c) c.style.backgroundPosition = `${bgX}px ${bgY}px`;
-  }, [bgX, bgY]);
-
-  // compute scale
+  // compute scale once
   const vh = window.innerHeight;
   const scale = vh / 1024;
-  const tileW = 1536 * scale;
-  const tileH = vh; // because background-size auto 100vh
 
   return (
     <div className="panContainer" ref={containerRef}>
-      {hotspots.map((hs) => {
-        // raw on infinite
-        const rawX = hs.x * scale + bgX;
-        const rawY = hs.y * scale + bgY;
-        // wrap into main tile
-        const screenX = ((rawX % tileW) + tileW) % tileW;
-        const screenY = ((rawY % tileH) + tileH) % tileH;
-        return (
+      <div
+        className="panContent"
+        ref={contentRef}
+        style={{
+          transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`,
+          transformOrigin: "top left",
+        }}
+      >
+        {/* background layer */}
+        <div className="mapLayer" />
+        {/* hotspots */}
+        {hotspots.map((hs) => (
           <button
             key={hs.id}
             className="hotspotWrapper"
-            style={{ left: screenX, top: screenY }}
+            style={{
+              left: hs.x,
+              top: hs.y,
+            }}
             onClick={() => navigate(hs.route)}
           >
             <img src={hs.icon} className="hotspot" alt="" />
           </button>
-        );
-      })}
+        ))}
+      </div>
     </div>
   );
 }
