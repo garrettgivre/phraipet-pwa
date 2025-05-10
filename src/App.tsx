@@ -19,16 +19,15 @@ import Sunnybrook from "./pages/Sunnybrook";
 import SBAdoption from "./pages/Sunnybrook/SBAdoption";
 import SBClinic from "./pages/Sunnybrook/SBClinic";
 import SBClock from "./pages/Sunnybrook/SBClock";
-import SBFountain from "./pages/Sunnybrook/SBFountain.tsx";
-import SBFurniture from "./pages/Sunnybrook/SBFurniture.tsx";
+import SBFountain from "./pages/Sunnybrook/SBFountain";
+import SBFurniture from "./pages/Sunnybrook/SBFurniture";
 import SBMart from "./pages/Sunnybrook/SBMart";
 import SBStall from "./pages/Sunnybrook/SBStall";
 import SBToy from "./pages/Sunnybrook/SBToy";
 
-
 import "./App.css";
 
-/* ─── descriptor bands ───────────────────────────────────────────────── */
+/* ─── Descriptor Bands ───────────────────────────────────────────────── */
 
 const bands: Record<Exclude<Need, "spirit">, { upTo: number; label: string }[]> = {
   hunger: [
@@ -92,7 +91,7 @@ const bands: Record<Exclude<Need, "spirit">, { upTo: number; label: string }[]> 
 const descriptor = (need: Exclude<Need, "spirit">, value: number) =>
   bands[need].find((b) => value <= b.upTo)?.label ?? "";
 
-/* ─── Main routing shell ───────────────────────────────────────────────── */
+/* ─── Main Routing Shell ────────────────────────────────────────────── */
 
 function AppShell({ pet }: { pet: Pet | null }) {
   const location = useLocation();
@@ -119,6 +118,17 @@ function AppShell({ pet }: { pet: Pet | null }) {
 
   return (
     <>
+      {/* Global Logo */}
+      <img
+        src="/logo.png"
+        alt="Phraipets Logo"
+        style={{
+          height: "100px",
+          display: "block",
+          margin: "0 auto",
+        }}
+      />
+
       {!hideHeader && <Header pet={pet} />}
 
       <Routes>
@@ -131,7 +141,7 @@ function AppShell({ pet }: { pet: Pet | null }) {
         <Route path="/sunnybrook/SBMart" element={<SBMart />} />
         <Route path="/sunnybrook/SBStall" element={<SBStall />} />
         <Route path="/sunnybrook/SBToy" element={<SBToy />} />
-        
+
         <Route
           path="/"
           element={
