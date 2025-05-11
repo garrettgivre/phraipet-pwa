@@ -17,3 +17,18 @@
   cursor: grab;
   overflow: hidden;
 }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow-x: hidden;
+}
+
+main {
+  padding-top: 80px; /* Header height */
+  padding-bottom: 72px; /* Nav height */
+  min-height: calc(100vh - 80px - 72px);
+  overflow-y: auto;
+}
+

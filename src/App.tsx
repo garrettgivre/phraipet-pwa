@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { ref, onValue, set } from "firebase/database";
 import { db } from "./firebase";
 import type { Pet, Need, NeedInfo } from "./types";
@@ -22,8 +22,16 @@ import InventoryPage from "./pages/InventoryPage";
 
 import "./App.css";
 
-/* ─── Descriptor Bands ──────────────────────────────────────────────── */
+/* ─── Scroll Reset Component ──────────────────────────────────────── */
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  return null;
+}
 
+/* ─── Descriptor Bands ──────────────────────────────────────────────── */
 const bands: Record<Exclude<Need, "spirit">, { upTo: number; label: string }[]> = {
   hunger: [
     { upTo: -21, label: "Dying" }, { upTo: -11, label: "Starving" }, { upTo: -1, label: "Famished" },
@@ -55,7 +63,6 @@ const descriptor = (need: Exclude<Need, "spirit">, value: number) =>
   bands[need].find((b) => value <= b.upTo)?.label ?? "";
 
 /* ─── AppShell ──────────────────────────────────────────────────────── */
-
 function AppShell({ pet }: { pet: Pet | null }) {
   const needInfo: NeedInfo[] = pet
     ? [
@@ -69,24 +76,24 @@ function AppShell({ pet }: { pet: Pet | null }) {
 
   return (
     <>
+      <ScrollToTop />
       <Header 
-  coins={100} 
-  petImage={pet ? pet.image : "/pet/Neutral.png"} 
-  needs={[
-    { need: "hunger", emoji: "🍕", value: pet?.hunger || 0 },
-    { need: "cleanliness", emoji: "🧼", value: pet?.cleanliness || 0 },
-    { need: "happiness", emoji: "🎲", value: pet?.happiness || 0 },
-    { need: "affection", emoji: "🤗", value: pet?.affection || 0 },
-    { need: "spirit", emoji: "✨", value: pet?.spirit || 0 },
-  ]}
-/>
-      <main style={{ paddingTop: "64px", paddingBottom: "72px" }}>
+        coins={100} 
+        petImage={pet ? pet.image : "/pet/Neutral.png"} 
+        needs={[
+          { need: "hunger", emoji: "🍕", value: pet?.hunger || 0 },
+          { need: "cleanliness", emoji: "🧼", value: pet?.cleanliness || 0 },
+          { need: "happiness", emoji: "🎲", value: pet?.happiness || 0 },
+          { need: "affection", emoji: "🤗", value: pet?.affection || 0 },
+          { need: "spirit", emoji: "✨", value: pet?.spirit || 0 },
+        ]}
+      />
+      <main style={{ paddingTop: "80px", paddingBottom: "72px", minHeight: "calc(100vh - 80px - 72px)" }}>
         <Routes>
           <Route path="/" element={<PetPage needInfo={needInfo} />} />
           <Route path="/explore" element={<Explore />} />
           <Route path="/play" element={<Play />} />
           <Route path="/inventory" element={<InventoryPage />} />
-          {/* Sunnybrook Routes */}
           <Route path="/sunnybrook" element={<Sunnybrook />} />
           <Route path="/sunnybrook/Adoption" element={<SBAdoption />} />
           <Route path="/sunnybrook/SBClinic" element={<SBClinic />} />
@@ -104,7 +111,6 @@ function AppShell({ pet }: { pet: Pet | null }) {
 }
 
 /* ─── Main App ──────────────────────────────────────────────────────── */
-
 export default function App() {
   const [pet, setPet] = useState<Pet | null>(null);
 
@@ -120,7 +126,7 @@ export default function App() {
           cleanliness: 100,
           affection: 100,
           spirit: 100,
-           image: "/pet/Neutral.png"
+          image: "/pet/Neutral.png"
         };
         set(petRef, starter);
       }
