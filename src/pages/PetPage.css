@@ -70,7 +70,8 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: clamp(200px, 30vw, 400px); /* Minimum 200px, scales up to 400px based on viewport width */
+  width: clamp(400px, 60vw, 800px); /* Doubled values for larger size */
   height: auto;
   z-index: 5;
 }
+
