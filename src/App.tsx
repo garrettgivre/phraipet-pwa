@@ -22,7 +22,7 @@ import InventoryPage from "./pages/InventoryPage";
 
 import "./App.css";
 
-/* ─── Scroll Reset Component ──────────────────────────────────────── */
+/* ─── Scroll Reset ──────────────────────────────────────────────── */
 function ScrollToTop() {
   const { pathname } = useLocation();
   useEffect(() => {
@@ -64,6 +64,9 @@ const descriptor = (need: Exclude<Need, "spirit">, value: number) =>
 
 /* ─── AppShell ──────────────────────────────────────────────────────── */
 function AppShell({ pet }: { pet: Pet | null }) {
+  const location = useLocation();
+  const isPetPage = location.pathname === "/";
+
   const needInfo: NeedInfo[] = pet
     ? [
         { need: "hunger", emoji: "🍕", value: pet.hunger, desc: descriptor("hunger", pet.hunger) },
@@ -77,18 +80,24 @@ function AppShell({ pet }: { pet: Pet | null }) {
   return (
     <>
       <ScrollToTop />
-      <Header 
-        coins={100} 
-        petImage={pet ? pet.image : "/pet/Neutral.png"} 
-        needs={[
-          { need: "hunger", emoji: "🍕", value: pet?.hunger || 0 },
-          { need: "cleanliness", emoji: "🧼", value: pet?.cleanliness || 0 },
-          { need: "happiness", emoji: "🎲", value: pet?.happiness || 0 },
-          { need: "affection", emoji: "🤗", value: pet?.affection || 0 },
-          { need: "spirit", emoji: "✨", value: pet?.spirit || 0 },
-        ]}
-      />
-      <main style={{ paddingTop: "80px", paddingBottom: "72px", minHeight: "calc(100vh - 80px - 72px)" }}>
+      {!isPetPage && (
+        <Header 
+          coins={100} 
+          petImage={pet ? pet.image : "/pet/Neutral.png"} 
+          needs={[
+            { need: "hunger", emoji: "🍕", value: pet?.hunger || 0 },
+            { need: "cleanliness", emoji: "🧼", value: pet?.cleanliness || 0 },
+            { need: "happiness", emoji: "🎲", value: pet?.happiness || 0 },
+            { need: "affection", emoji: "🤗", value: pet?.affection || 0 },
+            { need: "spirit", emoji: "✨", value: pet?.spirit || 0 },
+          ]}
+        />
+      )}
+      <main style={{
+        paddingTop: isPetPage ? "0px" : "80px",
+        paddingBottom: "72px",
+        minHeight: "calc(100vh - 72px)"
+      }}>
         <Routes>
           <Route path="/" element={<PetPage needInfo={needInfo} />} />
           <Route path="/explore" element={<Explore />} />
