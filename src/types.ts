@@ -16,6 +16,7 @@ export type Pet = {
   cleanliness: number;
   affection: number;
   spirit: number;
+  image: string; // Add this line
 };
 
 // Add more types as needed for player profiles, inventory, etc.

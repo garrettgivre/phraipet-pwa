@@ -69,7 +69,17 @@ function AppShell({ pet }: { pet: Pet | null }) {
 
   return (
     <>
-      <Header pet={pet} coins={100} />
+      <Header 
+  coins={100} 
+  petImage={pet ? pet.image : "/pet/Neutral.png"} 
+  needs={[
+    { need: "hunger", emoji: "🍕", value: pet?.hunger || 0 },
+    { need: "cleanliness", emoji: "🧼", value: pet?.cleanliness || 0 },
+    { need: "happiness", emoji: "🎲", value: pet?.happiness || 0 },
+    { need: "affection", emoji: "🤗", value: pet?.affection || 0 },
+    { need: "spirit", emoji: "✨", value: pet?.spirit || 0 },
+  ]}
+/>
       <main style={{ paddingTop: "64px", paddingBottom: "72px" }}>
         <Routes>
           <Route path="/" element={<PetPage needInfo={needInfo} />} />
@@ -110,6 +120,7 @@ export default function App() {
           cleanliness: 100,
           affection: 100,
           spirit: 100,
+           image: "/pet/Neutral.png"
         };
         set(petRef, starter);
       }
