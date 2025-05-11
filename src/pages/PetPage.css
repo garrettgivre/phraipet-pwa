@@ -5,16 +5,61 @@
   width: 100%;
   background-color: #f0f8ff;
   overflow-x: hidden;
-  padding-top: 80px; /* Matches your header height */
-  padding-bottom: 72px; /* Leaves space for fixed bottom nav */
-  min-height: calc(100vh - 80px - 72px); /* Ensure it fills viewport properly */
+  padding-top: 80px; /* Header height */
+  padding-bottom: 72px; /* Footer nav height */
+  min-height: calc(100vh - 80px - 72px);
 }
 
 .petSection {
+  position: relative;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 0;
+}
+
+.needsOverlay {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
   display: flex;
   flex-direction: column;
-  align-items: center;
-  margin-top: 0; /* Remove any vertical spacing above pet */
+  gap: 16px;
+  z-index: 10;
+}
+
+.need-circle {
+  width: 64px;
+  height: 64px;
+}
+
+.circular-chart {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.circle-bg {
+  fill: none;
+  stroke: #eee;
+  stroke-width: 3.8;
+}
+
+.circle {
+  fill: none;
+  stroke: #00acc1;
+  stroke-width: 3.8;
+  stroke-linecap: round;
+  transition: stroke-dasharray 0.3s;
+}
+
+.emoji-text {
+  fill: #333;
+  font-size: 14px;
+  text-anchor: middle;
+  dominant-baseline: middle;
 }
 
 .petHero {
@@ -24,50 +69,5 @@
   margin-bottom: 24px;
   object-fit: contain;
   display: block;
-}
-
-.needBigSection {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 12px;
-  margin-top: 16px;
-}
-
-.needBig {
-  background: #ffffff;
-  border-radius: 12px;
-  padding: 12px 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  text-align: center;
-  width: 140px;
-}
-
-.needBigEmoji {
-  font-size: 32px;
-  display: block;
-  margin-bottom: 8px;
-}
-
-.needBigWrap progress {
-  width: 100%;
-  height: 12px;
-  margin-bottom: 8px;
-}
-
-.needBigLabel {
-  font-weight: bold;
-  display: block;
-  margin-bottom: 4px;
-}
-
-.needBigDesc {
-  font-size: 14px;
-  color: #555;
-  display: block;
-}
-
-.needBigNum {
-  font-size: 12px;
-  color: #999;
+  z-index: 1;
 }

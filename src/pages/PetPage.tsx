@@ -1,4 +1,3 @@
-// src/pages/PetPage.tsx
 import { useState } from "react";
 import PetRoom from "../components/PetRoom";
 import Inventory from "../components/Inventory";
@@ -61,23 +60,28 @@ export default function PetPage({ needInfo }: { needInfo: NeedInfo[] }) {
       <PetRoom roomLayers={roomLayers} />
 
       <div className="petSection">
-        <img src="/pet/Neutral.png" alt="Your Pet" className="petHero" />
-
-        <section className="needBigSection">
+        {/* Needs Overlay */}
+        <div className="needsOverlay">
           {needInfo.map((n) => (
-            <div key={n.need} className="needBig">
-              <span className="needBigEmoji">{n.emoji}</span>
-              <div className="needBigWrap">
-                <progress max={150} value={n.value + 30} />
-                <span className="needBigLabel">
-                  {n.need.charAt(0).toUpperCase() + n.need.slice(1)}
-                </span>
-                <span className="needBigDesc">{n.desc}</span>
-                <span className="needBigNum">({n.value})</span>
-              </div>
+            <div key={n.need} className="need-circle">
+              <svg viewBox="0 0 36 36" className="circular-chart">
+                <path
+                  className="circle-bg"
+                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                />
+                <path
+                  className="circle"
+                  strokeDasharray={`${n.value}, 100`}
+                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                />
+                <text x="18" y="20.35" className="emoji-text">{n.emoji}</text>
+              </svg>
             </div>
           ))}
-        </section>
+        </div>
+
+        {/* Main Pet */}
+        <img src="/pet/Neutral.png" alt="Your Pet" className="petHero" />
       </div>
 
       <Inventory items={sampleInventory} onEquip={handleEquip} />
