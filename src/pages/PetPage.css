@@ -1,9 +1,9 @@
 .petPage {
-  position: relative;
-  width: 100vw;
-  height: 100vh;
+  position: fixed; /* Lock to viewport, prevents scroll */
+  inset: 0; /* Shortcut for top: 0; right: 0; bottom: 0; left: 0; */
   background-color: #f0f8ff;
   overflow: hidden;
+  z-index: 0;
 }
 
 .layer {
