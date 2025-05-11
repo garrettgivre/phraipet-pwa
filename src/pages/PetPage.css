@@ -1,41 +1,31 @@
-/* Container for the entire Pet Page */
 .petPageContainer {
   display: flex;
   flex-direction: column;
   align-items: center;
   width: 100%;
-  min-height: 100vh; /* Ensure the page fills the viewport */
   background-color: #f0f8ff;
   overflow-x: hidden;
-  padding-bottom: 72px; /* Enough space for the fixed nav bar */
-  box-sizing: border-box;
+  padding-top: 80px; /* Matches your header height */
+  padding-bottom: 72px; /* Leaves space for fixed bottom nav */
+  min-height: calc(100vh - 80px - 72px); /* Ensure it fills viewport properly */
 }
 
-/* Wrapper for Pet-specific content */
-.petPage {
-  max-width: 100%;
-  text-align: center;
-}
-
-/* Section holding the pet image and needs display */
 .petSection {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-top: 16px;
+  margin-top: 0; /* Remove any vertical spacing above pet */
 }
 
-/* Main Pet Image */
 .petHero {
   width: 200px;
   height: auto;
   max-width: 100%;
-  margin: 24px 0;
+  margin-bottom: 24px;
   object-fit: contain;
   display: block;
 }
 
-/* Needs Section */
 .needBigSection {
   display: flex;
   flex-wrap: wrap;

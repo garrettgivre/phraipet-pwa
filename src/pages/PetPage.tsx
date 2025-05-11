@@ -1,93 +1,73 @@
-// src/pages/PetPage.tsx
-import { useState } from "react";
-import PetRoom from "../components/PetRoom";
-import Inventory from "../components/Inventory";
-import type { Need } from "../types";
-import "./PetPage.css";
-
-interface NeedInfo {
-  need: Need;
-  emoji: string;
-  value: number;
-  desc: string;
+.petPageContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  background-color: #f0f8ff;
+  overflow-x: hidden;
+  padding-top: 80px; /* Matches your header height */
+  padding-bottom: 72px; /* Leaves space for fixed bottom nav */
+  min-height: calc(100vh - 80px - 72px); /* Ensure it fills viewport properly */
 }
 
-type DecorItem = {
-  src: string;
-  x: number;
-  y: number;
-  width?: number;
-  height?: number;
-};
+.petSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 0; /* Remove any vertical spacing above pet */
+}
 
-type InventoryItem = {
-  id: string;
-  name: string;
-  type: "floor" | "wall" | "ceiling" | "backDecor" | "frontDecor" | "overlay";
-  src: string;
-};
+.petHero {
+  width: 200px;
+  height: auto;
+  max-width: 100%;
+  margin-bottom: 24px;
+  object-fit: contain;
+  display: block;
+}
 
-const sampleInventory: InventoryItem[] = [
-  { id: "floor1", name: "Wood Floor", type: "floor", src: "/assets/floors/wood.png" },
-  { id: "wall1", name: "Starry Wall", type: "wall", src: "/assets/walls/starry.png" },
-  { id: "ceiling1", name: "Sky Ceiling", type: "ceiling", src: "/assets/ceilings/sky.png" },
-  { id: "decor1", name: "Plant", type: "backDecor", src: "/assets/decorations/plant.png" },
-  { id: "overlay1", name: "Sparkles", type: "overlay", src: "/assets/overlays/sparkles.png" }
-];
+.needBigSection {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 16px;
+}
 
-export default function PetPage({ needInfo }: { needInfo: NeedInfo[] }) {
-  const [roomLayers, setRoomLayers] = useState({
-    floor: "/assets/floors/wood.png",
-    wall: "/assets/walls/starry.png",
-    ceiling: "/assets/ceilings/sky.png",
-    backDecor: [] as DecorItem[],
-    frontDecor: [] as DecorItem[],
-    overlay: ""
-  });
+.needBig {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 12px 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  width: 140px;
+}
 
-  const handleEquip = (item: InventoryItem) => {
-    if (item.type === "backDecor" || item.type === "frontDecor") {
-      setRoomLayers((prev) => ({
-        ...prev,
-        [item.type]: [...prev[item.type], { src: item.src, x: 100, y: 200 }]
-      }));
-    } else {
-      setRoomLayers((prev) => ({ ...prev, [item.type]: item.src }));
-    }
-  };
+.needBigEmoji {
+  font-size: 32px;
+  display: block;
+  margin-bottom: 8px;
+}
 
-  return (
-    <div className="petPageContainer">
-      {/* Render the customizable room */}
-      <PetRoom roomLayers={roomLayers} />
+.needBigWrap progress {
+  width: 100%;
+  height: 12px;
+  margin-bottom: 8px;
+}
 
-      {/* Pet Status Section */}
-      <div className="petSection">
-        <img
-          src="/pet/Neutral.png"
-          alt="Your Pet"
-          className="petHero"
-        />
+.needBigLabel {
+  font-weight: bold;
+  display: block;
+  margin-bottom: 4px;
+}
 
-        <section className="needBigSection">
-          {needInfo.map((n) => (
-            <div key={n.need} className="needBig">
-              <span className="needBigEmoji">{n.emoji}</span>
-              <div className="needBigWrap">
-                <progress max={150} value={n.value + 30} />
-                <span className="needBigLabel">
-                  {n.need.charAt(0).toUpperCase() + n.need.slice(1)}
-                </span>
-                <span className="needBigDesc">{n.desc}</span>
-                <span className="needBigNum">({n.value})</span>
-              </div>
-            </div>
-          ))}
-        </section>
-      </div>
+.needBigDesc {
+  font-size: 14px;
+  color: #555;
+  display: block;
+}
 
-      {/* Inventory Panel */}
-      <Inventory items={sampleInventory} onEquip={handleEquip} />
-    </div>
-  );
+.needBigNum {
+  font-size: 12px;
+  color: #999;
 }
