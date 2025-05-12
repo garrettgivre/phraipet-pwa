@@ -66,6 +66,7 @@
   font-size: 12px;
   text-anchor: middle;
   dominant-baseline: middle;
+  transform: rotate(90deg); /* Corrects the current 90-degree counter-clockwise rotation */
 }
 
 .coin-counter {
