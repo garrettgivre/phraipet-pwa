@@ -52,13 +52,13 @@
 .circle-bg {
   fill: none;
   stroke: #eee;
-  stroke-width: 3.8;
+  stroke-width: 1.5;
 }
 
 .circle {
   fill: none;
   stroke: #00acc1;
-  stroke-width: 3.8;
+  stroke-width: 1.5;
   stroke-linecap: round;
   transition: stroke-dasharray 0.3s;
 }
