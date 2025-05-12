@@ -30,7 +30,12 @@ export default function Header({
       <div className="needs-wrapper">
         {needs.map((n) => (
           <div key={n.need} className="need-circle">
-            <svg viewBox="0 0 36 36" className="circular-chart">
+            <svg 
+  viewBox="0 0 36 36" 
+  className="circular-chart" 
+  width="16" 
+  height="16"
+>
   <path
     className="circle-bg"
     d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
