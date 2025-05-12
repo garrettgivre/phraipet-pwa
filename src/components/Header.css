@@ -39,8 +39,8 @@
 }
 
 .need-circle {
-  width: 60px !important;
-  height: 60px !important;
+  width: 50px !important;
+  height: 50px !important;
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -70,7 +70,7 @@
 
 .emoji-text {
   fill: #333;
-  font-size: 30px; /* Slightly smaller to fit inside small circle */
+  font-size: 20px; /* Slightly smaller to fit inside small circle */
   text-anchor: middle;
   dominant-baseline: middle;
 }
