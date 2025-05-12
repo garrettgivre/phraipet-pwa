@@ -51,7 +51,14 @@ export default function PetPage({ needInfo }: { needInfo: NeedInfo[] }) {
                 strokeDasharray={`${n.value}, 100`}
                 d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
               />
-              <text x="18" y="20.35" className="emoji-text">{n.emoji}</text>
+              <text 
+  x="18" 
+  y="20.35" 
+  className="emoji-text" 
+  transform="rotate(90, 18, 18)"
+>
+  {n.emoji}
+</text>
             </svg>
           </div>
         ))}
