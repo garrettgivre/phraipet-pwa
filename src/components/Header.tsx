@@ -31,27 +31,20 @@ export default function Header({
         {needs.map((n) => (
           <div key={n.need} className="need-circle">
             <svg viewBox="0 0 36 36" className="circular-chart">
-              <path
-                className="circle-bg"
-                d="M18 2.0845
-                   a 15.9155 15.9155 0 0 1 0 31.831
-                   a 15.9155 15.9155 0 0 1 0 -31.831"
-              />
-              <path
-                className="circle"
-                strokeDasharray={`${n.value}, 100`}
-                d="M18 2.0845
-                   a 15.9155 15.9155 0 0 1 0 31.831
-                   a 15.9155 15.9155 0 0 1 0 -31.831"
-              />
-              <text 
-  x="18" 
-  y="20.35" 
-  className="emoji-text" 
-  transform="rotate(90, 18, 18)">
-  {n.emoji}
-</text>
-            </svg>
+  <path
+    className="circle-bg"
+    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+  />
+  <path
+    className="circle"
+    strokeDasharray={`${n.value}, 100`}
+    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+    transform="rotate(-90 18 18)"  // Correct rotation only on the path
+  />
+  <text x="18" y="20.35" className="emoji-text">
+    {n.emoji}
+  </text>
+</svg>
           </div>
         ))}
       </div>

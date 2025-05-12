@@ -65,7 +65,7 @@
 
 .emoji-text {
   fill: #333;
-  font-size: 8px; /* Slightly smaller to fit inside small circle */
+  font-size: 6px; /* Slightly smaller to fit inside small circle */
   text-anchor: middle;
   dominant-baseline: middle;
 }
