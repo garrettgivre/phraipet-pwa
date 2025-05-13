@@ -1,6 +1,6 @@
 .petPage {
   opacity: 0;
-  transition: opacity 0.3s ease-in-out;
+  transition: opacity 0.6s ease-in-out; /* Smoother fade-in */
   position: relative;
   width: 100vw;
   height: 100vh;
@@ -76,7 +76,21 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: clamp(400px, 60vw, 800px);
+  width: clamp(400px, 60vw, 800px); /* Responsive scaling */
   height: auto;
   z-index: 5;
+}
+
+.paintbrush-icon {
+  position: fixed;
+  bottom: 80px; /* Above NavBar */
+  left: 16px;
+  cursor: pointer;
+  z-index: 20;
+}
+
+.paintbrush-icon img {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
 }

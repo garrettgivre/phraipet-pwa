@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { useInventory } from "../contexts/InventoryContext";
 import type { NeedInfo } from "../types";
 import "./PetPage.css";
@@ -10,6 +11,7 @@ const defaultLayers = {
 
 export default function PetPage({ needInfo }: { needInfo: NeedInfo[] }) {
   const { roomLayers } = useInventory();
+  const navigate = useNavigate();
 
   const isDefault = 
     roomLayers.floor === defaultLayers.floor &&
@@ -49,6 +51,14 @@ export default function PetPage({ needInfo }: { needInfo: NeedInfo[] }) {
 
       {/* Pet */}
       <img src="/pet/Neutral.png" alt="Your Pet" className="petHero" />
+
+      {/* Paintbrush Icon */}
+      <div 
+        className="paintbrush-icon" 
+        onClick={() => navigate("/inventory")}
+      >
+        <img src="/assets/icons/paintbrush.png" alt="Customize" />
+      </div>
     </div>
   );
 }
