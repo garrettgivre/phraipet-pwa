@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useInventory } from "../contexts/InventoryContext";
 import type { InventoryItem } from "../contexts/InventoryContext";
 import "./InventoryPage.css";
@@ -8,12 +8,20 @@ const categories = ["Walls", "Floors", "Ceilings", "Decor", "Overlays"];
 export default function InventoryPage() {
   const { items, setRoomLayer, addDecorItem } = useInventory();
   const [selectedCategory, setSelectedCategory] = useState("Walls");
+  const [navHeight, setNavHeight] = useState(56); // Default nav height
+
+  useEffect(() => {
+    const nav = document.querySelector(".nav");
+    if (nav) {
+      setNavHeight(nav.clientHeight);
+    }
+  }, []);
 
   const handleEquip = (item: InventoryItem) => {
     if (["floor", "wall", "ceiling"].includes(item.type)) {
       setRoomLayer(item.type as "floor" | "wall" | "ceiling", item.src);
     } else if (item.type === "backDecor" || item.type === "frontDecor") {
-      addDecorItem("backDecor", { src: item.src, x: 100, y: 100 });
+      addDecorItem("backDecor", { src: item.src, x: 100, y: 100 }); // Default placement
     } else if (item.type === "overlay") {
       setRoomLayer("overlay", item.src);
     }
@@ -47,7 +55,10 @@ export default function InventoryPage() {
         ))}
       </div>
 
-      <div className="inventory-tabs">
+      <div 
+        className="inventory-tabs" 
+        style={{ bottom: `${navHeight}px` }}
+      >
         {categories.map(category => (
           <button 
             key={category} 
