@@ -8,20 +8,21 @@ const categories = ["Walls", "Floors", "Ceilings", "Decor", "Overlays"];
 export default function InventoryPage() {
   const { items, setRoomLayer, addDecorItem } = useInventory();
   const [selectedCategory, setSelectedCategory] = useState("Walls");
-  const [navHeight, setNavHeight] = useState(56); // Default nav height
+  const [navHeight, setNavHeight] = useState(56); // Default nav bar height
+  const [headerHeight, setHeaderHeight] = useState(80); // Default header height
 
   useEffect(() => {
     const nav = document.querySelector(".nav");
-    if (nav) {
-      setNavHeight(nav.clientHeight);
-    }
+    const header = document.querySelector(".app-header");
+    if (nav) setNavHeight(nav.clientHeight);
+    if (header) setHeaderHeight(header.clientHeight);
   }, []);
 
   const handleEquip = (item: InventoryItem) => {
     if (["floor", "wall", "ceiling"].includes(item.type)) {
       setRoomLayer(item.type as "floor" | "wall" | "ceiling", item.src);
     } else if (item.type === "backDecor" || item.type === "frontDecor") {
-      addDecorItem("backDecor", { src: item.src, x: 100, y: 100 }); // Default placement
+      addDecorItem("backDecor", { src: item.src, x: 100, y: 100 });
     } else if (item.type === "overlay") {
       setRoomLayer("overlay", item.src);
     }
@@ -39,7 +40,10 @@ export default function InventoryPage() {
   });
 
   return (
-    <div className="inventory-page">
+    <div 
+      className="inventory-page" 
+      style={{ paddingTop: `${headerHeight}px` }}
+    >
       <h1>Inventory</h1>
 
       <div className="inventory-grid">

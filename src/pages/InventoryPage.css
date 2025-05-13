@@ -1,5 +1,5 @@
 .inventory-page {
-  padding: 80px 16px 120px; /* Account for header and nav/tabs */
+  padding: 0 16px 120px; /* Top padding is handled dynamically via style prop */
   text-align: center;
   background-color: #f9f9f9;
   min-height: 100vh;
@@ -16,7 +16,7 @@
   grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
   gap: 16px;
   justify-items: center;
-  padding-bottom: 100px; /* Add space for tabs */
+  padding-bottom: 100px; /* Space for category tabs */
 }
 
 .inventory-item {
