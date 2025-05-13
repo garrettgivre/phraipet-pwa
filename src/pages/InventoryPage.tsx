@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useInventory } from "../contexts/InventoryContext";
 import type { InventoryItem } from "../contexts/InventoryContext";
+import { calculateVisibleBounds } from "../utils/imageUtils";
 import "./InventoryPage.css";
 
 const categories = ["Walls", "Floors", "Ceilings", "Decor", "Overlays"];
@@ -8,15 +9,6 @@ const categories = ["Walls", "Floors", "Ceilings", "Decor", "Overlays"];
 export default function InventoryPage() {
   const { items, setRoomLayer, addDecorItem } = useInventory();
   const [selectedCategory, setSelectedCategory] = useState("Walls");
-  const [navHeight, setNavHeight] = useState(56); // Default nav bar height
-  const [headerHeight, setHeaderHeight] = useState(80); // Default header height
-
-  useEffect(() => {
-    const nav = document.querySelector(".nav");
-    const header = document.querySelector(".app-header");
-    if (nav) setNavHeight(nav.clientHeight);
-    if (header) setHeaderHeight(header.clientHeight);
-  }, []);
 
   const handleEquip = (item: InventoryItem) => {
     if (["floor", "wall", "ceiling"].includes(item.type)) {
@@ -40,32 +32,23 @@ export default function InventoryPage() {
   });
 
   return (
-    <div 
-      className="inventory-page" 
-      style={{ paddingTop: `${headerHeight}px` }}
-    >
+    <div className="inventory-page">
       <h1>Inventory</h1>
 
-      <div 
-        className="inventory-grid" 
-        style={{ bottom: `${navHeight + 56}px` }} // 56px for tab height
-      >
+      <div className="inventory-grid">
         {filteredItems.map(item => (
           <div 
             key={item.id} 
             className="inventory-item" 
             onClick={() => handleEquip(item)}
           >
-            <img src={item.src} alt={item.name} className="inventory-image" />
+            <ZoomedImage src={item.src} alt={item.name} />
             <span>{item.name}</span>
           </div>
         ))}
       </div>
 
-      <div 
-        className="inventory-tabs" 
-        style={{ bottom: `${navHeight}px` }}
-      >
+      <div className="inventory-tabs">
         {categories.map(category => (
           <button 
             key={category} 
@@ -78,4 +61,23 @@ export default function InventoryPage() {
       </div>
     </div>
   );
+}
+
+function ZoomedImage({ src, alt }: { src: string; alt: string }) {
+  const [style, setStyle] = useState<React.CSSProperties>({});
+
+  useEffect(() => {
+    calculateVisibleBounds(src).then(bounds => {
+      const scale = Math.min(64 / bounds.width, 64 / bounds.height);
+      const offsetX = -bounds.x * scale;
+      const offsetY = -bounds.y * scale;
+
+      setStyle({
+        transform: `scale(${scale}) translate(${offsetX}px, ${offsetY}px)`,
+        transformOrigin: "top left",
+      });
+    });
+  }, [src]);
+
+  return <img src={src} alt={alt} className="inventory-image" style={style} />;
 }
