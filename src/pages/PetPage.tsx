@@ -1,33 +1,19 @@
 import { useInventory } from "../contexts/InventoryContext";
+import type { NeedInfo } from "../types";
 import "./PetPage.css";
 
-interface NeedInfo {
-  need: string;
-  emoji: string;
-  value: number; // 0 to 100
-}
-
-const sampleNeeds: NeedInfo[] = [
-  { need: "hunger", emoji: "🍕", value: 80 },
-  { need: "cleanliness", emoji: "🧼", value: 60 },
-  { need: "happiness", emoji: "🎲", value: 90 },
-  { need: "affection", emoji: "🤗", value: 75 },
-  { need: "spirit", emoji: "✨", value: 50 },
-];
-
-export default function PetPage() {
+export default function PetPage({ needInfo }: { needInfo: NeedInfo[] }) {
   const { roomLayers } = useInventory();
 
   return (
     <div className="petPage">
-      {/* Background Layers */}
       <img src={roomLayers.ceiling} alt="Ceiling" className="layer ceiling" />
       <img src={roomLayers.wall} alt="Wall" className="layer wall" />
       <img src={roomLayers.floor} alt="Floor" className="layer floor" />
 
       {/* Needs Overlay */}
       <div className="needsOverlay">
-        {sampleNeeds.map((n) => (
+        {needInfo.map((n) => (
           <div key={n.need} className="need-circle">
             <svg viewBox="0 0 36 36" className="circular-chart">
               <path

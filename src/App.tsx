@@ -84,13 +84,7 @@ function AppShell({ pet }: { pet: Pet | null }) {
         <Header 
           coins={100} 
           petImage={pet ? pet.image : "/pet/Neutral.png"} 
-          needs={[
-            { need: "hunger", emoji: "🍕", value: pet?.hunger || 0 },
-            { need: "cleanliness", emoji: "🧼", value: pet?.cleanliness || 0 },
-            { need: "happiness", emoji: "🎲", value: pet?.happiness || 0 },
-            { need: "affection", emoji: "🤗", value: pet?.affection || 0 },
-            { need: "spirit", emoji: "✨", value: pet?.spirit || 0 },
-          ]}
+          needs={needInfo} 
         />
       )}
       <main style={{
@@ -99,7 +93,7 @@ function AppShell({ pet }: { pet: Pet | null }) {
         minHeight: "calc(100vh - 72px)"
       }}>
         <Routes>
-          <Route path="/" element={<PetPage />} />
+          <Route path="/" element={<PetPage needInfo={needInfo} />} />
           <Route path="/explore" element={<Explore />} />
           <Route path="/play" element={<Play />} />
           <Route path="/inventory" element={<InventoryPage />} />
@@ -143,11 +137,6 @@ export default function App() {
   }, []);
 
   return (
-    <BrowserRouter>
-      <AppShell pet={pet} />
-    </BrowserRouter>
-  );
-    return (
     <InventoryProvider>
       <BrowserRouter>
         <AppShell pet={pet} />
