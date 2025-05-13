@@ -15,23 +15,31 @@
 .nav-item {
   position: relative;
   display: flex;
-  flex-direction: column;
   align-items: center;
+  justify-content: center;
   cursor: pointer;
 }
 
-.bubble-icon {
-  width: 48px;
-  height: 48px;
-  margin-bottom: 4px;
-  margin-top: -16px; /* Pull the icon upward to extend above the nav bar */
-  object-fit: contain;
-  z-index: 101;
+.bubble-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.nav-item span {
-  font-size: 12px;
-  color: #333;
-  position: relative;
-  z-index: 102;
+.bubble-icon {
+  width: 80px; /* Increased size */
+  height: 80px;
+  margin-top: -32px; /* Extend above nav bar */
+  object-fit: contain;
+  z-index: 2;
+}
+
+.bubble-container span {
+  position: absolute;
+  color: #ffffff; /* White text inside bubble */
+  font-size: 14px;
+  font-weight: bold;
+  z-index: 1;
+  pointer-events: none; /* Allow clicks to pass through the text */
 }

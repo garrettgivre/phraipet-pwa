@@ -7,16 +7,22 @@ export default function NavBar() {
   return (
     <nav className="nav-bar">
       <div className="nav-item" onClick={() => navigate("/")}>
-        <img src="/assets/icons/bubble-b.png" alt="Pet" className="bubble-icon" />
-        <span>Pet</span>
+        <div className="bubble-container">
+          <span>Pet</span>
+          <img src="/assets/icons/bubble-b.png" alt="Pet" className="bubble-icon" />
+        </div>
       </div>
       <div className="nav-item" onClick={() => navigate("/explore")}>
-        <img src="/assets/icons/bubble-y.png" alt="Explore" className="bubble-icon" />
-        <span>Explore</span>
+        <div className="bubble-container">
+          <span>Explore</span>
+          <img src="/assets/icons/bubble-y.png" alt="Explore" className="bubble-icon" />
+        </div>
       </div>
       <div className="nav-item" onClick={() => navigate("/play")}>
-        <img src="/assets/icons/bubble-p.png" alt="Play" className="bubble-icon" />
-        <span>Play</span>
+        <div className="bubble-container">
+          <span>Play</span>
+          <img src="/assets/icons/bubble-p.png" alt="Play" className="bubble-icon" />
+        </div>
       </div>
     </nav>
   );
