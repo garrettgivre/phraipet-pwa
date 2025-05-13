@@ -9,8 +9,18 @@ const categories = ["Walls", "Floors", "Ceilings", "Decor", "Overlays"];
 export default function InventoryPage() {
   const { items, setRoomLayer, addDecorItem } = useInventory();
   const [selectedCategory, setSelectedCategory] = useState("Walls");
+  const [activeColorOptions, setActiveColorOptions] = useState<{ id: string; options: { label: string; src: string }[] } | null>(null);
 
   const handleEquip = (item: InventoryItem) => {
+    if (item.colorOptions) {
+      setActiveColorOptions({ id: item.id, options: item.colorOptions });
+    } else {
+      applyItem(item);
+      setActiveColorOptions(null);
+    }
+  };
+
+  const applyItem = (item: InventoryItem) => {
     if (["floor", "wall", "ceiling"].includes(item.type)) {
       setRoomLayer(item.type as "floor" | "wall" | "ceiling", item.src);
     } else if (item.type === "backDecor" || item.type === "frontDecor") {
@@ -44,6 +54,23 @@ export default function InventoryPage() {
           >
             <ZoomedImage src={item.src} alt={item.name} />
             <span>{item.name}</span>
+
+            {activeColorOptions?.id === item.id && (
+              <div className="color-options">
+                {activeColorOptions.options.map(option => (
+                  <div 
+                    key={option.label} 
+                    className="color-swatch" 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      applyItem({ ...item, src: option.src });
+                      setActiveColorOptions(null);
+                    }}
+                    style={{ backgroundImage: `url(${option.src})` }}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         ))}
       </div>

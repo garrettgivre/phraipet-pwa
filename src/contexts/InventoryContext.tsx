@@ -7,7 +7,9 @@ export type InventoryItem = {
   name: string;
   type: "floor" | "wall" | "ceiling" | "backDecor" | "frontDecor" | "overlay";
   src: string;
+  colorOptions?: { label: string; src: string }[]; // New color options field
 };
+
 
 export type DecorItem = {
   src: string;
