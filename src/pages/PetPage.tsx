@@ -26,12 +26,12 @@ type InventoryItem = {
 };
 
 const sampleInventory: InventoryItem[] = [
-  { id: "classicFloor", name: "Classic Floor", type: "floor", src: "/assets/floors/classic-floor.png" },
-  { id: "classicWall", name: "Classic Wall", type: "wall", src: "/assets/walls/classic-wall.png" },
-  { id: "classicCeiling", name: "Classic Ceiling", type: "ceiling", src: "/assets/ceilings/classic-ceiling.png" },
-  { id: "scienceFloor", name: "Science Floor", type: "floor", src: "/assets/floors/science-floor.png" },
-  { id: "scienceWall", name: "Science Wall", type: "wall", src: "/assets/walls/science-wall.png" },
-  { id: "scienceCeiling", name: "Science Ceiling", type: "ceiling", src: "/assets/ceilings/science-ceiling.png" },
+  { id: "classicFloor", name: "Classic Floor", type: "floor", src: "src/assets/floors/classic-floor.png" },
+  { id: "classicWall", name: "Classic Wall", type: "wall", src: "src/assets/walls/classic-wall.png" },
+  { id: "classicCeiling", name: "Classic Ceiling", type: "ceiling", src: "src/assets/ceilings/classic-ceiling.png" },
+  { id: "scienceFloor", name: "Science Floor", type: "floor", src: "src/assets/floors/science-floor.png" },
+  { id: "scienceWall", name: "Science Wall", type: "wall", src: "src/assets/walls/science-wall.png" },
+  { id: "scienceCeiling", name: "Science Ceiling", type: "ceiling", src: "src/assets/ceilings/science-ceiling.png" },
 ];
 
 export default function PetPage({ needInfo }: { needInfo: NeedInfo[] }) {
