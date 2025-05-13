@@ -31,7 +31,7 @@
 .bubble-icon {
   width: 80px;
   height: 80px;
-  margin-top: -32px;
+  margin-top: -16px; /* Was -32px, now lowered */
   object-fit: contain;
   z-index: 2;
   transition: transform 0.3s ease, filter 0.3s ease;
