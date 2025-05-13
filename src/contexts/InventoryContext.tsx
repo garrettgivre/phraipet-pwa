@@ -29,12 +29,30 @@ type RoomLayers = {
 };
 
 const defaultInventory: InventoryItem[] = [
-  { id: "classicFloor", name: "Classic Floor", type: "floor", src: "/assets/floors/classic-floor.png" },
-  { id: "classicWall", name: "Classic Wall", type: "wall", src: "/assets/walls/classic-wall.png" },
-  { id: "classicCeiling", name: "Classic Ceiling", type: "ceiling", src: "/assets/ceilings/classic-ceiling.png" },
-  { id: "scienceFloor", name: "Science Floor", type: "floor", src: "/assets/floors/science-floor.png" },
-  { id: "scienceWall", name: "Science Wall", type: "wall", src: "/assets/walls/science-wall.png" },
-  { id: "scienceCeiling", name: "Science Ceiling", type: "ceiling", src: "/assets/ceilings/science-ceiling.png" },
+  // Classic Theme
+  { id: "classic-floor", name: "Classic Floor", type: "floor", src: "/assets/floors/classic-floor.png" },
+  { id: "classic-wall", name: "Classic Wall", type: "wall", src: "/assets/walls/classic-wall.png" },
+  { id: "classic-ceiling", name: "Classic Ceiling", type: "ceiling", src: "/assets/ceilings/classic-ceiling.png" },
+
+  // Science Lab Theme
+  { id: "science-floor", name: "Science Floor", type: "floor", src: "/assets/floors/science-floor.png" },
+  { id: "science-wall", name: "Science Wall", type: "wall", src: "/assets/walls/science-wall.png" },
+  { id: "science-ceiling", name: "Science Ceiling", type: "ceiling", src: "/assets/ceilings/science-ceiling.png" },
+
+  // Aero Theme
+  { id: "aero-floor", name: "Aero Floor", type: "floor", src: "/assets/floors/aero-floor.png" },
+  { id: "aero-wall", name: "Aero Wall", type: "wall", src: "/assets/walls/aero-wall.png" },
+  { id: "aero-ceiling", name: "Aero Ceiling", type: "ceiling", src: "/assets/ceilings/aero-ceiling.png" },
+
+  // Candy Theme
+  { id: "candy-floor", name: "Candy Floor", type: "floor", src: "/assets/floors/candy-floor.png" },
+  { id: "candy-wall", name: "Candy Wall", type: "wall", src: "/assets/walls/candy-wall.png" },
+  { id: "candy-ceiling", name: "Candy Ceiling", type: "ceiling", src: "/assets/ceilings/candy-ceiling.png" },
+
+  // Krazy Theme
+  { id: "krazy-floor", name: "Krazy Floor", type: "floor", src: "/assets/floors/krazy-floor.png" },
+  { id: "krazy-wall", name: "Krazy Wall", type: "wall", src: "/assets/walls/krazy-wall.png" },
+  { id: "krazy-ceiling", name: "Krazy Ceiling", type: "ceiling", src: "/assets/ceilings/krazy-ceiling.png" },
 ];
 
 const defaultLayers: RoomLayers = {
