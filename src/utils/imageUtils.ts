@@ -2,7 +2,7 @@ export async function calculateVisibleBounds(imageSrc: string): Promise<{ x: num
   return new Promise((resolve) => {
     const img = new Image();
     img.src = imageSrc;
-    img.crossOrigin = "anonymous"; // Allow cross-origin if needed
+    img.crossOrigin = "anonymous";
 
     img.onload = () => {
       const canvas = document.createElement("canvas");
