@@ -1,9 +1,15 @@
 .petPage {
-  position: fixed; /* Lock to viewport, prevents scroll */
-  inset: 0; /* Shortcut for top: 0; right: 0; bottom: 0; left: 0; */
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+  position: relative;
+  width: 100vw;
+  height: 100vh;
   background-color: #f0f8ff;
   overflow: hidden;
-  z-index: 0;
+}
+
+.petPage.loaded {
+  opacity: 1;
 }
 
 .layer {
@@ -35,15 +41,13 @@
 }
 
 .need-circle {
-  width: 80px; /* Twice the header size */
-  height: 80px;
-  flex-shrink: 0;
+  width: 64px;
+  height: 64px;
 }
 
 .circular-chart {
   width: 100%;
   height: 100%;
-  display: block;
 }
 
 .circle-bg {
@@ -62,7 +66,7 @@
 
 .emoji-text {
   fill: #333;
-  font-size: 15px; /* Larger for better readability */
+  font-size: 16px;
   text-anchor: middle;
   dominant-baseline: middle;
 }
@@ -72,21 +76,7 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: clamp(400px, 60vw, 800px); /* Doubled values for larger size */
+  width: clamp(400px, 60vw, 800px);
   height: auto;
   z-index: 5;
 }
-
-.paintbrush-icon {
-  position: fixed;
-  bottom: 80px; /* Just above the NavBar */
-  left: 16px;
-  cursor: pointer;
-  z-index: 20;
-}
-
-.paintbrush-icon img {
-  width: 48px; /* Increase size */
-  height: 48px;
-  object-fit: contain;
-} 

@@ -16,10 +16,10 @@ export default function PetPage({ needInfo }: { needInfo: NeedInfo[] }) {
     roomLayers.wall === defaultLayers.wall &&
     roomLayers.ceiling === defaultLayers.ceiling;
 
-  if (isDefault) return null; // Skip rendering until real data loads
+  if (isDefault) return null;
 
   return (
-    <div className="petPage">
+    <div className="petPage loaded">
       <img src={roomLayers.ceiling} alt="Ceiling" className="layer ceiling" />
       <img src={roomLayers.wall} alt="Wall" className="layer wall" />
       <img src={roomLayers.floor} alt="Floor" className="layer floor" />
