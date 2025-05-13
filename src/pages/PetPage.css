@@ -81,16 +81,12 @@
   position: fixed;
   bottom: 80px; /* Just above the NavBar */
   left: 16px;
-  background: #fff;
-  border-radius: 50%;
-  padding: 12px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
   cursor: pointer;
   z-index: 20;
 }
 
 .paintbrush-icon img {
-  width: 32px;
-  height: 32px;
+  width: 48px; /* Increase size */
+  height: 48px;
   object-fit: contain;
-}
+} 
