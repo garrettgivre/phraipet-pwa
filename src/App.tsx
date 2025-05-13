@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { ref, onValue, set } from "firebase/database";
 import { db } from "./firebase";
 import type { Pet, Need, NeedInfo } from "./types";
-
+import { InventoryProvider } from "./contexts/InventoryContext";
 import Header from "./components/Header";
 import NavBar from "./components/NavBar";
 import PetPage from "./pages/PetPage";
@@ -99,7 +99,7 @@ function AppShell({ pet }: { pet: Pet | null }) {
         minHeight: "calc(100vh - 72px)"
       }}>
         <Routes>
-          <Route path="/" element={<PetPage needInfo={needInfo} />} />
+          <Route path="/" element={<PetPage />} />
           <Route path="/explore" element={<Explore />} />
           <Route path="/play" element={<Play />} />
           <Route path="/inventory" element={<InventoryPage />} />
@@ -146,5 +146,12 @@ export default function App() {
     <BrowserRouter>
       <AppShell pet={pet} />
     </BrowserRouter>
+  );
+    return (
+    <InventoryProvider>
+      <BrowserRouter>
+        <AppShell pet={pet} />
+      </BrowserRouter>
+    </InventoryProvider>
   );
 }
