@@ -64,22 +64,26 @@ export default function InventoryPage() {
 }
 
 function ZoomedImage({ src, alt }: { src: string; alt: string }) {
-  const [clipStyle, setClipStyle] = useState<React.CSSProperties>({});
+  const [clipBounds, setClipBounds] = useState<{ x: number; y: number; width: number; height: number }>({ x: 0, y: 0, width: 64, height: 64 });
 
   useEffect(() => {
     calculateVisibleBounds(src).then(bounds => {
-      const zoom = Math.min(64 / bounds.width, 64 / bounds.height);
-
-      setClipStyle({
-        objectFit: "none",
-        objectPosition: `-${bounds.x}px -${bounds.y}px`,
-        width: `${bounds.width}px`,
-        height: `${bounds.height}px`,
-        transform: `scale(${zoom})`,
-        transformOrigin: "top left",
-      });
+      setClipBounds(bounds);
     });
   }, [src]);
 
-  return <img src={src} alt={alt} className="inventory-image" style={clipStyle} />;
+  return (
+    <div className="zoom-container">
+      <img 
+        src={src} 
+        alt={alt} 
+        className="inventory-image" 
+        style={{
+          position: "absolute",
+          left: `-${clipBounds.x}px`,
+          top: `-${clipBounds.y}px`,
+        }} 
+      />
+    </div>
+  );
 }
