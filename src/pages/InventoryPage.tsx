@@ -46,7 +46,10 @@ export default function InventoryPage() {
     >
       <h1>Inventory</h1>
 
-      <div className="inventory-grid">
+      <div 
+        className="inventory-grid" 
+        style={{ bottom: `${navHeight + 56}px` }} // 56px for tab height
+      >
         {filteredItems.map(item => (
           <div 
             key={item.id} 
