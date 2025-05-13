@@ -33,9 +33,11 @@
 
 .needs-wrapper {
   display: flex;
-  gap: 6px;
+  gap: 8px;
   align-items: center;
-  height: 100%;
+  margin-left: 16px; /* Adds spacing directly next to the pet image */
+  flex-grow: 1; /* Forces it to stay left and use available space */
+  justify-content: flex-start;
 }
 
 .need-circle {
