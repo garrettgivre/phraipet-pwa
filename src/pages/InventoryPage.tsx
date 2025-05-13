@@ -39,15 +39,20 @@ export default function InventoryPage() {
   });
 
   const handleEquip = (item: InventoryItem) => {
-    if (item.type === "backDecor" || item.type === "frontDecor") {
-      setRoomLayers((prev) => ({
-        ...prev,
-        [item.type]: [...prev[item.type], { src: item.src, x: 100, y: 200 }]
-      }));
-    } else {
-      setRoomLayers((prev) => ({ ...prev, [item.type]: item.src }));
-    }
-  };
+  if (["floor", "wall", "ceiling"].includes(item.type)) {
+    setRoomLayers((prev) => ({
+      ...prev,
+      [item.type]: item.src
+    }));
+  } else if (item.type === "backDecor" || item.type === "frontDecor") {
+    setRoomLayers((prev) => ({
+      ...prev,
+      [item.type]: [...prev[item.type], { src: item.src, x: 100, y: 200 }]
+    }));
+  } else if (item.type === "overlay") {
+    setRoomLayers((prev) => ({ ...prev, overlay: item.src }));
+  }
+};
 
   return (
     <div className="inventoryPage">
