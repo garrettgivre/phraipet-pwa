@@ -20,7 +20,7 @@ import SBStall from "./pages/Sunnybrook/SBStall";
 import SBToy from "./pages/Sunnybrook/SBToy";
 import InventoryPage from "./pages/InventoryPage";
 
-import "./App.css";
+import "./App.css"; // Ensure App.css does not add overflow-y: auto to main
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -30,7 +30,6 @@ function ScrollToTop() {
   return null;
 }
 
-/* ─── Descriptor Bands ──────────────────────────────────────────────── */
 const bands: Record<Exclude<Need, "spirit">, { upTo: number; label: string }[]> = {
   hunger: [
     { upTo: -21, label: "Dying" }, { upTo: -11, label: "Starving" }, { upTo: -1, label: "Famished" },
@@ -57,11 +56,9 @@ const bands: Record<Exclude<Need, "spirit">, { upTo: number; label: string }[]> 
     { upTo: 104, label: "Inseparable" }, { upTo: 119, label: "Loving" }, { upTo: 120, label: "Soulmates" },
   ],
 };
+const descriptor = (need: Exclude<Need, "spirit">, value: number) => bands[need].find(b => value <= b.upTo)?.label ?? "";
 
-const descriptor = (need: Exclude<Need, "spirit">, value: number) =>
-  bands[need].find((b) => value <= b.upTo)?.label ?? "";
 
-/* ─── AppShell ──────────────────────────────────────────────────────── */
 interface AppShellProps {
   pet: Pet | null;
   setPet: React.Dispatch<React.SetStateAction<Pet | null>>;
@@ -70,10 +67,6 @@ interface AppShellProps {
 function AppShell({ pet, setPet }: AppShellProps) {
   const location = useLocation();
   const isPetPage = location.pathname === "/";
-  // consumeFoodItem is used within InventoryPage, which gets it from useInventory()
-  // So AppShell doesn't need to call useInventory() for this specific purpose.
-  // const { consumeFoodItem } = useInventory(); 
-
 
   const needInfo: NeedInfo[] = pet
     ? [
@@ -93,17 +86,12 @@ function AppShell({ pet, setPet }: AppShellProps) {
     const petRef = ref(db, `pets/sharedPet`);
     set(petRef, updatedPet).then(() => {
       setPet(updatedPet);
-      // consumeFoodItem is now called within InventoryContext after successful Firebase update
-      // by InventoryPage calling the context's consumeFoodItem method.
-      // To make this work, InventoryPage needs access to the context's consumeFoodItem.
-      // This is already set up as InventoryPage calls useInventory().
     }).catch(console.error);
   };
 
   return (
     <>
       <ScrollToTop />
-      {/* Header is fixed, so it's always visible unless explicitly hidden */}
       {!isPetPage && (
         <Header 
           coins={100} 
@@ -111,22 +99,16 @@ function AppShell({ pet, setPet }: AppShellProps) {
           needs={needInfo} 
         />
       )}
-      {/* The <main> tag provides the content area between the fixed Header and NavBar.
-        Its padding ensures that content within the Routes isn't obscured.
-      */}
       <main style={{
-        paddingTop: "80px", /* Height of the fixed Header */
-        paddingBottom: "56px", /* Height of the fixed NavBar */
-        minHeight: "100vh", /* Ensure it takes at least full viewport height */
-        boxSizing: "border-box", /* Include padding in height calculation */
-        display: "flex", /* Added to make child (Route content) take full height */
-        flexDirection: "column" /* Added */
+        paddingTop: "80px",      /* Height of the fixed Header */
+        paddingBottom: "56px",   /* Height of the fixed NavBar */
+        height: "100vh",         /* Make <main> exactly viewport height */
+        boxSizing: "border-box", 
+        display: "flex",         
+        flexDirection: "column",
+        overflow: "hidden"       /* CRITICAL: Prevent <main> from scrolling */
       }}>
         <Routes>
-          {/* Each route's component (like InventoryPage) will now be a direct child 
-            of this flex container (<main>). If InventoryPage's root div has height: 100%,
-            it will fill the space defined by <main>'s content box.
-          */}
           <Route path="/" element={<PetPage needInfo={needInfo} />} />
           <Route path="/explore" element={<Explore />} />
           <Route path="/play" element={<Play />} />
@@ -134,6 +116,7 @@ function AppShell({ pet, setPet }: AppShellProps) {
             path="/inventory" 
             element={<InventoryPage pet={pet} onFeedPet={handleFeedPet} />}
           />
+          {/* ... other routes ... */}
           <Route path="/sunnybrook" element={<Sunnybrook />} />
           <Route path="/sunnybrook/Adoption" element={<SBAdoption />} />
           <Route path="/sunnybrook/SBClinic" element={<SBClinic />} />
@@ -145,7 +128,6 @@ function AppShell({ pet, setPet }: AppShellProps) {
           <Route path="/sunnybrook/SBToy" element={<SBToy />} />
         </Routes>
       </main>
-      {/* NavBar is fixed, so it's always visible at the bottom */}
       <NavBar />
     </>
   );
@@ -161,12 +143,8 @@ export default function App() {
         setPet(snap.val() as Pet);
       } else {
         const starter: Pet = {
-          hunger: 50,
-          happiness: 100,
-          cleanliness: 100,
-          affection: 100,
-          spirit: 100,
-          image: "/pet/Neutral.png"
+          hunger: 50, happiness: 100, cleanliness: 100,
+          affection: 100, spirit: 100, image: "/pet/Neutral.png"
         };
         set(petRef, starter).then(() => setPet(starter));
       }
