@@ -4,21 +4,22 @@
   height: 100%; /* Fill the available height from App.tsx <main>'s content box */
   width: 100%; /* Ensure it takes full width */
   background-color: #f0f0f0; 
-  box-sizing: border-box; 
+  box-sizing: border-box;
+  min-width: 320px; /* Prevent extreme horizontal collapse */
 }
 
 .inventory-title {
   text-align: center;
   color: #333;
   font-size: 22px;
-  padding: 10px 16px; /* Added horizontal padding */
+  padding: 10px 16px; 
   margin: 0; 
   flex-shrink: 0; 
   background-color: #f8f9fa;
   border-bottom: 1px solid #dee2e6;
   box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-  width: 100%; /* Ensure title bar takes full width */
-  box-sizing: border-box; /* Include padding in width */
+  width: 100%; 
+  box-sizing: border-box; 
 }
 
 /* Scrollable area for the inventory items */
@@ -31,9 +32,9 @@
   gap: 16px;
   align-content: flex-end; 
   background-color: #ffffff;
-  width: 100%; /* Ensure grid area takes full width */
-  box-sizing: border-box; /* Include padding in width */
-  min-height: 100px; /* Give it a minimum height so "No items" message doesn't collapse it entirely */
+  width: 100%; 
+  box-sizing: border-box; 
+  min-height: 150px; /* Increased min-height to better showcase align-content: flex-end and prevent collapse */
 }
 
 .no-items-message {
@@ -43,7 +44,8 @@
   color: #6c757d;
   font-style: italic;
   align-self: center; 
-  width: 100%; /* Ensure message container takes full width */
+  width: 100%; 
+  box-sizing: border-box; /* Ensure padding doesn't add to width */
 }
 
 .inventory-item {
@@ -140,11 +142,11 @@
 
 /* Container for both tab bars - this will NOT scroll with the grid */
 .inventory-tab-bars-container {
-  flex-shrink: 0; /* Prevent this container from shrinking */
+  flex-shrink: 0; 
   background-color: #f8f9fa; 
   border-top: 1px solid #dee2e6;
   z-index: 5; 
-  width: 100%; /* Ensure tab container takes full width */
+  width: 100%; 
   box-sizing: border-box;
 }
 
@@ -178,7 +180,7 @@
   text-align: center;
   margin: 0 2px;
   line-height: 1.4;
-  min-width: 0; /* Allow flex items to shrink properly */
+  min-width: 0; 
 }
 
 .tab-button { /* Sub-category */
