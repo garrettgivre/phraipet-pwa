@@ -1,174 +1,219 @@
-// src/contexts/InventoryContext.tsx
-import { createContext, useState, useEffect, type ReactNode, useContext } from "react";
-import { db } from "../firebase";
-import { ref, onValue, set } from "firebase/database";
+// src/pages/InventoryPage.tsx
+import React, { useEffect, useState, useMemo } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useInventory } from "../contexts/InventoryContext";
 import type { 
-  InventoryItem, 
-  DecorationInventoryItem, 
-  FoodInventoryItem, 
-  CleaningInventoryItem,
-  ToyInventoryItem,      
-  RoomDecorItem 
+    InventoryItem, 
+    DecorationInventoryItem, 
+    FoodInventoryItem, 
+    CleaningInventoryItem,
+    ToyInventoryItem,      
+    FoodCategory, 
+    CleaningCategory,      
+    ToyCategory,           
+    Pet as PetType, 
+    DecorationItemType 
 } from "../types";
+import { calculateVisibleBounds } from "../utils/imageUtils";
+import "./InventoryPage.css";
 
-// This export is for compatibility if other files were importing DecorItem from here.
-export type DecorItem = RoomDecorItem;
+// Define main categories
+const mainCategories = ["Decorations", "Food", "Cleaning", "Toys"] as const;
+type MainCategory = typeof mainCategories[number];
 
-// Defines the structure of the layers that make up the pet's room.
-type RoomLayers = {
-  floor: string;
-  wall: string;
-  ceiling: string;
-  backDecor: RoomDecorItem[];
-  frontDecor: RoomDecorItem[];
-  overlay: string;
-};
+// Define sub-categories for Decorations using the actual DecorationItemType values
+const decorationSubCategories: DecorationItemType[] = ["wall", "floor", "ceiling", "backDecor", "frontDecor", "overlay"];
 
-// --- Sample Items (Ensure these match the types and have unique IDs) ---
-const defaultDecorationItems: DecorationInventoryItem[] = [
-  { id: "deco-classic-floor", name: "Classic Floor", itemCategory: "decoration", type: "floor", src: "/assets/floors/classic-floor.png" },
-  { id: "deco-classic-wall", name: "Classic Wall", itemCategory: "decoration", type: "wall", src: "/assets/walls/classic-wall.png" },
-  { id: "deco-classic-ceiling", name: "Classic Ceiling", itemCategory: "decoration", type: "ceiling", src: "/assets/ceilings/classic-ceiling.png" },
-  { id: "deco-science-floor", name: "Science Floor", itemCategory: "decoration", type: "floor", src: "/assets/floors/science-floor.png" },
-  { id: "deco-science-wall", name: "Science Wall", itemCategory: "decoration", type: "wall", src: "/assets/walls/science-wall.png" },
-  { id: "deco-science-ceiling", name: "Science Ceiling", itemCategory: "decoration", type: "ceiling", src: "/assets/ceilings/science-ceiling.png" },
-];
+// Define sub-categories for Food
+const foodSubCategories: FoodCategory[] = ["Treat", "Snack", "LightMeal", "HeartyMeal", "Feast"];
 
-const defaultFoodItems: FoodInventoryItem[] = [
-  { id: "food-apple-treat", name: "Apple Slice", itemCategory: "food", type: "Treat", hungerRestored: 10, src: "/assets/food/apple_slice.png", description: "A crunchy apple slice." },
-  { id: "food-cookie-snack", name: "Cookie", itemCategory: "food", type: "Snack", hungerRestored: 15, src: "/assets/food/cookie.png", description: "A tasty cookie." },
-  { id: "food-sandwich-light", name: "Sandwich", itemCategory: "food", type: "LightMeal", hungerRestored: 30, src: "/assets/food/sandwich.png", description: "A simple sandwich." },
-  { id: "food-steak-hearty", name: "Steak", itemCategory: "food", type: "HeartyMeal", hungerRestored: 45, src: "/assets/food/steak.png", description: "A juicy steak." },
-  { id: "food-cake-feast", name: "Full Cake", itemCategory: "food", type: "Feast", hungerRestored: 60, src: "/assets/food/cake.png", description: "A whole cake to feast on!" },
-];
+// Define sub-categories for Cleaning
+const cleaningSubCategories: CleaningCategory[] = ["QuickFix", "BasicKit", "StandardSet", "PremiumCare", "LuxurySpa"];
 
-const defaultCleaningItems: CleaningInventoryItem[] = [
-    { id: "clean-wet-wipe", name: "Wet Wipe", itemCategory: "cleaning", type: "QuickFix", cleanlinessBoost: 10, src: "/assets/cleaning/wet_wipe.png", description: "A quick wipe down." },
-    { id: "clean-soap-bar", name: "Soap Bar", itemCategory: "cleaning", type: "BasicKit", cleanlinessBoost: 15, src: "/assets/cleaning/soap_bar.png", description: "Basic but effective." },
-    { id: "clean-shampoo-bottle", name: "Shampoo", itemCategory: "cleaning", type: "StandardSet", cleanlinessBoost: 20, src: "/assets/cleaning/shampoo.png", description: "Leaves a fresh scent." },
-    { id: "clean-grooming-kit", name: "Grooming Kit", itemCategory: "cleaning", type: "PremiumCare", cleanlinessBoost: 25, src: "/assets/cleaning/grooming_kit.png", description: "For a thorough clean." },
-    { id: "clean-spa-day-pass", name: "Spa Day Pass", itemCategory: "cleaning", type: "LuxurySpa", cleanlinessBoost: 30, src: "/assets/cleaning/spa_pass.png", description: "The ultimate pampering!" },
-];
+// Define sub-categories for Toys
+const toySubCategories: ToyCategory[] = ["ChewToy", "Plushie", "PuzzleToy", "ActivityCenter", "RoboticPal"];
 
-const defaultToyItems: ToyInventoryItem[] = [
-    { id: "toy-rubber-ball", name: "Rubber Ball", itemCategory: "toy", type: "ChewToy", happinessBoost: 10, src: "/assets/toys/rubber_ball.png", description: "A bouncy classic." },
-    { id: "toy-teddy-bear", name: "Teddy Bear", itemCategory: "toy", type: "Plushie", happinessBoost: 15, src: "/assets/toys/teddy_bear.png", description: "Soft and cuddly." },
-    { id: "toy-puzzle-box", name: "Puzzle Box", itemCategory: "toy", type: "PuzzleToy", happinessBoost: 20, src: "/assets/toys/puzzle_box.png", description: "Keeps the mind sharp." },
-    { id: "toy-activity-tree", name: "Activity Tree", itemCategory: "toy", type: "ActivityCenter", happinessBoost: 25, src: "/assets/toys/cat_tree.png", description: "Hours of fun!" },
-    { id: "toy-robot-mouse", name: "Robo-Mouse", itemCategory: "toy", type: "RoboticPal", happinessBoost: 30, src: "/assets/toys/robot_mouse.png", description: "An interactive friend!" },
-];
-
-// Combine all default items into one list for the inventory.
-const defaultAllItems: InventoryItem[] = [
-    ...defaultDecorationItems, 
-    ...defaultFoodItems,
-    ...defaultCleaningItems,
-    ...defaultToyItems
-];
-
-// Default state for the room layers.
-const defaultRoomLayersData: RoomLayers = { 
-  floor: "/assets/floors/classic-floor.png",
-  wall: "/assets/walls/classic-wall.png",
-  ceiling: "/assets/ceilings/classic-ceiling.png",
-  backDecor: [],
-  frontDecor: [],
-  overlay: "",
-};
-
-// Defines the shape of the data and functions provided by the InventoryContext.
-interface InventoryContextType {
-  items: InventoryItem[];
-  roomLayers: RoomLayers;
-  roomLayersLoading: boolean; 
-  setRoomLayer: (type: "floor" | "wall" | "ceiling" | "overlay", src: string) => void;
-  addDecorItem: (type: "backDecor" | "frontDecor", decor: RoomDecorItem) => void;
-  consumeItem: (itemId: string) => void; // This is the function InventoryPage expects
+// Interface for the state passed via react-router-dom's navigate function
+interface InventoryLocationState {
+  targetMainCategory?: MainCategory;
+  targetSubCategory?: string; 
 }
 
-// Creates the context with default values.
-const InventoryContext = createContext<InventoryContextType>({
-  items: defaultAllItems,
-  roomLayers: defaultRoomLayersData,
-  roomLayersLoading: true, 
-  setRoomLayer: () => { console.warn("setRoomLayer called on default context"); },
-  addDecorItem: () => { console.warn("addDecorItem called on default context"); },
-  consumeItem: () => { console.warn("consumeItem called on default context"); }, // Default function for consumeItem
-});
+interface InventoryPageProps {
+  pet: PetType | null;
+  onFeedPet: (foodItem: FoodInventoryItem) => void;
+  onCleanPet: (cleaningItem: CleaningInventoryItem) => void;
+  onPlayWithToy: (toyItem: ToyInventoryItem) => void;
+}
 
-// Custom hook to easily consume the InventoryContext.
-export const useInventory = () => useContext(InventoryContext);
+// Helper to capitalize first letter for display
+const capitalizeFirstLetter = (string: string) => {
+  if (!string) return string;
+  if (string === "backDecor") return "Back Decor";
+  if (string === "frontDecor") return "Front Decor";
+  if (string === "QuickFix") return "Quick Fix";
+  if (string === "BasicKit") return "Basic Kit";
+  if (string === "StandardSet") return "Standard Set";
+  if (string === "PremiumCare") return "Premium Care";
+  if (string === "LuxurySpa") return "Luxury Spa";
+  if (string === "ChewToy") return "Chew Toy";
+  if (string === "PuzzleToy") return "Puzzle Toy";
+  if (string === "ActivityCenter") return "Activity Center";
+  if (string === "RoboticPal") return "Robotic Pal";
+  return string.charAt(0).toUpperCase() + string.slice(1);
+};
 
-// Provider component that wraps parts of the app needing access to inventory state.
-export function InventoryProvider({ children }: { children: ReactNode }) {
-  const [items, setItems] = useState<InventoryItem[]>(defaultAllItems);
-  const [roomLayers, setRoomLayers] = useState<RoomLayers>(defaultRoomLayersData);
-  const [roomLayersLoading, setRoomLayersLoading] = useState<boolean>(true);
+function ZoomedImage({ src, alt }: { src: string; alt: string }) {
+  const containerSize = 64;
+  const [imageStyle, setImageStyle] = useState<React.CSSProperties>({
+    visibility: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center',
+    width: `${containerSize}px`, height: `${containerSize}px`, fontSize: '12px', color: '#aaa',
+  });
+  const [loaded, setLoaded] = useState(false);
+  const [error, setError] = useState(false);
 
-  // Effect to load room layers from Firebase on component mount.
   useEffect(() => {
-    setRoomLayersLoading(true); 
-    const roomRef = ref(db, "roomLayers/sharedRoom");
-    const unsubscribe = onValue(roomRef, (snapshot) => {
-      if (snapshot.exists()) {
-        const firebaseData = snapshot.val();
-        setRoomLayers({
-          floor: firebaseData.floor || defaultRoomLayersData.floor,
-          wall: firebaseData.wall || defaultRoomLayersData.wall,
-          ceiling: firebaseData.ceiling || defaultRoomLayersData.ceiling,
-          backDecor: Array.isArray(firebaseData.backDecor) ? firebaseData.backDecor : [],
-          frontDecor: Array.isArray(firebaseData.frontDecor) ? firebaseData.frontDecor : [],
-          overlay: firebaseData.overlay || defaultRoomLayersData.overlay,
-        });
-      } else {
-        setRoomLayers(defaultRoomLayersData);
-      }
-      setRoomLayersLoading(false); 
-    }, (error) => {
-      console.error("Error fetching roomLayers from Firebase:", error);
-      setRoomLayers(defaultRoomLayersData); 
-      setRoomLayersLoading(false); 
-    });
-    return () => unsubscribe(); 
-  }, []);
-
-  const saveRoomToFirebase = (updatedLayers: RoomLayers) => {
-    const roomRef = ref(db, "roomLayers/sharedRoom");
-    set(roomRef, updatedLayers).catch(err => console.error("Failed to save room layers to Firebase:", err));
-  };
-
-  const setRoomLayer = (type: "floor" | "wall" | "ceiling" | "overlay", src: string) => {
-    const updatedLayers = { ...roomLayers, [type]: src };
-    setRoomLayers(updatedLayers);
-    saveRoomToFirebase(updatedLayers);
-  };
-
-  const addDecorItem = (type: "backDecor" | "frontDecor", decor: RoomDecorItem) => {
-    const updatedLayers = {
-      ...roomLayers,
-      [type]: [...(roomLayers[type] || []), decor], 
+    setLoaded(false); setError(false); setImageStyle(prev => ({ ...prev, visibility: 'hidden' }));
+    const img = new Image(); img.src = src; img.crossOrigin = "anonymous";
+    img.onload = () => {
+      calculateVisibleBounds(src).then(bounds => {
+        if (bounds.width <= 0 || bounds.height <= 0 || bounds.naturalWidth <= 0 || bounds.naturalHeight <= 0) {
+          setError(true); setLoaded(true); setImageStyle({ display: 'flex', alignItems: 'center', justifyContent: 'center', width: `${containerSize}px`, height: `${containerSize}px`, fontSize: '20px', color: 'red', border: '1px solid #ddd', boxSizing: 'border-box', visibility: 'visible', }); return;
+        }
+        const scale = Math.min(containerSize / bounds.width, containerSize / bounds.height);
+        const scaledNaturalWidth = bounds.naturalWidth * scale; const scaledNaturalHeight = bounds.naturalHeight * scale;
+        const offsetX = (containerSize - (bounds.width * scale)) / 2 - (bounds.x * scale); const offsetY = (containerSize - (bounds.height * scale)) / 2 - (bounds.y * scale);
+        setImageStyle({ position: "absolute", left: `${offsetX}px`, top: `${offsetY}px`, width: `${scaledNaturalWidth}px`, height: `${scaledNaturalHeight}px`, visibility: 'visible', });
+        setLoaded(true);
+      }).catch((err) => { console.error("Error in calculateVisibleBounds for src:", src, err); setError(true); setLoaded(true); setImageStyle({ display: 'flex', alignItems: 'center', justifyContent: 'center', width: `${containerSize}px`, height: `${containerSize}px`, fontSize: '20px', color: 'red', border: '1px solid #ddd', boxSizing: 'border-box', visibility: 'visible', }); });
     };
-    setRoomLayers(updatedLayers);
-    saveRoomToFirebase(updatedLayers);
+    img.onerror = () => { console.error("Failed to load image for ZoomedImage:", src); setError(true); setLoaded(true); setImageStyle({ display: 'flex', alignItems: 'center', justifyContent: 'center', width: `${containerSize}px`, height: `${containerSize}px`, fontSize: '20px', color: 'red', border: '1px solid #ddd', boxSizing: 'border-box', visibility: 'visible', }); };
+  }, [src]);
+  return ( <div className="zoom-container"> {!loaded && <div className="zoom-placeholder" style={{fontSize: '12px', color: '#aaa'}}>...</div>} {loaded && error && <div className="zoom-placeholder" style={imageStyle} title={`Error: ${alt}`}>X</div>} {loaded && !error && ( <img src={src} alt={alt} className="inventory-image" style={imageStyle} /> )} </div> );
+}
+
+// CRITICAL: This is the default export statement.
+export default function InventoryPage({ pet, onFeedPet, onCleanPet, onPlayWithToy }: InventoryPageProps) {
+  const { items, setRoomLayer, addDecorItem, consumeItem } = useInventory();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const initialTabs = useMemo(() => {
+    const state = location.state as InventoryLocationState | null;
+    let main: MainCategory = "Decorations";
+    let sub: string = decorationSubCategories[0]; // Default to the first actual type
+    if (state?.targetMainCategory) {
+      main = state.targetMainCategory;
+      if (main === "Decorations") sub = (decorationSubCategories.includes(state.targetSubCategory as DecorationItemType) ? state.targetSubCategory : decorationSubCategories[0]) as string;
+      else if (main === "Food") sub = (foodSubCategories.includes(state.targetSubCategory as FoodCategory) ? state.targetSubCategory : foodSubCategories[0]) as string;
+      else if (main === "Cleaning") sub = (cleaningSubCategories.includes(state.targetSubCategory as CleaningCategory) ? state.targetSubCategory : cleaningSubCategories[0]) as string;
+      else if (main === "Toys") sub = (toySubCategories.includes(state.targetSubCategory as ToyCategory) ? state.targetSubCategory : toySubCategories[0]) as string;
+    }
+    return { main, sub };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); 
+
+  const [selectedMainCategory, setSelectedMainCategory] = useState<MainCategory>(initialTabs.main);
+  const [selectedSubCategory, setSelectedSubCategory] = useState<string>(initialTabs.sub);
+  const [activeColorOptions, setActiveColorOptions] = useState<{ id: string; options: { label: string; src: string }[] } | null>(null);
+
+  useEffect(() => {
+    if (location.state && (location.state as InventoryLocationState).targetMainCategory) {
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); 
+
+  const handleMainCategoryChange = (category: MainCategory) => {
+    setSelectedMainCategory(category);
+    if (category === "Decorations") setSelectedSubCategory(decorationSubCategories[0]);
+    else if (category === "Food") setSelectedSubCategory(foodSubCategories[0]);
+    else if (category === "Cleaning") setSelectedSubCategory(cleaningSubCategories[0]);
+    else if (category === "Toys") setSelectedSubCategory(toySubCategories[0]);
+    setActiveColorOptions(null);
+  };
+  
+  useEffect(() => {
+    setActiveColorOptions(null);
+    if (selectedMainCategory === "Decorations" && !decorationSubCategories.includes(selectedSubCategory as DecorationItemType)) setSelectedSubCategory(decorationSubCategories[0]);
+    else if (selectedMainCategory === "Food" && !foodSubCategories.includes(selectedSubCategory as FoodCategory)) setSelectedSubCategory(foodSubCategories[0]);
+    else if (selectedMainCategory === "Cleaning" && !cleaningSubCategories.includes(selectedSubCategory as CleaningCategory)) setSelectedSubCategory(cleaningSubCategories[0]);
+    else if (selectedMainCategory === "Toys" && !toySubCategories.includes(selectedSubCategory as ToyCategory)) setSelectedSubCategory(toySubCategories[0]);
+  }, [selectedMainCategory, selectedSubCategory]);
+
+  const handleItemClick = (item: InventoryItem) => {
+    if (item.itemCategory === "decoration") {
+      const decorationItem = item as DecorationInventoryItem;
+      if (decorationItem.colorOptions && decorationItem.colorOptions.length > 0) setActiveColorOptions({ id: decorationItem.id, options: decorationItem.colorOptions });
+      else { applyDecorationItem(decorationItem); setActiveColorOptions(null); }
+    } else if (item.itemCategory === "food") {
+      if (pet) { onFeedPet(item as FoodInventoryItem); consumeItem(item.id); } 
+      else alert("Pet data not loaded!");
+    } else if (item.itemCategory === "cleaning") {
+      if (pet) { onCleanPet(item as CleaningInventoryItem); consumeItem(item.id); }
+      else alert("Pet data not loaded!");
+    } else if (item.itemCategory === "toy") {
+      if (pet) { onPlayWithToy(item as ToyInventoryItem); consumeItem(item.id); }
+      else alert("Pet data not loaded!");
+    }
   };
 
-  const consumeItem = (itemId: string) => {
-    setItems(prevItems => prevItems.filter(item => item.id !== itemId));
-    console.log(`Item ${itemId} consumed from local list.`);
-    // TODO: Add logic here to remove the item from the user's inventory in Firebase
+  const applyDecorationItem = (item: DecorationInventoryItem) => {
+    if (["floor", "wall", "ceiling", "overlay"].includes(item.type)) setRoomLayer(item.type as "floor" | "wall" | "ceiling" | "overlay", item.src);
+    else if (item.type === "backDecor" || item.type === "frontDecor") addDecorItem(item.type, { src: item.src, x: 100, y: 100 });
   };
 
-  // Provide the state and functions to children components.
+  const filteredItems = items.filter(item => {
+    if (selectedMainCategory === "Decorations") {
+      if (item.itemCategory !== "decoration") return false;
+      return (item as DecorationInventoryItem).type === selectedSubCategory; 
+    } else if (selectedMainCategory === "Food") {
+      if (item.itemCategory !== "food") return false;
+      return (item as FoodInventoryItem).type === selectedSubCategory;
+    } else if (selectedMainCategory === "Cleaning") {
+      if (item.itemCategory !== "cleaning") return false;
+      return (item as CleaningInventoryItem).type === selectedSubCategory;
+    } else if (selectedMainCategory === "Toys") {
+      if (item.itemCategory !== "toy") return false;
+      return (item as ToyInventoryItem).type === selectedSubCategory;
+    }
+    return false;
+  });
+
+  const currentSubcategories = 
+    selectedMainCategory === "Decorations" ? decorationSubCategories :
+    selectedMainCategory === "Food" ? foodSubCategories :
+    selectedMainCategory === "Cleaning" ? cleaningSubCategories :
+    selectedMainCategory === "Toys" ? toySubCategories :
+    [];
+
   return (
-    <InventoryContext.Provider value={{ 
-      items, 
-      roomLayers, 
-      roomLayersLoading, 
-      setRoomLayer, 
-      addDecorItem, 
-      consumeItem // Ensure consumeItem is included in the provided value
-    }}>
-      {children}
-    </InventoryContext.Provider>
+    <div className="inventory-page-layout">
+      <h1 className="inventory-title">Inventory</h1>
+      <div className="inventory-grid-scroll-area">
+        {filteredItems.length > 0 ? (
+          filteredItems.map(item => (
+            <div key={item.id} className="inventory-item" onClick={() => handleItemClick(item)} title={item.description || item.name}>
+              <ZoomedImage src={item.src} alt={item.name} />
+              <span className="item-name">{item.name}</span>
+              {item.itemCategory === "food" && <span className="item-effect">Hunger +{(item as FoodInventoryItem).hungerRestored}</span>}
+              {item.itemCategory === "cleaning" && <span className="item-effect">Clean +{(item as CleaningInventoryItem).cleanlinessBoost}</span>}
+              {item.itemCategory === "toy" && <span className="item-effect">Happy +{(item as ToyInventoryItem).happinessBoost}</span>}
+              {activeColorOptions?.id === item.id && item.itemCategory === "decoration" && (item as DecorationInventoryItem).colorOptions && (
+                <div className="color-options">
+                  {(item as DecorationInventoryItem).colorOptions!.map(option => ( <div key={option.label} className="color-swatch" onClick={(e) => { e.stopPropagation(); applyDecorationItem({ ...(item as DecorationInventoryItem), src: option.src }); setActiveColorOptions(null); }} style={{ backgroundImage: `url(${option.src})` }} title={option.label} /> ))}
+                </div> )}
+            </div> ))
+        ) : ( <p className="no-items-message">No items in this category.</p> )}
+      </div>
+      <div className="inventory-tab-bars-container">
+        <div className="inventory-sub-tabs">
+          {currentSubcategories.map(categoryValue => ( <button key={categoryValue} className={`tab-button ${selectedSubCategory === categoryValue ? "active" : ""}`} onClick={() => setSelectedSubCategory(categoryValue)}> {capitalizeFirstLetter(categoryValue)} </button> ))}
+        </div>
+        <div className="inventory-main-tabs">
+          {mainCategories.map(category => ( <button key={category} className={`main-tab-button ${selectedMainCategory === category ? "active" : ""}`} onClick={() => handleMainCategoryChange(category)}> {category} </button> ))}
+        </div>
+      </div>
+    </div>
   );
 }

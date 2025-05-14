@@ -19,7 +19,8 @@ import SBFurniture from "./pages/Sunnybrook/SBFurniture";
 import SBMart from "./pages/Sunnybrook/SBMart";
 import SBStall from "./pages/Sunnybrook/SBStall";
 import SBToy from "./pages/Sunnybrook/SBToy";
-import InventoryPage from "./pages/InventoryPage"; // Default import
+// CRITICAL: Ensure this import path and filename are exactly correct
+import InventoryPage from "./pages/InventoryPage"; 
 
 import "./App.css";
 
@@ -35,10 +36,6 @@ const HAPPINESS_DECAY_PER_DAY = 50;
 const CLEANLINESS_DECAY_PER_DAY = 100;
 const AFFECTION_DECAY_PER_DAY = 10;
 
-/**
- * Helper to get today's date in YYYY-MM-DD format.
- * @returns {string} The current date as "YYYY-MM-DD".
- */
 const getTodayDateString = (): string => {
   const today = new Date();
   const year = today.getFullYear();
@@ -47,9 +44,6 @@ const getTodayDateString = (): string => {
   return `${year}-${month}-${day}`;
 };
 
-/**
- * Component to automatically scroll to the top of the page on route changes.
- */
 function ScrollToTop() {
   const { pathname } = useLocation();
   useEffect(() => {
@@ -58,7 +52,6 @@ function ScrollToTop() {
   return null;
 }
 
-// Descriptor bands for pet needs to convert numerical values to text.
 const bands: Record<Exclude<Need, "spirit">, { upTo: number; label: string }[]> = {
   hunger: [ { upTo: -21, label: "Dying" }, { upTo: -11, label: "Starving" }, { upTo: -1, label: "Famished" }, { upTo: 14, label: "Very Hungry" }, { upTo: 29, label: "Hungry" }, { upTo: 44, label: "Not Hungry" }, { upTo: 59, label: "Fine" }, { upTo: 74, label: "Satiated" }, { upTo: 89, label: "Full Up" }, { upTo: 104, label: "Very Full" }, { upTo: 119, label: "Bloated" }, { upTo: 120, label: "Very Bloated" }, ],
   happiness: [ { upTo: -21, label: "Miserable" }, { upTo: -11, label: "Sad" }, { upTo: -1, label: "Unhappy" }, { upTo: 14, label: "Dull" }, { upTo: 29, label: "Okay" }, { upTo: 44, label: "Content" }, { upTo: 59, label: "Happy" }, { upTo: 74, label: "Joyful" }, { upTo: 89, label: "Delighted" }, { upTo: 104, label: "Ecstatic" }, { upTo: 119, label: "Overjoyed" }, { upTo: 120, label: "Blissful" }, ],
@@ -174,7 +167,7 @@ export default function App() {
 
   const handleIncreaseAffection = (amount: number) => {
     if (!pet) return;
-    let currentPetData = { ...pet }; // Work with a mutable copy for calculations
+    let currentPetData = { ...pet }; 
     const todayStr = getTodayDateString();
     if (currentPetData.lastAffectionGainDate !== todayStr) {
       currentPetData.affectionGainedToday = 0;
