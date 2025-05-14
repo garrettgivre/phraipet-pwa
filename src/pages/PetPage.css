@@ -49,8 +49,8 @@
 
 /* --- Styles for Need Circles on PetPage --- */
 .needsOverlay .need-circle { /* Scoped to needsOverlay */
-  width: 112px;  /* Doubled from original 56px concept */
-  height: 112px; /* Doubled from original 56px concept */
+  width: 112px;  /* Larger overall size for PetPage */
+  height: 112px; 
 }
 
 .needsOverlay .circular-chart { /* Scoped to needsOverlay */
@@ -61,23 +61,20 @@
 .needsOverlay .circle-bg { /* Scoped to needsOverlay */
   fill: none;
   stroke: #e0e0e0; 
-  stroke-width: 7.6; /* Proportional to new size (original was ~3.8) */
+  stroke-width: 3.8; /* Original desired thickness */
 }
 
 .needsOverlay .circle { /* Scoped to needsOverlay */
   fill: none;
   stroke: #00acc1; 
-  stroke-width: 7.6; /* Proportional to new size */
+  stroke-width: 3.8; /* Original desired thickness */
   stroke-linecap: round;
   transition: stroke-dasharray 0.3s ease-out;
 }
 
 .needsOverlay .emoji-text { /* Scoped to needsOverlay */
   fill: #333;
-  /* Adjusted font-size to fit inside the larger ring without overlapping */
-  /* Original for ~56-64px container was ~15-16px SVG units. */
-  /* For a 112px container, if 30px SVG units was too big, let's try smaller. */
-  font-size: 18px; /* SVG units. This will render to ~45-50px screen pixels. */
+  font-size: 18px; /* Adjusted to fit well within the 112px circle with 3.8px stroke */
   text-anchor: middle;
   dominant-baseline: middle;
 }
