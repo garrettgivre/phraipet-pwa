@@ -37,18 +37,18 @@
   transform: translateY(-50%);
   display: flex;
   flex-direction: column;
-  gap: 16px; /* Reduced gap slightly */
-  z-index: 10; /* Above room layers, below pet mood if it overlaps */
+  gap: 16px; 
+  z-index: 10; 
 }
 
-.need-item-container { /* If you add text below circles */
+.need-item-container { 
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
 .need-circle {
-  width: 56px; /* Slightly smaller */
+  width: 56px; 
   height: 56px;
 }
 
@@ -59,13 +59,13 @@
 
 .circle-bg {
   fill: none;
-  stroke: #e0e0e0; /* Lighter background */
+  stroke: #e0e0e0; 
   stroke-width: 3.5;
 }
 
 .circle {
   fill: none;
-  stroke: #00acc1; /* Default positive color */
+  stroke: #00acc1; 
   stroke-width: 3.5;
   stroke-linecap: round;
   transition: stroke-dasharray 0.3s ease-out;
@@ -73,7 +73,7 @@
 
 .emoji-text {
   fill: #333;
-  font-size: 15px; /* Adjusted size */
+  font-size: 15px; 
   text-anchor: middle;
   dominant-baseline: middle;
 }
@@ -84,46 +84,47 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  display: flex; /* To help position bubble relative to pet */
+  display: flex; 
   flex-direction: column;
   align-items: center;
-  z-index: 5; /* Pet and its mood are above back decor, below front decor */
+  z-index: 5; 
+  /* Ensure pet-area itself doesn't constrain petHero unnecessarily if petHero uses vw */
+  width: fit-content; /* Or max-content, or adjust based on petHero's needs */
 }
 
 .petHero {
-  /* width: clamp(300px, 50vw, 600px); Responsive scaling, adjust as needed */
-  max-width: 70%; /* Max width relative to viewport width */
-  max-height: 60vh; /* Max height relative to viewport height */
-  height: auto;   /* Maintain aspect ratio */
-  object-fit: contain; /* Ensure pet is not cropped */
-  /* transform is handled by .pet-area */
+  /* Reverted to original clamp-based sizing for more direct width control */
+  width: clamp(400px, 60vw, 800px); 
+  height: auto;   /* Maintain aspect ratio based on width */
+  object-fit: contain; 
+  /* transform is handled by .pet-area's translate for centering */
+  display: block; /* Removes any extra space below if it's an inline element */
 }
 
 /* Pet Mood Bubble Styling */
 .pet-mood-bubble {
-  background-color: rgba(255, 255, 255, 0.9); /* Semi-transparent white */
+  background-color: rgba(255, 255, 255, 0.9); 
   padding: 8px 15px;
-  border-radius: 20px; /* Rounded corners for bubble shape */
+  border-radius: 20px; 
   box-shadow: 0 2px 5px rgba(0,0,0,0.15);
-  margin-bottom: 15px; /* Space between bubble and pet */
-  max-width: 250px; /* Prevent bubble from getting too wide */
+  margin-bottom: 15px; 
+  max-width: 250px; 
   text-align: center;
-  /* Position it above the pet, centered by .pet-area's align-items */
-  position: relative; /* Or absolute if you need more fine-grained control relative to .pet-area */
-  z-index: 6; /* Above the pet image if overlapping */
+  position: relative; 
+  z-index: 6; 
 }
 
 .pet-mood-bubble::after { /* Triangle for speech bubble tail */
   content: '';
   position: absolute;
-  bottom: -8px; /* Position tail at the bottom */
+  bottom: -8px; 
   left: 50%;
   transform: translateX(-50%);
   width: 0;
   height: 0;
   border-left: 8px solid transparent;
   border-right: 8px solid transparent;
-  border-top: 10px solid rgba(255, 255, 255, 0.9); /* Same color as bubble */
+  border-top: 10px solid rgba(255, 255, 255, 0.9); 
 }
 
 .pet-mood-bubble p {
@@ -135,20 +136,20 @@
 
 
 .paintbrush-icon {
-  position: fixed; /* Fixed to viewport */
-  bottom: 72px; /* Space above main NavBar (assuming NavBar is 56px + some margin) */
+  position: fixed; 
+  bottom: 72px; 
   left: 16px;
   cursor: pointer;
-  z-index: 20; /* High z-index to be on top */
-  background-color: rgba(255, 255, 255, 0.8); /* Slight background for visibility */
+  z-index: 20; 
+  background-color: rgba(255, 255, 255, 0.8); 
   border-radius: 50%;
   padding: 8px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
 .paintbrush-icon img {
-  width: 32px; /* Smaller icon */
+  width: 32px; 
   height: 32px;
   object-fit: contain;
-  display: block; /* Remove extra space below image */
+  display: block; 
 }
