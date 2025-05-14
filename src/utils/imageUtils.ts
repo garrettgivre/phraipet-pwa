@@ -2,17 +2,22 @@ export async function calculateVisibleBounds(imageSrc: string): Promise<{ x: num
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.src = imageSrc;
-    img.crossOrigin = "anonymous"; // Important for canvas operations if images are from different origins
+    img.crossOrigin = "anonymous";
 
     img.onload = () => {
+      const naturalWidth = img.naturalWidth;
+      const naturalHeight = img.naturalHeight;
+      
+      // If image has no dimensions, or it's an error case for some browsers
+      if (naturalWidth === 0 || naturalHeight === 0) {
+        console.warn("Image has zero dimensions:", imageSrc);
+        return resolve({ x: 0, y: 0, width: 0, height: 0, naturalWidth: 0, naturalHeight: 0 });
+      }
+
       const canvas = document.createElement("canvas");
       const ctx = canvas.getContext("2d");
       
-      const naturalWidth = img.naturalWidth;
-      const naturalHeight = img.naturalHeight;
-
       if (!ctx) {
-        // Fallback if context cannot be obtained (should be rare)
         return resolve({ x: 0, y: 0, width: naturalWidth, height: naturalHeight, naturalWidth, naturalHeight });
       }
 
@@ -30,7 +35,7 @@ export async function calculateVisibleBounds(imageSrc: string): Promise<{ x: num
           for (let x = 0; x < naturalWidth; x++) {
             const index = (y * naturalWidth + x) * 4;
             const alpha = data[index + 3];
-            if (alpha > 0) { // Consider a pixel visible if alpha > 0
+            if (alpha > 5) { // Consider a pixel visible if alpha is slightly above 0 to avoid faint edges
               foundPixel = true;
               if (x < left) left = x;
               if (x > right) right = x;
@@ -40,27 +45,27 @@ export async function calculateVisibleBounds(imageSrc: string): Promise<{ x: num
           }
         }
         
-        if (!foundPixel) { // Handle fully transparent or empty images
+        if (!foundPixel) {
             resolve({ x: 0, y: 0, width: 0, height: 0, naturalWidth, naturalHeight });
         } else {
             resolve({
                 x: left,
                 y: top,
-                width: right - left + 1,
-                height: bottom - top + 1,
+                width: Math.max(1, right - left + 1), // Ensure width/height are at least 1
+                height: Math.max(1, bottom - top + 1),
                 naturalWidth,
                 naturalHeight,
             });
         }
       } catch (e) {
-        console.error("Canvas getImageData error (possibly CORS related for image):", imageSrc, e);
-        // Fallback to using natural dimensions if canvas inspection fails
+        console.error("Canvas getImageData error:", imageSrc, e);
         resolve({ x: 0, y: 0, width: naturalWidth, height: naturalHeight, naturalWidth, naturalHeight });
       }
     };
     img.onerror = () => {
       console.error("Failed to load image for bounds calculation:", imageSrc);
-      reject(new Error(`Failed to load image: ${imageSrc}`));
+      // Resolve with zero dimensions or reject, depending on how you want to handle errors upstream
+      resolve({ x: 0, y: 0, width: 0, height: 0, naturalWidth: 0, naturalHeight: 0 });
     };
   });
 }

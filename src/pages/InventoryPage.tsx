@@ -14,7 +14,6 @@ type DecorationSubCategory = typeof decorationSubCategories[number];
 
 // Define sub-categories for Food
 const foodSubCategories: FoodCategory[] = ["Treat", "Snack", "LightMeal", "HeartyMeal", "Feast"];
-// Removed duplicate type FoodSubCategory, FoodCategory from types.ts is sufficient
 
 interface InventoryPageProps {
   pet: PetType | null;
@@ -22,15 +21,14 @@ interface InventoryPageProps {
 }
 
 function ZoomedImage({ src, alt }: { src: string; alt: string }) {
+  const containerSize = 64; // Define containerSize here for use in error/loading styles too
   const [imageStyle, setImageStyle] = useState<React.CSSProperties>({
-    // Initial style to prevent flash of unstyled content or ensure placeholder is visible
+    visibility: 'hidden', // Initially hidden
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    width: '100%',
-    height: '100%',
-    fontSize: '10px',
-    color: 'grey'
+    width: `${containerSize}px`,
+    height: `${containerSize}px`,
   });
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
@@ -38,7 +36,12 @@ function ZoomedImage({ src, alt }: { src: string; alt: string }) {
   useEffect(() => {
     setLoaded(false);
     setError(false);
-    setImageStyle({ /* Reset style for loading state */ }); // Clear previous image style
+    // Initial style for loading placeholder
+    setImageStyle({
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        width: `${containerSize}px`, height: `${containerSize}px`,
+        fontSize: '12px', color: '#aaa'
+    });
 
     const img = new Image();
     img.src = src;
@@ -47,33 +50,31 @@ function ZoomedImage({ src, alt }: { src: string; alt: string }) {
     img.onload = () => {
       calculateVisibleBounds(src)
         .then(bounds => {
-          const containerSize = 64; // Desired display size in the grid
-
-          if (bounds.width <= 0 || bounds.height <= 0) { // Handle fully transparent or invalid bounds
+          if (bounds.width <= 0 || bounds.height <= 0 || bounds.naturalWidth <= 0 || bounds.naturalHeight <= 0) {
             setError(true);
             setLoaded(true);
+            setImageStyle({
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                width: `${containerSize}px`, height: `${containerSize}px`,
+                fontSize: '20px', color: 'red', border: '1px solid #ddd', boxSizing: 'border-box'
+            });
             return;
           }
           
-          // Scale to fit the *visible part* within the container
           const scale = Math.min(containerSize / bounds.width, containerSize / bounds.height);
-
-          // Dimensions of the original image, scaled
           const scaledNaturalWidth = bounds.naturalWidth * scale;
           const scaledNaturalHeight = bounds.naturalHeight * scale;
           
-          // Translate the *original scaled image* so that the *scaled visible part* is centered.
-          // Position the top-left of the scaled visible part (bounds.x * scale, bounds.y * scale)
-          // such that it's centered in the container.
-          const translateX = (containerSize - (bounds.width * scale)) / 2 - (bounds.x * scale);
-          const translateY = (containerSize - (bounds.height * scale)) / 2 - (bounds.y * scale);
+          const offsetX = (containerSize - (bounds.width * scale)) / 2 - (bounds.x * scale);
+          const offsetY = (containerSize - (bounds.height * scale)) / 2 - (bounds.y * scale);
 
           setImageStyle({
             position: "absolute",
-            left: `${translateX}px`,
-            top: `${translateY}px`,
+            left: `${offsetX}px`,
+            top: `${offsetY}px`,
             width: `${scaledNaturalWidth}px`,
             height: `${scaledNaturalHeight}px`,
+            visibility: 'visible',
           });
           setLoaded(true);
         })
@@ -81,30 +82,36 @@ function ZoomedImage({ src, alt }: { src: string; alt: string }) {
           console.error("Error in calculateVisibleBounds for src:", src, err);
           setError(true);
           setLoaded(true);
+           setImageStyle({
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                width: `${containerSize}px`, height: `${containerSize}px`,
+                fontSize: '20px', color: 'red', border: '1px solid #ddd', boxSizing: 'border-box'
+            });
         });
     };
     img.onerror = () => {
       console.error("Failed to load image for ZoomedImage:", src);
       setError(true);
       setLoaded(true);
+      setImageStyle({
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            width: `${containerSize}px`, height: `${containerSize}px`,
+            fontSize: '20px', color: 'red', border: '1px solid #ddd', boxSizing: 'border-box'
+        });
     };
-  }, [src]);
+  }, [src]); // containerSize is stable, no need to add to deps array
 
   return (
     <div className="zoom-container">
+      {!loaded && <div className="zoom-placeholder" style={imageStyle}>...</div>}
+      {loaded && error && <div className="zoom-placeholder" style={imageStyle} title={`Error: ${alt}`}>X</div>}
       {loaded && !error && (
         <img
           src={src}
           alt={alt}
-          className="inventory-image"
+          className="inventory-image" // This class might not need specific styles if all positioning is inline
           style={imageStyle}
         />
-      )}
-      {loaded && error && (
-        <div className="zoom-placeholder" title={`Error loading ${alt}`}>X</div>
-      )}
-      {!loaded && (
-        <div className="zoom-placeholder">...</div> // Loading indicator
       )}
     </div>
   );
@@ -138,7 +145,6 @@ export default function InventoryPage({ pet, onFeedPet }: InventoryPageProps) {
       if (pet) {
         onFeedPet(item as FoodInventoryItem);
       } else {
-        // Consider a more user-friendly notification system than alert
         alert("Pet data not loaded yet! Cannot feed.");
       }
     }
@@ -148,7 +154,7 @@ export default function InventoryPage({ pet, onFeedPet }: InventoryPageProps) {
     if (["floor", "wall", "ceiling"].includes(item.type)) {
       setRoomLayer(item.type as "floor" | "wall" | "ceiling", item.src);
     } else if (item.type === "backDecor" || item.type === "frontDecor") {
-      addDecorItem(item.type, { src: item.src, x: 100, y: 100 }); // Example coordinates
+      addDecorItem(item.type, { src: item.src, x: 100, y: 100 });
     } else if (item.type === "overlay") {
       setRoomLayer("overlay", item.src);
     }
@@ -177,10 +183,10 @@ export default function InventoryPage({ pet, onFeedPet }: InventoryPageProps) {
   const currentSubcategories = selectedMainCategory === "Decorations" ? decorationSubCategories : foodSubCategories;
 
   return (
-    <div className="inventory-page-container"> {/* Renamed for clarity */}
+    <div className="inventory-page-layout">
       <h1 className="inventory-title">Inventory</h1>
       
-      <div className="inventory-grid-container"> {/* Scrollable container for items */}
+      <div className="inventory-grid-scroll-area">
         {filteredItems.length > 0 ? (
           filteredItems.map(item => (
             <div
@@ -217,30 +223,30 @@ export default function InventoryPage({ pet, onFeedPet }: InventoryPageProps) {
         )}
       </div>
       
-      {/* Sub Category Tabs - Above Main Category Tabs */}
-      <div className="inventory-sub-tabs">
-        {currentSubcategories.map(category => (
-          <button
-            key={category}
-            className={`tab-button ${selectedSubCategory === category ? "active" : ""}`}
-            onClick={() => setSelectedSubCategory(category)}
-          >
-            {category}
-          </button>
-        ))}
-      </div>
+      <div className="inventory-tab-bars-container">
+        <div className="inventory-sub-tabs">
+          {currentSubcategories.map(category => (
+            <button
+              key={category}
+              className={`tab-button ${selectedSubCategory === category ? "active" : ""}`}
+              onClick={() => setSelectedSubCategory(category)}
+            >
+              {category}
+            </button>
+          ))}
+        </div>
 
-      {/* Main Category Tabs - Above NavBar */}
-      <div className="inventory-main-tabs">
-        {mainCategories.map(category => (
-          <button
-            key={category}
-            className={`main-tab-button ${selectedMainCategory === category ? "active" : ""}`}
-            onClick={() => setSelectedMainCategory(category)}
-          >
-            {category}
-          </button>
-        ))}
+        <div className="inventory-main-tabs">
+          {mainCategories.map(category => (
+            <button
+              key={category}
+              className={`main-tab-button ${selectedMainCategory === category ? "active" : ""}`}
+              onClick={() => setSelectedMainCategory(category)}
+            >
+              {category}
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );
