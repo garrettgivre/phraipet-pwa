@@ -1,60 +1,63 @@
 .inventory-page-layout {
   display: flex;
   flex-direction: column;
-  /* Full height between fixed header and fixed main app navbar */
-  height: calc(100vh - 80px - 56px); /* Header is 80px, NavBar is 56px */
-  margin-top: 80px; /* Offset for the fixed Header from App.tsx */
-  background-color: #f0f0f0; /* Overall page background */
+  height: calc(100vh - 80px - 56px); /* Header (80px) + Main App NavBar (56px) */
+  margin-top: 80px; /* Space for the fixed Header from App.tsx */
+  background-color: #f0f0f0;
   box-sizing: border-box;
-  width: 100%; /* Ensure it takes full width */
+  width: 100%;
+  position: relative; /* Fallback for older browsers if calc/vh have issues, though unlikely */
 }
 
 .inventory-title {
   text-align: center;
   color: #333;
-  font-size: 24px;
-  padding: 12px 0; /* Reduced padding */
+  font-size: 22px; /* Slightly smaller */
+  padding: 10px 0;
   margin: 0;
-  flex-shrink: 0;
-  background-color: #f8f9fa; /* Light background for title bar */
+  flex-shrink: 0; /* Don't shrink the title */
+  background-color: #f8f9fa;
   border-bottom: 1px solid #dee2e6;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
 }
 
 /* Scrollable area for the inventory items */
 .inventory-grid-scroll-area {
   flex-grow: 1; /* Takes up available space */
-  overflow-y: auto; /* Enable vertical scrolling for the grid */
+  overflow-y: auto;
   padding: 16px;
   display: grid;
-  grid-template-columns: repeat(4, 1fr); /* Four items across */
-  gap: 16px; /* Increased gap slightly */
-  align-content: flex-start; /* Items start from the top of the grid */
-  background-color: #ffffff; /* White background for the grid content area */
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  /* This will align the block of items to the bottom if they don't fill the container */
+  /* When items overflow, the container scrolls from top, but content starts aligned to bottom */
+  align-content: flex-end; 
+  background-color: #ffffff;
 }
 
 .no-items-message {
   grid-column: 1 / -1;
   text-align: center;
   padding: 20px;
-  color: #6c757d; /* Softer color for the message */
+  color: #6c757d;
   font-style: italic;
+  align-self: center; /* Center message if grid is empty and align-content is flex-end */
 }
 
 .inventory-item {
   background: #ffffff;
   border: 1px solid #e9ecef;
   border-radius: 8px;
-  padding: 10px; /* Slightly more padding */
+  padding: 10px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.05);
   text-align: center;
-  aspect-ratio: 1 / 1.3; /* Adjusted aspect ratio for better spacing */
+  aspect-ratio: 1 / 1.3;
   display: flex;
   flex-direction: column;
   justify-content: flex-start; 
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
-  position: relative; /* For color options */
+  position: relative;
 }
 
 .inventory-item:hover {
@@ -65,11 +68,11 @@
 .zoom-container {
   width: 64px; 
   height: 64px;
-  overflow: hidden;
-  position: relative;
-  margin: 0 auto 10px auto; /* Increased bottom margin */
-  background-color: #f8f9fa; /* Light placeholder background */
-  border-radius: 6px; /* Softer radius */
+  overflow: hidden; /* Crucial for cropping */
+  position: relative; /* For absolute positioning of the img */
+  margin: 0 auto 10px auto;
+  background-color: #f8f9fa;
+  border-radius: 6px;
   border: 1px solid #dee2e6;
   display: flex; 
   align-items: center;
@@ -77,27 +80,28 @@
 }
 
 .inventory-image {
-  /* Dynamic styles from JS */
+  /* Dynamic styles from JS for position, width, height */
   display: block; 
 }
 .zoom-placeholder {
+  /* Style for '...' or 'X' placeholder */
   font-size: 12px;
-  color: #adb5bd; /* Softer placeholder color */
+  color: #adb5bd;
   text-align: center;
 }
 
 .item-name {
   display: block;
-  font-size: 13px; /* Slightly larger name */
-  color: #212529; /* Darker name color */
+  font-size: 13px;
+  color: #212529;
   font-weight: 500;
-  margin-top: auto; 
+  margin-top: auto; /* Pushes name to bottom of flex item */
   word-break: break-word;
   line-height: 1.3;
   padding-top: 5px;
 }
 .item-effect {
-  font-size: 11px; /* Slightly larger effect text */
+  font-size: 11px;
   color: #007bff;
   margin-top: 3px;
 }
@@ -107,16 +111,16 @@
   justify-content: center;
   gap: 6px;
   position: absolute;
-  bottom: 8px; /* Adjusted positioning */
+  bottom: 8px;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(255,255,255,0.97); /* Slightly less transparent */
+  background: rgba(255,255,255,0.97);
   padding: 5px;
   border-radius: 6px;
   box-shadow: 0 1px 4px rgba(0,0,0,0.2);
-  width: auto; /* Fit content */
-  max-width: calc(100% - 10px); /* Ensure it doesn't overflow item padding */
-  z-index: 10; /* Ensure it's above other item content */
+  width: auto;
+  max-width: calc(100% - 10px);
+  z-index: 10;
 }
 
 .color-swatch {
@@ -136,10 +140,11 @@
 
 /* Container for both tab bars at the bottom of the page content area */
 .inventory-tab-bars-container {
-  flex-shrink: 0; /* Prevent shrinking */
+  flex-shrink: 0; /* Prevent this container from shrinking */
   background-color: #f8f9fa; /* Base background for the tab area */
-  border-top: 1px solid #dee2e6; /* Separator from grid */
-  /* No margin-top needed as it's part of the flex column */
+  border-top: 1px solid #dee2e6;
+  /* Removed position: sticky/fixed, it's part of the flex flow */
+  z-index: 100; /* Ensure it's above other content if any overlap issues (shouldn't be with flex) */
 }
 
 /* Sub Category Tabs: Directly above Main Category Tabs */
@@ -148,56 +153,53 @@
   display: flex;
   justify-content: space-around;
   padding: 8px 4px;
-  /* border-bottom: 1px solid #dee2e6; No border needed if main tabs are directly below */
 }
 
 /* Main Category Tabs: Bottom-most within inventory page content */
 .inventory-main-tabs {
-  background: #ced4da; /* Darker for main tabs, distinct from sub-tabs */
+  background: #ced4da; 
   display: flex;
   justify-content: space-around;
   padding: 10px 4px;
 }
 
-/* Common styling for all tab buttons */
 .tab-button, .main-tab-button {
-  background: transparent; /* Start transparent */
+  background: transparent;
   border: none;
   cursor: pointer;
-  padding: 8px 10px; /* Adjusted padding */
+  padding: 8px 10px;
   border-radius: 5px;
-  transition: background-color 0.2s, color 0.2s, box-shadow 0.2s;
+  transition: background-color 0.2s, color 0.2s;
   font-weight: 500;
-  flex-grow: 1; /* Allow buttons to grow and fill space */
-  text-align: center; /* Center text in button */
-  margin: 0 2px; /* Small margin between buttons */
+  flex-grow: 1;
+  text-align: center;
+  margin: 0 2px; /* Minimal gap */
+  line-height: 1.4; /* Ensure text fits well */
 }
 
-/* Sub-category tab specific */
-.tab-button {
+.tab-button { /* Sub-category */
   font-size: 13px;
   color: #495057;
 }
 .tab-button.active {
-  background-color: #6c757d; /* Active sub-tab background */
+  background-color: #6c757d;
   color: #fff;
-  font-weight: 600; /* Slightly less bold than main active */
+  font-weight: 600;
 }
 .tab-button:hover:not(.active) {
   background-color: #f1f3f5;
 }
 
-/* Main-category tab specific */
-.main-tab-button {
+.main-tab-button { /* Main category */
   font-size: 15px;
   font-weight: bold;
-  color: #212529; /* Darker default color for main tabs */
+  color: #343a40;
 }
 .main-tab-button.active {
-  background-color: #495057; /* Active main tab background */
+  background-color: #495057;
   color: #fff;
 }
 .main-tab-button:hover:not(.active) {
-  background-color: #adb5bd; /* Hover for main tabs */
+  background-color: #adb5bd;
   color: #fff;
 }

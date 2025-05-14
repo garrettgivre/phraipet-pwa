@@ -21,14 +21,16 @@ interface InventoryPageProps {
 }
 
 function ZoomedImage({ src, alt }: { src: string; alt: string }) {
-  const containerSize = 64; // Define containerSize here for use in error/loading styles too
+  const containerSize = 64;
   const [imageStyle, setImageStyle] = useState<React.CSSProperties>({
-    visibility: 'hidden', // Initially hidden
+    visibility: 'hidden',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     width: `${containerSize}px`,
     height: `${containerSize}px`,
+    fontSize: '12px',
+    color: '#aaa',
   });
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
@@ -36,12 +38,7 @@ function ZoomedImage({ src, alt }: { src: string; alt: string }) {
   useEffect(() => {
     setLoaded(false);
     setError(false);
-    // Initial style for loading placeholder
-    setImageStyle({
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        width: `${containerSize}px`, height: `${containerSize}px`,
-        fontSize: '12px', color: '#aaa'
-    });
+    setImageStyle(prev => ({ ...prev, visibility: 'hidden' })); // Keep placeholder style but hide image
 
     const img = new Image();
     img.src = src;
@@ -56,15 +53,20 @@ function ZoomedImage({ src, alt }: { src: string; alt: string }) {
             setImageStyle({
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 width: `${containerSize}px`, height: `${containerSize}px`,
-                fontSize: '20px', color: 'red', border: '1px solid #ddd', boxSizing: 'border-box'
+                fontSize: '20px', color: 'red', border: '1px solid #ddd', boxSizing: 'border-box',
+                visibility: 'visible',
             });
             return;
           }
           
+          // Scale to fit the *visible part* (bounds.width, bounds.height) into the container
           const scale = Math.min(containerSize / bounds.width, containerSize / bounds.height);
+
+          // New dimensions of the entire original image, scaled
           const scaledNaturalWidth = bounds.naturalWidth * scale;
           const scaledNaturalHeight = bounds.naturalHeight * scale;
           
+          // Calculate offsets to center the *scaled visible part* within the container
           const offsetX = (containerSize - (bounds.width * scale)) / 2 - (bounds.x * scale);
           const offsetY = (containerSize - (bounds.height * scale)) / 2 - (bounds.y * scale);
 
@@ -85,7 +87,8 @@ function ZoomedImage({ src, alt }: { src: string; alt: string }) {
            setImageStyle({
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 width: `${containerSize}px`, height: `${containerSize}px`,
-                fontSize: '20px', color: 'red', border: '1px solid #ddd', boxSizing: 'border-box'
+                fontSize: '20px', color: 'red', border: '1px solid #ddd', boxSizing: 'border-box',
+                visibility: 'visible',
             });
         });
     };
@@ -96,20 +99,21 @@ function ZoomedImage({ src, alt }: { src: string; alt: string }) {
       setImageStyle({
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             width: `${containerSize}px`, height: `${containerSize}px`,
-            fontSize: '20px', color: 'red', border: '1px solid #ddd', boxSizing: 'border-box'
+            fontSize: '20px', color: 'red', border: '1px solid #ddd', boxSizing: 'border-box',
+            visibility: 'visible',
         });
     };
-  }, [src]); // containerSize is stable, no need to add to deps array
+  }, [src]);
 
   return (
     <div className="zoom-container">
-      {!loaded && <div className="zoom-placeholder" style={imageStyle}>...</div>}
+      {!loaded && <div className="zoom-placeholder" style={{fontSize: '12px', color: '#aaa'}}>...</div>}
       {loaded && error && <div className="zoom-placeholder" style={imageStyle} title={`Error: ${alt}`}>X</div>}
       {loaded && !error && (
         <img
           src={src}
           alt={alt}
-          className="inventory-image" // This class might not need specific styles if all positioning is inline
+          className="inventory-image"
           style={imageStyle}
         />
       )}
@@ -183,10 +187,11 @@ export default function InventoryPage({ pet, onFeedPet }: InventoryPageProps) {
   const currentSubcategories = selectedMainCategory === "Decorations" ? decorationSubCategories : foodSubCategories;
 
   return (
-    <div className="inventory-page-layout">
+    <div className="inventory-page-layout"> {/* Flex column container */}
       <h1 className="inventory-title">Inventory</h1>
       
-      <div className="inventory-grid-scroll-area">
+      {/* This area will contain the grid items and will scroll */}
+      <div className="inventory-grid-scroll-area"> 
         {filteredItems.length > 0 ? (
           filteredItems.map(item => (
             <div
@@ -223,6 +228,7 @@ export default function InventoryPage({ pet, onFeedPet }: InventoryPageProps) {
         )}
       </div>
       
+      {/* This container holds both tab bars and will be at the bottom of the flex layout */}
       <div className="inventory-tab-bars-container">
         <div className="inventory-sub-tabs">
           {currentSubcategories.map(category => (
