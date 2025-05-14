@@ -4,12 +4,6 @@ import type { NeedInfo, Pet as PetType } from "../types";
 import { getPetMoodPhrase } from "../utils/petMoodUtils";
 import "./PetPage.css";
 
-// const defaultLayers = { // This was used by isDefaultRoom, can be removed if not used elsewhere
-//   floor: "/assets/floors/classic-floor.png",
-//   wall: "/assets/walls/classic-wall.png",
-//   ceiling: "/assets/ceilings/classic-ceiling.png",
-// };
-
 interface PetPageProps {
   pet: PetType | null;
   needInfo: NeedInfo[];
@@ -19,16 +13,13 @@ export default function PetPage({ pet, needInfo }: PetPageProps) {
   const { roomLayers } = useInventory();
   const navigate = useNavigate();
 
-  const moodPhrase = pet ? getPetMoodPhrase(pet) : "Loading pet's mood...";
-
-  // 'isDefaultRoom' was declared but its value was never read. Removed.
-  // const isDefaultRoom = 
-  //   roomLayers.floor === defaultLayers.floor &&
-  //   roomLayers.wall === defaultLayers.wall &&
-  //   roomLayers.ceiling === defaultLayers.ceiling;
+  // getPetMoodPhrase now handles null pet and returns a loading/default phrase
+  const moodPhrase = getPetMoodPhrase(pet); 
 
   return (
-    <div className={`petPage ${roomLayers.floor ? 'loaded' : ''}`}>
+    // Added a key to the root div to help React re-render if roomLayers change significantly,
+    // though this might not be strictly necessary for the current issue.
+    <div className={`petPage ${roomLayers.floor ? 'loaded' : ''}`} key={roomLayers.floor + roomLayers.wall}>
       <img src={roomLayers.ceiling} alt="Ceiling" className="layer ceiling" />
       <img src={roomLayers.wall} alt="Wall" className="layer wall" />
       <img src={roomLayers.floor} alt="Floor" className="layer floor" />
@@ -49,7 +40,8 @@ export default function PetPage({ pet, needInfo }: PetPageProps) {
       ))}
 
       <div className="needsOverlay">
-        {needInfo.map((n) => (
+        {/* Ensure needInfo is only mapped if pet data (and thus needInfo) is valid */}
+        {pet && needInfo.map((n) => (
           <div key={n.need} className="need-item-container">
             <div className="need-circle">
               <svg viewBox="0 0 36 36" className="circular-chart">
@@ -73,6 +65,7 @@ export default function PetPage({ pet, needInfo }: PetPageProps) {
       </div>
 
       <div className="pet-area">
+        {/* Only render mood bubble if there's a pet and a non-empty mood phrase */}
         {pet && moodPhrase && (
           <div className="pet-mood-bubble">
             <p>{moodPhrase}</p>
