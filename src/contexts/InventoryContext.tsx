@@ -3,7 +3,7 @@ import { db } from "../firebase";
 import { ref, onValue, set } from "firebase/database";
 import type { InventoryItem, DecorationInventoryItem, FoodInventoryItem, RoomDecorItem } from "../types";
 
-export type DecorItem = RoomDecorItem; // For compatibility if used elsewhere
+export type DecorItem = RoomDecorItem;
 
 type RoomLayers = {
   floor: string;
@@ -42,7 +42,7 @@ const defaultFoodItems: FoodInventoryItem[] = [
 
 const defaultAllItems: InventoryItem[] = [...defaultDecorationItems, ...defaultFoodItems];
 
-const defaultRoomLayersData: RoomLayers = { // Renamed to avoid conflict with type
+const defaultRoomLayersData: RoomLayers = { 
   floor: "/assets/floors/classic-floor.png",
   wall: "/assets/walls/classic-wall.png",
   ceiling: "/assets/ceilings/classic-ceiling.png",
@@ -51,15 +51,20 @@ const defaultRoomLayersData: RoomLayers = { // Renamed to avoid conflict with ty
   overlay: "",
 };
 
-const InventoryContext = createContext<{
+// Define the shape of the context
+interface InventoryContextType {
   items: InventoryItem[];
   roomLayers: RoomLayers;
+  roomLayersLoading: boolean; // New loading state
   setRoomLayer: (type: "floor" | "wall" | "ceiling" | "overlay", src: string) => void;
   addDecorItem: (type: "backDecor" | "frontDecor", decor: RoomDecorItem) => void;
   consumeFoodItem: (itemId: string) => void;
-}>({
+}
+
+const InventoryContext = createContext<InventoryContextType>({
   items: defaultAllItems,
-  roomLayers: defaultRoomLayersData, // Use the renamed default data
+  roomLayers: defaultRoomLayersData,
+  roomLayersLoading: true, // Initialize as true
   setRoomLayer: () => {},
   addDecorItem: () => {},
   consumeFoodItem: () => {},
@@ -69,14 +74,15 @@ export const useInventory = () => useContext(InventoryContext);
 
 export function InventoryProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<InventoryItem[]>(defaultAllItems);
-  const [roomLayers, setRoomLayers] = useState<RoomLayers>(defaultRoomLayersData); // Initialize with default
+  const [roomLayers, setRoomLayers] = useState<RoomLayers>(defaultRoomLayersData);
+  const [roomLayersLoading, setRoomLayersLoading] = useState<boolean>(true); // New state for loading
 
   useEffect(() => {
+    setRoomLayersLoading(true); // Set loading to true when effect runs
     const roomRef = ref(db, "roomLayers/sharedRoom");
     const unsubscribe = onValue(roomRef, (snapshot) => {
       if (snapshot.exists()) {
         const firebaseData = snapshot.val();
-        // Ensure all properties exist, defaulting if necessary
         setRoomLayers({
           floor: firebaseData.floor || defaultRoomLayersData.floor,
           wall: firebaseData.wall || defaultRoomLayersData.wall,
@@ -86,14 +92,13 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
           overlay: firebaseData.overlay || defaultRoomLayersData.overlay,
         });
       } else {
-        // If no data in Firebase, ensure local state is (or remains) default
         setRoomLayers(defaultRoomLayersData);
-        // Optionally, write default layers to Firebase if they don't exist
-        // set(roomRef, defaultRoomLayersData).catch(console.error);
       }
+      setRoomLayersLoading(false); // Set loading to false after data is processed
     }, (error) => {
       console.error("Error fetching roomLayers from Firebase:", error);
-      setRoomLayers(defaultRoomLayersData); // Fallback to default on error
+      setRoomLayers(defaultRoomLayersData); 
+      setRoomLayersLoading(false); // Also set loading to false on error
     });
     return () => unsubscribe();
   }, []);
@@ -112,7 +117,7 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
   const addDecorItem = (type: "backDecor" | "frontDecor", decor: RoomDecorItem) => {
     const updatedLayers = {
       ...roomLayers,
-      [type]: [...(roomLayers[type] || []), decor], // Ensure array exists before spreading
+      [type]: [...(roomLayers[type] || []), decor], 
     };
     setRoomLayers(updatedLayers);
     saveRoomToFirebase(updatedLayers);
@@ -123,7 +128,7 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <InventoryContext.Provider value={{ items, roomLayers, setRoomLayer, addDecorItem, consumeFoodItem }}>
+    <InventoryContext.Provider value={{ items, roomLayers, roomLayersLoading, setRoomLayer, addDecorItem, consumeFoodItem }}>
       {children}
     </InventoryContext.Provider>
   );
