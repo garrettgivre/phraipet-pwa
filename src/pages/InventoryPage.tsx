@@ -12,7 +12,6 @@ import type {
 } from "../types";
 
 // This export is for compatibility if other files were importing DecorItem from here.
-// It should ideally refer to RoomDecorItem if that's the intended shared type.
 export type DecorItem = RoomDecorItem;
 
 // Defines the structure of the layers that make up the pet's room.
@@ -30,25 +29,33 @@ const defaultDecorationItems: DecorationInventoryItem[] = [
   { id: "deco-classic-floor", name: "Classic Floor", itemCategory: "decoration", type: "floor", src: "/assets/floors/classic-floor.png" },
   { id: "deco-classic-wall", name: "Classic Wall", itemCategory: "decoration", type: "wall", src: "/assets/walls/classic-wall.png" },
   { id: "deco-classic-ceiling", name: "Classic Ceiling", itemCategory: "decoration", type: "ceiling", src: "/assets/ceilings/classic-ceiling.png" },
-  // Add more unique decoration items
+  { id: "deco-science-floor", name: "Science Floor", itemCategory: "decoration", type: "floor", src: "/assets/floors/science-floor.png" },
+  { id: "deco-science-wall", name: "Science Wall", itemCategory: "decoration", type: "wall", src: "/assets/walls/science-wall.png" },
+  { id: "deco-science-ceiling", name: "Science Ceiling", itemCategory: "decoration", type: "ceiling", src: "/assets/ceilings/science-ceiling.png" },
 ];
 
 const defaultFoodItems: FoodInventoryItem[] = [
   { id: "food-apple-treat", name: "Apple Slice", itemCategory: "food", type: "Treat", hungerRestored: 10, src: "/assets/food/apple_slice.png", description: "A crunchy apple slice." },
   { id: "food-cookie-snack", name: "Cookie", itemCategory: "food", type: "Snack", hungerRestored: 15, src: "/assets/food/cookie.png", description: "A tasty cookie." },
-  // Add more unique food items
+  { id: "food-sandwich-light", name: "Sandwich", itemCategory: "food", type: "LightMeal", hungerRestored: 30, src: "/assets/food/sandwich.png", description: "A simple sandwich." },
+  { id: "food-steak-hearty", name: "Steak", itemCategory: "food", type: "HeartyMeal", hungerRestored: 45, src: "/assets/food/steak.png", description: "A juicy steak." },
+  { id: "food-cake-feast", name: "Full Cake", itemCategory: "food", type: "Feast", hungerRestored: 60, src: "/assets/food/cake.png", description: "A whole cake to feast on!" },
 ];
 
 const defaultCleaningItems: CleaningInventoryItem[] = [
     { id: "clean-wet-wipe", name: "Wet Wipe", itemCategory: "cleaning", type: "QuickFix", cleanlinessBoost: 10, src: "/assets/cleaning/wet_wipe.png", description: "A quick wipe down." },
     { id: "clean-soap-bar", name: "Soap Bar", itemCategory: "cleaning", type: "BasicKit", cleanlinessBoost: 15, src: "/assets/cleaning/soap_bar.png", description: "Basic but effective." },
-    // Add more unique cleaning items
+    { id: "clean-shampoo-bottle", name: "Shampoo", itemCategory: "cleaning", type: "StandardSet", cleanlinessBoost: 20, src: "/assets/cleaning/shampoo.png", description: "Leaves a fresh scent." },
+    { id: "clean-grooming-kit", name: "Grooming Kit", itemCategory: "cleaning", type: "PremiumCare", cleanlinessBoost: 25, src: "/assets/cleaning/grooming_kit.png", description: "For a thorough clean." },
+    { id: "clean-spa-day-pass", name: "Spa Day Pass", itemCategory: "cleaning", type: "LuxurySpa", cleanlinessBoost: 30, src: "/assets/cleaning/spa_pass.png", description: "The ultimate pampering!" },
 ];
 
 const defaultToyItems: ToyInventoryItem[] = [
     { id: "toy-rubber-ball", name: "Rubber Ball", itemCategory: "toy", type: "ChewToy", happinessBoost: 10, src: "/assets/toys/rubber_ball.png", description: "A bouncy classic." },
     { id: "toy-teddy-bear", name: "Teddy Bear", itemCategory: "toy", type: "Plushie", happinessBoost: 15, src: "/assets/toys/teddy_bear.png", description: "Soft and cuddly." },
-    // Add more unique toy items
+    { id: "toy-puzzle-box", name: "Puzzle Box", itemCategory: "toy", type: "PuzzleToy", happinessBoost: 20, src: "/assets/toys/puzzle_box.png", description: "Keeps the mind sharp." },
+    { id: "toy-activity-tree", name: "Activity Tree", itemCategory: "toy", type: "ActivityCenter", happinessBoost: 25, src: "/assets/toys/cat_tree.png", description: "Hours of fun!" },
+    { id: "toy-robot-mouse", name: "Robo-Mouse", itemCategory: "toy", type: "RoboticPal", happinessBoost: 30, src: "/assets/toys/robot_mouse.png", description: "An interactive friend!" },
 ];
 
 // Combine all default items into one list for the inventory.
@@ -76,7 +83,7 @@ interface InventoryContextType {
   roomLayersLoading: boolean; 
   setRoomLayer: (type: "floor" | "wall" | "ceiling" | "overlay", src: string) => void;
   addDecorItem: (type: "backDecor" | "frontDecor", decor: RoomDecorItem) => void;
-  consumeItem: (itemId: string) => void; // Ensured this is correctly named
+  consumeItem: (itemId: string) => void; // This is the function InventoryPage expects
 }
 
 // Creates the context with default values.
@@ -86,7 +93,7 @@ const InventoryContext = createContext<InventoryContextType>({
   roomLayersLoading: true, 
   setRoomLayer: () => { console.warn("setRoomLayer called on default context"); },
   addDecorItem: () => { console.warn("addDecorItem called on default context"); },
-  consumeItem: () => { console.warn("consumeItem called on default context"); }, // Correctly named here
+  consumeItem: () => { console.warn("consumeItem called on default context"); }, // Default function for consumeItem
 });
 
 // Custom hook to easily consume the InventoryContext.
@@ -105,7 +112,6 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
     const unsubscribe = onValue(roomRef, (snapshot) => {
       if (snapshot.exists()) {
         const firebaseData = snapshot.val();
-        // Ensure all properties exist, defaulting if necessary to prevent runtime errors
         setRoomLayers({
           floor: firebaseData.floor || defaultRoomLayersData.floor,
           wall: firebaseData.wall || defaultRoomLayersData.wall,
@@ -115,45 +121,37 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
           overlay: firebaseData.overlay || defaultRoomLayersData.overlay,
         });
       } else {
-        // If no data in Firebase, ensure local state is (or remains) default
         setRoomLayers(defaultRoomLayersData);
-        // Optionally, write default layers to Firebase if they don't exist upon first load
-        // set(roomRef, defaultRoomLayersData).catch(err => console.error("Failed to set default room layers:", err));
       }
-      setRoomLayersLoading(false); // Data processing finished
+      setRoomLayersLoading(false); 
     }, (error) => {
       console.error("Error fetching roomLayers from Firebase:", error);
-      setRoomLayers(defaultRoomLayersData); // Fallback to default on error
+      setRoomLayers(defaultRoomLayersData); 
       setRoomLayersLoading(false); 
     });
-    return () => unsubscribe(); // Cleanup Firebase listener on unmount
+    return () => unsubscribe(); 
   }, []);
 
-  // Function to save the current room layers configuration to Firebase.
   const saveRoomToFirebase = (updatedLayers: RoomLayers) => {
     const roomRef = ref(db, "roomLayers/sharedRoom");
     set(roomRef, updatedLayers).catch(err => console.error("Failed to save room layers to Firebase:", err));
   };
 
-  // Function to update a specific layer of the room (floor, wall, ceiling, overlay).
   const setRoomLayer = (type: "floor" | "wall" | "ceiling" | "overlay", src: string) => {
     const updatedLayers = { ...roomLayers, [type]: src };
     setRoomLayers(updatedLayers);
     saveRoomToFirebase(updatedLayers);
   };
 
-  // Function to add a decor item to either the back or front decor layers.
   const addDecorItem = (type: "backDecor" | "frontDecor", decor: RoomDecorItem) => {
     const updatedLayers = {
       ...roomLayers,
-      [type]: [...(roomLayers[type] || []), decor], // Ensure the array exists before spreading
+      [type]: [...(roomLayers[type] || []), decor], 
     };
     setRoomLayers(updatedLayers);
     saveRoomToFirebase(updatedLayers);
   };
 
-  // Generic function to remove an item from the client-side inventory list after consumption.
-  // In a full game, this would also update the user's persistent inventory in Firebase.
   const consumeItem = (itemId: string) => {
     setItems(prevItems => prevItems.filter(item => item.id !== itemId));
     console.log(`Item ${itemId} consumed from local list.`);
@@ -168,7 +166,7 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
       roomLayersLoading, 
       setRoomLayer, 
       addDecorItem, 
-      consumeItem // Ensure this is passed
+      consumeItem // Ensure consumeItem is included in the provided value
     }}>
       {children}
     </InventoryContext.Provider>
