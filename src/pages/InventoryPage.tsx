@@ -1,317 +1,176 @@
-// src/pages/InventoryPage.tsx
-import React, { useEffect, useState, useMemo } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import { useInventory } from "../contexts/InventoryContext";
-import type { InventoryItem, DecorationInventoryItem, FoodInventoryItem, FoodCategory, Pet as PetType, DecorationItemType } from "../types";
-import { calculateVisibleBounds } from "../utils/imageUtils";
-import "./InventoryPage.css";
+// src/contexts/InventoryContext.tsx
+import { createContext, useState, useEffect, type ReactNode, useContext } from "react";
+import { db } from "../firebase";
+import { ref, onValue, set } from "firebase/database";
+import type { 
+  InventoryItem, 
+  DecorationInventoryItem, 
+  FoodInventoryItem, 
+  CleaningInventoryItem,
+  ToyInventoryItem,      
+  RoomDecorItem 
+} from "../types";
 
-// Define main categories
-const mainCategories = ["Decorations", "Food"] as const;
-type MainCategory = typeof mainCategories[number];
+// This export is for compatibility if other files were importing DecorItem from here.
+// It should ideally refer to RoomDecorItem if that's the intended shared type.
+export type DecorItem = RoomDecorItem;
 
-// Define sub-categories for Decorations using the actual DecorationItemType values
-const decorationSubCategories: DecorationItemType[] = ["wall", "floor", "ceiling", "backDecor", "frontDecor", "overlay"];
-// No need for a separate DecorationSubCategory type if it's just DecorationItemType
-
-// Define sub-categories for Food
-const foodSubCategories: FoodCategory[] = ["Treat", "Snack", "LightMeal", "HeartyMeal", "Feast"];
-
-// Interface for the state passed via react-router-dom's navigate function
-interface InventoryLocationState {
-  targetMainCategory?: MainCategory;
-  targetSubCategory?: string; // This will be validated against DecorationItemType or FoodCategory
-}
-
-interface InventoryPageProps {
-  pet: PetType | null;
-  onFeedPet: (foodItem: FoodInventoryItem) => void;
-}
-
-// Helper to capitalize first letter for display if needed
-const capitalizeFirstLetter = (string: string) => {
-  if (!string) return string;
-  // Handle "backDecor" and "frontDecor" specifically if needed for better display
-  if (string === "backDecor") return "Back Decor";
-  if (string === "frontDecor") return "Front Decor";
-  return string.charAt(0).toUpperCase() + string.slice(1);
+// Defines the structure of the layers that make up the pet's room.
+type RoomLayers = {
+  floor: string;
+  wall: string;
+  ceiling: string;
+  backDecor: RoomDecorItem[];
+  frontDecor: RoomDecorItem[];
+  overlay: string;
 };
 
+// --- Sample Items (Ensure these match the types and have unique IDs) ---
+const defaultDecorationItems: DecorationInventoryItem[] = [
+  { id: "deco-classic-floor", name: "Classic Floor", itemCategory: "decoration", type: "floor", src: "/assets/floors/classic-floor.png" },
+  { id: "deco-classic-wall", name: "Classic Wall", itemCategory: "decoration", type: "wall", src: "/assets/walls/classic-wall.png" },
+  { id: "deco-classic-ceiling", name: "Classic Ceiling", itemCategory: "decoration", type: "ceiling", src: "/assets/ceilings/classic-ceiling.png" },
+  // Add more unique decoration items
+];
 
-function ZoomedImage({ src, alt }: { src: string; alt: string }) {
-  const containerSize = 64;
-  const [imageStyle, setImageStyle] = useState<React.CSSProperties>({
-    visibility: 'hidden',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: `${containerSize}px`,
-    height: `${containerSize}px`,
-    fontSize: '12px',
-    color: '#aaa',
-  });
-  const [loaded, setLoaded] = useState(false);
-  const [error, setError] = useState(false);
+const defaultFoodItems: FoodInventoryItem[] = [
+  { id: "food-apple-treat", name: "Apple Slice", itemCategory: "food", type: "Treat", hungerRestored: 10, src: "/assets/food/apple_slice.png", description: "A crunchy apple slice." },
+  { id: "food-cookie-snack", name: "Cookie", itemCategory: "food", type: "Snack", hungerRestored: 15, src: "/assets/food/cookie.png", description: "A tasty cookie." },
+  // Add more unique food items
+];
 
-  useEffect(() => {
-    setLoaded(false);
-    setError(false);
-    setImageStyle(prev => ({ ...prev, visibility: 'hidden' }));
+const defaultCleaningItems: CleaningInventoryItem[] = [
+    { id: "clean-wet-wipe", name: "Wet Wipe", itemCategory: "cleaning", type: "QuickFix", cleanlinessBoost: 10, src: "/assets/cleaning/wet_wipe.png", description: "A quick wipe down." },
+    { id: "clean-soap-bar", name: "Soap Bar", itemCategory: "cleaning", type: "BasicKit", cleanlinessBoost: 15, src: "/assets/cleaning/soap_bar.png", description: "Basic but effective." },
+    // Add more unique cleaning items
+];
 
-    const img = new Image();
-    img.src = src;
-    img.crossOrigin = "anonymous";
+const defaultToyItems: ToyInventoryItem[] = [
+    { id: "toy-rubber-ball", name: "Rubber Ball", itemCategory: "toy", type: "ChewToy", happinessBoost: 10, src: "/assets/toys/rubber_ball.png", description: "A bouncy classic." },
+    { id: "toy-teddy-bear", name: "Teddy Bear", itemCategory: "toy", type: "Plushie", happinessBoost: 15, src: "/assets/toys/teddy_bear.png", description: "Soft and cuddly." },
+    // Add more unique toy items
+];
 
-    img.onload = () => {
-      calculateVisibleBounds(src)
-        .then(bounds => {
-          if (bounds.width <= 0 || bounds.height <= 0 || bounds.naturalWidth <= 0 || bounds.naturalHeight <= 0) {
-            setError(true);
-            setLoaded(true);
-            setImageStyle({
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                width: `${containerSize}px`, height: `${containerSize}px`,
-                fontSize: '20px', color: 'red', border: '1px solid #ddd', boxSizing: 'border-box',
-                visibility: 'visible',
-            });
-            return;
-          }
-          
-          const scale = Math.min(containerSize / bounds.width, containerSize / bounds.height);
-          const scaledNaturalWidth = bounds.naturalWidth * scale;
-          const scaledNaturalHeight = bounds.naturalHeight * scale;
-          
-          const offsetX = (containerSize - (bounds.width * scale)) / 2 - (bounds.x * scale);
-          const offsetY = (containerSize - (bounds.height * scale)) / 2 - (bounds.y * scale);
+// Combine all default items into one list for the inventory.
+const defaultAllItems: InventoryItem[] = [
+    ...defaultDecorationItems, 
+    ...defaultFoodItems,
+    ...defaultCleaningItems,
+    ...defaultToyItems
+];
 
-          setImageStyle({
-            position: "absolute",
-            left: `${offsetX}px`,
-            top: `${offsetY}px`,
-            width: `${scaledNaturalWidth}px`,
-            height: `${scaledNaturalHeight}px`,
-            visibility: 'visible',
-          });
-          setLoaded(true);
-        })
-        .catch((err) => {
-          console.error("Error in calculateVisibleBounds for src:", src, err);
-          setError(true);
-          setLoaded(true);
-           setImageStyle({
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                width: `${containerSize}px`, height: `${containerSize}px`,
-                fontSize: '20px', color: 'red', border: '1px solid #ddd', boxSizing: 'border-box',
-                visibility: 'visible',
-            });
-        });
-    };
-    img.onerror = () => {
-      console.error("Failed to load image for ZoomedImage:", src);
-      setError(true);
-      setLoaded(true);
-      setImageStyle({
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            width: `${containerSize}px`, height: `${containerSize}px`,
-            fontSize: '20px', color: 'red', border: '1px solid #ddd', boxSizing: 'border-box',
-            visibility: 'visible',
-        });
-    };
-  }, [src]);
+// Default state for the room layers.
+const defaultRoomLayersData: RoomLayers = { 
+  floor: "/assets/floors/classic-floor.png",
+  wall: "/assets/walls/classic-wall.png",
+  ceiling: "/assets/ceilings/classic-ceiling.png",
+  backDecor: [],
+  frontDecor: [],
+  overlay: "",
+};
 
-  return (
-    <div className="zoom-container">
-      {!loaded && <div className="zoom-placeholder" style={{fontSize: '12px', color: '#aaa'}}>...</div>}
-      {loaded && error && <div className="zoom-placeholder" style={imageStyle} title={`Error: ${alt}`}>X</div>}
-      {loaded && !error && (
-        <img
-          src={src}
-          alt={alt}
-          className="inventory-image"
-          style={imageStyle}
-        />
-      )}
-    </div>
-  );
+// Defines the shape of the data and functions provided by the InventoryContext.
+interface InventoryContextType {
+  items: InventoryItem[];
+  roomLayers: RoomLayers;
+  roomLayersLoading: boolean; 
+  setRoomLayer: (type: "floor" | "wall" | "ceiling" | "overlay", src: string) => void;
+  addDecorItem: (type: "backDecor" | "frontDecor", decor: RoomDecorItem) => void;
+  consumeItem: (itemId: string) => void; // Ensured this is correctly named
 }
 
-export default function InventoryPage({ pet, onFeedPet }: InventoryPageProps) {
-  const { items, setRoomLayer, addDecorItem } = useInventory();
-  const location = useLocation();
-  const navigate = useNavigate();
+// Creates the context with default values.
+const InventoryContext = createContext<InventoryContextType>({
+  items: defaultAllItems,
+  roomLayers: defaultRoomLayersData,
+  roomLayersLoading: true, 
+  setRoomLayer: () => { console.warn("setRoomLayer called on default context"); },
+  addDecorItem: () => { console.warn("addDecorItem called on default context"); },
+  consumeItem: () => { console.warn("consumeItem called on default context"); }, // Correctly named here
+});
 
-  const initialTabs = useMemo(() => {
-    const state = location.state as InventoryLocationState | null;
-    let main: MainCategory = "Decorations";
-    let sub: string = decorationSubCategories[0]; // Default to the first actual type
+// Custom hook to easily consume the InventoryContext.
+export const useInventory = () => useContext(InventoryContext);
 
-    if (state?.targetMainCategory) {
-      main = state.targetMainCategory;
-      if (state.targetMainCategory === "Decorations") {
-        // Ensure targetSubCategory is a valid DecorationItemType
-        sub = (decorationSubCategories.includes(state.targetSubCategory as DecorationItemType) 
-               ? state.targetSubCategory 
-               : decorationSubCategories[0]) as string;
-      } else if (state.targetMainCategory === "Food") {
-         // Ensure targetSubCategory is a valid FoodCategory
-        sub = (foodSubCategories.includes(state.targetSubCategory as FoodCategory) 
-               ? state.targetSubCategory 
-               : foodSubCategories[0]) as string;
-      }
-    }
-    return { main, sub };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); 
+// Provider component that wraps parts of the app needing access to inventory state.
+export function InventoryProvider({ children }: { children: ReactNode }) {
+  const [items, setItems] = useState<InventoryItem[]>(defaultAllItems);
+  const [roomLayers, setRoomLayers] = useState<RoomLayers>(defaultRoomLayersData);
+  const [roomLayersLoading, setRoomLayersLoading] = useState<boolean>(true);
 
-  const [selectedMainCategory, setSelectedMainCategory] = useState<MainCategory>(initialTabs.main);
-  const [selectedSubCategory, setSelectedSubCategory] = useState<string>(initialTabs.sub);
-  const [activeColorOptions, setActiveColorOptions] = useState<{ id: string; options: { label: string; src: string }[] } | null>(null);
-
+  // Effect to load room layers from Firebase on component mount.
   useEffect(() => {
-    if (location.state && (location.state as InventoryLocationState).targetMainCategory) {
-      navigate(location.pathname, { replace: true, state: {} });
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); 
-
-  const handleMainCategoryChange = (category: MainCategory) => {
-    setSelectedMainCategory(category);
-    if (category === "Decorations") {
-      setSelectedSubCategory(decorationSubCategories[0]);
-    } else if (category === "Food") {
-      setSelectedSubCategory(foodSubCategories[0]);
-    }
-    setActiveColorOptions(null); // Also reset color options when main category changes
-  };
-  
-  // This useEffect is to ensure subcategory consistency if selectedMainCategory changes programmatically
-  // or if selectedSubCategory becomes invalid for the current selectedMainCategory.
-  useEffect(() => {
-    setActiveColorOptions(null); // Always reset color options when categories change
-    if (selectedMainCategory === "Decorations") {
-      if (!decorationSubCategories.includes(selectedSubCategory as DecorationItemType)) {
-        setSelectedSubCategory(decorationSubCategories[0]);
-      }
-    } else if (selectedMainCategory === "Food") {
-      if (!foodSubCategories.includes(selectedSubCategory as FoodCategory)) {
-        setSelectedSubCategory(foodSubCategories[0]);
-      }
-    }
-  }, [selectedMainCategory, selectedSubCategory]);
-
-
-  const handleItemClick = (item: InventoryItem) => {
-    if (item.itemCategory === "decoration") {
-      const decorationItem = item as DecorationInventoryItem;
-      if (decorationItem.colorOptions && decorationItem.colorOptions.length > 0) {
-        setActiveColorOptions({ id: decorationItem.id, options: decorationItem.colorOptions });
+    setRoomLayersLoading(true); 
+    const roomRef = ref(db, "roomLayers/sharedRoom");
+    const unsubscribe = onValue(roomRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const firebaseData = snapshot.val();
+        // Ensure all properties exist, defaulting if necessary to prevent runtime errors
+        setRoomLayers({
+          floor: firebaseData.floor || defaultRoomLayersData.floor,
+          wall: firebaseData.wall || defaultRoomLayersData.wall,
+          ceiling: firebaseData.ceiling || defaultRoomLayersData.ceiling,
+          backDecor: Array.isArray(firebaseData.backDecor) ? firebaseData.backDecor : [],
+          frontDecor: Array.isArray(firebaseData.frontDecor) ? firebaseData.frontDecor : [],
+          overlay: firebaseData.overlay || defaultRoomLayersData.overlay,
+        });
       } else {
-        applyDecorationItem(decorationItem);
-        setActiveColorOptions(null);
+        // If no data in Firebase, ensure local state is (or remains) default
+        setRoomLayers(defaultRoomLayersData);
+        // Optionally, write default layers to Firebase if they don't exist upon first load
+        // set(roomRef, defaultRoomLayersData).catch(err => console.error("Failed to set default room layers:", err));
       }
-    } else if (item.itemCategory === "food") {
-      if (pet) {
-        onFeedPet(item as FoodInventoryItem);
-      } else {
-        alert("Pet data not loaded yet! Cannot feed.");
-      }
-    }
+      setRoomLayersLoading(false); // Data processing finished
+    }, (error) => {
+      console.error("Error fetching roomLayers from Firebase:", error);
+      setRoomLayers(defaultRoomLayersData); // Fallback to default on error
+      setRoomLayersLoading(false); 
+    });
+    return () => unsubscribe(); // Cleanup Firebase listener on unmount
+  }, []);
+
+  // Function to save the current room layers configuration to Firebase.
+  const saveRoomToFirebase = (updatedLayers: RoomLayers) => {
+    const roomRef = ref(db, "roomLayers/sharedRoom");
+    set(roomRef, updatedLayers).catch(err => console.error("Failed to save room layers to Firebase:", err));
   };
 
-  const applyDecorationItem = (item: DecorationInventoryItem) => {
-    // item.type is already a valid DecorationItemType here
-    if (["floor", "wall", "ceiling", "overlay"].includes(item.type)) {
-      setRoomLayer(item.type as "floor" | "wall" | "ceiling" | "overlay", item.src);
-    } else if (item.type === "backDecor" || item.type === "frontDecor") {
-      addDecorItem(item.type, { src: item.src, x: 100, y: 100 });
-    }
+  // Function to update a specific layer of the room (floor, wall, ceiling, overlay).
+  const setRoomLayer = (type: "floor" | "wall" | "ceiling" | "overlay", src: string) => {
+    const updatedLayers = { ...roomLayers, [type]: src };
+    setRoomLayers(updatedLayers);
+    saveRoomToFirebase(updatedLayers);
   };
 
-  const filteredItems = items.filter(item => {
-    if (selectedMainCategory === "Decorations") {
-      if (item.itemCategory !== "decoration") return false;
-      const decItem = item as DecorationInventoryItem;
-      // selectedSubCategory here will be one of the DecorationItemType values
-      return decItem.type === selectedSubCategory; 
-    } else if (selectedMainCategory === "Food") {
-      if (item.itemCategory !== "food") return false;
-      const foodItem = item as FoodInventoryItem;
-      // selectedSubCategory here will be one of the FoodCategory values
-      return foodItem.type === selectedSubCategory;
-    }
-    return false;
-  });
+  // Function to add a decor item to either the back or front decor layers.
+  const addDecorItem = (type: "backDecor" | "frontDecor", decor: RoomDecorItem) => {
+    const updatedLayers = {
+      ...roomLayers,
+      [type]: [...(roomLayers[type] || []), decor], // Ensure the array exists before spreading
+    };
+    setRoomLayers(updatedLayers);
+    saveRoomToFirebase(updatedLayers);
+  };
 
-  const currentSubcategories = selectedMainCategory === "Decorations" 
-    ? decorationSubCategories 
-    : foodSubCategories;
+  // Generic function to remove an item from the client-side inventory list after consumption.
+  // In a full game, this would also update the user's persistent inventory in Firebase.
+  const consumeItem = (itemId: string) => {
+    setItems(prevItems => prevItems.filter(item => item.id !== itemId));
+    console.log(`Item ${itemId} consumed from local list.`);
+    // TODO: Add logic here to remove the item from the user's inventory in Firebase
+  };
 
+  // Provide the state and functions to children components.
   return (
-    <div className="inventory-page-layout">
-      <h1 className="inventory-title">Inventory</h1>
-      
-      <div className="inventory-grid-scroll-area">
-        {filteredItems.length > 0 ? (
-          filteredItems.map(item => (
-            <div
-              key={item.id}
-              className="inventory-item"
-              onClick={() => handleItemClick(item)}
-              title={item.description || item.name}
-            >
-              <ZoomedImage src={item.src} alt={item.name} />
-              <span className="item-name">{item.name}</span>
-              {item.itemCategory === "food" && <span className="item-effect">Hunger +{(item as FoodInventoryItem).hungerRestored}</span>}
-
-              {activeColorOptions?.id === item.id && item.itemCategory === "decoration" && (item as DecorationInventoryItem).colorOptions && (
-                <div className="color-options">
-                  {(item as DecorationInventoryItem).colorOptions!.map(option => (
-                    <div
-                      key={option.label}
-                      className="color-swatch"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        applyDecorationItem({ ...(item as DecorationInventoryItem), src: option.src });
-                        setActiveColorOptions(null);
-                      }}
-                      style={{ backgroundImage: `url(${option.src})` }}
-                      title={option.label}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-          ))
-        ) : (
-          <p className="no-items-message">No items in this category.</p>
-        )}
-      </div>
-      
-      <div className="inventory-tab-bars-container">
-        <div className="inventory-sub-tabs">
-          {currentSubcategories.map(categoryValue => ( // categoryValue is now like "wall", "floor", "Treat"
-            <button
-              key={categoryValue}
-              className={`tab-button ${selectedSubCategory === categoryValue ? "active" : ""}`}
-              onClick={() => setSelectedSubCategory(categoryValue)}
-            >
-              {capitalizeFirstLetter(categoryValue)} {/* Display capitalized version */}
-            </button>
-          ))}
-        </div>
-
-        <div className="inventory-main-tabs">
-          {mainCategories.map(category => (
-            <button
-              key={category}
-              className={`main-tab-button ${selectedMainCategory === category ? "active" : ""}`}
-              onClick={() => handleMainCategoryChange(category)}
-            >
-              {category}
-            </button>
-          ))}
-        </div>
-      </div>
-    </div>
+    <InventoryContext.Provider value={{ 
+      items, 
+      roomLayers, 
+      roomLayersLoading, 
+      setRoomLayer, 
+      addDecorItem, 
+      consumeItem // Ensure this is passed
+    }}>
+      {children}
+    </InventoryContext.Provider>
   );
 }
