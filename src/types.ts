@@ -1,79 +1,70 @@
-// Define all the possible pet needs
+// src/types.ts
+
+// Defines the possible categories for a pet's needs.
 export type Need = "hunger" | "happiness" | "cleanliness" | "affection" | "spirit";
 
-// Individual need info with description for UI purposes
+// Represents the information for displaying a single need in the UI.
 export type NeedInfo = {
-  need: Need;
-  emoji: string;
-  value: number;
-  desc: string;
+  need: Need;          // The category of the need.
+  emoji: string;       // Emoji representing the need.
+  value: number;       // Current numerical value of the need (e.g., 0-120).
+  desc: string;        // Textual description of the current need state (e.g., "Famished").
 };
 
-// The Pet object structure stored in Firebase and state
-export type Pet = {
-  hunger: number;
-  happiness: number;
-  cleanliness: number;
-  affection: number;
-  spirit: number;
-  image: string;
-};
+// Defines the structure for a pet object.
+// This is used for both local state and Firebase storage.
+export interface Pet {
+  hunger: number;                 // Current hunger level.
+  happiness: number;              // Current happiness level.
+  cleanliness: number;            // Current cleanliness level.
+  affection: number;              // Current affection level.
+  spirit: number;                 // Current spirit level (often derived from other needs).
+  image: string;                  // Path to the pet's current image.
+  lastNeedsUpdateTime?: number;    // Optional: Timestamp of the last time needs were calculated and updated.
+                                  // Used for calculating decay based on time elapsed.
+  affectionGainedToday?: number; // Optional: Tracks how much affection has been gained on the current day.
+                                  // Used for daily affection gain caps.
+  lastAffectionGainDate?: string;  // Optional: The date (e.g., "YYYY-MM-DD") of the last affection gain.
+                                  // Used to reset affectionGainedToday daily.
+}
 
-// Type for decor items placed in a room (e.g., in RoomLayers)
+// Defines the structure for a decor item that can be placed in a room.
+// These are typically part of the RoomLayers state.
 export type RoomDecorItem = {
-  src: string;
-  x: number;
-  y: number;
-  width?: number;
-  height?: number;
+  src: string;      // Path to the decor item's image.
+  x: number;        // X-coordinate for placement (pixels or percentage).
+  y: number;        // Y-coordinate for placement.
+  width?: number;   // Optional: Width of the decor item.
+  height?: number;  // Optional: Height of the decor item.
 };
 
-// Decoration item types (for inventory items)
+// Defines the types of decoration items available in the inventory.
 export type DecorationItemType = "floor" | "wall" | "ceiling" | "backDecor" | "frontDecor" | "overlay";
 
-// Food item categories
+// Defines the categories for food items.
 export type FoodCategory = "Treat" | "Snack" | "LightMeal" | "HeartyMeal" | "Feast";
 
-// Base Inventory Item
+// Base interface for all inventory items.
 interface BaseInventoryItem {
-  id: string;
-  name: string;
-  src: string; // Path to the item's image
-  description?: string;
+  id: string;           // Unique identifier for the item.
+  name: string;         // Display name of the item.
+  src: string;          // Path to the item's image/icon.
+  description?: string; // Optional: A short description of the item.
 }
 
-// Decoration Inventory Item
+// Interface for decoration items as they appear in the inventory.
 export interface DecorationInventoryItem extends BaseInventoryItem {
-  itemCategory: "decoration";
-  type: DecorationItemType;
-  colorOptions?: { label: string; src: string }[];
+  itemCategory: "decoration"; // Discriminator for the type of inventory item.
+  type: DecorationItemType;   // Specific type of decoration (e.g., "wall", "floor").
+  colorOptions?: { label: string; src: string }[]; // Optional: Different color variants.
 }
 
-// Food Inventory Item
+// Interface for food items as they appear in the inventory.
 export interface FoodInventoryItem extends BaseInventoryItem {
-  itemCategory: "food";
-  type: FoodCategory; // Treat, Snack, etc.
-  hungerRestored: number;
+  itemCategory: "food";      // Discriminator for the type of inventory item.
+  type: FoodCategory;        // Specific category of food (e.g., "Treat", "Snack").
+  hungerRestored: number;    // How many hunger points this food item restores.
 }
 
-// Union type for all inventory items
+// A union type representing any item that can be in the inventory.
 export type InventoryItem = DecorationInventoryItem | FoodInventoryItem;
-
-
-// Example for future expansions:
-// export type Player = {
-//   id: string;
-//   username: string;
-//   phraipoints: number;
-//   pets: Pet[];
-//   inventory: InventoryItem[]; // Player-specific inventory
-// };
-
-// export type GameItem = { // More generic item for shops, etc.
-//   id: string;
-//   name: string;
-//   category: string; // e.g., "food", "toy", "decoration"
-//   effect?: (pet: Pet, setPet: Function) => void;
-//   price?: number;
-//   src: string;
-// };
