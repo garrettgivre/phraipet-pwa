@@ -1,3 +1,4 @@
+// Add onIncreaseAffection to props and use it for an example button
 import { useNavigate } from "react-router-dom";
 import { useInventory } from "../contexts/InventoryContext";
 import type { NeedInfo, Pet as PetType, RoomDecorItem } from "../types"; 
@@ -7,10 +8,11 @@ import "./PetPage.css";
 interface PetPageProps {
   pet: PetType | null;
   needInfo: NeedInfo[];
+  onIncreaseAffection: (amount: number) => void; // New prop for affection
 }
 
-export default function PetPage({ pet, needInfo }: PetPageProps) {
-  const { roomLayers, roomLayersLoading } = useInventory(); // Added roomLayersLoading
+export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageProps) {
+  const { roomLayers, roomLayersLoading } = useInventory(); 
   const navigate = useNavigate();
 
   const moodPhrase = getPetMoodPhrase(pet); 
@@ -22,6 +24,11 @@ export default function PetPage({ pet, needInfo }: PetPageProps) {
   const frontDecorItems: RoomDecorItem[] = roomLayers?.frontDecor || [];
   const overlaySrc = roomLayers?.overlay || "";
 
+  const handlePetting = () => {
+    // Example: petting gives 5 affection points
+    onIncreaseAffection(5); 
+    // You might want to show a heart animation or some feedback here
+  };
 
   return (
     <div className={`petPage ${!roomLayersLoading ? 'loaded' : ''}`} key={currentFloor + currentWall}> 
@@ -57,9 +64,8 @@ export default function PetPage({ pet, needInfo }: PetPageProps) {
                   className="circle"
                   strokeDasharray={`${n.value}, 100`}
                   d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                  transform="rotate(-90 18 18)" // This rotates the starting point of the progress stroke
+                  transform="rotate(-90 18 18)"
                 />
-                {/* Removed transform from the text element itself */}
                 <text x="18" y="20.35" className="emoji-text"> 
                   {n.emoji}
                 </text>
@@ -79,6 +85,8 @@ export default function PetPage({ pet, needInfo }: PetPageProps) {
           src={pet?.image || "/pet/Neutral.png"} 
           alt="Your Pet" 
           className="petHero" 
+          onClick={handlePetting} // Example: Make pet image clickable for petting
+          style={{ cursor: 'pointer' }} // Add pointer cursor to indicate clickability
         />
       </div>
       

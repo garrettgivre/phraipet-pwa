@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
-import { ref, onValue, set, serverTimestamp } from "firebase/database"; // Added serverTimestamp
+import { ref, onValue, set, serverTimestamp, update } from "firebase/database"; // Added update
 import { db } from "./firebase";
 import type { Pet, Need, NeedInfo, FoodInventoryItem } from "./types";
 import { InventoryProvider } from "./contexts/InventoryContext";
@@ -25,10 +25,9 @@ import "./App.css";
 // --- Constants for Need System ---
 const MAX_NEED_VALUE = 120;
 const MIN_NEED_VALUE = 0;
-// const AFFECTION_DAILY_GAIN_CAP = 20; // This will be used in functions that grant affection
+const AFFECTION_DAILY_GAIN_CAP = 20; // Max affection points that can be gained in one day
 
 const MILLISECONDS_IN_HOUR = 60 * 60 * 1000;
-// const MILLISECONDS_IN_DAY = 24 * MILLISECONDS_IN_HOUR; // Not directly used in decay calc, but good for reference
 
 const HUNGER_DECAY_PER_DAY = 100;
 const HAPPINESS_DECAY_PER_DAY = 50;
@@ -37,20 +36,16 @@ const AFFECTION_DECAY_PER_DAY = 10;
 
 /**
  * Helper to get today's date in YYYY-MM-DD format.
- * This is used for resetting daily caps (like affection gained).
  * @returns {string} The current date as "YYYY-MM-DD".
  */
 const getTodayDateString = (): string => {
   const today = new Date();
   const year = today.getFullYear();
-  const month = (today.getMonth() + 1).toString().padStart(2, '0'); // Months are 0-indexed
+  const month = (today.getMonth() + 1).toString().padStart(2, '0');
   const day = today.getDate().toString().padStart(2, '0');
   return `${year}-${month}-${day}`;
 };
 
-/**
- * Component to automatically scroll to the top of the page on route changes.
- */
 function ScrollToTop() {
   const { pathname } = useLocation();
   useEffect(() => {
@@ -59,7 +54,6 @@ function ScrollToTop() {
   return null;
 }
 
-// Descriptor bands for pet needs to convert numerical values to text.
 const bands: Record<Exclude<Need, "spirit">, { upTo: number; label: string }[]> = {
   hunger: [
     { upTo: -21, label: "Dying" }, { upTo: -11, label: "Starving" }, { upTo: -1, label: "Famished" },
@@ -87,17 +81,8 @@ const bands: Record<Exclude<Need, "spirit">, { upTo: number; label: string }[]> 
   ],
 };
 
-/**
- * Gets a descriptive string for a given need and its value.
- * Handles cases where value might be undefined or not a number.
- * @param need - The type of need.
- * @param value - The current value of the need.
- * @returns A descriptive string or a default "Unknown" string.
- */
 const descriptor = (need: Exclude<Need, "spirit">, value: number | undefined): string => {
-  if (typeof value !== 'number' || isNaN(value)) {
-    return "Unknown"; 
-  }
+  if (typeof value !== 'number' || isNaN(value)) return "Unknown";
   const needBand = bands[need];
   if (!needBand) {
     console.warn(`Descriptor bands not found for need: ${need}`);
@@ -108,18 +93,15 @@ const descriptor = (need: Exclude<Need, "spirit">, value: number | undefined): s
 
 interface AppShellProps {
   pet: Pet | null;
-  setPet: React.Dispatch<React.SetStateAction<Pet | null>>; // setPet is used by App component, not directly by AppShell for pet updates
+  // setPet is managed by App component's Firebase listener
+  handleFeedPet: (foodItem: FoodInventoryItem) => void; // Pass down feeding function
+  handleIncreaseAffection: (amount: number) => void; // Pass down affection function
 }
 
-/**
- * AppShell component: Renders the main layout including Header, NavBar, and page content via Routes.
- * It receives the current pet data to pass to child components.
- */
-function AppShell({ pet }: AppShellProps) { // Removed setPet from props as it's not directly used here for updates
+function AppShell({ pet, handleFeedPet, handleIncreaseAffection }: AppShellProps) {
   const location = useLocation();
   const isPetPage = location.pathname === "/";
 
-  // Construct needInfo only if pet is not null and its properties are valid numbers
   const needInfo: NeedInfo[] = pet &&
     typeof pet.hunger === 'number' &&
     typeof pet.cleanliness === 'number' &&
@@ -131,39 +113,10 @@ function AppShell({ pet }: AppShellProps) { // Removed setPet from props as it's
         { need: "cleanliness", emoji: "🧼", value: pet.cleanliness, desc: descriptor("cleanliness", pet.cleanliness) },
         { need: "happiness", emoji: "🎲", value: pet.happiness, desc: descriptor("happiness", pet.happiness) },
         { need: "affection", emoji: "🤗", value: pet.affection, desc: descriptor("affection", pet.affection) },
-        { need: "spirit", emoji: "✨", value: pet.spirit, desc: descriptor("happiness", pet.spirit) }, // Spirit uses happiness descriptors for now
+        { need: "spirit", emoji: "✨", value: pet.spirit, desc: descriptor("happiness", pet.spirit) },
       ]
-    : []; // Default to empty array if pet or its properties are not ready
+    : [];
   
-  // This function will be passed down to InventoryPage.
-  // It's defined in App component and passed through AppShell.
-  // For clarity, we can also define it in App and pass it directly to InventoryPage via props if AppShell doesn't need it.
-  // However, since AppShell is already passing `pet`, it's reasonable to pass `handleFeedPet` from here too.
-  // The actual state update (setPet) will happen in the App component's Firebase listener.
-  const handleFeedPet = (foodItem: FoodInventoryItem) => {
-    if (!pet || typeof pet.hunger !== 'number') {
-      console.warn("Cannot feed: Pet data or hunger value is invalid.");
-      return;
-    }
-    
-    let newHunger = Math.min(MAX_NEED_VALUE, pet.hunger + foodItem.hungerRestored);
-    newHunger = Math.max(MIN_NEED_VALUE, newHunger);
-
-    const updatedPetData: Partial<Pet> = { 
-        hunger: newHunger,
-        lastNeedsUpdateTime: serverTimestamp() as any // Mark interaction time
-    };
-    
-    const petRef = ref(db, `pets/sharedPet`);
-    // We merge with existing pet data to ensure we only update specific fields
-    const currentPetData = { ...pet, ...updatedPetData }; 
-    set(petRef, currentPetData) 
-      .then(() => {
-        console.log(`Pet fed with ${foodItem.name}. Hunger is now approximately ${newHunger}. Firebase will confirm.`);
-      })
-      .catch(err => console.error("Failed to update pet hunger in Firebase:", err));
-  };
-
   return (
     <>
       <ScrollToTop />
@@ -184,7 +137,8 @@ function AppShell({ pet }: AppShellProps) { // Removed setPet from props as it's
         overflow: "hidden" 
       }}>
         <Routes>
-          <Route path="/" element={<PetPage pet={pet} needInfo={needInfo} />} /> 
+          {/* Pass handleIncreaseAffection to PetPage */}
+          <Route path="/" element={<PetPage pet={pet} needInfo={needInfo} onIncreaseAffection={handleIncreaseAffection} />} /> 
           <Route path="/explore" element={<Explore />} />
           <Route path="/play" element={<Play />} />
           <Route 
@@ -207,64 +161,142 @@ function AppShell({ pet }: AppShellProps) { // Removed setPet from props as it's
   );
 }
 
-// Default starter pet data, now including new fields
 const defaultPetData: Pet = {
   hunger: 100, 
   happiness: 100,
   cleanliness: 100,
   affection: 50, 
-  spirit: 0, // Will be calculated based on others
+  spirit: 0,
   image: "/pet/Neutral.png",
   lastNeedsUpdateTime: Date.now(), 
   affectionGainedToday: 0,
   lastAffectionGainDate: getTodayDateString(),
 };
-// Calculate initial spirit for defaultPetData
 defaultPetData.spirit = Math.max(MIN_NEED_VALUE, Math.min(MAX_NEED_VALUE,
   Math.round((defaultPetData.hunger + defaultPetData.happiness + defaultPetData.cleanliness + defaultPetData.affection) / 4)
 ));
 
-
-/**
- * Main App component: Manages pet state, Firebase connection, and routing.
- */
 export default function App() {
-  const [pet, setPet] = useState<Pet | null>(null); // Initialize as null, will be populated from Firebase or default
+  const [pet, setPet] = useState<Pet | null>(null);
+
+  // Function to handle feeding, passed to AppShell and then InventoryPage
+  const handleFeedPet = (foodItem: FoodInventoryItem) => {
+    if (!pet || typeof pet.hunger !== 'number') {
+      console.warn("Cannot feed: Pet data or hunger value is invalid.");
+      return;
+    }
+    
+    let newHunger = Math.min(MAX_NEED_VALUE, pet.hunger + foodItem.hungerRestored);
+    newHunger = Math.max(MIN_NEED_VALUE, newHunger);
+
+    const petRef = ref(db, `pets/sharedPet`);
+    const updates: Partial<Pet> = {
+      hunger: newHunger,
+      lastNeedsUpdateTime: serverTimestamp() as any,
+    };
+    // Recalculate spirit based on the new hunger
+    updates.spirit = Math.max(MIN_NEED_VALUE, Math.min(MAX_NEED_VALUE,
+        Math.round((newHunger + pet.happiness + pet.cleanliness + pet.affection) / 4)
+    ));
+
+
+    update(petRef, updates) // Use update to modify specific fields
+      .then(() => {
+        console.log(`Pet fed with ${foodItem.name}. Hunger updated. Firebase will confirm.`);
+      })
+      .catch(err => console.error("Failed to update pet hunger in Firebase:", err));
+  };
+
+  // Function to handle increasing affection, passed to AppShell and then PetPage
+  const handleIncreaseAffection = (amount: number) => {
+    if (!pet) {
+      console.warn("Cannot increase affection: Pet data is not available.");
+      return;
+    }
+
+    let currentPetData = { ...pet }; // Create a mutable copy
+
+    const todayStr = getTodayDateString();
+    // Reset daily gain if it's a new day
+    if (currentPetData.lastAffectionGainDate !== todayStr) {
+      currentPetData.affectionGainedToday = 0;
+      currentPetData.lastAffectionGainDate = todayStr;
+    }
+
+    const currentGainedToday = currentPetData.affectionGainedToday || 0;
+    if (currentGainedToday >= AFFECTION_DAILY_GAIN_CAP) {
+      console.log("Affection daily cap reached for today.");
+      // Optionally, provide feedback to the user here (e.g., pet is happy but won't gain more affection today)
+      // We still update lastNeedsUpdateTime to prevent immediate decay after this interaction.
+      const petRef = ref(db, `pets/sharedPet`);
+      update(petRef, { lastNeedsUpdateTime: serverTimestamp() as any })
+          .catch(err => console.error("Error updating lastNeedsUpdateTime after affection cap reached:", err));
+      return;
+    }
+
+    const gainableAmount = Math.min(amount, AFFECTION_DAILY_GAIN_CAP - currentGainedToday);
+    if (gainableAmount <= 0) {
+        // This case should ideally be caught by the previous check, but as a safeguard:
+        console.log("No affection can be gained (already at cap or negative amount requested).");
+        const petRef = ref(db, `pets/sharedPet`);
+        update(petRef, { lastNeedsUpdateTime: serverTimestamp() as any })
+            .catch(err => console.error("Error updating lastNeedsUpdateTime after no affection gain:", err));
+        return;
+    }
+    
+    let newAffection = Math.min(MAX_NEED_VALUE, (currentPetData.affection || 0) + gainableAmount);
+    newAffection = Math.max(MIN_NEED_VALUE, newAffection);
+
+    const newAffectionGainedToday = currentGainedToday + gainableAmount;
+
+    const petRef = ref(db, `pets/sharedPet`);
+    const updates: Partial<Pet> = {
+      affection: newAffection,
+      affectionGainedToday: newAffectionGainedToday,
+      lastAffectionGainDate: todayStr, // Ensure this is updated
+      lastNeedsUpdateTime: serverTimestamp() as any,
+    };
+     // Recalculate spirit based on the new affection
+    updates.spirit = Math.max(MIN_NEED_VALUE, Math.min(MAX_NEED_VALUE,
+        Math.round((currentPetData.hunger + currentPetData.happiness + currentPetData.cleanliness + newAffection) / 4)
+    ));
+
+
+    update(petRef, updates) // Use Firebase update for partial changes
+      .then(() => {
+        console.log(`Affection increased by ${gainableAmount}. Total gained today: ${newAffectionGainedToday}.`);
+      })
+      .catch(err => console.error("Failed to update pet affection in Firebase:", err));
+  };
+
 
   useEffect(() => {
     const petRef = ref(db, `pets/sharedPet`);
     const unsubscribe = onValue(petRef, (snapshot) => {
       const currentTime = Date.now();
-      let petDataFromFirebase: Pet; // Will hold the processed pet data
-      let needsFirebaseUpdate = false; // Flag to indicate if Firebase needs to be updated
+      let petDataFromFirebase: Pet;
+      let needsFirebaseUpdate = false;
 
       if (snapshot.exists()) {
         const rawData = snapshot.val();
-        
-        // Initialize with defaults, then override with Firebase data if valid
         petDataFromFirebase = { 
-          ...defaultPetData, // Start with a complete default structure
-          ...rawData, // Override with whatever Firebase has
-          // Ensure critical numeric fields are numbers, falling back to default if not
+          ...defaultPetData, 
+          ...rawData,
           hunger: (typeof rawData.hunger === 'number' && !isNaN(rawData.hunger)) ? rawData.hunger : defaultPetData.hunger,
           happiness: (typeof rawData.happiness === 'number' && !isNaN(rawData.happiness)) ? rawData.happiness : defaultPetData.happiness,
           cleanliness: (typeof rawData.cleanliness === 'number' && !isNaN(rawData.cleanliness)) ? rawData.cleanliness : defaultPetData.cleanliness,
           affection: (typeof rawData.affection === 'number' && !isNaN(rawData.affection)) ? rawData.affection : defaultPetData.affection,
-          // spirit will be recalculated
           image: rawData.image || defaultPetData.image,
         };
         
-        // Ensure lastNeedsUpdateTime is a valid number, otherwise use current time (or default if it's the very first load)
         const lastUpdate = petDataFromFirebase.lastNeedsUpdateTime;
         petDataFromFirebase.lastNeedsUpdateTime = (typeof lastUpdate === 'number' && lastUpdate > 0 && !isNaN(lastUpdate)) 
             ? lastUpdate 
-            : currentTime; // If invalid, assume this is the first update cycle
+            : currentTime; 
 
-        // Initialize affection cap fields if missing
         petDataFromFirebase.affectionGainedToday = petDataFromFirebase.affectionGainedToday ?? 0;
         petDataFromFirebase.lastAffectionGainDate = petDataFromFirebase.lastAffectionGainDate || getTodayDateString();
 
-        // --- Affection Cap Daily Reset ---
         const todayStr = getTodayDateString();
         if (petDataFromFirebase.lastAffectionGainDate !== todayStr) {
           petDataFromFirebase.affectionGainedToday = 0;
@@ -272,11 +304,9 @@ export default function App() {
           needsFirebaseUpdate = true; 
         }
 
-        // --- Calculate Time Elapsed and Decay ---
-        // Only calculate decay if lastNeedsUpdateTime is reasonably in the past
         const timeElapsedMs = currentTime - petDataFromFirebase.lastNeedsUpdateTime;
 
-        if (timeElapsedMs > 1000) { // Only apply decay if more than a second has passed (to avoid tiny updates)
+        if (timeElapsedMs > 1000) { 
           needsFirebaseUpdate = true; 
           const hoursElapsed = timeElapsedMs / MILLISECONDS_IN_HOUR;
 
@@ -291,35 +321,34 @@ export default function App() {
           petDataFromFirebase.affection = calculateDecay(petDataFromFirebase.affection, AFFECTION_DECAY_PER_DAY);
         }
         
-        // --- Recalculate Spirit ---
-        petDataFromFirebase.spirit = Math.round(
-          (petDataFromFirebase.hunger +
-           petDataFromFirebase.happiness +
-           petDataFromFirebase.cleanliness +
-           petDataFromFirebase.affection) / 4
-        );
-        petDataFromFirebase.spirit = Math.max(MIN_NEED_VALUE, Math.min(MAX_NEED_VALUE, petDataFromFirebase.spirit));
+        petDataFromFirebase.spirit = Math.max(MIN_NEED_VALUE, Math.min(MAX_NEED_VALUE,
+          Math.round(
+            (petDataFromFirebase.hunger +
+             petDataFromFirebase.happiness +
+             petDataFromFirebase.cleanliness +
+             petDataFromFirebase.affection) / 4
+          )
+        ));
 
-        // Update local state immediately for responsiveness
         setPet({...petDataFromFirebase}); 
 
         if (needsFirebaseUpdate) {
-          // Prepare data for Firebase, ensuring lastNeedsUpdateTime is a server timestamp
           const updateForFirebase = { ...petDataFromFirebase, lastNeedsUpdateTime: serverTimestamp() };
+          // Use 'update' instead of 'set' if you only want to change specific fields and not overwrite the entire node
+          // if other processes might be updating other parts of the pet object concurrently.
+          // For this scenario, 'set' is okay as we are managing the whole pet object here.
           set(petRef, updateForFirebase)
             .catch(err => console.error("Error updating pet needs in Firebase:", err));
         }
 
       } else {
-        // Pet data doesn't exist in Firebase, create it with default values
         console.log("No pet data in Firebase, creating starter pet.");
         const initialPetDataForFirebase = {
             ...defaultPetData,
-            lastNeedsUpdateTime: serverTimestamp() // Use server timestamp for initial creation
+            lastNeedsUpdateTime: serverTimestamp() 
         };
         set(petRef, initialPetDataForFirebase)
           .then(() => {
-            // For immediate local state after creation, use current client time for lastNeedsUpdateTime
             setPet({...defaultPetData, lastNeedsUpdateTime: Date.now() });
           })
           .catch((error) => {
@@ -328,31 +357,30 @@ export default function App() {
       }
     }, (error) => {
       console.error("Firebase onValue error:", error);
-      // Fallback to local default if Firebase read fails, ensuring new fields are present
       const fallbackPet = {
         ...defaultPetData,
-        lastNeedsUpdateTime: Date.now(), // Use client time for fallback
+        lastNeedsUpdateTime: Date.now(),
         affectionGainedToday: 0,
         lastAffectionGainDate: getTodayDateString(),
       };
-      // Recalculate spirit for the fallback pet
       fallbackPet.spirit = Math.max(MIN_NEED_VALUE, Math.min(MAX_NEED_VALUE,
         Math.round((fallbackPet.hunger + fallbackPet.happiness + fallbackPet.cleanliness + fallbackPet.affection) / 4)
       ));
       setPet(fallbackPet);
     });
 
-    return () => unsubscribe(); // Cleanup Firebase listener on component unmount
-  }, []); // Empty dependency array ensures this effect runs only once on mount
+    return () => unsubscribe();
+  }, []);
 
   return (
     <InventoryProvider>
       <BrowserRouter>
-        {/* Pass setPet to AppShell if AppShell needs to modify pet state directly,
-            otherwise, modifications should happen in App and flow down.
-            For handleFeedPet, it's passed down, but the actual setPet is via onValue.
-        */}
-        <AppShell pet={pet} setPet={setPet} />
+        <AppShell 
+          pet={pet} 
+          // setPet is not directly passed if all updates go through Firebase and onValue listener
+          handleFeedPet={handleFeedPet}
+          handleIncreaseAffection={handleIncreaseAffection} 
+        />
       </BrowserRouter>
     </InventoryProvider>
   );
