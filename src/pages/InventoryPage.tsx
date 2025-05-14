@@ -1,6 +1,8 @@
-import React, { useEffect, useState } from "react";
+// src/pages/InventoryPage.tsx
+import React, { useEffect, useState, useMemo } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useInventory } from "../contexts/InventoryContext";
-import type { InventoryItem, DecorationInventoryItem, FoodInventoryItem, FoodCategory, Pet as PetType } from "../types";
+import type { InventoryItem, DecorationInventoryItem, FoodInventoryItem, FoodCategory, Pet as PetType, DecorationItemType } from "../types";
 import { calculateVisibleBounds } from "../utils/imageUtils";
 import "./InventoryPage.css";
 
@@ -8,17 +10,33 @@ import "./InventoryPage.css";
 const mainCategories = ["Decorations", "Food"] as const;
 type MainCategory = typeof mainCategories[number];
 
-// Define sub-categories for Decorations
-const decorationSubCategories = ["Walls", "Floors", "Ceilings", "Decor", "Overlays"] as const;
-type DecorationSubCategory = typeof decorationSubCategories[number];
+// Define sub-categories for Decorations using the actual DecorationItemType values
+const decorationSubCategories: DecorationItemType[] = ["wall", "floor", "ceiling", "backDecor", "frontDecor", "overlay"];
+// No need for a separate DecorationSubCategory type if it's just DecorationItemType
 
 // Define sub-categories for Food
 const foodSubCategories: FoodCategory[] = ["Treat", "Snack", "LightMeal", "HeartyMeal", "Feast"];
+
+// Interface for the state passed via react-router-dom's navigate function
+interface InventoryLocationState {
+  targetMainCategory?: MainCategory;
+  targetSubCategory?: string; // This will be validated against DecorationItemType or FoodCategory
+}
 
 interface InventoryPageProps {
   pet: PetType | null;
   onFeedPet: (foodItem: FoodInventoryItem) => void;
 }
+
+// Helper to capitalize first letter for display if needed
+const capitalizeFirstLetter = (string: string) => {
+  if (!string) return string;
+  // Handle "backDecor" and "frontDecor" specifically if needed for better display
+  if (string === "backDecor") return "Back Decor";
+  if (string === "frontDecor") return "Front Decor";
+  return string.charAt(0).toUpperCase() + string.slice(1);
+};
+
 
 function ZoomedImage({ src, alt }: { src: string; alt: string }) {
   const containerSize = 64;
@@ -38,7 +56,7 @@ function ZoomedImage({ src, alt }: { src: string; alt: string }) {
   useEffect(() => {
     setLoaded(false);
     setError(false);
-    setImageStyle(prev => ({ ...prev, visibility: 'hidden' })); // Keep placeholder style but hide image
+    setImageStyle(prev => ({ ...prev, visibility: 'hidden' }));
 
     const img = new Image();
     img.src = src;
@@ -59,14 +77,10 @@ function ZoomedImage({ src, alt }: { src: string; alt: string }) {
             return;
           }
           
-          // Scale to fit the *visible part* (bounds.width, bounds.height) into the container
           const scale = Math.min(containerSize / bounds.width, containerSize / bounds.height);
-
-          // New dimensions of the entire original image, scaled
           const scaledNaturalWidth = bounds.naturalWidth * scale;
           const scaledNaturalHeight = bounds.naturalHeight * scale;
           
-          // Calculate offsets to center the *scaled visible part* within the container
           const offsetX = (containerSize - (bounds.width * scale)) / 2 - (bounds.x * scale);
           const offsetY = (containerSize - (bounds.height * scale)) / 2 - (bounds.y * scale);
 
@@ -123,18 +137,68 @@ function ZoomedImage({ src, alt }: { src: string; alt: string }) {
 
 export default function InventoryPage({ pet, onFeedPet }: InventoryPageProps) {
   const { items, setRoomLayer, addDecorItem } = useInventory();
-  const [selectedMainCategory, setSelectedMainCategory] = useState<MainCategory>("Decorations");
-  const [selectedSubCategory, setSelectedSubCategory] = useState<string>(decorationSubCategories[0]);
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const initialTabs = useMemo(() => {
+    const state = location.state as InventoryLocationState | null;
+    let main: MainCategory = "Decorations";
+    let sub: string = decorationSubCategories[0]; // Default to the first actual type
+
+    if (state?.targetMainCategory) {
+      main = state.targetMainCategory;
+      if (state.targetMainCategory === "Decorations") {
+        // Ensure targetSubCategory is a valid DecorationItemType
+        sub = (decorationSubCategories.includes(state.targetSubCategory as DecorationItemType) 
+               ? state.targetSubCategory 
+               : decorationSubCategories[0]) as string;
+      } else if (state.targetMainCategory === "Food") {
+         // Ensure targetSubCategory is a valid FoodCategory
+        sub = (foodSubCategories.includes(state.targetSubCategory as FoodCategory) 
+               ? state.targetSubCategory 
+               : foodSubCategories[0]) as string;
+      }
+    }
+    return { main, sub };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); 
+
+  const [selectedMainCategory, setSelectedMainCategory] = useState<MainCategory>(initialTabs.main);
+  const [selectedSubCategory, setSelectedSubCategory] = useState<string>(initialTabs.sub);
   const [activeColorOptions, setActiveColorOptions] = useState<{ id: string; options: { label: string; src: string }[] } | null>(null);
 
   useEffect(() => {
-    if (selectedMainCategory === "Decorations") {
+    if (location.state && (location.state as InventoryLocationState).targetMainCategory) {
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); 
+
+  const handleMainCategoryChange = (category: MainCategory) => {
+    setSelectedMainCategory(category);
+    if (category === "Decorations") {
       setSelectedSubCategory(decorationSubCategories[0]);
-    } else if (selectedMainCategory === "Food") {
+    } else if (category === "Food") {
       setSelectedSubCategory(foodSubCategories[0]);
     }
-    setActiveColorOptions(null);
-  }, [selectedMainCategory]);
+    setActiveColorOptions(null); // Also reset color options when main category changes
+  };
+  
+  // This useEffect is to ensure subcategory consistency if selectedMainCategory changes programmatically
+  // or if selectedSubCategory becomes invalid for the current selectedMainCategory.
+  useEffect(() => {
+    setActiveColorOptions(null); // Always reset color options when categories change
+    if (selectedMainCategory === "Decorations") {
+      if (!decorationSubCategories.includes(selectedSubCategory as DecorationItemType)) {
+        setSelectedSubCategory(decorationSubCategories[0]);
+      }
+    } else if (selectedMainCategory === "Food") {
+      if (!foodSubCategories.includes(selectedSubCategory as FoodCategory)) {
+        setSelectedSubCategory(foodSubCategories[0]);
+      }
+    }
+  }, [selectedMainCategory, selectedSubCategory]);
+
 
   const handleItemClick = (item: InventoryItem) => {
     if (item.itemCategory === "decoration") {
@@ -155,12 +219,11 @@ export default function InventoryPage({ pet, onFeedPet }: InventoryPageProps) {
   };
 
   const applyDecorationItem = (item: DecorationInventoryItem) => {
-    if (["floor", "wall", "ceiling"].includes(item.type)) {
-      setRoomLayer(item.type as "floor" | "wall" | "ceiling", item.src);
+    // item.type is already a valid DecorationItemType here
+    if (["floor", "wall", "ceiling", "overlay"].includes(item.type)) {
+      setRoomLayer(item.type as "floor" | "wall" | "ceiling" | "overlay", item.src);
     } else if (item.type === "backDecor" || item.type === "frontDecor") {
       addDecorItem(item.type, { src: item.src, x: 100, y: 100 });
-    } else if (item.type === "overlay") {
-      setRoomLayer("overlay", item.src);
     }
   };
 
@@ -168,30 +231,26 @@ export default function InventoryPage({ pet, onFeedPet }: InventoryPageProps) {
     if (selectedMainCategory === "Decorations") {
       if (item.itemCategory !== "decoration") return false;
       const decItem = item as DecorationInventoryItem;
-      switch (selectedSubCategory as DecorationSubCategory) {
-        case "Walls": return decItem.type === "wall";
-        case "Floors": return decItem.type === "floor";
-        case "Ceilings": return decItem.type === "ceiling";
-        case "Decor": return decItem.type === "backDecor" || decItem.type === "frontDecor";
-        case "Overlays": return decItem.type === "overlay";
-        default: return false;
-      }
+      // selectedSubCategory here will be one of the DecorationItemType values
+      return decItem.type === selectedSubCategory; 
     } else if (selectedMainCategory === "Food") {
       if (item.itemCategory !== "food") return false;
       const foodItem = item as FoodInventoryItem;
-      return foodItem.type === (selectedSubCategory as FoodCategory);
+      // selectedSubCategory here will be one of the FoodCategory values
+      return foodItem.type === selectedSubCategory;
     }
     return false;
   });
 
-  const currentSubcategories = selectedMainCategory === "Decorations" ? decorationSubCategories : foodSubCategories;
+  const currentSubcategories = selectedMainCategory === "Decorations" 
+    ? decorationSubCategories 
+    : foodSubCategories;
 
   return (
-    <div className="inventory-page-layout"> {/* Flex column container */}
+    <div className="inventory-page-layout">
       <h1 className="inventory-title">Inventory</h1>
       
-      {/* This area will contain the grid items and will scroll */}
-      <div className="inventory-grid-scroll-area"> 
+      <div className="inventory-grid-scroll-area">
         {filteredItems.length > 0 ? (
           filteredItems.map(item => (
             <div
@@ -228,16 +287,15 @@ export default function InventoryPage({ pet, onFeedPet }: InventoryPageProps) {
         )}
       </div>
       
-      {/* This container holds both tab bars and will be at the bottom of the flex layout */}
       <div className="inventory-tab-bars-container">
         <div className="inventory-sub-tabs">
-          {currentSubcategories.map(category => (
+          {currentSubcategories.map(categoryValue => ( // categoryValue is now like "wall", "floor", "Treat"
             <button
-              key={category}
-              className={`tab-button ${selectedSubCategory === category ? "active" : ""}`}
-              onClick={() => setSelectedSubCategory(category)}
+              key={categoryValue}
+              className={`tab-button ${selectedSubCategory === categoryValue ? "active" : ""}`}
+              onClick={() => setSelectedSubCategory(categoryValue)}
             >
-              {category}
+              {capitalizeFirstLetter(categoryValue)} {/* Display capitalized version */}
             </button>
           ))}
         </div>
@@ -247,7 +305,7 @@ export default function InventoryPage({ pet, onFeedPet }: InventoryPageProps) {
             <button
               key={category}
               className={`main-tab-button ${selectedMainCategory === category ? "active" : ""}`}
-              onClick={() => setSelectedMainCategory(category)}
+              onClick={() => handleMainCategoryChange(category)}
             >
               {category}
             </button>
