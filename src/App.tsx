@@ -59,16 +59,21 @@ const bands: Record<Exclude<Need, "spirit">, { upTo: number; label: string }[]> 
 
 /**
  * Gets a descriptive string for a given need and its value.
- * Handles cases where value might be undefined.
+ * Handles cases where value might be undefined or not a number.
  * @param need - The type of need.
  * @param value - The current value of the need.
- * @returns A descriptive string or an empty string if value is invalid.
+ * @returns A descriptive string or a default "Unknown" string.
  */
 const descriptor = (need: Exclude<Need, "spirit">, value: number | undefined): string => {
   if (typeof value !== 'number' || isNaN(value)) {
-    return "Unknown"; // Or an empty string, or a specific "loading" state
+    return "Unknown"; 
   }
-  return bands[need]?.find((b) => value <= b.upTo)?.label ?? "Undefined State";
+  // Ensure bands[need] exists before trying to find
+  const needBand = bands[need];
+  if (!needBand) {
+    return "Undefined Need Type";
+  }
+  return needBand.find((b) => value <= b.upTo)?.label ?? "Undefined State";
 }
 
 
@@ -81,18 +86,24 @@ function AppShell({ pet, setPet }: AppShellProps) {
   const location = useLocation();
   const isPetPage = location.pathname === "/";
 
-  const needInfo: NeedInfo[] = pet
+  // Construct needInfo only if pet is not null and its properties are valid numbers
+  const needInfo: NeedInfo[] = pet &&
+    typeof pet.hunger === 'number' &&
+    typeof pet.cleanliness === 'number' &&
+    typeof pet.happiness === 'number' &&
+    typeof pet.affection === 'number' &&
+    typeof pet.spirit === 'number'
     ? [
         { need: "hunger", emoji: "🍕", value: pet.hunger, desc: descriptor("hunger", pet.hunger) },
         { need: "cleanliness", emoji: "🧼", value: pet.cleanliness, desc: descriptor("cleanliness", pet.cleanliness) },
         { need: "happiness", emoji: "🎲", value: pet.happiness, desc: descriptor("happiness", pet.happiness) },
         { need: "affection", emoji: "🤗", value: pet.affection, desc: descriptor("affection", pet.affection) },
-        { need: "spirit", emoji: "✨", value: pet.spirit, desc: descriptor("happiness", pet.spirit) }, // Assuming spirit uses happiness descriptors
+        { need: "spirit", emoji: "✨", value: pet.spirit, desc: descriptor("happiness", pet.spirit) },
       ]
-    : [];
+    : []; // Default to empty array if pet or its properties are not ready
   
   const handleFeedPet = (foodItem: FoodInventoryItem) => {
-    if (!pet) return;
+    if (!pet || typeof pet.hunger !== 'number') return; // Ensure pet and hunger are valid
     const newHunger = Math.min(120, pet.hunger + foodItem.hungerRestored);
     const updatedPet: Pet = { ...pet, hunger: newHunger };
     
@@ -108,7 +119,7 @@ function AppShell({ pet, setPet }: AppShellProps) {
       {!isPetPage && (
         <Header 
           coins={100} 
-          petImage={pet ? pet.image : "/pet/Neutral.png"} 
+          petImage={pet?.image || "/pet/Neutral.png"} // Use optional chaining for image
           needs={needInfo} 
         />
       )}
@@ -152,49 +163,42 @@ const defaultPetData: Pet = {
 };
 
 export default function App() {
-  const [pet, setPet] = useState<Pet | null>(null); // Initialize as null
+  const [pet, setPet] = useState<Pet | null>(null);
 
   useEffect(() => {
     const petRef = ref(db, `pets/sharedPet`);
-    const unsubscribe = onValue(petRef, (snap) => {
-      if (snap.exists()) {
-        const petData = snap.val();
-        // Validate the structure of petData before setting it
+    const unsubscribe = onValue(petRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const petData = snapshot.val();
+        // More robust validation for petData
         if (
           petData &&
-          typeof petData.hunger === 'number' &&
-          typeof petData.happiness === 'number' &&
-          typeof petData.cleanliness === 'number' &&
-          typeof petData.affection === 'number' &&
-          typeof petData.spirit === 'number' &&
+          typeof petData.hunger === 'number' && !isNaN(petData.hunger) &&
+          typeof petData.happiness === 'number' && !isNaN(petData.happiness) &&
+          typeof petData.cleanliness === 'number' && !isNaN(petData.cleanliness) &&
+          typeof petData.affection === 'number' && !isNaN(petData.affection) &&
+          typeof petData.spirit === 'number' && !isNaN(petData.spirit) &&
           typeof petData.image === 'string'
         ) {
           setPet(petData as Pet);
         } else {
-          console.warn("Invalid pet data from Firebase, attempting to set default:", petData);
-          // If data is invalid, consider setting (or re-setting) default data in Firebase
-          // and then updating local state. For now, just set local to default.
-          set(petRef, defaultPetData).then(() => setPet(defaultPetData)).catch(console.error);
+          console.warn("Invalid or incomplete pet data from Firebase, setting/resetting to default:", petData);
+          set(petRef, defaultPetData)
+            .then(() => setPet(defaultPetData))
+            .catch(err => console.error("Failed to set default pet data in Firebase after invalid data:", err));
         }
       } else {
-        // Pet data doesn't exist in Firebase, create it with default values
         console.log("No pet data in Firebase, creating starter pet.");
         set(petRef, defaultPetData)
-          .then(() => {
-            setPet(defaultPetData);
-          })
-          .catch((error) => {
-            console.error("Failed to set starter pet in Firebase:", error);
-          });
+          .then(() => setPet(defaultPetData))
+          .catch(err => console.error("Failed to set starter pet in Firebase:", err));
       }
     }, (error) => {
-      // Handle Firebase read errors
       console.error("Firebase onValue error:", error);
-      // Potentially set pet to a default error state or null
-      setPet(null); // Or a default local pet if Firebase is unavailable
+      setPet(defaultPetData); // Fallback to local default if Firebase read fails
     });
 
-    return () => unsubscribe(); // Cleanup listener on component unmount
+    return () => unsubscribe();
   }, []);
 
   return (

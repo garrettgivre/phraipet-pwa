@@ -1,10 +1,9 @@
 import { createContext, useState, useEffect, type ReactNode, useContext } from "react";
 import { db } from "../firebase";
 import { ref, onValue, set } from "firebase/database";
-import type { InventoryItem, DecorationInventoryItem, FoodInventoryItem, RoomDecorItem } from "../types"; // Corrected import
+import type { InventoryItem, DecorationInventoryItem, FoodInventoryItem, RoomDecorItem } from "../types";
 
-// This export makes RoomDecorItem available if other files were importing a 'DecorItem' from this context.
-export type DecorItem = RoomDecorItem;
+export type DecorItem = RoomDecorItem; // For compatibility if used elsewhere
 
 type RoomLayers = {
   floor: string;
@@ -15,35 +14,24 @@ type RoomLayers = {
   overlay: string;
 };
 
-// Sample Decoration Items
 const defaultDecorationItems: DecorationInventoryItem[] = [
-  // Classic Theme
   { id: "classic-floor", name: "Classic Floor", itemCategory: "decoration", type: "floor", src: "/assets/floors/classic-floor.png" },
   { id: "classic-wall", name: "Classic Wall", itemCategory: "decoration", type: "wall", src: "/assets/walls/classic-wall.png" },
   { id: "classic-ceiling", name: "Classic Ceiling", itemCategory: "decoration", type: "ceiling", src: "/assets/ceilings/classic-ceiling.png" },
-
-  // Science Lab Theme
   { id: "science-floor", name: "Science Floor", itemCategory: "decoration", type: "floor", src: "/assets/floors/science-floor.png" },
   { id: "science-wall", name: "Science Wall", itemCategory: "decoration", type: "wall", src: "/assets/walls/science-wall.png" },
   { id: "science-ceiling", name: "Science Ceiling", itemCategory: "decoration", type: "ceiling", src: "/assets/ceilings/science-ceiling.png" },
-  
-  // Aero Theme
   { id: "aero-floor", name: "Aero Floor", itemCategory: "decoration", type: "floor", src: "/assets/floors/aero-floor.png" },
   { id: "aero-wall", name: "Aero Wall", itemCategory: "decoration", type: "wall", src: "/assets/walls/aero-wall.png" },
   { id: "aero-ceiling", name: "Aero Ceiling", itemCategory: "decoration", type: "ceiling", src: "/assets/ceilings/aero-ceiling.png" },
-
-  // Candy Theme
   { id: "candy-floor", name: "Candy Floor", itemCategory: "decoration", type: "floor", src: "/assets/floors/candy-floor.png" },
   { id: "candy-wall", name: "Candy Wall", itemCategory: "decoration", type: "wall", src: "/assets/walls/candy-wall.png" },
   { id: "candy-ceiling", name: "Candy Ceiling", itemCategory: "decoration", type: "ceiling", src: "/assets/ceilings/candy-ceiling.png" },
-
-  // Krazy Theme
   { id: "krazy-floor", name: "Krazy Floor", itemCategory: "decoration", type: "floor", src: "/assets/floors/krazy-floor.png" },
   { id: "krazy-wall", name: "Krazy Wall", itemCategory: "decoration", type: "wall", src: "/assets/walls/krazy-wall.png" },
   { id: "krazy-ceiling", name: "Krazy Ceiling", itemCategory: "decoration", type: "ceiling", src: "/assets/ceilings/krazy-ceiling.png" },
 ];
 
-// Sample Food Items
 const defaultFoodItems: FoodInventoryItem[] = [
   { id: "apple-treat", name: "Apple Slice", itemCategory: "food", type: "Treat", hungerRestored: 10, src: "/assets/food/apple_slice.png", description: "A crunchy apple slice." },
   { id: "cookie-snack", name: "Cookie", itemCategory: "food", type: "Snack", hungerRestored: 15, src: "/assets/food/cookie.png", description: "A tasty cookie." },
@@ -54,7 +42,7 @@ const defaultFoodItems: FoodInventoryItem[] = [
 
 const defaultAllItems: InventoryItem[] = [...defaultDecorationItems, ...defaultFoodItems];
 
-const defaultLayers: RoomLayers = {
+const defaultRoomLayersData: RoomLayers = { // Renamed to avoid conflict with type
   floor: "/assets/floors/classic-floor.png",
   wall: "/assets/walls/classic-wall.png",
   ceiling: "/assets/ceilings/classic-ceiling.png",
@@ -71,7 +59,7 @@ const InventoryContext = createContext<{
   consumeFoodItem: (itemId: string) => void;
 }>({
   items: defaultAllItems,
-  roomLayers: defaultLayers,
+  roomLayers: defaultRoomLayersData, // Use the renamed default data
   setRoomLayer: () => {},
   addDecorItem: () => {},
   consumeFoodItem: () => {},
@@ -81,20 +69,38 @@ export const useInventory = () => useContext(InventoryContext);
 
 export function InventoryProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<InventoryItem[]>(defaultAllItems);
-  const [roomLayers, setRoomLayers] = useState<RoomLayers>(defaultLayers);
+  const [roomLayers, setRoomLayers] = useState<RoomLayers>(defaultRoomLayersData); // Initialize with default
 
   useEffect(() => {
     const roomRef = ref(db, "roomLayers/sharedRoom");
-    onValue(roomRef, (snapshot) => {
+    const unsubscribe = onValue(roomRef, (snapshot) => {
       if (snapshot.exists()) {
-        setRoomLayers(snapshot.val());
+        const firebaseData = snapshot.val();
+        // Ensure all properties exist, defaulting if necessary
+        setRoomLayers({
+          floor: firebaseData.floor || defaultRoomLayersData.floor,
+          wall: firebaseData.wall || defaultRoomLayersData.wall,
+          ceiling: firebaseData.ceiling || defaultRoomLayersData.ceiling,
+          backDecor: Array.isArray(firebaseData.backDecor) ? firebaseData.backDecor : [],
+          frontDecor: Array.isArray(firebaseData.frontDecor) ? firebaseData.frontDecor : [],
+          overlay: firebaseData.overlay || defaultRoomLayersData.overlay,
+        });
+      } else {
+        // If no data in Firebase, ensure local state is (or remains) default
+        setRoomLayers(defaultRoomLayersData);
+        // Optionally, write default layers to Firebase if they don't exist
+        // set(roomRef, defaultRoomLayersData).catch(console.error);
       }
+    }, (error) => {
+      console.error("Error fetching roomLayers from Firebase:", error);
+      setRoomLayers(defaultRoomLayersData); // Fallback to default on error
     });
+    return () => unsubscribe();
   }, []);
 
   const saveRoomToFirebase = (updatedLayers: RoomLayers) => {
     const roomRef = ref(db, "roomLayers/sharedRoom");
-    set(roomRef, updatedLayers);
+    set(roomRef, updatedLayers).catch(console.error);
   };
 
   const setRoomLayer = (type: "floor" | "wall" | "ceiling" | "overlay", src: string) => {
@@ -106,7 +112,7 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
   const addDecorItem = (type: "backDecor" | "frontDecor", decor: RoomDecorItem) => {
     const updatedLayers = {
       ...roomLayers,
-      [type]: [...roomLayers[type], decor],
+      [type]: [...(roomLayers[type] || []), decor], // Ensure array exists before spreading
     };
     setRoomLayers(updatedLayers);
     saveRoomToFirebase(updatedLayers);
