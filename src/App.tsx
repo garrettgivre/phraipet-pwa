@@ -20,7 +20,7 @@ import SBStall from "./pages/Sunnybrook/SBStall";
 import SBToy from "./pages/Sunnybrook/SBToy";
 import InventoryPage from "./pages/InventoryPage";
 
-import "./App.css"; // Ensure App.css does not add overflow-y: auto to main
+import "./App.css"; // Ensure App.css does not add conflicting overflow or padding to main
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -30,6 +30,7 @@ function ScrollToTop() {
   return null;
 }
 
+// Descriptor bands (ensure these are complete as per your needs)
 const bands: Record<Exclude<Need, "spirit">, { upTo: number; label: string }[]> = {
   hunger: [
     { upTo: -21, label: "Dying" }, { upTo: -11, label: "Starving" }, { upTo: -1, label: "Famished" },
@@ -66,7 +67,7 @@ interface AppShellProps {
 
 function AppShell({ pet, setPet }: AppShellProps) {
   const location = useLocation();
-  const isPetPage = location.pathname === "/";
+  const isPetPage = location.pathname === "/"; // Check if it's the PetPage
 
   const needInfo: NeedInfo[] = pet
     ? [
@@ -92,6 +93,7 @@ function AppShell({ pet, setPet }: AppShellProps) {
   return (
     <>
       <ScrollToTop />
+      {/* Header is conditionally rendered, but <main> padding needs to adapt */}
       {!isPetPage && (
         <Header 
           coins={100} 
@@ -100,13 +102,14 @@ function AppShell({ pet, setPet }: AppShellProps) {
         />
       )}
       <main style={{
-        paddingTop: "80px",      /* Height of the fixed Header */
-        paddingBottom: "56px",   /* Height of the fixed NavBar */
-        height: "100vh",         /* Make <main> exactly viewport height */
+        // Conditionally apply paddingTop: 0 for PetPage, 80px for others
+        paddingTop: isPetPage ? "0px" : "80px", 
+        paddingBottom: "56px",   // For the fixed NavBar
+        height: "100vh",         // Make <main> exactly viewport height
         boxSizing: "border-box", 
         display: "flex",         
         flexDirection: "column",
-        overflow: "hidden"       /* CRITICAL: Prevent <main> from scrolling */
+        overflow: "hidden"       // Prevent <main> from scrolling its direct children
       }}>
         <Routes>
           <Route path="/" element={<PetPage needInfo={needInfo} />} />
@@ -116,7 +119,6 @@ function AppShell({ pet, setPet }: AppShellProps) {
             path="/inventory" 
             element={<InventoryPage pet={pet} onFeedPet={handleFeedPet} />}
           />
-          {/* ... other routes ... */}
           <Route path="/sunnybrook" element={<Sunnybrook />} />
           <Route path="/sunnybrook/Adoption" element={<SBAdoption />} />
           <Route path="/sunnybrook/SBClinic" element={<SBClinic />} />
