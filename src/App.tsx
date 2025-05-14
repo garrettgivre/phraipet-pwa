@@ -56,7 +56,20 @@ const bands: Record<Exclude<Need, "spirit">, { upTo: number; label: string }[]> 
     { upTo: 104, label: "Inseparable" }, { upTo: 119, label: "Loving" }, { upTo: 120, label: "Soulmates" },
   ],
 };
-const descriptor = (need: Exclude<Need, "spirit">, value: number) => bands[need].find(b => value <= b.upTo)?.label ?? "";
+
+/**
+ * Gets a descriptive string for a given need and its value.
+ * Handles cases where value might be undefined.
+ * @param need - The type of need.
+ * @param value - The current value of the need.
+ * @returns A descriptive string or an empty string if value is invalid.
+ */
+const descriptor = (need: Exclude<Need, "spirit">, value: number | undefined): string => {
+  if (typeof value !== 'number' || isNaN(value)) {
+    return "Unknown"; // Or an empty string, or a specific "loading" state
+  }
+  return bands[need]?.find((b) => value <= b.upTo)?.label ?? "Undefined State";
+}
 
 
 interface AppShellProps {
@@ -74,7 +87,7 @@ function AppShell({ pet, setPet }: AppShellProps) {
         { need: "cleanliness", emoji: "🧼", value: pet.cleanliness, desc: descriptor("cleanliness", pet.cleanliness) },
         { need: "happiness", emoji: "🎲", value: pet.happiness, desc: descriptor("happiness", pet.happiness) },
         { need: "affection", emoji: "🤗", value: pet.affection, desc: descriptor("affection", pet.affection) },
-        { need: "spirit", emoji: "✨", value: pet.spirit, desc: descriptor("happiness", pet.spirit) },
+        { need: "spirit", emoji: "✨", value: pet.spirit, desc: descriptor("happiness", pet.spirit) }, // Assuming spirit uses happiness descriptors
       ]
     : [];
   
@@ -109,7 +122,6 @@ function AppShell({ pet, setPet }: AppShellProps) {
         overflow: "hidden" 
       }}>
         <Routes>
-          {/* Pass the pet object to PetPage */}
           <Route path="/" element={<PetPage pet={pet} needInfo={needInfo} />} /> 
           <Route path="/explore" element={<Explore />} />
           <Route path="/play" element={<Play />} />
@@ -133,23 +145,56 @@ function AppShell({ pet, setPet }: AppShellProps) {
   );
 }
 
+// Default starter pet data
+const defaultPetData: Pet = {
+  hunger: 50, happiness: 70, cleanliness: 70,
+  affection: 60, spirit: 60, image: "/pet/Neutral.png"
+};
+
 export default function App() {
-  const [pet, setPet] = useState<Pet | null>(null);
+  const [pet, setPet] = useState<Pet | null>(null); // Initialize as null
 
   useEffect(() => {
     const petRef = ref(db, `pets/sharedPet`);
     const unsubscribe = onValue(petRef, (snap) => {
       if (snap.exists()) {
-        setPet(snap.val() as Pet);
+        const petData = snap.val();
+        // Validate the structure of petData before setting it
+        if (
+          petData &&
+          typeof petData.hunger === 'number' &&
+          typeof petData.happiness === 'number' &&
+          typeof petData.cleanliness === 'number' &&
+          typeof petData.affection === 'number' &&
+          typeof petData.spirit === 'number' &&
+          typeof petData.image === 'string'
+        ) {
+          setPet(petData as Pet);
+        } else {
+          console.warn("Invalid pet data from Firebase, attempting to set default:", petData);
+          // If data is invalid, consider setting (or re-setting) default data in Firebase
+          // and then updating local state. For now, just set local to default.
+          set(petRef, defaultPetData).then(() => setPet(defaultPetData)).catch(console.error);
+        }
       } else {
-        const starter: Pet = {
-          hunger: 50, happiness: 100, cleanliness: 100,
-          affection: 100, spirit: 100, image: "/pet/Neutral.png"
-        };
-        set(petRef, starter).then(() => setPet(starter));
+        // Pet data doesn't exist in Firebase, create it with default values
+        console.log("No pet data in Firebase, creating starter pet.");
+        set(petRef, defaultPetData)
+          .then(() => {
+            setPet(defaultPetData);
+          })
+          .catch((error) => {
+            console.error("Failed to set starter pet in Firebase:", error);
+          });
       }
+    }, (error) => {
+      // Handle Firebase read errors
+      console.error("Firebase onValue error:", error);
+      // Potentially set pet to a default error state or null
+      setPet(null); // Or a default local pet if Firebase is unavailable
     });
-    return () => unsubscribe();
+
+    return () => unsubscribe(); // Cleanup listener on component unmount
   }, []);
 
   return (
