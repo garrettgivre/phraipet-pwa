@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { ref, onValue, set } from "firebase/database";
 import { db } from "./firebase";
-import type { Pet, Need, NeedInfo, FoodInventoryItem } from "./types"; // Added FoodInventoryItem
-import { InventoryProvider, useInventory } from "./contexts/InventoryContext";
+import type { Pet, Need, NeedInfo, FoodInventoryItem } from "./types";
+import { InventoryProvider } from "./contexts/InventoryContext";
 import Header from "./components/Header";
 import NavBar from "./components/NavBar";
 import PetPage from "./pages/PetPage";
@@ -22,7 +22,6 @@ import InventoryPage from "./pages/InventoryPage";
 
 import "./App.css";
 
-/* ─── Scroll Reset ──────────────────────────────────────────────── */
 function ScrollToTop() {
   const { pathname } = useLocation();
   useEffect(() => {
@@ -65,13 +64,15 @@ const descriptor = (need: Exclude<Need, "spirit">, value: number) =>
 /* ─── AppShell ──────────────────────────────────────────────────────── */
 interface AppShellProps {
   pet: Pet | null;
-  setPet: React.Dispatch<React.SetStateAction<Pet | null>>; // Pass setPet
+  setPet: React.Dispatch<React.SetStateAction<Pet | null>>;
 }
 
-function AppShell({ pet, setPet }: AppShellProps) { // Accept setPet
+function AppShell({ pet, setPet }: AppShellProps) {
   const location = useLocation();
   const isPetPage = location.pathname === "/";
-  const { consumeFoodItem } = useInventory();
+  // consumeFoodItem is used within InventoryPage, which gets it from useInventory()
+  // So AppShell doesn't need to call useInventory() for this specific purpose.
+  // const { consumeFoodItem } = useInventory(); 
 
 
   const needInfo: NeedInfo[] = pet
@@ -80,26 +81,29 @@ function AppShell({ pet, setPet }: AppShellProps) { // Accept setPet
         { need: "cleanliness", emoji: "🧼", value: pet.cleanliness, desc: descriptor("cleanliness", pet.cleanliness) },
         { need: "happiness", emoji: "🎲", value: pet.happiness, desc: descriptor("happiness", pet.happiness) },
         { need: "affection", emoji: "🤗", value: pet.affection, desc: descriptor("affection", pet.affection) },
-        { need: "spirit", emoji: "✨", value: pet.spirit, desc: descriptor("happiness", pet.spirit) }, // Assuming spirit uses happiness descriptors
+        { need: "spirit", emoji: "✨", value: pet.spirit, desc: descriptor("happiness", pet.spirit) },
       ]
     : [];
   
   const handleFeedPet = (foodItem: FoodInventoryItem) => {
     if (!pet) return;
-
     const newHunger = Math.min(120, pet.hunger + foodItem.hungerRestored);
     const updatedPet: Pet = { ...pet, hunger: newHunger };
     
     const petRef = ref(db, `pets/sharedPet`);
     set(petRef, updatedPet).then(() => {
-      setPet(updatedPet); // Update local state after successful Firebase update
-      consumeFoodItem(foodItem.id); // Consume item from client inventory
+      setPet(updatedPet);
+      // consumeFoodItem is now called within InventoryContext after successful Firebase update
+      // by InventoryPage calling the context's consumeFoodItem method.
+      // To make this work, InventoryPage needs access to the context's consumeFoodItem.
+      // This is already set up as InventoryPage calls useInventory().
     }).catch(console.error);
   };
 
   return (
     <>
       <ScrollToTop />
+      {/* Header is fixed, so it's always visible unless explicitly hidden */}
       {!isPetPage && (
         <Header 
           coins={100} 
@@ -107,18 +111,28 @@ function AppShell({ pet, setPet }: AppShellProps) { // Accept setPet
           needs={needInfo} 
         />
       )}
+      {/* The <main> tag provides the content area between the fixed Header and NavBar.
+        Its padding ensures that content within the Routes isn't obscured.
+      */}
       <main style={{
-        paddingTop: isPetPage ? "0px" : "80px",
-        paddingBottom: "72px", // Standard NavBar height
-        minHeight: `calc(100vh - ${isPetPage ? 0 : 80}px - 72px)`
+        paddingTop: "80px", /* Height of the fixed Header */
+        paddingBottom: "56px", /* Height of the fixed NavBar */
+        minHeight: "100vh", /* Ensure it takes at least full viewport height */
+        boxSizing: "border-box", /* Include padding in height calculation */
+        display: "flex", /* Added to make child (Route content) take full height */
+        flexDirection: "column" /* Added */
       }}>
         <Routes>
+          {/* Each route's component (like InventoryPage) will now be a direct child 
+            of this flex container (<main>). If InventoryPage's root div has height: 100%,
+            it will fill the space defined by <main>'s content box.
+          */}
           <Route path="/" element={<PetPage needInfo={needInfo} />} />
           <Route path="/explore" element={<Explore />} />
           <Route path="/play" element={<Play />} />
           <Route 
             path="/inventory" 
-            element={<InventoryPage pet={pet} onFeedPet={handleFeedPet} />} // Pass pet and feed function
+            element={<InventoryPage pet={pet} onFeedPet={handleFeedPet} />}
           />
           <Route path="/sunnybrook" element={<Sunnybrook />} />
           <Route path="/sunnybrook/Adoption" element={<SBAdoption />} />
@@ -131,39 +145,39 @@ function AppShell({ pet, setPet }: AppShellProps) { // Accept setPet
           <Route path="/sunnybrook/SBToy" element={<SBToy />} />
         </Routes>
       </main>
+      {/* NavBar is fixed, so it's always visible at the bottom */}
       <NavBar />
     </>
   );
 }
 
-/* ─── Main App ──────────────────────────────────────────────────────── */
 export default function App() {
   const [pet, setPet] = useState<Pet | null>(null);
 
   useEffect(() => {
     const petRef = ref(db, `pets/sharedPet`);
-    const unsubscribe = onValue(petRef, (snap) => { // Store the unsubscribe function
+    const unsubscribe = onValue(petRef, (snap) => {
       if (snap.exists()) {
         setPet(snap.val() as Pet);
       } else {
         const starter: Pet = {
-          hunger: 50, // Start with some hunger
+          hunger: 50,
           happiness: 100,
           cleanliness: 100,
           affection: 100,
           spirit: 100,
           image: "/pet/Neutral.png"
         };
-        set(petRef, starter).then(() => setPet(starter)); // Set local state after initial Firebase set
+        set(petRef, starter).then(() => setPet(starter));
       }
     });
-    return () => unsubscribe(); // Cleanup listener on component unmount
+    return () => unsubscribe();
   }, []);
 
   return (
     <InventoryProvider>
       <BrowserRouter>
-        <AppShell pet={pet} setPet={setPet} /> {/* Pass setPet to AppShell */}
+        <AppShell pet={pet} setPet={setPet} />
       </BrowserRouter>
     </InventoryProvider>
   );

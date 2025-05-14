@@ -1,47 +1,43 @@
 .inventory-page-layout {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 80px - 56px); /* Header (80px) + Main App NavBar (56px) */
-  margin-top: 80px; /* Space for the fixed Header from App.tsx */
-  background-color: #f0f0f0;
+  height: 100%; /* Fill the available height from App.tsx <main>'s content box */
+  background-color: #f0f0f0; /* Background for the entire inventory content area */
   box-sizing: border-box;
-  width: 100%;
-  position: relative; /* Fallback for older browsers if calc/vh have issues, though unlikely */
+  /* No margin-top here; App.tsx's <main> handles spacing for the fixed Header */
 }
 
 .inventory-title {
   text-align: center;
   color: #333;
-  font-size: 22px; /* Slightly smaller */
-  padding: 10px 0;
-  margin: 0;
-  flex-shrink: 0; /* Don't shrink the title */
-  background-color: #f8f9fa;
+  font-size: 22px;
+  padding: 12px 0;
+  margin: 0; /* Remove default h1 margin */
+  flex-shrink: 0; /* Prevent title from shrinking */
+  background-color: #f8f9fa; /* Light background for title bar */
   border-bottom: 1px solid #dee2e6;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.03);
 }
 
 /* Scrollable area for the inventory items */
 .inventory-grid-scroll-area {
-  flex-grow: 1; /* Takes up available space */
-  overflow-y: auto;
+  flex-grow: 1; /* This makes the grid area take up all available vertical space */
+  overflow-y: auto; /* Enable vertical scrolling ONLY for this grid area */
   padding: 16px;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, 1fr); /* Four items across */
   gap: 16px;
-  /* This will align the block of items to the bottom if they don't fill the container */
-  /* When items overflow, the container scrolls from top, but content starts aligned to bottom */
-  align-content: flex-end; 
-  background-color: #ffffff;
+  align-content: flex-end; /* Aligns grid items to the bottom if they don't fill the space */
+  background-color: #ffffff; /* White background for the grid content itself */
 }
 
 .no-items-message {
-  grid-column: 1 / -1;
+  grid-column: 1 / -1; /* Span all columns if grid is empty */
   text-align: center;
   padding: 20px;
   color: #6c757d;
   font-style: italic;
-  align-self: center; /* Center message if grid is empty and align-content is flex-end */
+  align-self: center; /* Vertically center message if grid is empty and align-content is flex-end */
 }
 
 .inventory-item {
@@ -68,8 +64,8 @@
 .zoom-container {
   width: 64px; 
   height: 64px;
-  overflow: hidden; /* Crucial for cropping */
-  position: relative; /* For absolute positioning of the img */
+  overflow: hidden;
+  position: relative;
   margin: 0 auto 10px auto;
   background-color: #f8f9fa;
   border-radius: 6px;
@@ -80,11 +76,9 @@
 }
 
 .inventory-image {
-  /* Dynamic styles from JS for position, width, height */
   display: block; 
 }
 .zoom-placeholder {
-  /* Style for '...' or 'X' placeholder */
   font-size: 12px;
   color: #adb5bd;
   text-align: center;
@@ -95,7 +89,7 @@
   font-size: 13px;
   color: #212529;
   font-weight: 500;
-  margin-top: auto; /* Pushes name to bottom of flex item */
+  margin-top: auto; 
   word-break: break-word;
   line-height: 1.3;
   padding-top: 5px;
@@ -138,16 +132,16 @@
   box-shadow: 0 0 3px rgba(0,0,0,0.3);
 }
 
-/* Container for both tab bars at the bottom of the page content area */
+/* Container for both tab bars - this will NOT scroll */
 .inventory-tab-bars-container {
   flex-shrink: 0; /* Prevent this container from shrinking */
   background-color: #f8f9fa; /* Base background for the tab area */
-  border-top: 1px solid #dee2e6;
-  /* Removed position: sticky/fixed, it's part of the flex flow */
-  z-index: 100; /* Ensure it's above other content if any overlap issues (shouldn't be with flex) */
+  border-top: 1px solid #dee2e6; /* Separator from grid content */
+  z-index: 5; /* Ensure it's above grid content if any weird overlap, though flex should handle it */
+  /* This container is the last item in the flex column of .inventory-page-layout,
+     so it will naturally be at the bottom of that layout. */
 }
 
-/* Sub Category Tabs: Directly above Main Category Tabs */
 .inventory-sub-tabs {
   background: #e9ecef; 
   display: flex;
@@ -155,7 +149,6 @@
   padding: 8px 4px;
 }
 
-/* Main Category Tabs: Bottom-most within inventory page content */
 .inventory-main-tabs {
   background: #ced4da; 
   display: flex;
@@ -173,8 +166,8 @@
   font-weight: 500;
   flex-grow: 1;
   text-align: center;
-  margin: 0 2px; /* Minimal gap */
-  line-height: 1.4; /* Ensure text fits well */
+  margin: 0 2px;
+  line-height: 1.4;
 }
 
 .tab-button { /* Sub-category */
