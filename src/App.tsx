@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { ref, onValue, set } from "firebase/database";
 import { db } from "./firebase";
-import type { Pet, Need, NeedInfo } from "./types";
-import { InventoryProvider } from "./contexts/InventoryContext";
+import type { Pet, Need, NeedInfo, FoodInventoryItem } from "./types"; // Added FoodInventoryItem
+import { InventoryProvider, useInventory } from "./contexts/InventoryContext";
 import Header from "./components/Header";
 import NavBar from "./components/NavBar";
 import PetPage from "./pages/PetPage";
@@ -63,9 +63,16 @@ const descriptor = (need: Exclude<Need, "spirit">, value: number) =>
   bands[need].find((b) => value <= b.upTo)?.label ?? "";
 
 /* ─── AppShell ──────────────────────────────────────────────────────── */
-function AppShell({ pet }: { pet: Pet | null }) {
+interface AppShellProps {
+  pet: Pet | null;
+  setPet: React.Dispatch<React.SetStateAction<Pet | null>>; // Pass setPet
+}
+
+function AppShell({ pet, setPet }: AppShellProps) { // Accept setPet
   const location = useLocation();
   const isPetPage = location.pathname === "/";
+  const { consumeFoodItem } = useInventory();
+
 
   const needInfo: NeedInfo[] = pet
     ? [
@@ -73,9 +80,22 @@ function AppShell({ pet }: { pet: Pet | null }) {
         { need: "cleanliness", emoji: "🧼", value: pet.cleanliness, desc: descriptor("cleanliness", pet.cleanliness) },
         { need: "happiness", emoji: "🎲", value: pet.happiness, desc: descriptor("happiness", pet.happiness) },
         { need: "affection", emoji: "🤗", value: pet.affection, desc: descriptor("affection", pet.affection) },
-        { need: "spirit", emoji: "✨", value: pet.spirit, desc: descriptor("happiness", pet.spirit) },
+        { need: "spirit", emoji: "✨", value: pet.spirit, desc: descriptor("happiness", pet.spirit) }, // Assuming spirit uses happiness descriptors
       ]
     : [];
+  
+  const handleFeedPet = (foodItem: FoodInventoryItem) => {
+    if (!pet) return;
+
+    const newHunger = Math.min(120, pet.hunger + foodItem.hungerRestored);
+    const updatedPet: Pet = { ...pet, hunger: newHunger };
+    
+    const petRef = ref(db, `pets/sharedPet`);
+    set(petRef, updatedPet).then(() => {
+      setPet(updatedPet); // Update local state after successful Firebase update
+      consumeFoodItem(foodItem.id); // Consume item from client inventory
+    }).catch(console.error);
+  };
 
   return (
     <>
@@ -89,14 +109,17 @@ function AppShell({ pet }: { pet: Pet | null }) {
       )}
       <main style={{
         paddingTop: isPetPage ? "0px" : "80px",
-        paddingBottom: "72px",
-        minHeight: "calc(100vh - 72px)"
+        paddingBottom: "72px", // Standard NavBar height
+        minHeight: `calc(100vh - ${isPetPage ? 0 : 80}px - 72px)`
       }}>
         <Routes>
           <Route path="/" element={<PetPage needInfo={needInfo} />} />
           <Route path="/explore" element={<Explore />} />
           <Route path="/play" element={<Play />} />
-          <Route path="/inventory" element={<InventoryPage />} />
+          <Route 
+            path="/inventory" 
+            element={<InventoryPage pet={pet} onFeedPet={handleFeedPet} />} // Pass pet and feed function
+          />
           <Route path="/sunnybrook" element={<Sunnybrook />} />
           <Route path="/sunnybrook/Adoption" element={<SBAdoption />} />
           <Route path="/sunnybrook/SBClinic" element={<SBClinic />} />
@@ -119,27 +142,28 @@ export default function App() {
 
   useEffect(() => {
     const petRef = ref(db, `pets/sharedPet`);
-    return onValue(petRef, (snap) => {
+    const unsubscribe = onValue(petRef, (snap) => { // Store the unsubscribe function
       if (snap.exists()) {
         setPet(snap.val() as Pet);
       } else {
         const starter: Pet = {
-          hunger: 100,
+          hunger: 50, // Start with some hunger
           happiness: 100,
           cleanliness: 100,
           affection: 100,
           spirit: 100,
           image: "/pet/Neutral.png"
         };
-        set(petRef, starter);
+        set(petRef, starter).then(() => setPet(starter)); // Set local state after initial Firebase set
       }
     });
+    return () => unsubscribe(); // Cleanup listener on component unmount
   }, []);
 
   return (
     <InventoryProvider>
       <BrowserRouter>
-        <AppShell pet={pet} />
+        <AppShell pet={pet} setPet={setPet} /> {/* Pass setPet to AppShell */}
       </BrowserRouter>
     </InventoryProvider>
   );
