@@ -2,42 +2,48 @@
   display: flex;
   flex-direction: column;
   height: 100%; /* Fill the available height from App.tsx <main>'s content box */
-  background-color: #f0f0f0; /* Background for the entire inventory content area */
-  box-sizing: border-box;
-  /* No margin-top here; App.tsx's <main> handles spacing for the fixed Header */
+  width: 100%; /* Ensure it takes full width */
+  background-color: #f0f0f0; 
+  box-sizing: border-box; 
 }
 
 .inventory-title {
   text-align: center;
   color: #333;
   font-size: 22px;
-  padding: 12px 0;
-  margin: 0; /* Remove default h1 margin */
-  flex-shrink: 0; /* Prevent title from shrinking */
-  background-color: #f8f9fa; /* Light background for title bar */
+  padding: 10px 16px; /* Added horizontal padding */
+  margin: 0; 
+  flex-shrink: 0; 
+  background-color: #f8f9fa;
   border-bottom: 1px solid #dee2e6;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  width: 100%; /* Ensure title bar takes full width */
+  box-sizing: border-box; /* Include padding in width */
 }
 
 /* Scrollable area for the inventory items */
 .inventory-grid-scroll-area {
-  flex-grow: 1; /* This makes the grid area take up all available vertical space */
-  overflow-y: auto; /* Enable vertical scrolling ONLY for this grid area */
+  flex-grow: 1; /* Takes up available space */
+  overflow-y: auto; 
   padding: 16px;
   display: grid;
-  grid-template-columns: repeat(4, 1fr); /* Four items across */
+  grid-template-columns: repeat(4, 1fr); 
   gap: 16px;
-  align-content: flex-end; /* Aligns grid items to the bottom if they don't fill the space */
-  background-color: #ffffff; /* White background for the grid content itself */
+  align-content: flex-end; 
+  background-color: #ffffff;
+  width: 100%; /* Ensure grid area takes full width */
+  box-sizing: border-box; /* Include padding in width */
+  min-height: 100px; /* Give it a minimum height so "No items" message doesn't collapse it entirely */
 }
 
 .no-items-message {
-  grid-column: 1 / -1; /* Span all columns if grid is empty */
+  grid-column: 1 / -1; 
   text-align: center;
   padding: 20px;
   color: #6c757d;
   font-style: italic;
-  align-self: center; /* Vertically center message if grid is empty and align-content is flex-end */
+  align-self: center; 
+  width: 100%; /* Ensure message container takes full width */
 }
 
 .inventory-item {
@@ -132,14 +138,14 @@
   box-shadow: 0 0 3px rgba(0,0,0,0.3);
 }
 
-/* Container for both tab bars - this will NOT scroll */
+/* Container for both tab bars - this will NOT scroll with the grid */
 .inventory-tab-bars-container {
   flex-shrink: 0; /* Prevent this container from shrinking */
-  background-color: #f8f9fa; /* Base background for the tab area */
-  border-top: 1px solid #dee2e6; /* Separator from grid content */
-  z-index: 5; /* Ensure it's above grid content if any weird overlap, though flex should handle it */
-  /* This container is the last item in the flex column of .inventory-page-layout,
-     so it will naturally be at the bottom of that layout. */
+  background-color: #f8f9fa; 
+  border-top: 1px solid #dee2e6;
+  z-index: 5; 
+  width: 100%; /* Ensure tab container takes full width */
+  box-sizing: border-box;
 }
 
 .inventory-sub-tabs {
@@ -147,6 +153,8 @@
   display: flex;
   justify-content: space-around;
   padding: 8px 4px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .inventory-main-tabs {
@@ -154,6 +162,8 @@
   display: flex;
   justify-content: space-around;
   padding: 10px 4px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .tab-button, .main-tab-button {
@@ -168,6 +178,7 @@
   text-align: center;
   margin: 0 2px;
   line-height: 1.4;
+  min-width: 0; /* Allow flex items to shrink properly */
 }
 
 .tab-button { /* Sub-category */
