@@ -32,12 +32,12 @@
 
 .needsOverlay {
   position: absolute;
-  left: 16px; /* Adjust as needed for larger circles */
+  left: 16px; 
   top: 50%;
   transform: translateY(-50%);
   display: flex;
   flex-direction: column;
-  gap: 24px; /* Increased gap for larger circles */
+  gap: 18px; /* Adjusted gap for new circle size */
   z-index: 10; 
 }
 
@@ -49,8 +49,8 @@
 
 /* --- Styles for Need Circles on PetPage --- */
 .needsOverlay .need-circle { /* Scoped to needsOverlay */
-  width: 112px;  /* Larger overall size for PetPage */
-  height: 112px; 
+  width: 80px;  /* New intermediate size */
+  height: 80px; 
 }
 
 .needsOverlay .circular-chart { /* Scoped to needsOverlay */
@@ -61,22 +61,27 @@
 .needsOverlay .circle-bg { /* Scoped to needsOverlay */
   fill: none;
   stroke: #e0e0e0; 
-  stroke-width: 3.8; /* Original desired thickness */
+  stroke-width: 3.8; /* Consistent thickness */
 }
 
 .needsOverlay .circle { /* Scoped to needsOverlay */
   fill: none;
   stroke: #00acc1; 
-  stroke-width: 3.8; /* Original desired thickness */
+  stroke-width: 3.8; /* Consistent thickness */
   stroke-linecap: round;
   transition: stroke-dasharray 0.3s ease-out;
 }
 
 .needsOverlay .emoji-text { /* Scoped to needsOverlay */
   fill: #333;
-  font-size: 18px; /* Adjusted to fit well within the 112px circle with 3.8px stroke */
+  /* Adjusted font-size for 80px container with 3.8px stroke */
+  /* SVG viewBox is 36x36. Inner clear diameter ~28 SVG units. */
+  /* For 80px container, 1 SVG unit ~ 2.22px. */
+  /* 14px * 2.22 = ~31px screen pixels. */
+  font-size: 14px; 
   text-anchor: middle;
   dominant-baseline: middle;
+  /* Removed transform: rotate(90, 18, 18) from CSS if it was ever here */
 }
 
 /* Pet Area - container for pet and its mood bubble */

@@ -10,25 +10,21 @@ interface PetPageProps {
 }
 
 export default function PetPage({ pet, needInfo }: PetPageProps) {
-  // Consume roomLayersLoading from the context
-  const { roomLayers, roomLayersLoading } = useInventory(); 
+  const { roomLayers, roomLayersLoading } = useInventory(); // Added roomLayersLoading
   const navigate = useNavigate();
 
   const moodPhrase = getPetMoodPhrase(pet); 
 
-  // Default values are now primarily handled within InventoryContext when data is fetched
-  const currentCeiling = roomLayers?.ceiling;
-  const currentWall = roomLayers?.wall;
-  const currentFloor = roomLayers?.floor;
+  const currentCeiling = roomLayers?.ceiling || "/assets/ceilings/classic-ceiling.png";
+  const currentWall = roomLayers?.wall || "/assets/walls/classic-wall.png";
+  const currentFloor = roomLayers?.floor || "/assets/floors/classic-floor.png";
   const backDecorItems: RoomDecorItem[] = roomLayers?.backDecor || [];
   const frontDecorItems: RoomDecorItem[] = roomLayers?.frontDecor || [];
   const overlaySrc = roomLayers?.overlay || "";
 
-  // The 'loaded' class is now controlled by !roomLayersLoading
-  // The key can be simplified if not causing specific re-render issues, or use a stable page ID.
+
   return (
-    <div className={`petPage ${!roomLayersLoading ? 'loaded' : ''}`} key={currentFloor}> 
-      {/* Only render room layers if not loading and paths exist */}
+    <div className={`petPage ${!roomLayersLoading ? 'loaded' : ''}`} key={currentFloor + currentWall}> 
       {!roomLayersLoading && currentCeiling && <img src={currentCeiling} alt="Ceiling" className="layer ceiling" />}
       {!roomLayersLoading && currentWall && <img src={currentWall} alt="Wall" className="layer wall" />}
       {!roomLayersLoading && currentFloor && <img src={currentFloor} alt="Floor" className="layer floor" />}
@@ -61,9 +57,10 @@ export default function PetPage({ pet, needInfo }: PetPageProps) {
                   className="circle"
                   strokeDasharray={`${n.value}, 100`}
                   d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                  transform="rotate(-90 18 18)"
+                  transform="rotate(-90 18 18)" // This rotates the starting point of the progress stroke
                 />
-                <text x="18" y="20.35" className="emoji-text" transform="rotate(90 18 18)">
+                {/* Removed transform from the text element itself */}
+                <text x="18" y="20.35" className="emoji-text"> 
                   {n.emoji}
                 </text>
               </svg>
