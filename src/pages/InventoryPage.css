@@ -1,11 +1,11 @@
 .inventory-page-layout {
   display: flex;
   flex-direction: column;
-  height: 100%; /* Fill the available height from App.tsx <main>'s content box */
-  width: 100%; /* Ensure it takes full width */
+  height: 100%; 
+  width: 100%; 
   background-color: #f0f0f0; 
   box-sizing: border-box;
-  min-width: 320px; /* Prevent extreme horizontal collapse */
+  min-width: 320px; 
 }
 
 .inventory-title {
@@ -20,11 +20,15 @@
   box-shadow: 0 1px 3px rgba(0,0,0,0.04);
   width: 100%; 
   box-sizing: border-box; 
+  user-select: none; /* Prevent text selection on the title */
+  -webkit-user-select: none; /* For Safari */
+  -moz-user-select: none; /* For Firefox */
+  -ms-user-select: none; /* For Internet Explorer/Edge */
 }
 
 /* Scrollable area for the inventory items */
 .inventory-grid-scroll-area {
-  flex-grow: 1; /* Takes up available space */
+  flex-grow: 1; 
   overflow-y: auto; 
   padding: 16px;
   display: grid;
@@ -34,7 +38,7 @@
   background-color: #ffffff;
   width: 100%; 
   box-sizing: border-box; 
-  min-height: 150px; /* Increased min-height to better showcase align-content: flex-end and prevent collapse */
+  min-height: 150px; 
 }
 
 .no-items-message {
@@ -45,7 +49,7 @@
   font-style: italic;
   align-self: center; 
   width: 100%; 
-  box-sizing: border-box; /* Ensure padding doesn't add to width */
+  box-sizing: border-box;
 }
 
 .inventory-item {
@@ -140,7 +144,6 @@
   box-shadow: 0 0 3px rgba(0,0,0,0.3);
 }
 
-/* Container for both tab bars - this will NOT scroll with the grid */
 .inventory-tab-bars-container {
   flex-shrink: 0; 
   background-color: #f8f9fa; 

@@ -1,15 +1,12 @@
 .petPage {
   opacity: 0;
   transition: opacity 0.6s ease-in-out;
-  position: relative;
+  position: relative; /* Crucial for absolute positioning of children */
   width: 100vw;
   height: 100vh;
   background-color: #f0f8ff;
   overflow: hidden;
-  display: flex; /* Use flex to manage layout of pet area and needs container */
-  flex-direction: column; /* Stack pet area and needs vertically */
-  align-items: center; /* Center children horizontally */
-  justify-content: center; /* Center children vertically (adjust if needed) */
+  /* Removed flex properties, direct children will be positioned absolutely or in flow */
 }
 
 .petPage.loaded {
@@ -35,20 +32,20 @@
 
 /* Container for the pet image and its mood bubble */
 .pet-display-area {
-  /* position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); */
-  /* Now part of flex layout, no longer needs absolute positioning for centering */
+  position: absolute; 
+  top: 50%; 
+  left: 50%;
+  transform: translate(-50%, -50%); /* This centers the pet display area */
   display: flex; 
   flex-direction: column;
   align-items: center;
   z-index: 5; 
   width: fit-content; 
-  margin-bottom: 20px; /* Space between pet area and needs container */
-  /* flex-grow: 1; /* Allow it to take space if needed, but needs container is main focus */
-  justify-content: flex-end; /* Pushes petHero to bottom of its allocated space if mood bubble is tall */
+  /* margin-bottom: 20px; No longer needed as needs container is positioned independently */
 }
 
 .petHero {
-  width: clamp(300px, 50vw, 500px); /* Adjusted size slightly for more space below */
+  width: clamp(400px, 60vw, 800px); /* Original desired size */
   height: auto;   
   object-fit: contain; 
   display: block; 
@@ -59,7 +56,7 @@
   padding: 8px 15px;
   border-radius: 20px; 
   box-shadow: 0 2px 5px rgba(0,0,0,0.15);
-  margin-bottom: 10px; /* Reduced margin as it's above pet */
+  margin-bottom: 10px; 
   max-width: 220px; 
   text-align: center;
   position: relative; 
@@ -86,23 +83,28 @@
   line-height: 1.4;
 }
 
-/* Container for the horizontally aligned need circles below the pet */
+/* Container for the horizontally aligned need circles */
 .pet-page-needs-container {
+  position: absolute; /* Position relative to .petPage */
+  bottom: 70px; /* Space above the main NavBar (assuming NavBar is ~56px + some buffer) */
+  left: 50%;
+  transform: translateX(-50%); /* Center horizontally */
   display: flex;
-  flex-direction: row; /* Arrange need items horizontally */
-  justify-content: center; /* Center the group of need items */
+  flex-direction: row;
+  justify-content: center;
   align-items: center;
-  gap: 15px; /* Space between each need item */
-  padding: 10px 0; /* Padding above/below the container */
-  width: 100%; /* Take full width to center its content */
+  gap: 15px; 
+  padding: 10px 15px; /* Add some padding around the needs bar */
+  width: auto; /* Let it size to its content */
+  max-width: 90%; /* Prevent it from being too wide on large screens */
   box-sizing: border-box;
-  z-index: 10; /* Ensure it's above room layers */
-  /* position: absolute; bottom: 70px; left: 50%; transform: translateX(-50%); */
-  /* No longer absolute, part of flex flow */
-  margin-bottom: 60px; /* Space above the main NavBar (which is 56px high) */
+  z-index: 10; 
+  background-color: rgba(240, 240, 240, 0.85); /* Optional: slight background for readability */
+  border-radius: 12px; /* Optional: rounded corners for the bar */
+  box-shadow: 0 -1px 5px rgba(0,0,0,0.05); /* Optional: subtle shadow */
 }
 
-.need-item-interactive { /* Wrapper for each clickable need circle + (optional) label */
+.need-item-interactive { 
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -113,12 +115,11 @@
 }
 
 .need-item-interactive:hover {
-  background-color: rgba(0,0,0,0.05); /* Subtle hover effect */
+  background-color: rgba(0,0,0,0.05); 
 }
 
-/* Styles for Need Circles within .pet-page-needs-container */
 .pet-page-needs-container .need-circle {
-  width: 64px;  /* Slightly smaller than previous PetPage version, adjust as needed */
+  width: 64px;  
   height: 64px; 
 }
 
@@ -143,12 +144,12 @@
 
 .pet-page-needs-container .emoji-text {
   fill: #333;
-  font-size: 16px; /* Adjusted for 64px circle */
+  font-size: 16px; 
   text-anchor: middle;
   dominant-baseline: middle;
 }
 
-.need-name-label { /* Optional text label below each circle */
+.need-name-label { 
   font-size: 10px;
   color: #555;
   margin-top: 4px;
