@@ -33,13 +33,28 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
         onIncreaseAffection(5);
         break;
       case "hunger":
-        navigate('/inventory', { state: { targetMainCategory: 'Food', targetSubCategory: 'Snack' } });
+        navigate('/inventory', {
+          state: {
+            targetMainCategory: 'Food',
+            targetSubCategory: 'Snack' // Default Food sub-category
+          }
+        });
         break;
-      case "cleanliness":
-        navigate('/inventory', { state: { targetMainCategory: 'Cleaning', targetSubCategory: 'BasicKit' } });
+      case "cleanliness": // This case handles the click on the cleanliness/grooming icon
+        navigate('/inventory', {
+          state: {
+            targetMainCategory: 'Grooming', // MODIFIED: Was 'Cleaning'
+            targetSubCategory: 'BasicKit'   // Default Grooming sub-category
+          }
+        });
         break;
       case "happiness":
-        navigate('/inventory', { state: { targetMainCategory: 'Toys', targetSubCategory: 'Plushie' } });
+        navigate('/inventory', {
+          state: {
+            targetMainCategory: 'Toys',
+            targetSubCategory: 'Classic' // Default Toy sub-category (using your new "Classic" type)
+          }
+        });
         break;
       case "spirit":
         console.log("Spirit clicked - action TBD.");
@@ -72,14 +87,13 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
               <svg viewBox="0 0 36 36" className="circular-chart">
                 <path className="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                 <path className="circle" strokeDasharray={`${n.value}, 100`} d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" transform="rotate(-90 18 18)" />
-                {/* MODIFIED: Use SVG image element for icons */}
                 <image
                   href={n.iconSrc}
-                  x={(36 - iconDisplaySize) / 2} // Center the image
-                  y={(36 - iconDisplaySize) / 2} // Center the image
+                  x={(36 - iconDisplaySize) / 2}
+                  y={(36 - iconDisplaySize) / 2}
                   height={iconDisplaySize}
                   width={iconDisplaySize}
-                  className="need-icon-image" // Add a class for potential specific styling
+                  className="need-icon-image"
                 />
               </svg>
             </div>

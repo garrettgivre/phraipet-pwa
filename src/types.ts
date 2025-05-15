@@ -15,7 +15,7 @@ export type NeedInfo = {
 export interface Pet {
   hunger: number;
   happiness: number;
-  cleanliness: number; // This stat remains 'cleanliness' for the pet
+  cleanliness: number;
   affection: number;
   spirit: number;
   image: string;
@@ -39,11 +39,11 @@ export type DecorationItemType = "floor" | "wall" | "ceiling" | "backDecor" | "f
 // Defines the categories for food items.
 export type FoodCategory = "Treat" | "Snack" | "LightMeal" | "HeartyMeal" | "Feast";
 
-// MODIFIED: Renamed CleaningCategory to GroomingCategory
-export type GroomingCategory = "QuickFix" | "BasicKit" | "StandardSet" | "PremiumCare" | "LuxurySpa";
+// Defines the categories for grooming items.
+export type GroomingCategory = "QuickFix" | "BasicKit" | "StandardSet" | "PremiumCare" | "LuxurySpa" | "Claws" | "Dermal" | "Fragrance" | "Oral"; // Added new specific grooming types if needed, or map to existing
 
-// Defines the categories for toy items.
-export type ToyCategory = "ChewToy" | "Plushie" | "PuzzleToy" | "ActivityCenter" | "RoboticPal";
+// MODIFIED: ToyCategory names updated
+export type ToyCategory = "Basic" | "Classic" | "Plushie" | "Gadget" | "Wonder";
 
 
 // Base interface for all inventory items.
@@ -68,25 +68,25 @@ export interface FoodInventoryItem extends BaseInventoryItem {
   hungerRestored: number;
 }
 
-// MODIFIED: Renamed CleaningInventoryItem to GroomingInventoryItem
+// Interface for grooming items as they appear in the inventory.
 export interface GroomingInventoryItem extends BaseInventoryItem {
-  itemCategory: "grooming"; // MODIFIED: from "cleaning"
-  type: GroomingCategory;    // MODIFIED: uses GroomingCategory
-  cleanlinessBoost: number;  // This property name can remain, as it boosts the 'cleanliness' stat
+  itemCategory: "grooming";
+  type: GroomingCategory;
+  cleanlinessBoost: number;
 }
 
-// Interface for toy items as they appear in the inventory.
+// MODIFIED: ToyInventoryItem now uses the updated ToyCategory
 export interface ToyInventoryItem extends BaseInventoryItem {
   itemCategory: "toy";
-  type: ToyCategory;
+  type: ToyCategory; // Uses updated ToyCategory
   happinessBoost: number;
 }
 
-// MODIFIED: Updated union type to include GroomingInventoryItem
+// A union type representing any item that can be in the inventory.
 export type InventoryItem =
   | DecorationInventoryItem
   | FoodInventoryItem
-  | GroomingInventoryItem // MODIFIED
+  | GroomingInventoryItem
   | ToyInventoryItem;
 
 

@@ -6,12 +6,12 @@ import type {
   InventoryItem,
   DecorationInventoryItem,
   FoodInventoryItem,
-  GroomingInventoryItem, // MODIFIED: Was CleaningInventoryItem
+  GroomingInventoryItem,
   ToyInventoryItem,
   RoomDecorItem,
-  // FoodCategory, // REMOVED: Not directly used in this file
-  // GroomingCategory, // REMOVED: Not directly used in this file
-} from "../types"; // FoodCategory and GroomingCategory are used via the item types
+  // GroomingCategory, // Not directly used, but defined in types.ts for GroomingInventoryItem
+  // ToyCategory,      // Not directly used, but defined in types.ts for ToyInventoryItem
+} from "../types";
 
 export type DecorItem = RoomDecorItem;
 
@@ -25,36 +25,23 @@ type RoomLayers = {
 };
 
 const defaultDecorationItems: DecorationInventoryItem[] = [
-  // Classic Theme
   { id: "deco-classic-floor", name: "Classic Floor", itemCategory: "decoration", type: "floor", src: "/assets/floors/classic-floor.png" },
   { id: "deco-classic-wall", name: "Classic Wall", itemCategory: "decoration", type: "wall", src: "/assets/walls/classic-wall.png" },
   { id: "deco-classic-ceiling", name: "Classic Ceiling", itemCategory: "decoration", type: "ceiling", src: "/assets/ceilings/classic-ceiling.png" },
-
-  // Science Lab Theme
   { id: "deco-science-floor", name: "Science Floor", itemCategory: "decoration", type: "floor", src: "/assets/floors/science-floor.png" },
   { id: "deco-science-wall", name: "Science Wall", itemCategory: "decoration", type: "wall", src: "/assets/walls/science-wall.png" },
   { id: "deco-science-ceiling", name: "Science Ceiling", itemCategory: "decoration", type: "ceiling", src: "/assets/ceilings/science-ceiling.png" },
-
-  // Aero Theme
   { id: "deco-aero-floor", name: "Aero Floor", itemCategory: "decoration", type: "floor", src: "/assets/floors/aero-floor.png" },
   { id: "deco-aero-wall", name: "Aero Wall", itemCategory: "decoration", type: "wall", src: "/assets/walls/aero-wall.png" },
   { id: "deco-aero-ceiling", name: "Aero Ceiling", itemCategory: "decoration", type: "ceiling", src: "/assets/ceilings/aero-ceiling.png" },
-
-  // Candy Theme
   { id: "deco-candy-floor", name: "Candy Floor", itemCategory: "decoration", type: "floor", src: "/assets/floors/candy-floor.png" },
   { id: "deco-candy-wall", name: "Candy Wall", itemCategory: "decoration", type: "wall", src: "/assets/walls/candy-wall.png" },
   { id: "deco-candy-ceiling", name: "Candy Ceiling", itemCategory: "decoration", type: "ceiling", src: "/assets/ceilings/candy-ceiling.png" },
-
-  // Krazy Theme
   { id: "deco-krazy-floor", name: "Krazy Floor", itemCategory: "decoration", type: "floor", src: "/assets/floors/krazy-floor.png" },
   { id: "deco-krazy-wall", name: "Krazy Wall", itemCategory: "decoration", type: "wall", src: "/assets/walls/krazy-wall.png" },
   { id: "deco-krazy-ceiling", name: "Krazy Ceiling", itemCategory: "decoration", type: "ceiling", src: "/assets/ceilings/krazy-ceiling.png" },
-
-  // Example Decor Items
   { id: "deco-plant-1", name: "Potted Plant", itemCategory: "decoration", type: "backDecor", src: "/assets/decor/plant_1.png", description: "A lovely green plant." },
   { id: "deco-lamp-1", name: "Floor Lamp", itemCategory: "decoration", type: "frontDecor", src: "/assets/decor/lamp_1.png", description: "Lights up the room." },
-
-  // Example Overlay
   { id: "deco-rainy-overlay", name: "Rainy Window", itemCategory: "decoration", type: "overlay", src: "/assets/overlays/rainy_window.png", description: "A cozy rainy day view."}
 ];
 
@@ -96,18 +83,31 @@ const defaultGroomingItems: GroomingInventoryItem[] = [
   { id: "grooming-dermal-luxury-velvetcoatconditioner", name: "Velvet Coat Conditioner", itemCategory: "grooming", type: "LuxurySpa", cleanlinessBoost: 30, src: "/assets/grooming/grooming-dermal-luxury-velvetcoatconditioner.png", description: "For a luxurious, velvety coat." },
   { id: "grooming-dermal-premium-coconutoillotion", name: "Coconut Oil Lotion", itemCategory: "grooming", type: "PremiumCare", cleanlinessBoost: 25, src: "/assets/grooming/grooming-dermal-premium-coconutoillotion.png", description: "Nourishing coconut oil lotion." },
   { id: "grooming-dermal-standard-aloeleafgel", name: "Aloe Leaf Gel", itemCategory: "grooming", type: "StandardSet", cleanlinessBoost: 20, src: "/assets/grooming/grooming-dermal-standard-aloeleafgel.png", description: "Soothing aloe vera gel." },
-  { id: "grooming-general-basic-everydaygroomingglove", name: "Everyday Grooming Glove", itemCategory: "grooming", type: "BasicKit", cleanlinessBoost: 15, src: "/assets/grooming/grooming-general-basic-everydaygroomingglove.png", description: "For daily grooming and bonding." },
+  { id: "grooming-general-basic-everydaygroomingglove", name: "Grooming Glove", itemCategory: "grooming", type: "BasicKit", cleanlinessBoost: 15, src: "/assets/grooming/grooming-general-basic-everydaygroomingglove.png", description: "For daily grooming and bonding." },
   { id: "grooming-general-quickfix-onthegokit", name: "On-the-Go Kit", itemCategory: "grooming", type: "QuickFix", cleanlinessBoost: 10, src: "/assets/grooming/grooming-general-quickfix-onthegokit.png", description: "Quick grooming essentials." },
   { id: "grooming-general-quickfix-quickcleanspritz", name: "Quick Clean Spritz", itemCategory: "grooming", type: "QuickFix", cleanlinessBoost: 10, src: "/assets/grooming/grooming-general-quickfix-quickcleanspritz.png", description: "A refreshing quick clean spritz." },
-  { id: "grooming-general-standard-basicbathsponge", name: "Basic Bath Sponge", itemCategory: "grooming", type: "StandardSet", cleanlinessBoost: 20, src: "/assets/grooming/grooming-general-standard-basicbathsponge.png", description: "A simple sponge for bath time." },
+  { id: "grooming-general-standard-basicbathsponge", name: "Bath Sponge", itemCategory: "grooming", type: "StandardSet", cleanlinessBoost: 20, src: "/assets/grooming/grooming-general-standard-basicbathsponge.png", description: "A simple sponge for bath time." },
+  { id: "grooming-claws-standard-standardclawcleaner", name: "Claw Cleaner", itemCategory: "grooming", type: "StandardSet", cleanlinessBoost: 20, src: "/assets/grooming/grooming-claws-standard-standardclawcleaner.png", description: "Keeps claws neat and tidy." },
+  { id: "grooming-fragrance-luxury-jasminemist", name: "Jasmine Mist", itemCategory: "grooming", type: "LuxurySpa", cleanlinessBoost: 5, src: "/assets/grooming/grooming-fragrance-luxury-jasminemist.png", description: "A luxurious jasmine fragrance." },
+  { id: "grooming-fragrance-quickfix-quickfreshwipes", name: "Fresh Wipes", itemCategory: "grooming", type: "QuickFix", cleanlinessBoost: 10, src: "/assets/grooming/grooming-fragrance-quickfix-quickfreshwipes.png", description: "Fragranced wipes for a quick refresh." },
+  { id: "grooming-fragrance-standard-everydayfreshener", name: "Everyday Freshener", itemCategory: "grooming", type: "StandardSet", cleanlinessBoost: 5, src: "/assets/grooming/grooming-fragrance-standard-everydayfreshener.png", description: "A light, everyday freshening spray." },
+  { id: "grooming-oral-basic-basicfloss", name: "Basic Floss", itemCategory: "grooming", type: "BasicKit", cleanlinessBoost: 15, src: "/assets/grooming/grooming-oral-basic-basicfloss.png", description: "For healthy gums." },
+  { id: "grooming-oral-basic-plaintoothgel", name: "Plain Tooth Gel", itemCategory: "grooming", type: "BasicKit", cleanlinessBoost: 15, src: "/assets/grooming/grooming-oral-basic-plaintoothgel.png", description: "Simple tooth gel for cleaning." },
+  { id: "grooming-oral-luxury-herbalmouthrinse", name: "Herbal Mouth Rinse", itemCategory: "grooming", type: "LuxurySpa", cleanlinessBoost: 10, src: "/assets/grooming/grooming-oral-luxury-herbalmouthrinse.png", description: "A refreshing herbal mouth rinse." },
 ];
 
 const defaultToyItems: ToyInventoryItem[] = [
-    { id: "toy-rubber-ball", name: "Rubber Ball", itemCategory: "toy", type: "ChewToy", happinessBoost: 10, src: "/assets/toys/rubber_ball.png", description: "A bouncy classic." },
-    { id: "toy-teddy-bear", name: "Teddy Bear", itemCategory: "toy", type: "Plushie", happinessBoost: 15, src: "/assets/toys/teddy_bear.png", description: "Soft and cuddly." },
-    { id: "toy-puzzle-box", name: "Puzzle Box", itemCategory: "toy", type: "PuzzleToy", happinessBoost: 20, src: "/assets/toys/puzzle_box.png", description: "Keeps the mind sharp." },
-    { id: "toy-activity-tree", name: "Activity Tree", itemCategory: "toy", type: "ActivityCenter", happinessBoost: 25, src: "/assets/toys/cat_tree.png", description: "Hours of fun!" },
-    { id: "toy-robot-mouse", name: "Robo-Mouse", itemCategory: "toy", type: "RoboticPal", happinessBoost: 30, src: "/assets/toys/robot_mouse.png", description: "An interactive friend!" },
+  { id: "toys-basic-dull-lintlump", name: "Lint Lump", itemCategory: "toy", type: "Basic", happinessBoost: 10, src: "/assets/toys/toys-basic-dull-lintlump.png", description: "A surprisingly amusing lump of lint." },
+  { id: "toys-basic-exciting-rattlecube", name: "Rattle Cube", itemCategory: "toy", type: "Basic", happinessBoost: 12, src: "/assets/toys/toys-basic-exciting-rattlecube.png", description: "A cube that rattles with excitement." },
+  { id: "toys-basic-fun-paperfrisbee", name: "Paper Frisbee", itemCategory: "toy", type: "Basic", happinessBoost: 10, src: "/assets/toys/toys-basic-fun-paperfrisbee.png", description: "Simple, light, and fun to chase." },
+  { id: "toys-classic-dull-flatsqueaker", name: "Flat Squeaker (Dull)", itemCategory: "toy", type: "Classic", happinessBoost: 15, src: "/assets/toys/toys-classic-dull-flatsqueaker.png", description: "A classic squeaky toy, a bit flat." },
+  { id: "toys-classic-fun-flatsqueaker", name: "Flat Squeaker (Fun)", itemCategory: "toy", type: "Classic", happinessBoost: 18, src: "/assets/toys/toys-classic-fun-flatsqueaker.png", description: "A more engaging flat squeaker." },
+  { id: "toys-gadget-fun-clickomatic", name: "Click-o-matic", itemCategory: "toy", type: "Gadget", happinessBoost: 25, src: "/assets/toys/toys-gadget-fun-clickomatic.png", description: "Makes satisfying clicking sounds." },
+  { id: "toys-gadget-thrilling-starlightprojector", name: "Starlight Projector", itemCategory: "toy", type: "Gadget", happinessBoost: 28, src: "/assets/toys/toys-gadget-thrilling-starlightprojector.png", description: "Projects thrilling stars." },
+  { id: "toys-plushie-fun-pingu", name: "Pingu Plushie", itemCategory: "toy", type: "Plushie", happinessBoost: 20, src: "/assets/toys/toys-plushie-fun-pingu.png", description: "A fun penguin plushie." },
+  { id: "toys-plushie-mindblowing-sentientsnugglepod", name: "Sentient Snugglepod", itemCategory: "toy", type: "Plushie", happinessBoost: 22, src: "/assets/toys/toys-plushie-mindblowing-sentientsnugglepod.png", description: "A surprisingly sentient pod." },
+  { id: "toys-wonder-exciting-skyboundyoyo", name: "Skybound Yo-yo", itemCategory: "toy", type: "Wonder", happinessBoost: 30, src: "/assets/toys/toys-wonder-exciting-skyboundyoyo.png", description: "A yo-yo that reaches for the sky." },
+  { id: "toys-wonder-mindblowing-cosmicwonderbox", name: "Cosmic Wonderbox", itemCategory: "toy", type: "Wonder", happinessBoost: 35, src: "/assets/toys/toys-wonder-mindblowing-cosmicwonderbox.png", description: "A box full of cosmic wonders." },
 ];
 
 const defaultAllItems: InventoryItem[] = [
