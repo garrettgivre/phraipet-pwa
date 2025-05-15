@@ -1,259 +1,274 @@
 /* src/pages/InventoryPage.css */
 
-/* Outermost wrapper for the entire inventory page */
-.inventory-page-wrapper {
+/* Overall page container, using flex to structure title, items, and tabs */
+.inventory-page-container {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  height: 100%; /* Full height of its parent (likely <main>) */
   width: 100%;
-  background-color: #f4f6f8;
-  overflow: hidden;
+  background-color: #f0f2f5; /* Light background for the page */
+  overflow: hidden; /* Prevent the whole page from scrolling */
   box-sizing: border-box;
 }
 
-/* Title styling */
-.inventory-page-title {
-  flex-shrink: 0;
-  padding: 12px 16px;
+/* Title bar at the top */
+.inventory-title-bar {
+  flex-shrink: 0; /* Prevent shrinking */
+  padding: 10px 15px;
   margin: 0;
-  font-size: 20px;
+  font-size: 1.25rem; /* 20px */
   font-weight: 600;
   text-align: center;
   color: #333;
   background-color: #ffffff;
-  border-bottom: 1px solid #e0e0e0;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+  border-bottom: 1px solid #dee2e6;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   box-sizing: border-box;
 }
 
-/* NEW: Outer container for the scrollable items area. This is a flex item. */
-.inventory-items-scroll-container {
-  flex-grow: 1; /* Takes up available vertical space */
-  display: flex; /* Enables use of margin-top: auto on its child */
-  flex-direction: column; /* Stack its children (just the grid) vertically */
-  overflow-y: auto; /* Handles scrolling if the grid inside becomes too tall */
-  background-color: #ffffff; /* Background for the scrollable area */
-  padding: 16px; /* Padding around the grid area */
+/* Area for displaying inventory items */
+/* This area grows to fill space and uses flex to push the grid to its bottom */
+.inventory-item-display-area {
+  flex-grow: 1; /* Allows this area to take available vertical space */
+  display: flex;
+  flex-direction: column; /* Stack children vertically */
+  justify-content: flex-end; /* Pushes the .inventory-item-grid to the bottom */
+  overflow-y: auto; /* Allows scrolling of the item grid if it overflows */
+  padding: 16px; /* Padding around the grid */
+  background-color: #ffffff; /* White background for the item display section */
   box-sizing: border-box;
   width: 100%;
 }
 
-/* Actual grid container for inventory items */
-.inventory-items-grid {
+/* The actual grid for inventory items */
+.inventory-item-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr)); /* 4 equal columns */
-  gap: 12px;
-  width: 100%; /* Grid takes full width of its scroll-container parent's content box */
+  gap: 12px; /* Space between items */
+  width: 100%; /* Grid takes full width of its parent */
   box-sizing: border-box;
-  margin-top: auto; /* CRITICAL: Pushes this grid to the bottom of inventory-items-scroll-container */
+  /* No margin-top: auto needed here as parent uses justify-content: flex-end */
 }
 
-/* Message when no items are in the current category */
-.inventory-no-items-message {
-  grid-column: 1 / -1;
+/* Message shown when a category is empty */
+.inventory-empty-message {
+  grid-column: 1 / -1; /* Span all columns */
   text-align: center;
-  padding: 20px;
-  color: #757575;
+  padding: 25px 15px;
+  color: #6c757d;
   font-style: italic;
-  align-self: center; /* Center message if grid is otherwise empty */
-  margin-top: auto; /* Helps center it if it's the only thing and grid is pushed down */
-  margin-bottom: auto;
+  /* If the grid is empty, this will be at the bottom due to parent's justify-content */
 }
 
-/* Styling for each individual item card */
-.inventory-item-card {
-  background: #ffffff;
-  border: 1px solid #eeeeee;
+/* Individual inventory item slot/card */
+.inventory-item-slot {
+  background-color: #fdfdfd;
+  border: 1px solid #e9ecef;
   border-radius: 8px;
-  padding: 10px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  padding: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
   text-align: center;
-  aspect-ratio: 1 / 1.35;
+  aspect-ratio: 1 / 1.3; /* Maintain aspect ratio */
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: space-between; /* Pushes image to top, info to bottom */
   cursor: pointer;
-  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+  transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
   overflow: hidden;
-  position: relative;
+  position: relative; /* For absolute positioning of color picker */
   box-sizing: border-box;
-  width: 100%; /* Ensure card fills its grid cell */
-  min-height: 100px; /* Prevent extreme collapse, adjust if needed */
+  width: 100%; /* Fill grid cell */
 }
 
-.inventory-item-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+.inventory-item-slot:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 3px 7px rgba(0, 0, 0, 0.07);
 }
 
+/* Wrapper for the item's image (ZoomedImage component) */
 .inventory-item-image-wrapper {
-  width: 64px;
-  height: 64px;
+  width: 60px; /* Adjust size as needed */
+  height: 60px;
   overflow: hidden;
   position: relative;
-  margin: 0 auto 8px auto;
-  background-color: #f9f9f9;
+  margin: 0 auto 6px auto; /* Center and space below */
+  background-color: #f0f2f5; /* Placeholder background */
   border-radius: 6px;
-  border: 1px solid #f0f0f0;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
 
-.inventory-item-image {
+.inventory-item-image-content { /* The actual <img> tag */
   display: block;
 }
 
-.inventory-item-placeholder {
-  font-size: 12px;
-  color: #cccccc;
-  text-align: center;
+.inventory-item-placeholder-text {
+  font-size: 0.7rem; /* 11.2px */
+  color: #adb5bd;
 }
-.inventory-item-placeholder.error {
-  color: #e57373;
-  font-size: 20px;
-}
-
-.inventory-item-details {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 2.8em;
-  width: 100%;
-  padding: 4px;
-  box-sizing: border-box;
+.inventory-item-placeholder-text.error {
+  color: #d9534f;
+  font-size: 1.2rem; /* 19.2px */
 }
 
-.inventory-item-name {
+/* Container for item name and effect */
+.inventory-item-info {
+  padding: 4px 0;
+}
+
+.inventory-item-name-text {
   display: block;
-  width: 100%;
-  font-size: 11px;
-  color: #333333;
+  font-size: 0.7rem; /* 11.2px */
+  color: #343a40;
   font-weight: 500;
-  line-height: 1.3;
-  /* padding-top: 4px; Removed, handled by parent padding */
-  max-height: 2.6em;
+  line-height: 1.2;
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
+  margin-bottom: 2px;
 }
 
-.inventory-item-effect {
-  font-size: 9px;
-  color: #0277bd;
-  margin-top: 3px;
-  white-space: nowrap;
+.inventory-item-effect-text {
+  display: block;
+  font-size: 0.6rem; /* 9.6px */
+  color: #007bff;
 }
 
-.inventory-item-color-options {
+/* Color picker for decoration items */
+.inventory-item-color-picker {
   display: flex;
   justify-content: center;
-  gap: 5px;
+  align-items: center;
+  gap: 4px;
   position: absolute;
-  bottom: 5px;
+  bottom: 4px;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(255, 255, 255, 0.98);
-  padding: 4px;
-  border-radius: 12px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
-  z-index: 10;
-  width: auto;
-  max-width: calc(100% - 8px);
+  background: rgba(255, 255, 255, 0.95);
+  padding: 3px;
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+  z-index: 5; /* Above item info */
 }
 
-.inventory-color-swatch {
-  width: 18px;
-  height: 18px;
+.inventory-color-option-button {
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
   background-size: cover;
-  border: 1px solid #e0e0e0;
+  border: 1px solid #ced4da;
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition: transform 0.1s ease;
   padding: 0;
   appearance: none;
   -webkit-appearance: none;
 }
 
-.inventory-color-swatch:hover {
-  transform: scale(1.15);
-  box-shadow: 0 0 4px rgba(0, 0, 0, 0.25);
+.inventory-color-option-button:hover {
+  transform: scale(1.1);
 }
 
-.inventory-tabs-container {
-  flex-shrink: 0;
-  background-color: #e9ecef;
-  border-top: 1px solid #d1d5db;
-  box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.04);
+/* Container for both tab bars at the bottom */
+.inventory-navigation-bars {
+  flex-shrink: 0; /* Prevent this area from shrinking */
+  background-color: #e9ecef; /* Fallback background */
+  border-top: 1px solid #ced4da;
+  box-shadow: 0 -1px 3px rgba(0,0,0,0.04);
   box-sizing: border-box;
   width: 100%;
 }
 
-.inventory-sub-tabs-bar,
-.inventory-main-tabs-bar {
+/* Sub-category tab bar - horizontally scrollable */
+.inventory-sub-category-bar {
+  display: flex;
+  overflow-x: auto; /* Enable horizontal scrolling */
+  white-space: nowrap; /* Keep tabs in a single line */
+  padding: 6px 8px; /* Padding around the scrollable tabs */
+  background-color: #f8f9fa; /* Lighter background for sub-tabs */
+  box-sizing: border-box;
+  -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+}
+/* Hide scrollbar for a cleaner look (optional) */
+.inventory-sub-category-bar::-webkit-scrollbar {
+  display: none; /* Safari and Chrome */
+}
+.inventory-sub-category-bar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+
+/* Main category tab bar - buttons will take equal width */
+.inventory-main-category-bar {
   display: flex;
   width: 100%;
+  background-color: #e9ecef; /* Slightly darker for main tabs */
+  border-top: 1px solid #d1d5db;
   box-sizing: border-box;
 }
 
-.inventory-sub-tabs-bar {
-  background-color: #e9ecef;
-}
-
-.inventory-main-tabs-bar {
-  background-color: #dee2e6;
-  border-top: 1px solid #cfd8dc;
-}
-
-.inventory-tab-button,
-.inventory-main-tab-button {
-  flex-grow: 1;
-  flex-basis: 0;
-  padding: 10px 6px;
-  margin: 0;
-  border: none;
-  border-radius: 0;
-  background-color: transparent;
-  color: #546e7a;
+/* Styling for sub-category tab buttons */
+.inventory-sub-tab {
+  flex-shrink: 0; /* Prevent shrinking, rely on padding for size */
+  padding: 6px 12px;
+  margin-right: 8px; /* Space between sub-tabs */
+  border: 1px solid #ced4da;
+  border-radius: 15px; /* Pill shape */
+  background-color: #ffffff;
+  color: #495057;
   text-align: center;
   cursor: pointer;
-  font-size: 12px;
+  font-size: 0.75rem; /* 12px */
   font-weight: 500;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
-  border-left: 1px solid #d1d5db;
+  transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+  white-space: nowrap; /* Important for horizontal scrolling */
+}
+.inventory-sub-tab:last-child {
+  margin-right: 0;
+}
+
+.inventory-sub-tab.active {
+  background-color: #007bff;
+  color: #ffffff;
+  border-color: #007bff;
+  font-weight: 600;
+}
+
+.inventory-sub-tab:hover:not(.active) {
+  background-color: #e9ecef;
+  border-color: #adb5bd;
+}
+
+/* Styling for main category tab buttons */
+.inventory-main-tab {
+  flex-grow: 1; /* Each button takes equal share of width */
+  flex-basis: 0; /* Start with no intrinsic width */
+  padding: 10px 5px;
+  border: none;
+  border-radius: 0; /* No radius for continuous bar */
+  background-color: transparent; /* Inherits from parent bar */
+  color: #495057;
+  text-align: center;
+  cursor: pointer;
+  font-size: 0.875rem; /* 14px */
+  font-weight: 600;
+  transition: background-color 0.2s, color 0.2s;
+  border-left: 1px solid #ced4da; /* Separator line */
   box-sizing: border-box;
 }
 
-.inventory-sub-tabs-bar .inventory-tab-button:first-child,
-.inventory-main-tabs-bar .inventory-main-tab-button:first-child {
-  border-left: none;
+.inventory-main-tab:first-child {
+  border-left: none; /* No separator for the first tab */
 }
 
-.inventory-main-tab-button {
-  font-size: 14px;
-  font-weight: 600;
-  color: #37474f;
-  padding: 12px 6px;
-}
-
-.inventory-tab-button.active,
-.inventory-main-tab-button.active {
-  background-color: #546e7a;
+.inventory-main-tab.active {
+  background-color: #5a6268;
   color: #ffffff;
-  font-weight: 700;
 }
 
-.inventory-tab-button:hover:not(.active) {
-  background-color: #cfd8dc;
-  color: #263238;
+.inventory-main-tab:hover:not(.active) {
+  background-color: #d1d5db;
 }
 
-.inventory-main-tab-button:hover:not(.active) {
-  background-color: #bcccdc;
-  color: #263238;
-}

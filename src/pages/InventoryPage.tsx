@@ -16,7 +16,7 @@ import type {
   RoomDecorItem,
 } from "../types";
 import { calculateVisibleBounds } from "../utils/imageUtils";
-import "./InventoryPage.css"; // Will use the new CSS provided below
+import "./InventoryPage.css"; // We will create this new CSS file
 
 // --- Constants for categories ---
 const mainCategories = ["Decorations", "Food", "Cleaning", "Toys"] as const;
@@ -112,10 +112,10 @@ function ZoomedImage({ src, alt }: { src: string; alt: string }) {
 
   return (
     <div className="inventory-item-image-wrapper">
-      {!loaded && <div className="inventory-item-placeholder">...</div>}
-      {loaded && error && <div className="inventory-item-placeholder error" style={imageStyle} title={`Error: ${alt}`}>X</div>}
+      {!loaded && <div className="inventory-item-placeholder-text">...</div>}
+      {loaded && error && <div className="inventory-item-placeholder-text error" style={imageStyle} title={`Error: ${alt}`}>X</div>}
       {loaded && !error && (
-        <img src={src} alt={alt} className="inventory-item-image" style={imageStyle} />
+        <img src={src} alt={alt} className="inventory-item-image-content" style={imageStyle} />
       )}
     </div>
   );
@@ -225,18 +225,17 @@ export default function InventoryPage({ pet, onFeedPet, onCleanPet, onPlayWithTo
   }, [selectedMainCategory]);
 
   return (
-    <div className="inventory-page-wrapper">
-      <h1 className="inventory-page-title">Inventory</h1>
+    <div className="inventory-page-container"> {/* Overall flex column container */}
+      <h1 className="inventory-title-bar">Inventory</h1>
 
-      {/* This is the new outer flex container for the items area */}
-      <div className="inventory-items-scroll-container">
-        {/* This is the actual grid, which will be pushed to the bottom */}
-        <div className="inventory-items-grid">
+      {/* Area for displaying items - this will grow and push its content (the grid) to the bottom */}
+      <div className="inventory-item-display-area">
+        <div className="inventory-item-grid"> {/* Actual grid for items */}
           {filteredItems.length > 0 ? (
             filteredItems.map(item => (
               <div
                 key={item.id}
-                className="inventory-item-card"
+                className="inventory-item-slot" // Changed class name
                 onClick={() => handleItemClick(item)}
                 title={item.description || item.name}
                 role="button"
@@ -244,18 +243,18 @@ export default function InventoryPage({ pet, onFeedPet, onCleanPet, onPlayWithTo
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleItemClick(item);}}}
               >
                 <ZoomedImage src={item.src} alt={item.name} />
-                <div className="inventory-item-details">
-                  <span className="inventory-item-name">{item.name}</span>
-                  {item.itemCategory === "food" && <span className="inventory-item-effect">Hunger +{(item as FoodInventoryItem).hungerRestored}</span>}
-                  {item.itemCategory === "cleaning" && <span className="inventory-item-effect">Clean +{(item as CleaningInventoryItem).cleanlinessBoost}</span>}
-                  {item.itemCategory === "toy" && <span className="inventory-item-effect">Happy +{(item as ToyInventoryItem).happinessBoost}</span>}
+                <div className="inventory-item-info">
+                  <span className="inventory-item-name-text">{item.name}</span>
+                  {item.itemCategory === "food" && <span className="inventory-item-effect-text">Hunger +{(item as FoodInventoryItem).hungerRestored}</span>}
+                  {item.itemCategory === "cleaning" && <span className="inventory-item-effect-text">Clean +{(item as CleaningInventoryItem).cleanlinessBoost}</span>}
+                  {item.itemCategory === "toy" && <span className="inventory-item-effect-text">Happy +{(item as ToyInventoryItem).happinessBoost}</span>}
                 </div>
                 {activeColorOptions?.id === item.id && item.itemCategory === "decoration" && (item as DecorationInventoryItem).colorOptions && (
-                  <div className="inventory-item-color-options">
+                  <div className="inventory-item-color-picker"> {/* Changed class name */}
                     {(item as DecorationInventoryItem).colorOptions!.map(option => (
                       <button
                         key={option.label}
-                        className="inventory-color-swatch"
+                        className="inventory-color-option-button" // Changed class name
                         onClick={(e) => {
                           e.stopPropagation();
                           applyDecorationItem(item as DecorationInventoryItem, option.src);
@@ -270,28 +269,29 @@ export default function InventoryPage({ pet, onFeedPet, onCleanPet, onPlayWithTo
               </div>
             ))
           ) : (
-            <p className="inventory-no-items-message">No items in this category.</p>
+            <p className="inventory-empty-message">No items in this category.</p>
           )}
         </div>
       </div>
 
-      <div className="inventory-tabs-container">
-        <div className="inventory-sub-tabs-bar">
+      {/* Container for both tab bars at the bottom */}
+      <div className="inventory-navigation-bars">
+        <div className="inventory-sub-category-bar">
           {currentSubcategories.map(categoryValue => (
             <button
               key={categoryValue}
-              className={`inventory-tab-button ${selectedSubCategory === categoryValue ? "active" : ""}`}
+              className={`inventory-sub-tab ${selectedSubCategory === categoryValue ? "active" : ""}`}
               onClick={() => setSelectedSubCategory(categoryValue)}
             >
               {capitalizeFirstLetter(categoryValue)}
             </button>
           ))}
         </div>
-        <div className="inventory-main-tabs-bar">
+        <div className="inventory-main-category-bar">
           {mainCategories.map(category => (
             <button
               key={category}
-              className={`inventory-main-tab-button ${selectedMainCategory === category ? "active" : ""}`}
+              className={`inventory-main-tab ${selectedMainCategory === category ? "active" : ""}`}
               onClick={() => handleMainCategoryChange(category)}
             >
               {category}
