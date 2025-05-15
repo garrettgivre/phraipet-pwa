@@ -1,34 +1,35 @@
 /* src/App.css */
-.pageBody {
-  /* only affects Pet & Play now */
-  padding-top: var(--header-h);
-  padding-bottom: var(--nav-h);
-}
 
-/* pan container still covers full gap */
-.panContainer {
-  position: absolute;
-  top: var(--header-h);
-  bottom: var(--nav-h);
-  left: 0; right: 0;
-  background: url("/maps/world.png") repeat;
-  background-position: 0 0;
-  touch-action: none;
-  cursor: grab;
-  overflow: hidden;
-}
+/* Remove .pageBody and .panContainer if they are not directly used by App.tsx's main layout
+   or ensure they don't conflict. The current App.tsx doesn't use .pageBody for its main tag.
+*/
 
-html, body {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  overflow-x: hidden;
-}
+/*
+  Styles for the <main> element in App.tsx are primarily handled by inline styles
+  in App.tsx for dynamic padding and core layout.
 
-main {
-  padding-top: 80px; /* Header height */
-  padding-bottom: 72px; /* Nav height */
-  min-height: calc(100vh - 80px - 72px);
-  overflow-y: auto;
-}
+  The App.tsx inline style for <main> is typically:
+  style={{
+    paddingTop: isPetPage ? "0px" : "80px", // Height of Header
+    paddingBottom: "56px",                   // Height of NavBar
+    height: "100vh",                         // Full viewport height
+    boxSizing: "border-box",                 // Padding included in height calculation
+    display: "flex",
+    flexDirection: "column",
+    overflow: "hidden" // Prevents <main> itself from scrolling; content inside <main> scrolls
+  }}
 
+  The `height: 100vh` and `box-sizing: border-box` along with paddings mean the
+  content area of main is `100vh - actualPaddingTop - actualPaddingBottom`.
+  The `display: flex; flex-direction: column;` means direct children of main
+  (like the component rendered by <Routes>) can use flex properties like flex-grow.
+  `overflow: hidden;` on main means the main tag itself won't scroll, which is correct.
+  The InventoryPage (or other routed pages) should then take height: 100% of this main
+  content area and manage its own internal scrolling if needed.
+
+  If any default styling for `main` is needed here, it can be added.
+  Otherwise, this file can be kept minimal if App.tsx handles main layout comprehensively.
+*/
+
+/* Ensure html, body, and #root are set up to allow full height/width content */
+/* These are better placed in index.css for global effect, as done in the updated index.css */

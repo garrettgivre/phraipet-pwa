@@ -1,27 +1,31 @@
-/* src/pages/InventoryPage.css - Option 3: Pill-Style Scrolling Tabs */
+/* src/pages/InventoryPage.css - Option 3: Pill-Style Scrolling Tabs - Revised */
+
+/* Ensure box-sizing is applied from index.css or here */
+/* *, *::before, *::after { box-sizing: border-box; } */
 
 /* Overall page container */
 .opt3-inventory-page-wrapper {
   display: flex;
   flex-direction: column;
   height: 100%; /* Full height of its parent */
-  width: 100%;
-  background-color: #f0f2f5; /* Light page background */
-  overflow: hidden; /* Prevent the whole page from scrolling */
-  box-sizing: border-box;
+  width: 100%;   /* Full width of its parent */
+  background-color: #f0f2f5;
+  overflow: hidden; /* Prevent this wrapper from scrolling */
+  box-sizing: border-box; /* Explicitly set */
 }
 
 /* Title bar */
 .opt3-inventory-title-bar {
   flex-shrink: 0;
   padding: 10px 15px;
-  font-size: 1.2rem; /* ~19px */
+  font-size: 1.2rem;
   font-weight: 600;
   text-align: center;
-  color: #2c3e50; /* Darker text for title */
+  color: #2c3e50;
   background-color: #ffffff;
   border-bottom: 1px solid #dde1e6;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  width: 100%; /* Ensure title bar takes full width */
   box-sizing: border-box;
 }
 
@@ -32,41 +36,43 @@
   flex-direction: column;
   justify-content: flex-end; /* Pushes grid to the bottom */
   overflow-y: auto; /* Vertical scroll for items */
-  padding: 16px;
+  padding: 16px;    /* Padding for the content inside */
   background-color: #ffffff;
+  width: 100%; /* Ensure this area takes full width */
   box-sizing: border-box;
-  width: 100%;
 }
 
 /* Actual grid for items */
 .opt3-inventory-item-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr)); /* 4 equal, responsive columns */
-  gap: 10px; /* Slightly reduced gap */
-  width: 100%;
+  gap: 10px;
+  width: 100%; /* Grid takes full width of its parent's content box */
   box-sizing: border-box;
-  /* margin-top: auto; /* This is handled by parent's justify-content: flex-end */
+  /* margin-top: auto; /* This is now handled by parent's justify-content: flex-end */
 }
 
 /* Message for empty categories */
 .opt3-inventory-empty-message {
-  grid-column: 1 / -1;
+  grid-column: 1 / -1; /* Span all columns */
   text-align: center;
   padding: 20px 15px;
-  color: #7f8c8d; /* Softer grey */
+  color: #7f8c8d;
   font-style: italic;
-  /* Will be at the bottom due to parent's justify-content */
+  width: 100%; /* Take full width of the grid area */
+  box-sizing: border-box;
+  /* Vertically centered if it's the only thing due to parent flex properties */
 }
 
 /* Individual item slot/card */
 .opt3-inventory-item-slot {
   background-color: #ffffff;
-  border: 1px solid #ecf0f1; /* Lighter border */
-  border-radius: 6px; /* Softer radius */
+  border: 1px solid #ecf0f1;
+  border-radius: 6px;
   padding: 8px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   text-align: center;
-  aspect-ratio: 1 / 1.4; /* Adjust as needed */
+  aspect-ratio: 1 / 1.4;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -74,9 +80,9 @@
   transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
   overflow: hidden;
   position: relative;
+  width: 100%; /* Item slot takes full width of its grid cell */
+  min-width: 0; /* Important for grid items with fr units */
   box-sizing: border-box;
-  width: 100%;
-  min-height: 90px; /* Prevent extreme collapse */
 }
 
 .opt3-inventory-item-slot:hover {
@@ -84,9 +90,8 @@
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
 }
 
-/* Wrapper for item image */
 .opt3-inventory-item-image-wrapper {
-  width: 56px; /* Slightly smaller */
+  width: 56px;
   height: 56px;
   overflow: hidden;
   position: relative;
@@ -99,149 +104,89 @@
   flex-shrink: 0;
 }
 
-.opt3-inventory-item-image-content {
-  display: block;
-}
+.opt3-inventory-item-image-content { display: block; }
+.opt3-inventory-item-placeholder-text { font-size: 0.65rem; color: #bdc3c7; }
+.opt3-inventory-item-placeholder-text.error { color: #e74c3c; font-size: 1.1rem; }
 
-.opt3-inventory-item-placeholder-text {
-  font-size: 0.65rem; /* ~10.4px */
-  color: #bdc3c7;
-}
-.opt3-inventory-item-placeholder-text.error {
-  color: #e74c3c;
-  font-size: 1.1rem; /* ~17.6px */
-}
-
-/* Item info (name, effect) */
-.opt3-inventory-item-info {
-  padding: 3px 0;
-}
-
+.opt3-inventory-item-info { padding: 3px 0; }
 .opt3-inventory-item-name-text {
-  display: block;
-  font-size: 0.65rem; /* ~10.4px */
-  color: #34495e;
-  font-weight: 500;
-  line-height: 1.25;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  margin-bottom: 1px;
+  display: block; font-size: 0.65rem; color: #34495e; font-weight: 500;
+  line-height: 1.25; white-space: nowrap; overflow: hidden;
+  text-overflow: ellipsis; margin-bottom: 1px;
 }
+.opt3-inventory-item-effect-text { display: block; font-size: 0.55rem; color: #2980b9;}
 
-.opt3-inventory-item-effect-text {
-  display: block;
-  font-size: 0.55rem; /* ~8.8px */
-  color: #2980b9;
-}
-
-/* Color picker */
 .opt3-inventory-item-color-picker {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 4px;
-  position: absolute;
-  bottom: 4px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(245, 245, 245, 0.96); /* Light background for picker */
-  padding: 3px;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  z-index: 5;
+  display: flex; justify-content: center; align-items: center; gap: 4px;
+  position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%);
+  background: rgba(245, 245, 245, 0.96); padding: 3px; border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); z-index: 5;
 }
-
 .opt3-inventory-color-option-button {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background-size: cover;
-  border: 1px solid #bdc3c7;
-  cursor: pointer;
-  transition: transform 0.1s ease;
-  padding: 0;
-  appearance: none;
-  -webkit-appearance: none;
+  width: 16px; height: 16px; border-radius: 50%; background-size: cover;
+  border: 1px solid #bdc3c7; cursor: pointer; transition: transform 0.1s ease;
+  padding: 0; appearance: none; -webkit-appearance: none;
 }
-
-.opt3-inventory-color-option-button:hover {
-  transform: scale(1.1);
-}
+.opt3-inventory-color-option-button:hover { transform: scale(1.1); }
 
 /* Container for both tab bars */
 .opt3-inventory-navigation-bars {
   flex-shrink: 0;
-  background-color: #e4e7ea; /* Base for nav area */
+  background-color: #e4e7ea;
   border-top: 1px solid #c8ced3;
   box-shadow: 0 -1px 2px rgba(0,0,0,0.03);
+  width: 100%; /* Ensure tab bars take full width */
   box-sizing: border-box;
-  width: 100%;
 }
 
 /* Styling for horizontally scrollable tab bars */
 .opt3-inventory-sub-category-scroll-bar,
 .opt3-inventory-main-category-scroll-bar {
-  display: flex; /* Lays out pill tabs in a row */
-  overflow-x: auto; /* Enables horizontal scrolling */
-  white-space: nowrap; /* Prevents tabs from wrapping to the next line */
-  padding: 8px 10px; /* Padding around the scrollable content */
+  display: flex;
+  overflow-x: auto;
+  white-space: nowrap;
+  padding: 8px 10px;
   box-sizing: border-box;
-  -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
-  scrollbar-width: none; /* Firefox: Hide scrollbar */
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; /* Firefox */
 }
 .opt3-inventory-sub-category-scroll-bar::-webkit-scrollbar,
 .opt3-inventory-main-category-scroll-bar::-webkit-scrollbar {
-  display: none; /* WebKit (Chrome, Safari): Hide scrollbar */
+  display: none; /* WebKit */
 }
 
-.opt3-inventory-sub-category-scroll-bar {
-  background-color: #eceff1; /* Lighter for sub-categories */
-}
-
-.opt3-inventory-main-category-scroll-bar {
-  background-color: #dde1e6; /* Slightly darker for main categories */
-  border-top: 1px solid #cfd8dc;
-}
+.opt3-inventory-sub-category-scroll-bar { background-color: #eceff1; }
+.opt3-inventory-main-category-scroll-bar { background-color: #dde1e6; border-top: 1px solid #cfd8dc; }
 
 /* Pill-style tab buttons */
 .opt3-inventory-pill-tab {
-  display: inline-block; /* Allows tabs to sit in a row and respect padding */
-  flex-shrink: 0; /* Prevent tabs from shrinking; width comes from content/padding */
-  padding: 7px 14px; /* Padding inside the pill */
-  margin-right: 8px; /* Space between pills */
-  border: 1px solid #b0bec5; /* Border for the pill */
-  border-radius: 20px; /* Rounded ends for pill shape */
+  display: inline-block;
+  flex-shrink: 0; /* Important for scrollable tabs */
+  padding: 7px 14px;
+  margin-right: 8px;
+  border: 1px solid #b0bec5;
+  border-radius: 20px;
   background-color: #ffffff;
   color: #455a64;
   text-align: center;
   cursor: pointer;
-  font-size: 0.8rem; /* ~12.8px */
+  font-size: 0.8rem;
   font-weight: 500;
   transition: background-color 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.2s;
-  white-space: nowrap; /* Ensure text stays on one line */
-  user-select: none; /* Prevent text selection on tap */
+  white-space: nowrap;
+  user-select: none;
   -webkit-user-select: none;
 }
-.opt3-inventory-pill-tab:last-child {
-  margin-right: 0; /* No margin for the last pill in a scrollable row */
-}
+.opt3-inventory-pill-tab:last-child { margin-right: 0; }
 
 .opt3-inventory-pill-tab.main-cat-pill {
-  font-size: 0.85rem; /* ~13.6px, slightly larger for main categories */
-  font-weight: 600;
-  padding: 8px 16px;
+  font-size: 0.85rem; font-weight: 600; padding: 8px 16px;
 }
 
 .opt3-inventory-pill-tab.active {
-  background-color: #3498db; /* Active color (e.g., blue) */
-  color: #ffffff;
-  border-color: #2980b9; /* Darker border for active */
+  background-color: #3498db; color: #ffffff; border-color: #2980b9;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
-
 .opt3-inventory-pill-tab:hover:not(.active) {
-  background-color: #f4f6f8;
-  border-color: #90a4ae;
+  background-color: #f4f6f8; border-color: #90a4ae;
 }
-

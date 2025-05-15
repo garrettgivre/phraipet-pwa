@@ -16,9 +16,9 @@ import type {
   RoomDecorItem,
 } from "../types";
 import { calculateVisibleBounds } from "../utils/imageUtils";
-import "./InventoryPage.css"; // This will be the new CSS for Option 3
+import "./InventoryPage.css"; // CSS for Option 3
 
-// --- Constants for categories (can be kept as is) ---
+// --- Constants for categories ---
 const mainCategories = ["Decorations", "Food", "Cleaning", "Toys"] as const;
 type MainCategory = (typeof mainCategories)[number];
 
@@ -61,7 +61,7 @@ const capitalizeFirstLetter = (string: string) => {
 };
 
 function ZoomedImage({ src, alt }: { src: string; alt: string }) {
-  const containerSize = 64; // Or your desired thumbnail size
+  const containerSize = 64;
   const [imageStyle, setImageStyle] = useState<React.CSSProperties>({
     visibility: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center',
     width: `${containerSize}px`, height: `${containerSize}px`, fontSize: '12px', color: '#aaa',
@@ -111,7 +111,6 @@ function ZoomedImage({ src, alt }: { src: string; alt: string }) {
   }, [src]);
 
   return (
-    // Class names here match the new CSS for Option 3
     <div className="opt3-inventory-item-image-wrapper">
       {!loaded && <div className="opt3-inventory-item-placeholder-text">...</div>}
       {loaded && error && <div className="opt3-inventory-item-placeholder-text error" style={imageStyle} title={`Error: ${alt}`}>X</div>}
@@ -226,12 +225,11 @@ export default function InventoryPage({ pet, onFeedPet, onCleanPet, onPlayWithTo
   }, [selectedMainCategory]);
 
   return (
-    <div className="opt3-inventory-page-wrapper"> {/* Outermost container for Option 3 */}
+    <div className="opt3-inventory-page-wrapper">
       <h1 className="opt3-inventory-title-bar">Inventory</h1>
 
-      {/* Area for displaying items - this will grow and push its content (the grid) to the bottom */}
       <div className="opt3-inventory-item-display-area">
-        <div className="opt3-inventory-item-grid"> {/* Actual grid for items */}
+        <div className="opt3-inventory-item-grid">
           {filteredItems.length > 0 ? (
             filteredItems.map(item => (
               <div
@@ -275,9 +273,8 @@ export default function InventoryPage({ pet, onFeedPet, onCleanPet, onPlayWithTo
         </div>
       </div>
 
-      {/* Container for both tab bars at the bottom */}
       <div className="opt3-inventory-navigation-bars">
-        <div className="opt3-inventory-sub-category-scroll-bar"> {/* Horizontally scrollable */}
+        <div className="opt3-inventory-sub-category-scroll-bar">
           {currentSubcategories.map(categoryValue => (
             <button
               key={categoryValue}
@@ -288,7 +285,7 @@ export default function InventoryPage({ pet, onFeedPet, onCleanPet, onPlayWithTo
             </button>
           ))}
         </div>
-        <div className="opt3-inventory-main-category-scroll-bar"> {/* Horizontally scrollable */}
+        <div className="opt3-inventory-main-category-scroll-bar">
           {mainCategories.map(category => (
             <button
               key={category}
