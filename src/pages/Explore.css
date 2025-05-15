@@ -1,23 +1,20 @@
 /* src/pages/Explore.css */
 .explore-page {
   width: 100%;
-  height: 100%; /* Fill the <main> content area from App.tsx */
-  overflow: scroll; /* Use 'scroll' to force scrollbars if content overflows, 'auto' for production */
-  background-color: #121212; /* Dark background for the scrollable viewport area */
+  height: 100%; 
+  overflow: auto; /* Changed to auto for production, use 'scroll' for debugging */
+  background-color: #121212; 
   box-sizing: border-box;
-  position: relative; /* Establishes a stacking context for absolute positioned children like status messages */
+  position: relative; 
 }
 
 .map-scrollable-content {
-  position: relative; /* For the absolutely positioned canvas overlay */
-  /* Width and height are set by inline styles in Explore.tsx to WORLD_PIXEL_WIDTH/HEIGHT.
-     This div needs to be large enough to cause .explore-page to scroll. */
-  background-repeat: repeat; /* Tile the background image */
-  background-position: top left; /* Ensure tiling starts from top-left */
-  background-color: #282828; /* Slightly lighter background for the actual map tiled area, visible if tile image has transparency */
+  position: relative; 
+  background-repeat: repeat; 
+  background-position: top left; 
+  background-color: #282828; 
 }
 
-/* Status messages (loading/error) */
 .explore-status-message { 
   display: flex;
   align-items: center;
@@ -29,13 +26,13 @@
   width: 100%;
   height: 100%; 
   box-sizing: border-box;
-  position: absolute; /* Overlay on top of the .explore-page content */
+  position: absolute; 
   top: 0;
   left: 0;
-  background-color: rgba(0, 0, 0, 0.9); /* Darker, more opaque background for messages */
-  z-index: 200; /* High z-index to be above map content */
+  background-color: rgba(0, 0, 0, 0.9); 
+  z-index: 200; 
 }
 
 .explore-error {
-  color: #ff8a8a; /* Lighter red for error text on dark background */
+  color: #ff8a8a; 
 }

@@ -6,25 +6,18 @@
   flex-direction: column;
   align-items: center; 
   justify-content: center; 
-  background-color: #d4f0c7; /* A pleasant light green for Sunnybrook */
-  /* If Sunnybrook map is smaller than viewport and centered, overflow:hidden is fine.
-     If Sunnybrook map can be larger and scrollable, use overflow:auto.
-     For now, assuming it fits or is centered with overflow hidden on this page.
-  */
+  background-color: #d4f0c7; 
   overflow: hidden; 
   box-sizing: border-box;
 }
 
-/* This class is used by Sunnybrook.tsx for its map content area */
 .sunnybrook-page .map-scrollable-content { 
   position: relative; 
-  /* Width and height are set by inline styles in Sunnybrook.tsx */
-  /* background-repeat, background-size, background-position are set by inline styles */
-  background-color: #c0e0b8; /* Fallback background for the map area itself */
-  box-shadow: 0 0 10px rgba(0,0,0,0.1); /* Optional: subtle shadow for the map area */
-  /* Ensure it doesn't exceed parent if parent is smaller and not scrolling */
+  background-color: #c0e0b8; 
+  box-shadow: 0 0 10px rgba(0,0,0,0.1); 
   max-width: 100%;
   max-height: 100%;
+  /* Inline styles from Sunnybrook.tsx will set width, height, and background image properties */
 }
 
 
@@ -46,7 +39,6 @@
   background-color: rgba(230, 255, 230, 0.9); 
   z-index: 200;
 }
-
 
 .sunnybrook-error {
   color: #a04040;

@@ -64,7 +64,7 @@ const MapCanvas: React.FC<MapCanvasProps> = ({
       }
     });
     return () => { isMounted = false; };
-  }, [hotspots, loadedHotspotImages]); // Rerun if hotspots change or already loaded images change
+  }, [hotspots, loadedHotspotImages]); 
 
   // Drawing logic for hotspots on a transparent canvas
   const drawCanvas = useCallback(() => {
@@ -79,75 +79,61 @@ const MapCanvas: React.FC<MapCanvasProps> = ({
       return;
     }
 
-    // Set canvas drawing surface size to the full world dimensions
     canvas.width = canvasWidth;
     canvas.height = canvasHeight;
 
-    // Clear the canvas (it's transparent, so this ensures no old drawings)
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Hotspots are drawn at their absolute world coordinates.
     hotspots.forEach(hotspot => {
-      const drawX = hotspot.x; // Use direct world coordinates (center of hotspot)
-      const drawY = hotspot.y; // Use direct world coordinates (center of hotspot)
+      const drawX = hotspot.x; 
+      const drawY = hotspot.y; 
       const icon = hotspot.iconSrc ? loadedHotspotImages[hotspot.iconSrc] : null;
-      const baseIconSize = 32; // Base size of icon in pixels for the world map
+      const baseIconSize = 32; 
 
       if (icon && icon.complete && icon.naturalHeight !== 0) {
-        // Draw icon centered on the hotspot's x,y
         ctx.drawImage(icon, drawX - baseIconSize / 2, drawY - baseIconSize / 2, baseIconSize, baseIconSize);
       } else {
-        // Fallback: draw a simple circle if no icon or icon failed to load
         const fallbackRadius = 10; 
         ctx.beginPath();
         ctx.arc(drawX, drawY, fallbackRadius, 0, 2 * Math.PI, false);
-        ctx.fillStyle = hotspot.iconSrc ? 'rgba(255, 165, 0, 0.7)' : 'rgba(255, 0, 0, 0.7)'; // Orange if icon failed, Red if no icon
+        ctx.fillStyle = hotspot.iconSrc ? 'rgba(255, 165, 0, 0.7)' : 'rgba(255, 0, 0, 0.7)'; 
         ctx.fill();
         ctx.lineWidth = 2;
         ctx.strokeStyle = hotspot.iconSrc ? '#FFA500' : '#FF0000';
         ctx.stroke();
       }
 
-      // Draw hotspot name below the icon/circle
-      const fontSize = 12; // Fixed font size for hotspot names on the map
+      const fontSize = 12; 
       ctx.fillStyle = 'black';
       ctx.font = `bold ${fontSize}px Arial`;
       ctx.textAlign = 'center';
-      ctx.strokeStyle = 'white'; // White outline for better readability
+      ctx.strokeStyle = 'white'; 
       ctx.lineWidth = 3; 
-      const textYPosition = drawY + baseIconSize / 2 + fontSize * 1.2; // Position text below icon
+      const textYPosition = drawY + baseIconSize / 2 + fontSize * 1.2; 
       ctx.strokeText(hotspot.name, drawX, textYPosition); 
       ctx.fillText(hotspot.name, drawX, textYPosition);
     });
   }, [hotspots, loadedHotspotImages, canvasWidth, canvasHeight]);
 
-  // Effect for initial drawing and redrawing when dependencies change
   useEffect(() => {
     drawCanvas(); 
   }, [drawCanvas]); 
 
-  // Handles clicks on the canvas to detect hotspot interaction
   const handleCanvasClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
     if (!canvasRef.current || canvasWidth === 0 || canvasHeight === 0) return;
 
     const canvas = canvasRef.current;
-    const rect = canvas.getBoundingClientRect(); // Position of canvas element on screen
+    const rect = canvas.getBoundingClientRect(); 
     
-    // Calculate click coordinates relative to the canvas element's display size
     const clickXOnElement = event.clientX - rect.left;
     const clickYOnElement = event.clientY - rect.top;
 
-    // Convert click coordinates on the (potentially CSS-scaled) canvas element
-    // to coordinates on the canvas's internal drawing surface (which are world coordinates).
-    // canvas.clientWidth/Height are the CSS-rendered size of the canvas element.
-    // canvas.width/height are the drawing surface dimensions.
     const worldX = (clickXOnElement / canvas.clientWidth) * canvas.width;
     const worldY = (clickYOnElement / canvas.clientHeight) * canvas.height;
     
-    const baseIconHitRadius = 16; // Base hit radius (e.g., half of 32px base icon size)
+    const baseIconHitRadius = 16; 
 
     for (const hotspot of hotspots) {
-      // Hotspot x,y are already world coordinates (center of hotspot)
       const distance = Math.sqrt(
         Math.pow(worldX - hotspot.x, 2) + 
         Math.pow(worldY - hotspot.y, 2)
@@ -163,8 +149,6 @@ const MapCanvas: React.FC<MapCanvasProps> = ({
   };
 
   return (
-    // The canvas element itself will be styled via inline styles to match its parent (.map-scrollable-content)
-    // but its drawing surface (width/height attributes) is set to the full world size.
     <canvas 
         ref={canvasRef} 
         onClick={handleCanvasClick} 
@@ -173,8 +157,6 @@ const MapCanvas: React.FC<MapCanvasProps> = ({
             position: 'absolute', 
             top: 0,
             left: 0,
-            // CSS width/height make the canvas element take up the full world space.
-            // This ensures that clicks are mapped correctly to the large drawing surface.
             width: `${canvasWidth}px`,  
             height: `${canvasHeight}px`, 
         }}

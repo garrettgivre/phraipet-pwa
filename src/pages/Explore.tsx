@@ -4,7 +4,6 @@ import MapCanvas from '../components/MapCanvas';
 import type { AppHotspot, TiledMapData, TiledObject } from '../types'; 
 import './Explore.css'; 
 
-// Helper function to get a custom property value from a Tiled object
 const getTiledObjectProperty = (object: TiledObject, propertyName: string): any | undefined => {
   if (!object.properties) {
     return undefined;
@@ -12,16 +11,14 @@ const getTiledObjectProperty = (object: TiledObject, propertyName: string): any 
   return object.properties.find(p => p.name === propertyName)?.value;
 };
 
-// Define the conceptual size of your scrollable world.
-const WORLD_PIXEL_WIDTH = 3600; // Example: 3 times your background tile width
-const WORLD_PIXEL_HEIGHT = 2400; // Example: 3 times your background tile height
+const WORLD_PIXEL_WIDTH = 7200; 
+const WORLD_PIXEL_HEIGHT = 4800;
 
 export default function Explore() {
   const [hotspots, setHotspots] = useState<AppHotspot[]>([]);
   const [isLoading, setIsLoading] = useState(true); 
   const [error, setError] = useState<string | null>(null);
 
-  // Path to your world map background image (this image will be tiled by CSS)
   const mapTileImageUrl = "/maps/world_map_background.png"; 
 
   useEffect(() => {
@@ -34,7 +31,6 @@ export default function Explore() {
       setHotspots([]); 
 
       try {
-        // Fetch the Tiled JSON data which defines hotspot locations
         const response = await fetch('/maps/world_map_data.json'); 
         if (!response.ok) {
           throw new Error(`Failed to fetch map data: ${response.statusText} (status: ${response.status})`);
@@ -47,7 +43,6 @@ export default function Explore() {
           const processedHotspots: AppHotspot[] = hotspotLayer.objects.map(obj => ({
             id: getTiledObjectProperty(obj, 'id_string') || `tiled-obj-${obj.id}`,
             name: getTiledObjectProperty(obj, 'name') || obj.name || 'Unnamed Hotspot',
-            // Coordinates from Tiled are used directly as they are in world space (center of object)
             x: obj.x + (obj.width / 2), 
             y: obj.y + (obj.height / 2), 
             route: getTiledObjectProperty(obj, 'route') || '/',
@@ -71,30 +66,37 @@ export default function Explore() {
 
     fetchMapHotspotData();
 
+    // Optional: Scroll to the center of the map on initial load
+    const scrollableArea = document.querySelector('.explore-page'); 
+    if (scrollableArea) {
+        // Ensure clientHeight/Width are available (component is mounted and rendered)
+        if (scrollableArea.clientHeight > 0 && scrollableArea.clientWidth > 0) {
+            scrollableArea.scrollTop = (WORLD_PIXEL_HEIGHT - scrollableArea.clientHeight) / 2;
+            scrollableArea.scrollLeft = (WORLD_PIXEL_WIDTH - scrollableArea.clientWidth) / 2;
+        }
+    }
+
     return () => {
         isMounted = false; 
     };
-  }, []); // mapTileImageUrl is static, so not needed in deps if defined outside
+  }, []); 
 
-  // Render loading state
   if (isLoading) {
     return <div className="explore-status-message explore-loading">Loading Map Data...</div>;
   }
 
-  // Render error state
   if (error) {
     return <div className="explore-status-message explore-error">Error loading map: {error}</div>;
   }
   
-  // Render the map
   return (
-    <div className="explore-page"> {/* This div handles scrolling */}
+    <div className="explore-page"> 
       <div 
         className="map-scrollable-content" 
         style={{ 
           width: `${WORLD_PIXEL_WIDTH}px`, 
           height: `${WORLD_PIXEL_HEIGHT}px`,
-          backgroundImage: `url(${mapTileImageUrl})`, // CSS will tile this
+          backgroundImage: `url(${mapTileImageUrl})`,
         }}
       >
         <MapCanvas 

@@ -13,11 +13,8 @@ const getTiledObjectProperty = (object: TiledObject, propertyName: string): any 
   return property?.value;
 };
 
-// Define the conceptual size of your Sunnybrook map area.
-// If Sunnybrook is a single screen and doesn't tile/scroll, these should match its background image dimensions.
-const SUNNYBROOK_MAP_PIXEL_WIDTH_FALLBACK = 1600; // Example: Adjust
-const SUNNYBROOK_MAP_PIXEL_HEIGHT_FALLBACK = 1200; // Example: Adjust
-
+const SUNNYBROOK_MAP_PIXEL_WIDTH_FALLBACK = 1600; 
+const SUNNYBROOK_MAP_PIXEL_HEIGHT_FALLBACK = 1200; 
 
 export default function Sunnybrook() {
   const location = useLocation();
@@ -43,14 +40,13 @@ export default function Sunnybrook() {
       setIsLoading(true);
       setError(null);
       setHotspots([]);
-      setMapPixelWidth(0); // Reset dimensions before fetching
+      setMapPixelWidth(0); 
       setMapPixelHeight(0);
       
-      // 1. Attempt to get map dimensions from the actual background image for Sunnybrook
       try {
         const img = new Image();
         img.src = mapTileImageUrl;
-        await new Promise<void>((resolve) => { // No reject needed here, we handle error by falling back
+        await new Promise<void>((resolve) => { 
             img.onload = () => {
                 if (isMounted) {
                     setMapPixelWidth(img.naturalWidth);
@@ -64,19 +60,17 @@ export default function Sunnybrook() {
                     setMapPixelWidth(SUNNYBROOK_MAP_PIXEL_WIDTH_FALLBACK);
                     setMapPixelHeight(SUNNYBROOK_MAP_PIXEL_HEIGHT_FALLBACK);
                 }
-                resolve(); // Resolve even on error to allow JSON fetching
+                resolve();
             };
         });
       } catch (e) {
           console.error("Sunnybrook.tsx: Exception during image dimension loading:", e);
-          if (isMounted) { // Fallback if promise somehow throws
+          if (isMounted) { 
             setMapPixelWidth(SUNNYBROOK_MAP_PIXEL_WIDTH_FALLBACK);
             setMapPixelHeight(SUNNYBROOK_MAP_PIXEL_HEIGHT_FALLBACK);
           }
       }
-
-      // 2. Fetch Tiled JSON for hotspots
-      // This runs after dimensions are attempted (either successfully or fallback)
+      
       try {
         const response = await fetch('/maps/sunnybrook_map_data.json'); 
         if (!response.ok) {
@@ -106,7 +100,7 @@ export default function Sunnybrook() {
             setHotspots([]);
         }
       } finally {
-        if (isMounted) setIsLoading(false); // All loading attempts done
+        if (isMounted) setIsLoading(false);
       }
     };
 
@@ -127,13 +121,13 @@ export default function Sunnybrook() {
   return (
     <div className="sunnybrook-page">
       <div 
-        className="map-scrollable-content" // Re-using class for consistency, can be styled differently via .sunnybrook-page .map-scrollable-content
+        className="map-scrollable-content" 
         style={{ 
           width: `${mapPixelWidth}px`, 
           height: `${mapPixelHeight}px`,
           backgroundImage: `url(${mapTileImageUrl})`,
-          backgroundRepeat: 'no-repeat', // Sunnybrook likely doesn't tile
-          backgroundSize: 'contain',    // Or 'cover', depending on desired fit
+          backgroundRepeat: 'no-repeat', 
+          backgroundSize: 'contain',    
           backgroundPosition: 'center center',
         }}
       >
