@@ -9,8 +9,8 @@ import type {
   GroomingInventoryItem,
   ToyInventoryItem,
   FoodCategory,
-  GroomingCategory,
-  ToyCategory, // Updated ToyCategory names
+  GroomingCategory, // This type is now restricted to the 5 main ones
+  ToyCategory,
   Pet as PetType,
   DecorationItemType,
   RoomDecorItem,
@@ -27,11 +27,10 @@ const decorationSubCategories: DecorationItemType[] = [
 const foodSubCategories: FoodCategory[] = [
   "Treat", "Snack", "LightMeal", "HeartyMeal", "Feast",
 ];
-// These are the sub-categories for "Grooming"
+// MODIFIED: groomingSubCategories now only contains the 5 main types
 const groomingSubCategories: GroomingCategory[] = [
-  "QuickFix", "BasicKit", "StandardSet", "PremiumCare", "LuxurySpa", "Claws", "Dermal", "Fragrance", "Oral" // Match types.ts if you added more
+  "QuickFix", "BasicKit", "StandardSet", "PremiumCare", "LuxurySpa",
 ];
-// MODIFIED: Updated toySubCategories to new names
 const toySubCategories: ToyCategory[] = [
   "Basic", "Classic", "Plushie", "Gadget", "Wonder",
 ];
@@ -54,7 +53,6 @@ const capitalizeFirstLetter = (string: string) => {
     backDecor: "Back Decor", frontDecor: "Front Decor", QuickFix: "Quick Fix",
     BasicKit: "Basic Kit", StandardSet: "Standard Set", PremiumCare: "Premium Care",
     LuxurySpa: "Luxury Spa", LightMeal: "Light Meal", HeartyMeal: "Hearty Meal",
-    // Add new toy category display names if needed, e.g., "SkyboundYoYo": "Skybound Yo-yo"
   };
   if (specialCases[string]) return specialCases[string];
   // Generic capitalization for single words or rely on direct enum value if it's already capitalized

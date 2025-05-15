@@ -15,7 +15,7 @@ export type NeedInfo = {
 export interface Pet {
   hunger: number;
   happiness: number;
-  cleanliness: number;
+  cleanliness: number; // This stat remains 'cleanliness' for the pet
   affection: number;
   spirit: number;
   image: string;
@@ -39,10 +39,10 @@ export type DecorationItemType = "floor" | "wall" | "ceiling" | "backDecor" | "f
 // Defines the categories for food items.
 export type FoodCategory = "Treat" | "Snack" | "LightMeal" | "HeartyMeal" | "Feast";
 
-// Defines the categories for grooming items.
-export type GroomingCategory = "QuickFix" | "BasicKit" | "StandardSet" | "PremiumCare" | "LuxurySpa" | "Claws" | "Dermal" | "Fragrance" | "Oral"; // Added new specific grooming types if needed, or map to existing
+// MODIFIED: GroomingCategory restricted to the five main types for sub-tabs
+export type GroomingCategory = "QuickFix" | "BasicKit" | "StandardSet" | "PremiumCare" | "LuxurySpa";
 
-// MODIFIED: ToyCategory names updated
+// ToyCategory names updated
 export type ToyCategory = "Basic" | "Classic" | "Plushie" | "Gadget" | "Wonder";
 
 
@@ -71,14 +71,14 @@ export interface FoodInventoryItem extends BaseInventoryItem {
 // Interface for grooming items as they appear in the inventory.
 export interface GroomingInventoryItem extends BaseInventoryItem {
   itemCategory: "grooming";
-  type: GroomingCategory;
+  type: GroomingCategory;    // Uses the restricted GroomingCategory
   cleanlinessBoost: number;
 }
 
-// MODIFIED: ToyInventoryItem now uses the updated ToyCategory
+// ToyInventoryItem now uses the updated ToyCategory
 export interface ToyInventoryItem extends BaseInventoryItem {
   itemCategory: "toy";
-  type: ToyCategory; // Uses updated ToyCategory
+  type: ToyCategory;
   happinessBoost: number;
 }
 
