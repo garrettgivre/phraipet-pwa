@@ -11,10 +11,11 @@
   align-items: center;
   justify-content: space-evenly; /* Distributes nav items evenly */
   box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow on top */
-  z-index: 100; /* High z-index to stay on top of other content */
 
-  /* MODIFICATION: Attempt to force a new compositing layer */
-  /* This can sometimes help with rendering issues for fixed elements */
+  /* MODIFICATION: Significantly increased z-index */
+  z-index: 2147483647; /* Max possible signed 32-bit integer, common "highest" value */
+
+  /* Attempt to force a new compositing layer, can help with rendering issues */
   transform: translateZ(0);
   -webkit-transform: translateZ(0); /* For older Safari/Chrome */
 
@@ -79,8 +80,10 @@
   filter: drop-shadow(0 0 8px rgba(170, 0, 255, 0.8)); /* Purple Glow for Play */
 }
 
-/* Ensure nav items themselves are clickable if bubble icon is smaller */
-.nav-item:hover .bubble-icon {
-  /* Optional: Add a slight hover effect to non-active items if desired */
-  /* transform: scale(1.05); */
-}
+/*
+  Removed empty ruleset:
+  .nav-item:hover .bubble-icon {
+    / Optional: Add a slight hover effect to non-active items if desired /
+    / transform: scale(1.05); /
+  }
+*/

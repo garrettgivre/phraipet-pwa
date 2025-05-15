@@ -1,3 +1,4 @@
+/* src/components/Header.css */
 .app-header {
   position: fixed;
   top: 0;
@@ -10,40 +11,48 @@
   justify-content: space-between;
   padding: 0 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  z-index: 100; /* Ensure header is on top */
+
+  /* MODIFICATION: Significantly increased z-index */
+  z-index: 2147483647; /* Max possible signed 32-bit integer */
+
+  /* Attempt to force a new compositing layer */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+
+  box-sizing: border-box;
 }
 
 .pet-icon-wrapper {
-  width: 64px; /* Size of the pet icon container */
+  width: 64px;
   height: 64px;
   border-radius: 50%;
   overflow: hidden;
-  background: #fff; /* White background for the icon circle */
+  background: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  cursor: pointer; /* Ensure it's clickable */
 }
 
 .pet-icon {
   width: 100%;
   height: 100%;
-  object-fit: contain; /* Ensures pet image scales nicely */
-  aspect-ratio: 1 / 1; 
+  object-fit: contain;
+  aspect-ratio: 1 / 1;
 }
 
 .needs-wrapper {
   display: flex;
-  gap: 8px; /* Space between need circles */
+  gap: 8px;
   align-items: center;
-  margin-left: 16px; 
-  flex-grow: 1; 
-  justify-content: flex-start; /* Align needs to the left after pet icon */
+  margin-left: 16px;
+  flex-grow: 1;
+  justify-content: flex-start;
 }
 
-/* --- Styles for Need Circles in Header --- */
-.app-header .need-circle { /* Specific to header */
-  width: 40px !important; /* Smaller size for header */
+.app-header .need-circle {
+  width: 40px !important;
   height: 40px !important;
   flex-shrink: 0;
   display: flex;
@@ -51,40 +60,41 @@
   justify-content: center;
 }
 
-.app-header .circular-chart { /* Specific to header */
+.app-header .circular-chart {
   width: 100% !important;
   height: 100% !important;
   display: block;
-  /* transform: rotate(-90deg); SVG transform is on the path itself */
 }
 
-.app-header .circle-bg { /* Specific to header */
+.app-header .circle-bg {
   fill: none;
   stroke: #eee;
-  stroke-width: 3.8; /* Original desired thickness */
+  stroke-width: 3.8;
 }
 
-.app-header .circle { /* Specific to header */
+.app-header .circle {
   fill: none;
-  stroke: #00acc1; /* Default color for needs */
-  stroke-width: 3.8; /* Original desired thickness */
+  stroke: #00acc1;
+  stroke-width: 3.8;
   stroke-linecap: round;
   transition: stroke-dasharray 0.3s;
 }
 
-.app-header .emoji-text { /* Specific to header */
-  fill: #333;
-  font-size: 15px; /* SVG units, appropriate for 40px container */
-  text-anchor: middle;
-  dominant-baseline: middle;
-  /* transform: rotate(90deg) is on the text element in Header.tsx SVG */
+.app-header .need-icon-image { /* Class for the <image> tag if used */
+  /* Styling for the icon image within the SVG */
+  /* For example:
+  width: 60%;
+  height: 60%;
+  transform-origin: center;
+  transform: translate(20%, 20%); / Adjust if icons are not centered /
+  */
 }
 
 .coin-counter {
   display: flex;
   align-items: center;
   background: #fff;
-  padding: 6px 12px; /* Adjusted padding */
+  padding: 6px 12px;
   border-radius: 20px;
   cursor: pointer;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
@@ -96,9 +106,9 @@
 }
 
 .coin-icon {
-  height: 24px; 
+  height: 24px;
   width: auto;
-  margin-right: 8px; /* Increased spacing */
+  margin-right: 8px;
   object-fit: contain;
 }
 
