@@ -1,7 +1,7 @@
 /* src/pages/Explore.css */
 
 /* The .explore-page should fill the content area defined by App.tsx's <main> tag.
-  App.tsx <main> style:
+  App.tsx <main> style should be:
     paddingTop: for app Header (e.g., 80px)
     paddingBottom: for app NavBar (e.g., 56px)
     height: 100vh
@@ -16,30 +16,31 @@
   overflow: auto; /* Allows both horizontal and vertical scrolling if its child is larger */
   background-color: #121212; /* Background of the scrollable viewport area */
   box-sizing: border-box;
-  position: relative; /* Establishes a stacking context, useful for absolute children like status messages if they were not conditionally rendered */
-  /* Ensure no transforms, filters, or opacity < 1 here that could break fixed positioning of NavBar */
+  /* position: relative; /* Not strictly needed if status messages are handled by conditional rendering */
+  /* No transforms, filters, or opacity < 1 here that could break fixed positioning of NavBar */
+  /* Ensure this element itself does not have a z-index that could conflict, 
+     unless specifically intended to be above something else (which it shouldn't be for NavBar).
+     Its children (.map-scrollable-content, MapCanvas) are within its flow or absolutely positioned within it.
+  */
 }
 
 .map-scrollable-content {
-  /* This div has its width and height set by inline styles in Explore.tsx 
-     to WORLD_PIXEL_WIDTH and WORLD_PIXEL_HEIGHT.
-     These large dimensions should cause the parent .explore-page to overflow and show scrollbars.
-  */
   position: relative; /* For the absolutely positioned MapCanvas overlay */
+  /* Width and height are set by inline styles in Explore.tsx to WORLD_PIXEL_WIDTH/HEIGHT.
+     These large dimensions should cause the parent .explore-page to overflow and show scrollbars. */
   background-repeat: repeat;
   background-position: top left;
-  background-color: #282828; /* Background for the tiled map area itself */
-  
-  /* It's important that this element is not constrained by flex properties
-     from .explore-page if .explore-page were a flex container trying to shrink its children.
-     However, .explore-page is now a simple block with overflow.
+  background-color: #282828; /* Background of the actual map tiled area */
+  /* The display:block or other properties are less critical here as long as width/height are set
+     and it's a direct child of the overflow container. */
+  /* Adding display:table can sometimes help force an element to respect its content width/height
+     if it's being unexpectedly constrained, but should not be necessary here.
   */
-  /* display: block; /* div is block by default, this is fine */
 }
 
 /* Status messages (loading/error) - these are now returned directly from Explore.tsx,
    so they become the sole content of .explore-page during those states.
-   Their styling ensures they fill the viewport.
+   Their styling ensures they fill the viewport defined by .explore-page.
 */
 .explore-status-message { 
   display: flex;
