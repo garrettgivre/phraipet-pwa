@@ -8,20 +8,4 @@
   background-color: transparent; /* Keep transparent for visuals */
   cursor: pointer; /* Hotspots are intended to be clickable */
 
-  /* --- TEST --- */
-  /* Uncomment the line below to temporarily disable all pointer events on the canvas. */
-  /* If the NavBar becomes clickable after this change, it means the canvas was */
-  /* overlaying or capturing events meant for the NavBar. */
- pointer-events: none;
-  /* --- END TEST --- */
-
-  /*
-    The canvas width and height are set via inline styles in MapCanvas.tsx
-    to match the full dimensions of the map data (e.g., WORLD_PIXEL_WIDTH).
-    It's a child of .map-scrollable-content, which is a child of .explore-page.
-    .explore-page has overflow: auto.
-    The <main> tag in App.tsx has overflow: hidden.
-    This layering should, in theory, prevent the canvas from interfering
-    with fixed elements like the NavBar, but complex interactions can occur.
-  */
 }

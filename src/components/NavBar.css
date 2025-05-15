@@ -1,53 +1,66 @@
+/* src/components/NavBar.css */
 .nav-bar {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  height: 56px;
+  height: 56px; /* Standard height for bottom nav */
   background: #ffd966 url("/assets/backgrounds/nav-bg.png") no-repeat center center;
   background-size: cover;
   display: flex;
   align-items: center;
-  justify-content: space-evenly;
-  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
-  z-index: 100;
+  justify-content: space-evenly; /* Distributes nav items evenly */
+  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow on top */
+  z-index: 100; /* High z-index to stay on top of other content */
+
+  /* MODIFICATION: Attempt to force a new compositing layer */
+  /* This can sometimes help with rendering issues for fixed elements */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0); /* For older Safari/Chrome */
+
+  box-sizing: border-box; /* Ensure padding/border don't add to height */
 }
 
 .nav-item {
-  position: relative;
+  position: relative; /* For positioning of bubble elements if needed */
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: transform 0.3s ease;
+  transition: transform 0.3s ease; /* For hover/active effects */
+  flex: 1; /* Allow nav items to take up equal space if needed, or adjust as per design */
+  text-align: center; /* Center text within the nav item */
+  height: 100%; /* Make nav items fill the height of the bar */
 }
 
 .bubble-container {
   position: relative;
   display: flex;
+  flex-direction: column; /* Stack icon above text, or adjust as needed */
   align-items: center;
   justify-content: center;
 }
 
 .bubble-icon {
-  width: 80px;
-  height: 80px;
-  margin-top: 0px; /* Move bubbles fully into the nav bar */
+  width: 80px; /* Adjust as per your icon's design */
+  height: 80px; /* Adjust as per your icon's design */
+  /* margin-top: 0px; /* Original value, adjust if bubbles should overlap differently */
   object-fit: contain;
-  z-index: 2;
+  z-index: 2; /* Icon above bubble background if any, but below nav-item click area */
   transition: transform 0.3s ease, filter 0.3s ease;
 }
 
 .bubble-container span {
-  position: absolute;
+  position: absolute; /* Position text over/within the bubble */
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  color: #ffffff;
-  font-size: 14px;
+  color: #ffffff; /* Text color */
+  font-size: 14px; /* Text size */
   font-weight: bold;
-  z-index: 1;
-  pointer-events: none;
+  z-index: 1; /* Text below icon if they overlap, or adjust */
+  pointer-events: none; /* Text itself shouldn't block clicks on nav-item */
+  text-shadow: 0 0 2px rgba(0,0,0,0.5); /* Optional: for better readability */
 }
 
 /* Selected Effect for Each Tab */
@@ -64,4 +77,10 @@
 .nav-item.active:nth-child(3) .bubble-icon {
   transform: scale(1.2);
   filter: drop-shadow(0 0 8px rgba(170, 0, 255, 0.8)); /* Purple Glow for Play */
+}
+
+/* Ensure nav items themselves are clickable if bubble icon is smaller */
+.nav-item:hover .bubble-icon {
+  /* Optional: Add a slight hover effect to non-active items if desired */
+  /* transform: scale(1.05); */
 }
