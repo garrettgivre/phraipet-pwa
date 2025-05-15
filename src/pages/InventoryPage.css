@@ -176,50 +176,40 @@
 .inventory-sub-tabs,
 .inventory-main-tabs {
   display: flex; 
-  /* justify-content: space-around; Ensure buttons fill width instead */
   width: 100%;
   box-sizing: border-box;
-  padding: 0; /* MODIFIED: Removed horizontal padding */
+  padding: 0; /* MODIFIED: Removed horizontal padding from tab bars */
 }
+
 .inventory-sub-tabs {
   background: #e9ecef; 
-  padding-top: 8px;
-  padding-bottom: 8px;
+  padding-top: 8px; /* Keep vertical padding if desired */
+  padding-bottom: 8px; /* Keep vertical padding if desired */
 }
 .inventory-main-tabs {
   background: #ced4da; 
-  padding-top: 10px;
-  padding-bottom: 10px;
+  padding-top: 10px; /* Keep vertical padding if desired */
+  padding-bottom: 10px; /* Keep vertical padding if desired */
 }
 
 .tab-button, .main-tab-button {
   background: transparent;
-  border: none;
+  border: none; 
   cursor: pointer;
   padding: 8px 5px; 
-  border-radius: 5px; /* You might want to set this to 0 if buttons should be perfectly rectangular and touch */
+  border-radius: 0; /* MODIFIED: For a continuous bar look */
   transition: background-color 0.2s, color 0.2s;
   font-weight: 500;
   flex-grow: 1; 
   flex-basis: 0; 
   text-align: center;
-  margin: 0; /* MODIFIED: Removed margins */
+  margin: 0; /* MODIFIED: Removed margins to prevent gaps */
   line-height: 1.4;
   min-width: 0; 
   overflow: hidden; 
   text-overflow: ellipsis; 
   white-space: nowrap; 
-  /* If you want a border between buttons, you can add it here: */
-  /* border-right: 1px solid #somecolor; */
 }
-
-/* Optional: Remove border from the last button in each tab bar */
-/*
-.inventory-sub-tabs .tab-button:last-child,
-.inventory-main-tabs .main-tab-button:last-child {
-  border-right: none;
-}
-*/
 
 .tab-button { 
   font-size: 13px;
