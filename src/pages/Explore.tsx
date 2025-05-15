@@ -1,8 +1,8 @@
-// src/pages/Explore.tsx (Rebuilt with Map)
+// src/pages/Explore.tsx (Revised for Robust Layout)
 import { useEffect, useState, useRef } from 'react';
 import MapCanvas from '../components/MapCanvas';
 import type { AppHotspot, TiledMapData, TiledObject } from '../types';
-import './Explore.css'; // This will be the CSS from the "Blank Slate" version, which is currently in the Canvas
+import './Explore.css'; // This will use the CSS provided in the next block
 
 // Helper function to get properties from Tiled objects
 const getTiledObjectProperty = (object: TiledObject, propertyName: string): any | undefined => {
@@ -21,12 +21,11 @@ export default function Explore() {
   const [hotspots, setHotspots] = useState<AppHotspot[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  // This ref points to the main scrollable container for the page
   const scrollablePageRef = useRef<HTMLDivElement>(null);
 
   const mapTileBackgroundImageUrl = "/maps/world_map_background.png";
 
-  // Effect to fetch hotspot data from your Tiled JSON
+  // Effect to fetch hotspot data
   useEffect(() => {
     let isMounted = true;
     const fetchMapData = async () => {
@@ -72,7 +71,7 @@ export default function Explore() {
     return () => { isMounted = false; };
   }, []);
 
-  // Effect to scroll the map to its center after loading
+  // Effect to scroll the map to its center
   useEffect(() => {
     if (!isLoading && !error && scrollablePageRef.current) {
       const scrollableArea = scrollablePageRef.current;
@@ -85,32 +84,24 @@ export default function Explore() {
     }
   }, [isLoading, error]);
 
+  // Conditional rendering for loading and error states
   if (isLoading) {
-    // Using class names from the "Blank Slate" CSS for consistency
-    return <div className="explore-page-blank-container explore-page-content"><p>Loading Map Data...</p></div>;
+    return <div className="explore-status-message explore-loading-state">Loading Map Data...</div>;
   }
   if (error) {
-    return <div className="explore-page-blank-container explore-page-content"><p>Error loading map: {error}</p></div>;
+    return <div className="explore-status-message explore-error-state">Error loading map: {error}</div>;
   }
 
+  // Main render for the Explore page
   return (
-    // This is the main scrollable container, using the class from the working "Blank Slate" CSS
-    <div ref={scrollablePageRef} className="explore-page-blank-container">
-      {/*
-        This div represents the full, large map area.
-        It will be larger than its parent and cause scrolling.
-        It needs a class for specific map content styling if different from the page wrapper.
-        For now, we'll call it 'explore-map-content-holder'.
-      */}
+    <div ref={scrollablePageRef} className="explore-page-scroll-wrapper">
       <div
-        className="explore-map-content-holder" // New class for the oversized map content
+        className="explore-map-content-holder"
         style={{
           width: `${WORLD_MAP_PIXEL_WIDTH}px`,
           height: `${WORLD_MAP_PIXEL_HEIGHT}px`,
           backgroundImage: `url(${mapTileBackgroundImageUrl})`,
-          position: 'relative', // For positioning the MapCanvas
-          backgroundRepeat: 'repeat', // Or 'no-repeat' as needed
-          backgroundPosition: 'top left',
+          // position: 'relative' is handled by the CSS class
         }}
       >
         <MapCanvas

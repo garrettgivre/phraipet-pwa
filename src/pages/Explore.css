@@ -1,54 +1,84 @@
-/* src/pages/Explore.css (Blank Slate) */
+/* src/pages/Explore.css (Revised for Robust Layout) */
 
 /*
-  The .explore-page-blank-container is the direct child of <main> in App.tsx.
-  It needs to fill the height and width allocated by <main>.
+  This is the main scrollable container for the Explore page.
+  It's a direct child of App.tsx's <main> element.
 */
-.explore-page-blank-container {
+.explore-page-scroll-wrapper {
   width: 100%;
-  height: 100%; /* Fill the content area provided by App.tsx's <main> tag */
-  background-color: #2c3e50; /* A distinct dark blue background for easy identification */
-  padding: 20px;
-  box-sizing: border-box; /* Include padding in width/height calculations */
-  overflow-y: auto; /* Allow scrolling if content exceeds height */
+  height: 100%; /* Fill the available space within <main> */
+  overflow: auto; /* Enable scrolling for the large map content */
+  background-color: #12121F; /* A dark background for the page */
+  box-sizing: border-box;
 
   /*
-    Crucial for stacking context:
-    Ensures this page's content is properly layered with respect to
-    the fixed Header and NavBar.
-    App.tsx's <main> tag should have `position: relative; z-index: 0;`
-    Header and NavBar should have `z-index: 100;` (or higher).
+    Crucial for stacking context and layer promotion:
+    - position: relative creates a stacking context.
+    - z-index: 1 ensures it's above <main>'s base z-index: 0 (if set),
+      but well below the Header/NavBar (which should have z-index: 100+).
+    - transform: translateZ(0) can promote this element to its own compositing layer,
+      which often helps resolve complex stacking issues with fixed-position children
+      of other elements (like the NavBar).
   */
-  position: relative; /* Establishes a stacking context */
-  z-index: 1; /* Layers it above <main>'s base, but below Header/NavBar */
-
-  display: flex; /* Optional: For centering content if desired */
-  flex-direction: column; /* Optional: For centering content */
-  align-items: center; /* Optional: For centering content */
-  justify-content: center; /* Optional: For centering content */
-  text-align: center; /* Optional: For centering content */
-}
-
-.explore-page-content {
-  color: #ecf0f1; /* Light text color for contrast */
-}
-
-.explore-page-content h1 {
-  font-size: 2rem;
-  margin-bottom: 1rem;
-  color: #ffffff;
-}
-
-.explore-page-content p {
-  font-size: 1rem;
-  line-height: 1.6;
-  max-width: 600px; /* Limit width of paragraph for readability */
-  margin-bottom: 0.5rem;
+  position: relative;
+  z-index: 1;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0); /* For older WebKit browsers */
 }
 
 /*
-  If you had .explore-status-message, .explore-error, .map-scrollable-content
-  from previous versions, they are not used by the Blank Slate Explore.tsx.
-  You can remove them from this file or keep them commented out if you plan
-  to reintroduce the map later.
+  This div is inside .explore-page-scroll-wrapper and will be very large,
+  containing the map background and the MapCanvas.
 */
+.explore-map-content-holder {
+  position: relative; /* Necessary for the absolutely positioned MapCanvas to be relative to this */
+  /* width and height are set by inline styles in Explore.tsx */
+  background-repeat: repeat; /* Or 'no-repeat' if your map image is a single large tile */
+  background-position: top left;
+  background-color: #202030; /* A slightly lighter dark color for the map area itself, visible if image is transparent */
+  /* This element should not have overflow properties; its parent handles scrolling. */
+}
+
+/*
+  Reminder for MapCanvas.css (.hotspot-canvas-overlay):
+  It should be absolutely positioned to cover its parent, .explore-map-content-holder.
+  .hotspot-canvas-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2; / Above the background image of .explore-map-content-holder /
+    cursor: pointer; / Or as needed for hotspot interaction /
+    background-color: transparent; / Ensure it's see-through /
+  }
+*/
+
+/*
+  Styling for loading and error messages.
+  These will fill the .explore-page-scroll-wrapper if rendered.
+*/
+.explore-status-message {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  box-sizing: border-box;
+  text-align: center;
+  color: #e0e0e0; /* Light text for dark backgrounds */
+  background-color: #12121F; /* Match the page wrapper background */
+}
+
+.explore-loading-state {
+  /* Specific styles for loading, if any */
+  font-style: italic;
+}
+
+.explore-error-state {
+  /* Specific styles for error, if any */
+  color: #ff6b6b; /* A noticeable error color */
+  font-weight: bold;
+}
