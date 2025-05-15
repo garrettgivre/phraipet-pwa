@@ -41,7 +41,7 @@
   background-color: #ffffff;
   width: 100%; 
   box-sizing: border-box; 
-  min-height: 150px; /* Ensures "No items" message has some space */
+  min-height: 200px; /* Increased min-height to better allow flex-end to show */
 }
 
 .no-items-message {
@@ -82,8 +82,8 @@
 .zoom-container {
   width: 64px; /* Fixed size for the thumbnail image area */
   height: 64px;
-  overflow: hidden; /* This is crucial for the "cropping" effect of ZoomedImage */
-  position: relative; /* For absolute positioning of the img inside */
+  overflow: hidden; /* CRUCIAL for the "cropping" effect of ZoomedImage */
+  position: relative; /* CRUCIAL for absolute positioning of the img inside */
   margin: 0 auto 8px auto; /* Center horizontally, add space below */
   background-color: #f8f9fa; /* Placeholder background */
   border-radius: 6px;
@@ -95,12 +95,14 @@
 }
 
 .inventory-image {
-  /* Styles are applied dynamically by ZoomedImage component (position, width, height) */
-  /* These are fallbacks or base styles if dynamic ones aren't applied */
+  /* Styles are applied dynamically by ZoomedImage component:
+     position: absolute, left, top, width, height.
+     This class is a fallback or for very basic styling if needed.
+  */
   display: block; 
-  max-width: 100%; 
-  max-height: 100%;
-  object-fit: contain; 
+  /* max-width: 100%; /* These might interfere with the absolute positioning and scaling from JS */
+  /* max-height: 100%; */
+  /* object-fit: contain; /* This is good if the image is not absolutely positioned for zoom */
 }
 .zoom-placeholder {
   font-size: 12px;
@@ -114,23 +116,22 @@
   align-items: center;
   justify-content: center; /* Center text if only one line */
   min-height: 2.6em; /* Approx two lines for name + effect */
+  width: 100%; /* Ensure it takes full width of the item card */
 }
 
 .item-name {
   display: block;
+  width: 100%; /* Take full width to allow text-overflow to work */
   font-size: 12px; 
   color: #212529;
   font-weight: 500;
   word-break: break-word; 
   line-height: 1.2;    
   padding-top: 4px;    
-  /* For multi-line truncation (more complex, often needs JS or specific CSS tricks)
-     For now, let's ensure it doesn't break layout.
-  */
   max-height: 2.4em; /* Allow up to two lines before overflow hidden */
   overflow: hidden;
-  text-overflow: ellipsis; /* Shows ... but only for single line overflow by default */
-  /* white-space: nowrap; /* Remove this to allow wrapping for two lines */
+  text-overflow: ellipsis; 
+  white-space: nowrap; /* Force to single line for ellipsis to work reliably, adjust if multi-line needed */
 }
 .item-effect {
   font-size: 10px; 
