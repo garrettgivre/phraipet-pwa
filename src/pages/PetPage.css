@@ -1,12 +1,11 @@
-/* src/pages/PetPage.css */
 .petPage {
   opacity: 0;
   transition: opacity 0.6s ease-in-out;
-  position: relative; /* Crucial for absolute positioning of children */
+  position: relative; 
   width: 100vw;
-  height: 100vh;
-  background-color: #f0f8ff;
-  overflow: hidden;
+  height: 100vh; 
+  background-color: #f0f8ff; 
+  overflow: hidden; 
 }
 
 .petPage.loaded {
@@ -17,23 +16,23 @@
   position: absolute;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: cover; 
   top: 0;
   left: 0;
-  z-index: 1;
+  z-index: 1; 
 }
 
 .ceiling { z-index: 1; }
 .wall { z-index: 2; }
 .floor { z-index: 3; }
 .back-decor { z-index: 4; position: absolute; }
-.front-decor { z-index: 6; position: absolute; }
+.front-decor { z-index: 6; position: absolute;}
 .overlay { z-index: 7; pointer-events: none; }
 
-/* Container for the pet image and its mood bubble */
+
 .pet-display-area {
   position: absolute; 
-  top: 50%; 
+  top: 45%; /* Adjusted to pull pet slightly higher to make more room for needs bar */
   left: 50%;
   transform: translate(-50%, -50%); 
   display: flex; 
@@ -44,7 +43,9 @@
 }
 
 .petHero {
-  width: clamp(400px, 60vw, 800px); 
+  /* Using clamp for responsive sizing: min, preferred (viewport based), max */
+  /* Reduced min from 400px to 280px for smaller phones */
+  width: clamp(280px, 60vw, 600px); /* Max also reduced slightly */
   height: auto;   
   object-fit: contain; 
   display: block; 
@@ -52,61 +53,54 @@
 
 .pet-mood-bubble {
   background-color: rgba(255, 255, 255, 0.9); 
-  padding: 8px 15px;
-  border-radius: 20px; 
-  box-shadow: 0 2px 5px rgba(0,0,0,0.15);
-  margin-bottom: 10px; 
-  max-width: 220px; 
+  padding: 6px 12px; /* Slightly smaller padding */
+  border-radius: 15px; 
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  margin-bottom: 8px; /* Reduced margin */
+  max-width: 200px; /* Slightly smaller max-width */
   text-align: center;
   position: relative; 
   z-index: 6; 
+  font-size: 13px; /* Slightly smaller font */
 }
 
-.pet-mood-bubble::after {
+.pet-mood-bubble::after { 
   content: '';
   position: absolute;
-  bottom: -8px; 
+  bottom: -7px; 
   left: 50%;
   transform: translateX(-50%);
   width: 0;
   height: 0;
-  border-left: 8px solid transparent;
-  border-right: 8px solid transparent;
-  border-top: 10px solid rgba(255, 255, 255, 0.9); 
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-top: 9px solid rgba(255, 255, 255, 0.9); 
 }
 
 .pet-mood-bubble p {
   margin: 0;
-  font-size: 14px;
+  font-size: 13px; /* Consistent with bubble font-size */
   color: #333;
-  line-height: 1.4;
+  line-height: 1.3;
 }
 
 /* Container for the horizontally aligned need circles */
 .pet-page-needs-container {
   position: absolute; 
-  /* Paintbrush icon: bottom: 72px, height: 64px. Top edge of paintbrush is 72+64 = 136px from bottom.
-    Needs circles are 64px tall.
-    To place needs bar above paintbrush with some space (e.g., 10px):
-    bottom = top_edge_of_paintbrush + space = 136px + 10px = 146px.
-    Alternatively, if paintbrush is 72px from bottom, and we want needs bar 10px above that + height of paintbrush:
-    bottom: 72px (NavBar height + small gap) + 64px (paintbrush height) + 10px (desired gap) = ~146px
-    Let's try 140px for now and adjust if needed.
-  */
-  bottom: 140px; 
-  left: 50%;
-  transform: translateX(-50%); 
+  bottom: clamp(65px, 10vh, 85px); /* Responsive bottom position */
+  /* (NavBar 56px + small gap) -> trying 10vh as preferred */
+  left: 0; /* Span full width for centering content */
+  right: 0;
   display: flex;
   flex-direction: row;
   justify-content: center;
   align-items: center;
-  gap: 15px; 
-  padding: 5px 10px; /* Reduced padding as background is gone */
-  width: auto; 
-  max-width: 90%; 
+  /* Responsive gap: min 8px, preferred 2.5vw, max 15px */
+  gap: clamp(8px, 2.5vw, 15px); 
+  padding: 8px 10px; 
+  width: 100%; /* Use full width to allow content to center */
   box-sizing: border-box;
   z-index: 10; 
-  /* Removed background, border-radius, and box-shadow */
   background-color: transparent;
   border-radius: 0;
   box-shadow: none;
@@ -117,8 +111,8 @@
   flex-direction: column;
   align-items: center;
   cursor: pointer;
-  padding: 5px;
-  border-radius: 8px;
+  padding: 3px; /* Reduced padding */
+  border-radius: 6px;
   transition: background-color 0.2s ease;
 }
 
@@ -126,9 +120,11 @@
   background-color: rgba(0,0,0,0.05); 
 }
 
+/* Responsive Need Circles */
 .pet-page-needs-container .need-circle {
-  width: 64px;  
-  height: 64px; 
+  /* Responsive size: min 48px, preferred 12vw, max 64px */
+  width: clamp(48px, 13vw, 64px);  
+  height: clamp(48px, 13vw, 64px); 
 }
 
 .pet-page-needs-container .circular-chart {
@@ -139,7 +135,7 @@
 .pet-page-needs-container .circle-bg {
   fill: none;
   stroke: #e0e0e0; 
-  stroke-width: 3.8; 
+  stroke-width: 3.8; /* Keep stroke width visually consistent */
 }
 
 .pet-page-needs-container .circle {
@@ -152,23 +148,26 @@
 
 .pet-page-needs-container .emoji-text {
   fill: #333;
-  font-size: 16px; 
+  /* Responsive font size based on container size */
+  /* If .need-circle is 12vw, emoji could be ~5vw or use clamp */
+  font-size: clamp(12px, 5vw, 16px); /* SVG units, but effectively scales */
   text-anchor: middle;
   dominant-baseline: middle;
 }
 
 .need-name-label { 
-  font-size: 10px;
+  font-size: clamp(8px, 1.8vw, 10px); /* Responsive font size */
   color: #555;
-  margin-top: 4px;
+  margin-top: 3px;
   text-transform: capitalize;
 }
 
-
+/* Responsive Paintbrush Icon */
 .paintbrush-icon {
   position: fixed; 
-  bottom: 72px; 
-  left: 16px;
+  /* Responsive positioning from bottom-left */
+  bottom: clamp(60px, 8vh, 72px); /* Above NavBar */
+  left: clamp(10px, 3vw, 16px);
   cursor: pointer;
   z-index: 20; 
   background-color: transparent; 
@@ -178,8 +177,9 @@
 }
 
 .paintbrush-icon img {
-  width: 64px;  
-  height: 64px; 
+  /* Responsive size for the icon image */
+  width: clamp(48px, 12vw, 64px);  
+  height: clamp(48px, 12vw, 64px); 
   object-fit: contain;
   display: block; 
 }
