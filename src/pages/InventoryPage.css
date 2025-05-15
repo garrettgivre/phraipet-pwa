@@ -3,17 +3,17 @@
 /* Outermost wrapper for the entire inventory page */
 .inventory-page-wrapper {
   display: flex;
-  flex-direction: column; /* Stack title, items, and tabs vertically */
-  height: 100%; /* Occupy full height provided by its parent (e.g., <main> in App.tsx) */
+  flex-direction: column;
+  height: 100%;
   width: 100%;
-  background-color: #f4f6f8; /* A light neutral background for the page */
-  overflow: hidden; /* Important: Prevents this wrapper from scrolling, only item area scrolls */
+  background-color: #f4f6f8;
+  overflow: hidden;
   box-sizing: border-box;
 }
 
 /* Title styling */
 .inventory-page-title {
-  flex-shrink: 0; /* Prevent title from shrinking */
+  flex-shrink: 0;
   padding: 12px 16px;
   margin: 0;
   font-size: 20px;
@@ -26,31 +26,38 @@
   box-sizing: border-box;
 }
 
-/* Container for the grid of inventory items */
-.inventory-items-grid-container {
-  flex-grow: 1; /* This makes the items area take up all available vertical space */
-  display: grid;
-  /* Ensure 4 columns. minmax(0, 1fr) allows items to shrink if needed but grow to fill 1fr */
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px; /* Space between items */
-  padding: 16px; /* Padding around the grid */
-  align-content: flex-end; /* CRITICAL: Aligns grid rows to the bottom of this container */
-  overflow-y: auto; /* Enable vertical scrolling ONLY for this items area */
-  background-color: #ffffff;
+/* NEW: Outer container for the scrollable items area. This is a flex item. */
+.inventory-items-scroll-container {
+  flex-grow: 1; /* Takes up available vertical space */
+  display: flex; /* Enables use of margin-top: auto on its child */
+  flex-direction: column; /* Stack its children (just the grid) vertically */
+  overflow-y: auto; /* Handles scrolling if the grid inside becomes too tall */
+  background-color: #ffffff; /* Background for the scrollable area */
+  padding: 16px; /* Padding around the grid area */
   box-sizing: border-box;
-  width: 100%; /* Ensure it takes full width of its flex parent */
+  width: 100%;
+}
+
+/* Actual grid container for inventory items */
+.inventory-items-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr)); /* 4 equal columns */
+  gap: 12px;
+  width: 100%; /* Grid takes full width of its scroll-container parent's content box */
+  box-sizing: border-box;
+  margin-top: auto; /* CRITICAL: Pushes this grid to the bottom of inventory-items-scroll-container */
 }
 
 /* Message when no items are in the current category */
 .inventory-no-items-message {
-  grid-column: 1 / -1; /* Span all 4 columns */
+  grid-column: 1 / -1;
   text-align: center;
   padding: 20px;
   color: #757575;
   font-style: italic;
-  align-self: center; /* Center message vertically within its grid cell if needed */
-  width: 100%; /* Ensure it takes full width of its grid cell */
-  box-sizing: border-box;
+  align-self: center; /* Center message if grid is otherwise empty */
+  margin-top: auto; /* Helps center it if it's the only thing and grid is pushed down */
+  margin-bottom: auto;
 }
 
 /* Styling for each individual item card */
@@ -70,7 +77,8 @@
   overflow: hidden;
   position: relative;
   box-sizing: border-box;
-  width: 100%; /* Make item card take full width of its grid cell */
+  width: 100%; /* Ensure card fills its grid cell */
+  min-height: 100px; /* Prevent extreme collapse, adjust if needed */
 }
 
 .inventory-item-card:hover {
@@ -78,7 +86,6 @@
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
 }
 
-/* Wrapper for the item image/thumbnail */
 .inventory-item-image-wrapper {
   width: 64px;
   height: 64px;
@@ -96,7 +103,6 @@
 
 .inventory-item-image {
   display: block;
-  /* Actual image styling (transform, scale) is handled by ZoomedImage component */
 }
 
 .inventory-item-placeholder {
@@ -109,7 +115,6 @@
   font-size: 20px;
 }
 
-/* Container for item name and effect text */
 .inventory-item-details {
   display: flex;
   flex-direction: column;
@@ -117,6 +122,8 @@
   justify-content: center;
   min-height: 2.8em;
   width: 100%;
+  padding: 4px;
+  box-sizing: border-box;
 }
 
 .inventory-item-name {
@@ -126,7 +133,7 @@
   color: #333333;
   font-weight: 500;
   line-height: 1.3;
-  padding-top: 4px;
+  /* padding-top: 4px; Removed, handled by parent padding */
   max-height: 2.6em;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -140,7 +147,6 @@
   white-space: nowrap;
 }
 
-/* Color options for decoration items */
 .inventory-item-color-options {
   display: flex;
   justify-content: center;
@@ -176,7 +182,6 @@
   box-shadow: 0 0 4px rgba(0, 0, 0, 0.25);
 }
 
-/* Container for both tab bars */
 .inventory-tabs-container {
   flex-shrink: 0;
   background-color: #e9ecef;
@@ -186,7 +191,6 @@
   width: 100%;
 }
 
-/* Styling for individual tab bars (sub and main) */
 .inventory-sub-tabs-bar,
 .inventory-main-tabs-bar {
   display: flex;
@@ -203,7 +207,6 @@
   border-top: 1px solid #cfd8dc;
 }
 
-/* Common styling for all tab buttons */
 .inventory-tab-button,
 .inventory-main-tab-button {
   flex-grow: 1;
@@ -222,7 +225,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
-  border-left: 1px solid #d1d5db; /* Vertical separator line */
+  border-left: 1px solid #d1d5db;
   box-sizing: border-box;
 }
 

@@ -16,7 +16,7 @@ import type {
   RoomDecorItem,
 } from "../types";
 import { calculateVisibleBounds } from "../utils/imageUtils";
-import "./InventoryPage.css"; // Will use the CSS provided in the "InventoryPage.css (Full Remake)" Canvas
+import "./InventoryPage.css"; // Will use the new CSS provided below
 
 // --- Constants for categories ---
 const mainCategories = ["Decorations", "Food", "Cleaning", "Toys"] as const;
@@ -35,13 +35,11 @@ const toySubCategories: ToyCategory[] = [
   "ChewToy", "Plushie", "PuzzleToy", "ActivityCenter", "RoboticPal",
 ];
 
-// --- Interface for location state ---
 interface InventoryLocationState {
   targetMainCategory?: MainCategory;
   targetSubCategory?: string;
 }
 
-// --- Component Props ---
 interface InventoryPageProps {
   pet: PetType | null;
   onFeedPet: (foodItem: FoodInventoryItem) => void;
@@ -49,7 +47,6 @@ interface InventoryPageProps {
   onPlayWithToy: (toyItem: ToyInventoryItem) => void;
 }
 
-// --- Helper to capitalize first letter ---
 const capitalizeFirstLetter = (string: string) => {
   if (!string) return string;
   const specialCases: Record<string, string> = {
@@ -63,7 +60,6 @@ const capitalizeFirstLetter = (string: string) => {
   return string.charAt(0).toUpperCase() + string.slice(1);
 };
 
-// --- ZoomedImage Component ---
 function ZoomedImage({ src, alt }: { src: string; alt: string }) {
   const containerSize = 64;
   const [imageStyle, setImageStyle] = useState<React.CSSProperties>({
@@ -125,7 +121,6 @@ function ZoomedImage({ src, alt }: { src: string; alt: string }) {
   );
 }
 
-// --- Main InventoryPage Component ---
 export default function InventoryPage({ pet, onFeedPet, onCleanPet, onPlayWithToy }: InventoryPageProps) {
   const { items, setRoomLayer, addDecorItem, consumeItem } = useInventory();
   const location = useLocation();
@@ -143,7 +138,7 @@ export default function InventoryPage({ pet, onFeedPet, onCleanPet, onPlayWithTo
       else if (main === "Toys") sub = (toySubCategories.includes(state.targetSubCategory as ToyCategory) ? state.targetSubCategory : toySubCategories[0]) as string;
     }
     return { main, sub };
-  }, [location.state]); // Dependency: location.state
+  }, [location.state]);
 
   const [selectedMainCategory, setSelectedMainCategory] = useState<MainCategory>(initialTabs.main);
   const [selectedSubCategory, setSelectedSubCategory] = useState<string>(initialTabs.sub);
@@ -187,7 +182,7 @@ export default function InventoryPage({ pet, onFeedPet, onCleanPet, onPlayWithTo
     if (["floor", "wall", "ceiling", "overlay"].includes(item.type)) {
       setRoomLayer(item.type as "floor" | "wall" | "ceiling" | "overlay", srcToApply);
     } else if (item.type === "backDecor" || item.type === "frontDecor") {
-      const decorItem: RoomDecorItem = { src: srcToApply, x: 100, y: 100 }; // Example coords
+      const decorItem: RoomDecorItem = { src: srcToApply, x: 100, y: 100 };
       addDecorItem(item.type, decorItem);
     }
     setActiveColorOptions(null);
@@ -197,7 +192,6 @@ export default function InventoryPage({ pet, onFeedPet, onCleanPet, onPlayWithTo
     if (item.itemCategory === "decoration") {
       const decorationItem = item as DecorationInventoryItem;
       if (decorationItem.colorOptions && decorationItem.colorOptions.length > 0) {
-        // Use non-null assertion for decorationItem.colorOptions here
         setActiveColorOptions(prev => (prev?.id === item.id ? null : { id: item.id, options: decorationItem.colorOptions! }));
       } else {
         applyDecorationItem(decorationItem);
@@ -212,7 +206,7 @@ export default function InventoryPage({ pet, onFeedPet, onCleanPet, onPlayWithTo
       if (pet) { onPlayWithToy(item as ToyInventoryItem); consumeItem(item.id); }
       else console.warn("Pet data not loaded! Cannot play.");
     }
-  }, [pet, onFeedPet, onCleanPet, onPlayWithToy, consumeItem, applyDecorationItem, activeColorOptions]); // Added activeColorOptions to dependency array
+  }, [pet, onFeedPet, onCleanPet, onPlayWithToy, consumeItem, applyDecorationItem, activeColorOptions]);
 
   const filteredItems = useMemo(() => items.filter(item => {
     if (selectedMainCategory === "Decorations") return item.itemCategory === "decoration" && (item as DecorationInventoryItem).type === selectedSubCategory;
@@ -234,47 +228,51 @@ export default function InventoryPage({ pet, onFeedPet, onCleanPet, onPlayWithTo
     <div className="inventory-page-wrapper">
       <h1 className="inventory-page-title">Inventory</h1>
 
-      <div className="inventory-items-grid-container">
-        {filteredItems.length > 0 ? (
-          filteredItems.map(item => (
-            <div
-              key={item.id}
-              className="inventory-item-card"
-              onClick={() => handleItemClick(item)}
-              title={item.description || item.name}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleItemClick(item);}}}
-            >
-              <ZoomedImage src={item.src} alt={item.name} />
-              <div className="inventory-item-details">
-                <span className="inventory-item-name">{item.name}</span>
-                {item.itemCategory === "food" && <span className="inventory-item-effect">Hunger +{(item as FoodInventoryItem).hungerRestored}</span>}
-                {item.itemCategory === "cleaning" && <span className="inventory-item-effect">Clean +{(item as CleaningInventoryItem).cleanlinessBoost}</span>}
-                {item.itemCategory === "toy" && <span className="inventory-item-effect">Happy +{(item as ToyInventoryItem).happinessBoost}</span>}
-              </div>
-              {activeColorOptions?.id === item.id && item.itemCategory === "decoration" && (item as DecorationInventoryItem).colorOptions && (
-                <div className="inventory-item-color-options">
-                  {(item as DecorationInventoryItem).colorOptions!.map(option => ( // Added non-null assertion here as well for safety
-                    <button
-                      key={option.label}
-                      className="inventory-color-swatch"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        applyDecorationItem(item as DecorationInventoryItem, option.src);
-                      }}
-                      style={{ backgroundImage: `url(${option.src})` }}
-                      title={option.label}
-                      aria-label={`Select color: ${option.label}`}
-                    />
-                  ))}
+      {/* This is the new outer flex container for the items area */}
+      <div className="inventory-items-scroll-container">
+        {/* This is the actual grid, which will be pushed to the bottom */}
+        <div className="inventory-items-grid">
+          {filteredItems.length > 0 ? (
+            filteredItems.map(item => (
+              <div
+                key={item.id}
+                className="inventory-item-card"
+                onClick={() => handleItemClick(item)}
+                title={item.description || item.name}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleItemClick(item);}}}
+              >
+                <ZoomedImage src={item.src} alt={item.name} />
+                <div className="inventory-item-details">
+                  <span className="inventory-item-name">{item.name}</span>
+                  {item.itemCategory === "food" && <span className="inventory-item-effect">Hunger +{(item as FoodInventoryItem).hungerRestored}</span>}
+                  {item.itemCategory === "cleaning" && <span className="inventory-item-effect">Clean +{(item as CleaningInventoryItem).cleanlinessBoost}</span>}
+                  {item.itemCategory === "toy" && <span className="inventory-item-effect">Happy +{(item as ToyInventoryItem).happinessBoost}</span>}
                 </div>
-              )}
-            </div>
-          ))
-        ) : (
-          <p className="inventory-no-items-message">No items in this category.</p>
-        )}
+                {activeColorOptions?.id === item.id && item.itemCategory === "decoration" && (item as DecorationInventoryItem).colorOptions && (
+                  <div className="inventory-item-color-options">
+                    {(item as DecorationInventoryItem).colorOptions!.map(option => (
+                      <button
+                        key={option.label}
+                        className="inventory-color-swatch"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          applyDecorationItem(item as DecorationInventoryItem, option.src);
+                        }}
+                        style={{ backgroundImage: `url(${option.src})` }}
+                        title={option.label}
+                        aria-label={`Select color: ${option.label}`}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))
+          ) : (
+            <p className="inventory-no-items-message">No items in this category.</p>
+          )}
+        </div>
       </div>
 
       <div className="inventory-tabs-container">
