@@ -1,170 +1,193 @@
 // src/components/MapCanvas.tsx
-import React, { useRef, useEffect } from "react";
-import "./MapCanvas.css";
+import React, { useRef, useEffect, useState, useCallback } from 'react'; // Added useCallback
+import { useNavigate } from 'react-router-dom';
+import type { AppHotspot } from '../types';
+import './MapCanvas.css'; // Standard CSS import
 
-export type Hotspot = {
-  id: string;
-  x: number;    // original map pixel X (on 1536×1024)
-  y: number;    // original map pixel Y
-  icon: string; // URL/path to marker icon
-  route: string;
-};
+interface MapCanvasProps {
+  mapImageUrl: string;
+  hotspots: AppHotspot[];
+  mapPixelWidth: number;    // Intrinsic pixel width of the map image
+  mapPixelHeight: number;   // Intrinsic pixel height of the map image
+}
 
-export default function MapCanvas({
-  width,
-  height,
-  hotspots = [],
-  onNavigate,
-}: {
-  width: number;       // e.g. 1536
-  height: number;      // e.g. 1024
-  hotspots?: Hotspot[];
-  onNavigate: (route: string) => void;
-}) {
+const MapCanvas: React.FC<MapCanvasProps> = ({ 
+  mapImageUrl, 
+  hotspots,
+  mapPixelWidth,
+  mapPixelHeight 
+}) => {
+  const navigate = useNavigate();
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const offset = useRef({ x: 0, y: 0 });
+  const containerRef = useRef<HTMLDivElement>(null); // Ref for the container div
+  const [mapImage, setMapImage] = useState<HTMLImageElement | null>(null);
+  const [loadedHotspotImages, setLoadedHotspotImages] = useState<Record<string, HTMLImageElement>>({});
 
-  // preload map image
-  const mapImg = useRef(new Image());
+  // Load main map image
   useEffect(() => {
-    mapImg.current.src = "/maps/world.png";
-  }, []);
+    const img = new Image();
+    img.src = mapImageUrl;
+    img.onload = () => setMapImage(img);
+    img.onerror = () => console.error(`Failed to load map image: ${mapImageUrl}`);
+  }, [mapImageUrl]);
 
-  // preload hotspot icons
-  const icons = useRef<Record<string, HTMLImageElement>>({});
+  // Preload hotspot icon images
   useEffect(() => {
-    hotspots.forEach((hs) => {
-      const img = new Image();
-      img.src = hs.icon;
-      icons.current[hs.id] = img;
+    const images: Record<string, HTMLImageElement> = {};
+    const iconHotspots = hotspots.filter(h => h.iconSrc);
+    if (iconHotspots.length === 0) {
+      setLoadedHotspotImages({});
+      return;
+    }
+
+    let imagesLoadedCount = 0;
+    iconHotspots.forEach(hotspot => {
+      if (hotspot.iconSrc && !images[hotspot.iconSrc]) { // Check if already loading/loaded
+        const img = new Image();
+        img.src = hotspot.iconSrc;
+        images[hotspot.iconSrc] = img; // Add to images map immediately to prevent re-loading
+        img.onload = () => {
+          imagesLoadedCount++;
+          if (imagesLoadedCount === iconHotspots.length) {
+            setLoadedHotspotImages(images);
+          }
+        };
+        img.onerror = () => {
+          console.error(`Failed to load hotspot icon: ${hotspot.iconSrc}`);
+          imagesLoadedCount++; // Still count as "attempted" to not block
+          if (imagesLoadedCount === iconHotspots.length) {
+            setLoadedHotspotImages(images); // Set even if some failed, they won't draw
+          }
+        };
+      }
     });
   }, [hotspots]);
 
-  useEffect(() => {
-    const canvas = canvasRef.current!;
-    const ctx = canvas.getContext("2d")!;
-    let dragging = false;
-    let lastX = 0, lastY = 0;
-
-    // scale hotspots to 10%
-    const iconScale = 0.1;
-
-    const draw = () => {
-      const { x: ox, y: oy } = offset.current;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // tile count (+2 to cover edges)
-      const cols = Math.ceil(canvas.width / width) + 2;
-      const rows = Math.ceil(canvas.height / height) + 2;
-
-      // compute rounded modulo offsets
-      const modX = Math.round(ox % width);
-      const modY = Math.round(oy % height);
-
-      // draw tiled map at integer positions
-      for (let row = -1; row < rows - 1; row++) {
-        for (let col = -1; col < cols - 1; col++) {
-          const dx = col * width + modX;
-          const dy = row * height + modY;
-          ctx.drawImage(
-            mapImg.current,
-            Math.round(dx),
-            Math.round(dy),
-            width,
-            height
-          );
-        }
-      }
-
-      // draw hotspots wrapped and scaled
-      hotspots.forEach((hs) => {
-        const icon = icons.current[hs.id];
-        const px = hs.x + ox;
-        const py = hs.y + oy;
-        // wrap into primary tile
-        const sx = ((px % width) + width) % width;
-        const sy = ((py % height) + height) % height;
-        const iw = icon.width * iconScale;
-        const ih = icon.height * iconScale;
-        ctx.drawImage(icon, sx - iw / 2, sy - ih, iw, ih);
-      });
-    };
-
-    const onDown = (e: PointerEvent) => {
-      dragging = true;
-      lastX = e.clientX;
-      lastY = e.clientY;
-      canvas.setPointerCapture(e.pointerId);
-    };
-    const onMove = (e: PointerEvent) => {
-      if (!dragging) return;
-      const dx = e.clientX - lastX,
-            dy = e.clientY - lastY;
-      lastX = e.clientX;
-      lastY = e.clientY;
-      offset.current.x += dx;
-      offset.current.y += dy;
-      draw();
-    };
-    const onUp = (e: PointerEvent) => {
-      dragging = false;
-      canvas.releasePointerCapture(e.pointerId);
-    };
-
-    canvas.addEventListener("pointerdown", onDown);
-    canvas.addEventListener("pointermove", onMove);
-    canvas.addEventListener("pointerup", onUp);
-    canvas.addEventListener("pointerleave", onUp);
-
-    // initial draw when map loads
-    if (!mapImg.current.complete) {
-      mapImg.current.onload = draw;
-    } else {
-      draw();
+  // Drawing logic - memoized with useCallback
+  const drawCanvas = useCallback(() => {
+    if (!canvasRef.current || !mapImage || !containerRef.current || mapPixelWidth === 0 || mapPixelHeight === 0) {
+      return;
     }
 
-    return () => {
-      canvas.removeEventListener("pointerdown", onDown);
-      canvas.removeEventListener("pointermove", onMove);
-      canvas.removeEventListener("pointerup", onUp);
-      canvas.removeEventListener("pointerleave", onUp);
-    };
-  }, [hotspots, width, height]);
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
 
-  const handleClick = (e: React.MouseEvent) => {
-    const canvas = canvasRef.current!;
-    const rect = canvas.getBoundingClientRect();
-    // raw coords in infinite plane
-    const rawX = e.clientX - rect.left - offset.current.x;
-    const rawY = e.clientY - rect.top  - offset.current.y;
-    // wrap into primary tile
-    const wrapX = ((rawX % width) + width) % width;
-    const wrapY = ((rawY % height) + height) % height;
-    // hit-test at scaled size
-    const iconScale = 0.1;
-    hotspots.forEach((hs) => {
-      const icon = icons.current[hs.id];
-      const iw = icon.width * iconScale;
-      const ih = icon.height * iconScale;
-      if (
-        wrapX >= hs.x - iw / 1 &&
-        wrapX <= hs.x + iw / 1 &&
-        wrapY >= hs.y - ih &&
-        wrapY <= hs.y
-      ) {
-        onNavigate(hs.route);
+    const container = containerRef.current;
+    const containerWidth = container.clientWidth;
+    const containerHeight = container.clientHeight;
+    
+    const mapAspectRatio = mapPixelWidth / mapPixelHeight;
+    
+    let canvasDrawWidth = containerWidth;
+    let canvasDrawHeight = containerWidth / mapAspectRatio;
+
+    if (canvasDrawHeight > containerHeight) {
+        canvasDrawHeight = containerHeight;
+        canvasDrawWidth = containerHeight * mapAspectRatio;
+    }
+    
+    canvas.width = canvasDrawWidth;
+    canvas.height = canvasDrawHeight;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(mapImage, 0, 0, canvas.width, canvas.height);
+
+    const scaleX = canvas.width / mapPixelWidth;
+    const scaleY = canvas.height / mapPixelHeight;
+    const effectiveScale = Math.min(scaleX, scaleY); // Use a single scale for icons to keep aspect
+
+    hotspots.forEach(hotspot => {
+      const drawX = hotspot.x * scaleX;
+      const drawY = hotspot.y * scaleY;
+      const icon = hotspot.iconSrc ? loadedHotspotImages[hotspot.iconSrc] : null;
+      const baseIconSize = 32; // Base size of icon in pixels (can be adjusted)
+      const iconDrawSize = baseIconSize * effectiveScale;
+
+      if (icon && icon.complete && icon.naturalHeight !== 0) {
+        ctx.drawImage(icon, drawX - iconDrawSize / 2, drawY - iconDrawSize / 2, iconDrawSize, iconDrawSize);
+      } else {
+        const fallbackRadius = 10 * effectiveScale;
+        ctx.beginPath();
+        ctx.arc(drawX, drawY, fallbackRadius, 0, 2 * Math.PI, false);
+        ctx.fillStyle = 'rgba(255, 0, 0, 0.6)';
+        ctx.fill();
+        ctx.lineWidth = Math.max(1, 2 * effectiveScale);
+        ctx.strokeStyle = '#FF0000';
+        ctx.stroke();
       }
+
+      // Optional: Draw hotspot name (adjust font size with scale)
+      const fontSize = Math.max(10, 12 * effectiveScale); // Min font size 10px
+      ctx.fillStyle = 'black';
+      ctx.font = `bold ${fontSize}px Arial`;
+      ctx.textAlign = 'center';
+      ctx.strokeStyle = 'white'; // For text outline
+      ctx.lineWidth = Math.max(1, 3 * effectiveScale);
+      ctx.strokeText(hotspot.name, drawX, drawY + iconDrawSize / 2 + fontSize * 1.2); // Position below icon
+      ctx.fillText(hotspot.name, drawX, drawY + iconDrawSize / 2 + fontSize * 1.2);
     });
+  }, [mapImage, hotspots, loadedHotspotImages, mapPixelWidth, mapPixelHeight]);
+
+  // Effect for drawing and resizing
+  useEffect(() => {
+    drawCanvas(); // Initial draw
+    
+    // Resize observer for responsive canvas redrawing
+    const container = containerRef.current;
+    if (!container) return;
+
+    const resizeObserver = new ResizeObserver(() => {
+      drawCanvas();
+    });
+    resizeObserver.observe(container);
+
+    return () => resizeObserver.unobserve(container);
+  }, [drawCanvas]); // drawCanvas is memoized
+
+  const handleCanvasClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!canvasRef.current || !mapImage || mapPixelWidth === 0 || mapPixelHeight === 0) return;
+
+    const canvas = canvasRef.current;
+    const rect = canvas.getBoundingClientRect();
+    
+    const scaleXDisplay = canvas.width / rect.width;
+    const scaleYDisplay = canvas.height / rect.height;
+
+    const clickXCanvas = (event.clientX - rect.left) * scaleXDisplay;
+    const clickYCanvas = (event.clientY - rect.top) * scaleYDisplay;
+
+    const mapToCanvasScaleX = canvas.width / mapPixelWidth;
+    const mapToCanvasScaleY = canvas.height / mapPixelHeight;
+    const effectiveIconScale = Math.min(mapToCanvasScaleX, mapToCanvasScaleY);
+
+
+    for (const hotspot of hotspots) {
+      const hotspotCanvasX = hotspot.x * mapToCanvasScaleX;
+      const hotspotCanvasY = hotspot.y * mapToCanvasScaleY;
+      const baseIconHitRadius = 16; // Half of baseIconSize (32px)
+      const clickableRadius = baseIconHitRadius * effectiveIconScale;
+
+      const distance = Math.sqrt(
+        Math.pow(clickXCanvas - hotspotCanvasX, 2) + 
+        Math.pow(clickYCanvas - hotspotCanvasY, 2)
+      );
+
+      if (distance < clickableRadius) {
+        if (hotspot.route) {
+          navigate(hotspot.route);
+        }
+        break; 
+      }
+    }
   };
 
   return (
-    <canvas
-      ref={canvasRef}
-      width={window.innerWidth}
-      height={window.innerHeight}
-      style={{ display: "block" }}
-      onClick={handleClick}
-      draggable={false}
-    />
+    // Assign ref to the container
+    <div ref={containerRef} className="map-canvas-container"> 
+      <canvas ref={canvasRef} onClick={handleCanvasClick} />
+    </div>
   );
-}
+};
+
+export default MapCanvas;

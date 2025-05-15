@@ -1,9 +1,24 @@
-.explorePage {
-  padding-top: 64px; /* Account for fixed header */
-  padding-bottom: 72px; /* Account for fixed nav bar */
+.explore-page {
+  width: 100%;
+  /* Make it fill the space between header and navbar */
+  height: 100%; /* This relies on parent (.inventory-page-layout structure from App.tsx) having display:flex and this being flex-grow:1 */
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
-  background-color: #f0f8ff;
-  min-height: calc(100vh - 136px); /* Ensure full view height minus header and nav */
+  justify-content: center;
+  background-color: #333; /* Dark background for the map page */
+  overflow: hidden; /* Important if MapCanvas container tries to be larger */
+}
+
+.explore-page h1 {
+  color: white;
+  margin-bottom: 10px;
+}
+
+/* The MapCanvas container itself will try to fill this,
+   and MapCanvas will draw its content scaled within its own bounds.
+*/
+.explore-loading, .explore-error {
+  color: white;
+  font-size: 1.2em;
 }

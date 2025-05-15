@@ -1,18 +1,15 @@
-// src/types.ts
-
-// Defines the possible categories for a pet's needs.
+// Define all the possible pet needs
 export type Need = "hunger" | "happiness" | "cleanliness" | "affection" | "spirit";
 
-// Represents the information for displaying a single need in the UI.
+// Individual need info with description for UI purposes
 export type NeedInfo = {
-  need: Need;          // The category of the need.
-  emoji: string;       // Emoji representing the need.
-  value: number;       // Current numerical value of the need (e.g., 0-120).
-  desc: string;        // Textual description of the current need state (e.g., "Famished").
+  need: Need;
+  emoji: string;
+  value: number;
+  desc: string;
 };
 
-// Defines the structure for a pet object.
-// This is used for both local state and Firebase storage.
+// The Pet object structure stored in Firebase and state
 export interface Pet {
   hunger: number;
   happiness: number;
@@ -20,12 +17,12 @@ export interface Pet {
   affection: number;
   spirit: number;
   image: string;
-  lastNeedsUpdateTime?: number;    // Optional: Timestamp of the last time needs were calculated and updated.
-  affectionGainedToday?: number; // Optional: Tracks how much affection has been gained on the current day.
-  lastAffectionGainDate?: string;  // Optional: The date (e.g., "YYYY-MM-DD") of the last affection gain.
+  lastNeedsUpdateTime?: number;
+  affectionGainedToday?: number;
+  lastAffectionGainDate?: string;
 }
 
-// Defines the structure for a decor item that can be placed in a room.
+// Type for decor items placed in a room
 export type RoomDecorItem = {
   src: string;
   x: number;
@@ -34,20 +31,20 @@ export type RoomDecorItem = {
   height?: number;
 };
 
-// Defines the types of decoration items available in the inventory.
+// Decoration item types (for inventory items)
 export type DecorationItemType = "floor" | "wall" | "ceiling" | "backDecor" | "frontDecor" | "overlay";
 
-// Defines the categories for food items.
+// Food item categories
 export type FoodCategory = "Treat" | "Snack" | "LightMeal" | "HeartyMeal" | "Feast";
 
-// Defines the categories for cleaning items.
+// Cleaning item categories
 export type CleaningCategory = "QuickFix" | "BasicKit" | "StandardSet" | "PremiumCare" | "LuxurySpa";
 
-// Defines the categories for toy items.
+// Toy item categories
 export type ToyCategory = "ChewToy" | "Plushie" | "PuzzleToy" | "ActivityCenter" | "RoboticPal";
 
 
-// Base interface for all inventory items.
+// Base Inventory Item
 interface BaseInventoryItem {
   id: string;
   name: string;
@@ -55,37 +52,108 @@ interface BaseInventoryItem {
   description?: string;
 }
 
-// Interface for decoration items as they appear in the inventory.
+// Decoration Inventory Item
 export interface DecorationInventoryItem extends BaseInventoryItem {
   itemCategory: "decoration";
   type: DecorationItemType;
   colorOptions?: { label: string; src: string }[];
 }
 
-// Interface for food items as they appear in the inventory.
+// Food Inventory Item
 export interface FoodInventoryItem extends BaseInventoryItem {
   itemCategory: "food";
   type: FoodCategory;
   hungerRestored: number;
 }
 
-// Interface for cleaning items as they appear in the inventory.
+// Cleaning Inventory Item
 export interface CleaningInventoryItem extends BaseInventoryItem {
   itemCategory: "cleaning";
   type: CleaningCategory;
   cleanlinessBoost: number; 
 }
 
-// Interface for toy items as they appear in the inventory.
+// Toy Inventory Item
 export interface ToyInventoryItem extends BaseInventoryItem {
   itemCategory: "toy";
   type: ToyCategory;
   happinessBoost: number; 
 }
 
-// A union type representing any item that can be in the inventory.
+// Union type for all inventory items
 export type InventoryItem = 
   | DecorationInventoryItem 
   | FoodInventoryItem
   | CleaningInventoryItem
   | ToyInventoryItem;
+
+
+// --- Types for Tiled Map Data Integration ---
+
+// Represents a custom property from a Tiled object
+export interface TiledProperty {
+  name: string;
+  type: string; // "string", "int", "float", "bool", "color", "file", "object"
+  value: any;
+}
+
+// Represents an object (like a hotspot) from an object layer in Tiled
+export interface TiledObject {
+  id: number;         // Unique ID assigned by Tiled
+  name: string;       // Name given to the object in Tiled editor
+  type: string;       // Type string, if assigned in Tiled
+  x: number;          // X-coordinate (top-left)
+  y: number;          // Y-coordinate (top-left) - Note: Tiled Y is often top of object, not baseline
+  width: number;      // Width of the object (often 0 for point objects)
+  height: number;     // Height of the object (often 0 for point objects)
+  rotation: number;
+  gid?: number;       // Tile GID if it's a tile object
+  visible: boolean;
+  properties?: TiledProperty[]; // Array of custom properties
+  point?: boolean;    // True if it's a point object
+  ellipse?: boolean;  // True if it's an ellipse object
+  // Add other Tiled object properties if needed (e.g., polygon, polyline)
+}
+
+// Represents a layer from a Tiled map
+export interface TiledLayer {
+  id?: number;
+  name: string;        // Name of the layer (e.g., "Hotspots", "Background")
+  type: "objectgroup" | "imagelayer" | "tilelayer" | string; // Layer type
+  visible: boolean;
+  opacity: number;
+  x: number;           // Layer offset X
+  y: number;           // Layer offset Y
+  objects?: TiledObject[]; // For "objectgroup" layers
+  image?: string;      // For "imagelayer" layers (path to image)
+  // Add other Tiled layer properties if needed (e.g., data for tilelayer)
+}
+
+// Represents the overall structure of a Tiled map JSON file
+export interface TiledMapData {
+  width: number;        // Map width in tiles
+  height: number;       // Map height in tiles
+  tilewidth: number;    // Width of a single tile in pixels
+  tileheight: number;   // Height of a single tile in pixels
+  layers: TiledLayer[]; // Array of layers in the map
+  // Add other Tiled map properties (e.g., orientation, version, properties)
+  properties?: TiledProperty[];
+  orientation?: string;
+  renderorder?: string;
+  version?: string | number;
+  tiledversion?: string;
+  infinite?: boolean;
+  nextlayerid?: number;
+  nextobjectid?: number;
+  type?: string; // "map"
+}
+
+// Simplified hotspot structure for use in the application
+export interface AppHotspot {
+  id: string;         // Unique string ID (e.g., from "id_string" custom property)
+  name: string;       // Display name (from "name" custom property or object name)
+  x: number;          // X-coordinate for placement on your canvas
+  y: number;          // Y-coordinate
+  route: string;      // Navigation route (from "route" custom property)
+  iconSrc?: string;   // Optional path to an icon image (from "iconSrc" custom property)
+}

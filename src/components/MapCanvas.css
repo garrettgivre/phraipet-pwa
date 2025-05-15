@@ -1,7 +1,66 @@
-canvas {
-  display: block;       /* fill its container */
-  width: 100vw;
-  height: 100vh;
-  touch-action: none;   /* let pointer events drive panning */
-  cursor: grab;
+/* src/components/MapCanvas.css */
+
+/* Container for the canvas.
+  This div wraps the <canvas> element and is responsible for occupying space
+  in its parent layout (e.g., in Explore.tsx or Sunnybrook.tsx).
+  It uses flexbox to center the canvas within itself.
+*/
+.map-canvas-container {
+  width: 100%; /* Make the container take the full width of its parent */
+  height: 100%; /* Make the container take the full height of its parent */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden; /* Prevents the canvas from causing scrollbars on this container if JS sizes it unexpectedly large */
+  background-color: #2c2c2c; /* A dark fallback background for the map area, visible if canvas is smaller */
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
 }
+
+/* Styling for the <canvas> element itself.
+  The actual 'width' and 'height' attributes of the canvas (pixel dimensions for drawing) 
+  are set by JavaScript in MapCanvas.tsx. 
+  These CSS rules primarily affect how the canvas element is displayed and behaves
+  within its .map-canvas-container parent.
+*/
+.map-canvas-container canvas {
+  /* max-width and max-height ensure the canvas element doesn't visually overflow 
+    its container, even if its drawing dimensions (set by JS) are larger.
+    The JavaScript logic in MapCanvas.tsx should already be sizing the canvas's
+    drawing dimensions to fit while maintaining aspect ratio, so these are safeguards.
+  */
+  max-width: 100%;
+  max-height: 100%;
+  
+  /* 'object-fit' is not applicable to <canvas>. 
+    The scaling and fitting of the drawn content is handled by ctx.drawImage() in JavaScript.
+  */
+  
+  cursor: pointer; /* Indicates that the map is interactive */
+  display: block;  /* Removes any extra space that might appear below the canvas if it were treated as inline */
+
+  /* Optional: Image rendering hints for pixel art. 
+    If your maps are not pixel art, you can remove these.
+  */
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;          /* Firefox */
+  image-rendering: -webkit-optimize-contrast; /* Webkit (Chrome, Safari) */
+  /* -ms-interpolation-mode: nearest-neighbor; */ /* IE (mostly obsolete) */
+}
+
+/* If you were to add loading or error message elements directly within the 
+  .map-canvas-container in MapCanvas.tsx (currently they are in the parent pages),
+  you could style them here. For example:
+
+  .map-canvas-container .map-loading-message,
+  .map-canvas-container .map-error-message {
+    position: absolute; // To overlay on the canvas or container
+    color: white;
+    font-size: 1.2em;
+    text-align: center;
+    background-color: rgba(0, 0, 0, 0.5);
+    padding: 10px;
+    border-radius: 5px;
+  }
+*/
