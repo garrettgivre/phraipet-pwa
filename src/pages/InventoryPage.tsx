@@ -61,7 +61,7 @@ const capitalizeFirstLetter = (string: string) => {
 };
 
 function ZoomedImage({ src, alt }: { src: string; alt: string }) {
-  const containerSize = 64;
+  const containerSize = 64; // This should match the CSS for .sq-inventory-item-image-wrapper
   const [imageStyle, setImageStyle] = useState<React.CSSProperties>({
     visibility: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center',
     width: `${containerSize}px`, height: `${containerSize}px`, fontSize: '12px', color: '#aaa',
@@ -182,7 +182,7 @@ export default function InventoryPage({ pet, onFeedPet, onCleanPet, onPlayWithTo
     if (["floor", "wall", "ceiling", "overlay"].includes(item.type)) {
       setRoomLayer(item.type as "floor" | "wall" | "ceiling" | "overlay", srcToApply);
     } else if (item.type === "backDecor" || item.type === "frontDecor") {
-      const decorItem: RoomDecorItem = { src: srcToApply, x: 100, y: 100 };
+      const decorItem: RoomDecorItem = { src: srcToApply, x: 100, y: 100 }; // Example coords
       addDecorItem(item.type, decorItem);
     }
     setActiveColorOptions(null);

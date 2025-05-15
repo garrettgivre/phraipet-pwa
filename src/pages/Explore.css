@@ -1,27 +1,13 @@
 /* src/pages/Explore.css */
 
-/* The .explore-page should fill the content area defined by App.tsx's <main> tag.
-  App.tsx <main> style should be:
-    paddingTop: for app Header (e.g., 80px)
-    paddingBottom: for app NavBar (e.g., 56px)
-    height: 100vh
-    boxSizing: border-box
-    display: flex
-    flexDirection: column
-    overflow: hidden (CRITICAL - prevents <main> itself from scrolling)
-*/
 .explore-page {
   width: 100%;
   height: 100%; /* This makes it fill the <main> content box */
-  overflow: auto; /* Allows both horizontal and vertical scrolling if its child is larger */
+  overflow: auto; /* Allows both horizontal and vertical scrolling for its child */
   background-color: #121212; /* Background of the scrollable viewport area */
   box-sizing: border-box;
-  /* position: relative; /* Not strictly needed if status messages are handled by conditional rendering */
-  /* No transforms, filters, or opacity < 1 here that could break fixed positioning of NavBar */
-  /* Ensure this element itself does not have a z-index that could conflict, 
-     unless specifically intended to be above something else (which it shouldn't be for NavBar).
-     Its children (.map-scrollable-content, MapCanvas) are within its flow or absolutely positioned within it.
-  */
+  position: relative; /* Ensure it establishes a stacking context */
+  z-index: 1;      /* Explicitly set z-index lower than NavBar (100) and Header (100) */
 }
 
 .map-scrollable-content {
@@ -33,16 +19,13 @@
   background-color: #282828; /* Background of the actual map tiled area */
   /* The display:block or other properties are less critical here as long as width/height are set
      and it's a direct child of the overflow container. */
-  /* Adding display:table can sometimes help force an element to respect its content width/height
-     if it's being unexpectedly constrained, but should not be necessary here.
-  */
 }
 
 /* Status messages (loading/error) - these are now returned directly from Explore.tsx,
    so they become the sole content of .explore-page during those states.
    Their styling ensures they fill the viewport defined by .explore-page.
 */
-.explore-status-message { 
+.explore-status-message {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -55,7 +38,11 @@
   box-sizing: border-box;
   background-color: rgba(10, 10, 10, 0.95); /* Darker, more opaque background */
   /* No position:absolute needed as it's the only child when rendered */
-  /* No z-index needed here as it's not overlaying other active content within .explore-page */
+  /* z-index is not strictly necessary here if it's the only content,
+     but if it were an overlay on active content, it would need a higher z-index
+     than that content, but still lower than global UI like Header/NavBar if applicable.
+     For now, keeping it simple as it replaces the map content.
+  */
 }
 
 .explore-error {

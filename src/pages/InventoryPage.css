@@ -83,86 +83,44 @@
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
 }
 
-/* MODIFIED: Ensure this matches containerSize in ZoomedImage component */
 .sq-inventory-item-image-wrapper {
-  width: 64px; /* Changed from 56px to 64px */
-  height: 64px; /* Changed from 56px to 64px */
-  overflow: hidden; /* Correct for cropping */
-  position: relative; /* Correct for absolute positioning of child img */
+  width: 64px; /* Ensure this matches containerSize in ZoomedImage */
+  height: 64px; /* Ensure this matches containerSize in ZoomedImage */
+  overflow: hidden;
+  position: relative;
   margin: 0 auto 6px auto;
   background-color: #f7f9fa;
-  border-radius: 4px; /* Can be 0 if you want sharper square for image frame */
+  border-radius: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
 
-.sq-inventory-item-image-content {
-  display: block;
-  /* The actual transform/positioning is applied via inline styles by ZoomedImage */
-}
-
-.sq-inventory-item-placeholder-text {
-  font-size: 0.65rem;
-  color: #bdc3c7;
-}
-.sq-inventory-item-placeholder-text.error {
-  color: #e74c3c;
-  font-size: 1.1rem;
-}
+.sq-inventory-item-image-content { display: block; }
+.sq-inventory-item-placeholder-text { font-size: 0.65rem; color: #bdc3c7; }
+.sq-inventory-item-placeholder-text.error { color: #e74c3c; font-size: 1.1rem; }
 
 .sq-inventory-item-info { padding: 3px 0; }
-
 .sq-inventory-item-name-text {
-  display: block;
-  font-size: 0.65rem;
-  color: #34495e;
-  font-weight: 500;
-  line-height: 1.25;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  margin-bottom: 1px;
+  display: block; font-size: 0.65rem; color: #34495e; font-weight: 500;
+  line-height: 1.25; white-space: nowrap; overflow: hidden;
+  text-overflow: ellipsis; margin-bottom: 1px;
 }
-
-.sq-inventory-item-effect-text {
-  display: block;
-  font-size: 0.55rem;
-  color: #2980b9;
-}
+.sq-inventory-item-effect-text { display: block; font-size: 0.55rem; color: #2980b9;}
 
 .sq-inventory-item-color-picker {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 4px;
-  position: absolute;
-  bottom: 4px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(245, 245, 245, 0.96);
-  padding: 3px;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  z-index: 5;
+  display: flex; justify-content: center; align-items: center; gap: 4px;
+  position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%);
+  background: rgba(245, 245, 245, 0.96); padding: 3px; border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); z-index: 5;
 }
-
 .sq-inventory-color-option-button {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background-size: cover;
-  border: 1px solid #bdc3c7;
-  cursor: pointer;
-  transition: transform 0.1s ease;
-  padding: 0;
-  appearance: none;
-  -webkit-appearance: none;
+  width: 16px; height: 16px; border-radius: 50%; background-size: cover;
+  border: 1px solid #bdc3c7; cursor: pointer; transition: transform 0.1s ease;
+  padding: 0; appearance: none; -webkit-appearance: none;
 }
-.sq-inventory-color-option-button:hover {
-  transform: scale(1.1);
-}
+.sq-inventory-color-option-button:hover { transform: scale(1.1); }
 
 /* Container for both tab bars */
 .sq-inventory-navigation-bars {
@@ -177,59 +135,60 @@
 /* Styling for tab bars that will contain equally growing tabs */
 .sq-inventory-sub-category-bar,
 .sq-inventory-main-category-bar {
-  display: flex;
-  width: 100%;
+  display: flex; /* Key for making buttons share width */
+  width: 100%;   /* Ensure bar takes full width */
   box-sizing: border-box;
 }
 
 .sq-inventory-sub-category-bar {
   background-color: #eceff1;
-  padding: 4px 0;
+  padding: 4px 0; /* Minimal vertical padding, no horizontal for buttons to touch edges */
 }
 
 .sq-inventory-main-category-bar {
   background-color: #dde1e6;
   border-top: 1px solid #cfd8dc;
-  padding: 4px 0;
+  padding: 4px 0; /* Minimal vertical padding, no horizontal */
 }
 
 /* Common styling for all square tab buttons */
 .sq-inventory-tab-button,
 .sq-inventory-main-tab-button {
-  flex-grow: 1;
-  flex-basis: 0;
-  padding: 8px 5px;
+  flex-grow: 1; /* Each button takes an equal share of the width */
+  flex-basis: 0; /* Start with no intrinsic width before growing */
+  padding: 8px 5px; /* Adjust padding as needed */
   margin: 0;
   border: none;
-  border-radius: 4px; /* Or 0px for sharp squares */
-  background-color: transparent;
+  border-radius: 4px; /* Slightly rounded corners for "soft square" look, set to 0 for sharp */
+  background-color: transparent; /* Will inherit from parent tab bar */
   color: #455a64;
   text-align: center;
   cursor: pointer;
-  font-size: 0.75rem;
+  font-size: 0.75rem; /* ~12px */
   font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
-  border-left: 1px solid #d1d5db;
-  box-sizing: border-box;
+  border-left: 1px solid #d1d5db; /* Vertical separator line */
+  box-sizing: border-box; /* Include border in width calculation */
 }
 
+/* Remove left border for the first button in each bar */
 .sq-inventory-sub-category-bar .sq-inventory-tab-button:first-child,
 .sq-inventory-main-category-bar .sq-inventory-main-tab-button:first-child {
   border-left: none;
 }
 
 .sq-inventory-main-tab-button {
-  font-size: 0.85rem;
+  font-size: 0.85rem; /* ~13.6px */
   font-weight: 600;
-  padding: 10px 5px;
+  padding: 10px 5px; /* Slightly more padding for main tabs */
 }
 
 .sq-inventory-tab-button.active,
 .sq-inventory-main-tab-button.active {
-  background-color: #546e7a;
+  background-color: #546e7a; /* Darker background for active tab */
   color: #ffffff;
   font-weight: 700;
 }
@@ -243,3 +202,4 @@
   background-color: #bcccdc;
   color: #263238;
 }
+
