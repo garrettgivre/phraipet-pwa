@@ -12,18 +12,14 @@
   box-sizing: border-box;
 
   /*
-    Crucial for stacking context and layer promotion:
-    - position: relative creates a stacking context.
-    - z-index: 1 ensures it's above <main>'s base z-index: 0 (if set),
-      but well below the Header/NavBar (which should have z-index: 100+).
-    - transform: translateZ(0) can promote this element to its own compositing layer,
-      which often helps resolve complex stacking issues with fixed-position children
-      of other elements (like the NavBar).
+    MODIFIED: Removed transform and z-index to simplify stacking context.
+    `position: relative` is kept as it's likely needed for child positioning
+    (e.g., .explore-map-content-holder or MapCanvas if it were a direct child).
   */
   position: relative;
-  z-index: 1;
-  transform: translateZ(0);
-  -webkit-transform: translateZ(0); /* For older WebKit browsers */
+  /* z-index: 1; */ /* Removed or set to auto */
+  /* transform: translateZ(0); */ /* Removed */
+  /* -webkit-transform: translateZ(0); */ /* Removed */
 }
 
 /*
