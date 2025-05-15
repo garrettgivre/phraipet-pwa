@@ -36,18 +36,12 @@
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr)); /* 4 equal, flexible columns */
   gap: 12px; 
-  align-content: flex-start; /* Align rows to the top by default. Change to flex-end for bottom alignment. */
+  align-content: flex-end; /* MODIFIED: Align items to the bottom */
   background-color: #ffffff;
   width: 100%; 
   box-sizing: border-box; 
   min-height: 200px; /* Ensure it has some height for align-content to work against */
 }
-
-/* If you want items to align to the bottom when there are few: */
-/* .inventory-grid-scroll-area {
-  align-content: flex-end;
-} */
-
 
 .no-items-message {
   grid-column: 1 / -1; 
@@ -99,15 +93,8 @@
   flex-shrink: 0; /* Prevent this container from shrinking due to long text below */
 }
 
-/* The <img> tag inside .zoom-container is styled dynamically by ZoomedImage.tsx.
-   It receives: position: absolute; left: ...; top: ...; width: ...; height: ...;
-   This class is mostly a fallback or for very basic styles if needed.
-*/
 .inventory-image {
   display: block; 
-  /* Avoid max-width/max-height/object-fit here as they can interfere
-     with the absolute positioning and scaling logic from the ZoomedImage component.
-  */
 }
 .zoom-placeholder {
   font-size: 12px;
@@ -130,13 +117,13 @@
   font-size: 12px; 
   color: #212529;
   font-weight: 500;
-  word-break: break-word; /* Allow long words to break if not using nowrap */
+  word-break: break-word; 
   line-height: 1.2;    
   padding-top: 4px;    
   max-height: 2.4em; /* Approx 2 lines */
   overflow: hidden;
   text-overflow: ellipsis; 
-  white-space: nowrap; /* Keep it to one line for ellipsis to work consistently */
+  white-space: nowrap; 
 }
 .item-effect {
   font-size: 10px; 
@@ -178,7 +165,7 @@
 }
 
 .inventory-tab-bars-container {
-  flex-shrink: 0; /* Prevent this container from shrinking */
+  flex-shrink: 0; 
   background-color: #f8f9fa; 
   border-top: 1px solid #dee2e6;
   z-index: 5; 
@@ -189,10 +176,10 @@
 .inventory-sub-tabs,
 .inventory-main-tabs {
   display: flex; 
-  justify-content: space-around; /* This will distribute space among buttons */
+  /* justify-content: space-around; Ensure buttons fill width instead */
   width: 100%;
   box-sizing: border-box;
-  padding: 0 4px; /* Add some padding to the bar itself, not the buttons */
+  padding: 0; /* MODIFIED: Removed horizontal padding */
 }
 .inventory-sub-tabs {
   background: #e9ecef; 
@@ -209,23 +196,32 @@
   background: transparent;
   border: none;
   cursor: pointer;
-  padding: 8px 5px; /* Padding inside buttons */
-  border-radius: 5px;
+  padding: 8px 5px; 
+  border-radius: 5px; /* You might want to set this to 0 if buttons should be perfectly rectangular and touch */
   transition: background-color 0.2s, color 0.2s;
   font-weight: 500;
-  /* flex-grow: 1 and flex-basis: 0 make buttons share space equally */
   flex-grow: 1; 
   flex-basis: 0; 
   text-align: center;
-  margin: 0 2px; /* Small margin between buttons */
+  margin: 0; /* MODIFIED: Removed margins */
   line-height: 1.4;
-  min-width: 0; /* CRITICAL for flex items to shrink below their content size */
-  overflow: hidden; /* Prevent text from breaking out of button */
-  text-overflow: ellipsis; /* Show ... for long tab names */
-  white-space: nowrap; /* Keep tab names on one line */
+  min-width: 0; 
+  overflow: hidden; 
+  text-overflow: ellipsis; 
+  white-space: nowrap; 
+  /* If you want a border between buttons, you can add it here: */
+  /* border-right: 1px solid #somecolor; */
 }
 
-.tab-button { /* Sub-category */
+/* Optional: Remove border from the last button in each tab bar */
+/*
+.inventory-sub-tabs .tab-button:last-child,
+.inventory-main-tabs .main-tab-button:last-child {
+  border-right: none;
+}
+*/
+
+.tab-button { 
   font-size: 13px;
   color: #495057;
 }
@@ -238,7 +234,7 @@
   background-color: #f1f3f5;
 }
 
-.main-tab-button { /* Main category */
+.main-tab-button { 
   font-size: 15px;
   font-weight: bold;
   color: #343a40;
