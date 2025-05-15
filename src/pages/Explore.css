@@ -2,29 +2,40 @@
 
 .explore-page {
   width: 100%;
-  height: 100%; /* This makes it fill the <main> content box */
-  overflow: auto; /* Allows both horizontal and vertical scrolling for its child */
-  background-color: #121212; /* Background of the scrollable viewport area */
+  height: 100%; /* Fill the content area of its parent <main> */
+  overflow: auto; /* Enable scrolling for the large map */
+  background-color: #121212; /* Dark background for the map area */
   box-sizing: border-box;
-  position: relative; /* Ensure it establishes a stacking context */
-  z-index: 1;      /* Explicitly set z-index lower than NavBar (100) and Header (100) */
+
+  /*
+    Force this element into its own stacking context and rendering layer.
+    This can help isolate its rendering and prevent interference with
+    fixed elements like the NavBar and Header.
+  */
+  position: relative; /* Establishes a stacking context */
+  z-index: 1; /* Ensures it's above <main>'s base (z-index: 0) but below Header/NavBar (z-index: 100) */
+  transform: translateZ(0); /* Promotes to its own compositing layer */
+  -webkit-transform: translateZ(0);
 }
 
 .map-scrollable-content {
-  position: relative; /* For the absolutely positioned MapCanvas overlay */
-  /* Width and height are set by inline styles in Explore.tsx to WORLD_PIXEL_WIDTH/HEIGHT.
-     These large dimensions should cause the parent .explore-page to overflow and show scrollbars. */
-  background-repeat: repeat;
+  /*
+    This div holds the very large map image and the MapCanvas.
+    Its dimensions are set by inline styles in Explore.tsx (WORLD_PIXEL_WIDTH/HEIGHT).
+    It needs a position for the MapCanvas overlay to be positioned correctly relative to it.
+  */
+  position: relative;
+  background-repeat: repeat; /* Or 'no-repeat' if your image is a single large map */
   background-position: top left;
-  background-color: #282828; /* Background of the actual map tiled area */
-  /* The display:block or other properties are less critical here as long as width/height are set
-     and it's a direct child of the overflow container. */
+  background-color: #282828; /* Fallback if image doesn't load or cover */
+  /*
+    Ensure this element does not have its own overflow properties that might conflict
+    with the parent .explore-page's overflow: auto.
+    It should simply be a large container that .explore-page scrolls.
+  */
 }
 
-/* Status messages (loading/error) - these are now returned directly from Explore.tsx,
-   so they become the sole content of .explore-page during those states.
-   Their styling ensures they fill the viewport defined by .explore-page.
-*/
+/* Status messages (loading/error) */
 .explore-status-message {
   display: flex;
   align-items: center;
@@ -33,18 +44,13 @@
   font-size: 1.2em;
   text-align: center;
   padding: 20px;
-  width: 100%; /* Full width of .explore-page (which is full screen content width) */
-  height: 100%; /* Full height of .explore-page */
+  width: 100%;
+  height: 100%;
   box-sizing: border-box;
-  background-color: rgba(10, 10, 10, 0.95); /* Darker, more opaque background */
-  /* No position:absolute needed as it's the only child when rendered */
-  /* z-index is not strictly necessary here if it's the only content,
-     but if it were an overlay on active content, it would need a higher z-index
-     than that content, but still lower than global UI like Header/NavBar if applicable.
-     For now, keeping it simple as it replaces the map content.
-  */
+  background-color: rgba(10, 10, 10, 0.95);
+  /* These messages replace the map, so their z-index is within .explore-page context */
 }
 
 .explore-error {
-  color: #ff9a9a; /* Lighter red for error text on dark background */
+  color: #ff9a9a;
 }
