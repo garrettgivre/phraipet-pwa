@@ -13,43 +13,26 @@ import type {
   ToyCategory,
   Pet as PetType,
   DecorationItemType,
-  RoomDecorItem, // Ensure RoomDecorItem is imported if used by addDecorItem
+  RoomDecorItem,
 } from "../types";
 import { calculateVisibleBounds } from "../utils/imageUtils";
-import "./InventoryPage.css"; // This should be the CSS from the "InventoryPage.css (Remake)" Canvas
+import "./InventoryPage.css"; // Will use the CSS provided in the "InventoryPage.css (Full Remake)" Canvas
 
 // --- Constants for categories ---
 const mainCategories = ["Decorations", "Food", "Cleaning", "Toys"] as const;
 type MainCategory = (typeof mainCategories)[number];
 
 const decorationSubCategories: DecorationItemType[] = [
-  "wall",
-  "floor",
-  "ceiling",
-  "backDecor",
-  "frontDecor",
-  "overlay",
+  "wall", "floor", "ceiling", "backDecor", "frontDecor", "overlay",
 ];
 const foodSubCategories: FoodCategory[] = [
-  "Treat",
-  "Snack",
-  "LightMeal",
-  "HeartyMeal",
-  "Feast",
+  "Treat", "Snack", "LightMeal", "HeartyMeal", "Feast",
 ];
 const cleaningSubCategories: CleaningCategory[] = [
-  "QuickFix",
-  "BasicKit",
-  "StandardSet",
-  "PremiumCare",
-  "LuxurySpa",
+  "QuickFix", "BasicKit", "StandardSet", "PremiumCare", "LuxurySpa",
 ];
 const toySubCategories: ToyCategory[] = [
-  "ChewToy",
-  "Plushie",
-  "PuzzleToy",
-  "ActivityCenter",
-  "RoboticPal",
+  "ChewToy", "Plushie", "PuzzleToy", "ActivityCenter", "RoboticPal",
 ];
 
 // --- Interface for location state ---
@@ -81,93 +64,55 @@ const capitalizeFirstLetter = (string: string) => {
 };
 
 // --- ZoomedImage Component ---
-// This component helps display item thumbnails, focusing on the visible part of the image.
 function ZoomedImage({ src, alt }: { src: string; alt: string }) {
-  const containerSize = 64; // Standard size for the thumbnail container
+  const containerSize = 64;
   const [imageStyle, setImageStyle] = useState<React.CSSProperties>({
-    visibility: 'hidden', // Initially hidden until calculated
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: `${containerSize}px`,
-    height: `${containerSize}px`,
-    fontSize: '12px',
-    color: '#aaa', // Placeholder color
+    visibility: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center',
+    width: `${containerSize}px`, height: `${containerSize}px`, fontSize: '12px', color: '#aaa',
   });
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    let isMounted = true; // Flag to prevent state updates on unmounted component
-    setLoaded(false);
-    setError(false);
-    // Reset visibility for new src
+    let isMounted = true;
+    setLoaded(false); setError(false);
     setImageStyle(prev => ({ ...prev, visibility: 'hidden' }));
 
     const img = new Image();
     img.src = src;
-    img.crossOrigin = "anonymous"; // Important for canvas operations if images are from different origins
+    img.crossOrigin = "anonymous";
 
     img.onload = () => {
       if (!isMounted) return;
       calculateVisibleBounds(src).then(bounds => {
         if (!isMounted) return;
-        // Check for invalid bounds (e.g., image failed to load properly or is transparent)
         if (bounds.width <= 0 || bounds.height <= 0 || bounds.naturalWidth <= 0 || bounds.naturalHeight <= 0) {
-          setError(true);
-          setLoaded(true);
-          setImageStyle({
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            width: `${containerSize}px`, height: `${containerSize}px`,
-            fontSize: '20px', color: 'red', border: '1px solid #ddd',
-            boxSizing: 'border-box', visibility: 'visible',
-          });
+          setError(true); setLoaded(true);
+          setImageStyle({ display: 'flex', alignItems: 'center', justifyContent: 'center', width: `${containerSize}px`, height: `${containerSize}px`, fontSize: '20px', color: 'red', border: '1px solid #ddd', boxSizing: 'border-box', visibility: 'visible' });
           return;
         }
-        // Calculate scaling and offset to center the visible part of the image
         const scale = Math.min(containerSize / bounds.width, containerSize / bounds.height);
         const scaledNaturalWidth = bounds.naturalWidth * scale;
         const scaledNaturalHeight = bounds.naturalHeight * scale;
         const offsetX = (containerSize - (bounds.width * scale)) / 2 - (bounds.x * scale);
         const offsetY = (containerSize - (bounds.height * scale)) / 2 - (bounds.y * scale);
-
-        setImageStyle({
-          position: "absolute",
-          left: `${offsetX}px`,
-          top: `${offsetY}px`,
-          width: `${scaledNaturalWidth}px`,
-          height: `${scaledNaturalHeight}px`,
-          visibility: 'visible',
-        });
+        setImageStyle({ position: "absolute", left: `${offsetX}px`, top: `${offsetY}px`, width: `${scaledNaturalWidth}px`, height: `${scaledNaturalHeight}px`, visibility: 'visible' });
         setLoaded(true);
       }).catch((err) => {
         if (!isMounted) return;
         console.error("Error in calculateVisibleBounds for src:", src, err);
-        setError(true);
-        setLoaded(true);
-        setImageStyle({
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          width: `${containerSize}px`, height: `${containerSize}px`,
-          fontSize: '20px', color: 'red', border: '1px solid #ddd',
-          boxSizing: 'border-box', visibility: 'visible',
-        });
+        setError(true); setLoaded(true);
+        setImageStyle({ display: 'flex', alignItems: 'center', justifyContent: 'center', width: `${containerSize}px`, height: `${containerSize}px`, fontSize: '20px', color: 'red', border: '1px solid #ddd', boxSizing: 'border-box', visibility: 'visible' });
       });
     };
     img.onerror = () => {
       if (!isMounted) return;
       console.error("Failed to load image for ZoomedImage:", src);
-      setError(true);
-      setLoaded(true);
-      setImageStyle({
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        width: `${containerSize}px`, height: `${containerSize}px`,
-        fontSize: '20px', color: 'red', border: '1px solid #ddd',
-        boxSizing: 'border-box', visibility: 'visible',
-      });
+      setError(true); setLoaded(true);
+      setImageStyle({ display: 'flex', alignItems: 'center', justifyContent: 'center', width: `${containerSize}px`, height: `${containerSize}px`, fontSize: '20px', color: 'red', border: '1px solid #ddd', boxSizing: 'border-box', visibility: 'visible' });
     };
-    // Cleanup function to set isMounted to false when the component unmounts
     return () => { isMounted = false; };
-  }, [src]); // Re-run effect if src changes
+  }, [src]);
 
   return (
     <div className="inventory-item-image-wrapper">
@@ -186,55 +131,41 @@ export default function InventoryPage({ pet, onFeedPet, onCleanPet, onPlayWithTo
   const location = useLocation();
   const navigate = useNavigate();
 
-  // --- State for selected categories and color options ---
   const initialTabs = useMemo(() => {
     const state = location.state as InventoryLocationState | null;
-    let main: MainCategory = "Decorations"; // Default main category
-    let sub: string = decorationSubCategories[0]; // Default sub-category
-
+    let main: MainCategory = "Decorations";
+    let sub: string = decorationSubCategories[0];
     if (state?.targetMainCategory) {
       main = state.targetMainCategory;
-      // Determine default sub-category based on the main category
-      if (main === "Decorations") {
-        sub = (decorationSubCategories.includes(state.targetSubCategory as DecorationItemType) ? state.targetSubCategory : decorationSubCategories[0]) as string;
-      } else if (main === "Food") {
-        sub = (foodSubCategories.includes(state.targetSubCategory as FoodCategory) ? state.targetSubCategory : foodSubCategories[0]) as string;
-      } else if (main === "Cleaning") {
-        sub = (cleaningSubCategories.includes(state.targetSubCategory as CleaningCategory) ? state.targetSubCategory : cleaningSubCategories[0]) as string;
-      } else if (main === "Toys") {
-        sub = (toySubCategories.includes(state.targetSubCategory as ToyCategory) ? state.targetSubCategory : toySubCategories[0]) as string;
-      }
+      if (main === "Decorations") sub = (decorationSubCategories.includes(state.targetSubCategory as DecorationItemType) ? state.targetSubCategory : decorationSubCategories[0]) as string;
+      else if (main === "Food") sub = (foodSubCategories.includes(state.targetSubCategory as FoodCategory) ? state.targetSubCategory : foodSubCategories[0]) as string;
+      else if (main === "Cleaning") sub = (cleaningSubCategories.includes(state.targetSubCategory as CleaningCategory) ? state.targetSubCategory : cleaningSubCategories[0]) as string;
+      else if (main === "Toys") sub = (toySubCategories.includes(state.targetSubCategory as ToyCategory) ? state.targetSubCategory : toySubCategories[0]) as string;
     }
     return { main, sub };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // This memo runs once on mount as location.state is stable for the instance.
+  }, [location.state]); // Dependency: location.state
 
   const [selectedMainCategory, setSelectedMainCategory] = useState<MainCategory>(initialTabs.main);
   const [selectedSubCategory, setSelectedSubCategory] = useState<string>(initialTabs.sub);
   const [activeColorOptions, setActiveColorOptions] = useState<{ id: string; options: { label: string; src: string }[] } | null>(null);
 
-  // --- Effect to clear location state after initial use ---
   useEffect(() => {
     if (location.state && (location.state as InventoryLocationState).targetMainCategory) {
       navigate(location.pathname, { replace: true, state: {} });
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Runs once on mount.
+  }, [location.state, location.pathname, navigate]);
 
-  // --- Callback for changing main category ---
   const handleMainCategoryChange = useCallback((category: MainCategory) => {
     setSelectedMainCategory(category);
-    // Reset sub-category to its default when main category changes
     if (category === "Decorations") setSelectedSubCategory(decorationSubCategories[0]);
     else if (category === "Food") setSelectedSubCategory(foodSubCategories[0]);
     else if (category === "Cleaning") setSelectedSubCategory(cleaningSubCategories[0]);
     else if (category === "Toys") setSelectedSubCategory(toySubCategories[0]);
-    setActiveColorOptions(null); // Close any open color pickers
-  }, []); // Empty dependency array as it uses constants
+    setActiveColorOptions(null);
+  }, []);
 
-  // --- Effect to ensure subcategory consistency ---
   useEffect(() => {
-    setActiveColorOptions(null); // Close color options if categories change
+    setActiveColorOptions(null);
     let currentSubIsValid = false;
     if (selectedMainCategory === "Decorations") {
       currentSubIsValid = decorationSubCategories.includes(selectedSubCategory as DecorationItemType);
@@ -251,30 +182,23 @@ export default function InventoryPage({ pet, onFeedPet, onCleanPet, onPlayWithTo
     }
   }, [selectedMainCategory, selectedSubCategory]);
 
-  // --- Callback to apply a decoration item ---
   const applyDecorationItem = useCallback((item: DecorationInventoryItem, chosenSrc?: string) => {
     const srcToApply = chosenSrc || item.src;
     if (["floor", "wall", "ceiling", "overlay"].includes(item.type)) {
       setRoomLayer(item.type as "floor" | "wall" | "ceiling" | "overlay", srcToApply);
     } else if (item.type === "backDecor" || item.type === "frontDecor") {
-      // Example coordinates, these might need to be user-adjustable in the future.
-      const decorItem: RoomDecorItem = { src: srcToApply, x: 100, y: 100 };
+      const decorItem: RoomDecorItem = { src: srcToApply, x: 100, y: 100 }; // Example coords
       addDecorItem(item.type, decorItem);
     }
-    setActiveColorOptions(null); // Close color options after applying
+    setActiveColorOptions(null);
   }, [setRoomLayer, addDecorItem]);
 
-  // --- Callback for handling item clicks ---
   const handleItemClick = useCallback((item: InventoryItem) => {
     if (item.itemCategory === "decoration") {
       const decorationItem = item as DecorationInventoryItem;
       if (decorationItem.colorOptions && decorationItem.colorOptions.length > 0) {
-        // Toggle color options: if already active for this item, close; otherwise, open.
-        if (activeColorOptions?.id === item.id) {
-          setActiveColorOptions(null);
-        } else {
-          setActiveColorOptions({ id: decorationItem.id, options: decorationItem.colorOptions });
-        }
+        // Use non-null assertion for decorationItem.colorOptions here
+        setActiveColorOptions(prev => (prev?.id === item.id ? null : { id: item.id, options: decorationItem.colorOptions! }));
       } else {
         applyDecorationItem(decorationItem);
       }
@@ -288,24 +212,16 @@ export default function InventoryPage({ pet, onFeedPet, onCleanPet, onPlayWithTo
       if (pet) { onPlayWithToy(item as ToyInventoryItem); consumeItem(item.id); }
       else console.warn("Pet data not loaded! Cannot play.");
     }
-  }, [pet, onFeedPet, onCleanPet, onPlayWithToy, consumeItem, applyDecorationItem, activeColorOptions]);
+  }, [pet, onFeedPet, onCleanPet, onPlayWithToy, consumeItem, applyDecorationItem, activeColorOptions]); // Added activeColorOptions to dependency array
 
-
-  // --- Memoized list of filtered items based on selected categories ---
   const filteredItems = useMemo(() => items.filter(item => {
-    if (selectedMainCategory === "Decorations") {
-      return item.itemCategory === "decoration" && (item as DecorationInventoryItem).type === selectedSubCategory;
-    } else if (selectedMainCategory === "Food") {
-      return item.itemCategory === "food" && (item as FoodInventoryItem).type === selectedSubCategory;
-    } else if (selectedMainCategory === "Cleaning") {
-      return item.itemCategory === "cleaning" && (item as CleaningInventoryItem).type === selectedSubCategory;
-    } else if (selectedMainCategory === "Toys") {
-      return item.itemCategory === "toy" && (item as ToyInventoryItem).type === selectedSubCategory;
-    }
+    if (selectedMainCategory === "Decorations") return item.itemCategory === "decoration" && (item as DecorationInventoryItem).type === selectedSubCategory;
+    if (selectedMainCategory === "Food") return item.itemCategory === "food" && (item as FoodInventoryItem).type === selectedSubCategory;
+    if (selectedMainCategory === "Cleaning") return item.itemCategory === "cleaning" && (item as CleaningInventoryItem).type === selectedSubCategory;
+    if (selectedMainCategory === "Toys") return item.itemCategory === "toy" && (item as ToyInventoryItem).type === selectedSubCategory;
     return false;
   }), [items, selectedMainCategory, selectedSubCategory]);
 
-  // --- Memoized list of current subcategories to display ---
   const currentSubcategories = useMemo(() => {
     if (selectedMainCategory === "Decorations") return decorationSubCategories;
     if (selectedMainCategory === "Food") return foodSubCategories;
@@ -314,7 +230,6 @@ export default function InventoryPage({ pet, onFeedPet, onCleanPet, onPlayWithTo
     return [];
   }, [selectedMainCategory]);
 
-  // --- JSX for the component ---
   return (
     <div className="inventory-page-wrapper">
       <h1 className="inventory-page-title">Inventory</h1>
@@ -327,9 +242,9 @@ export default function InventoryPage({ pet, onFeedPet, onCleanPet, onPlayWithTo
               className="inventory-item-card"
               onClick={() => handleItemClick(item)}
               title={item.description || item.name}
-              role="button" // For accessibility
-              tabIndex={0} // For keyboard navigation
-              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleItemClick(item);}}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleItemClick(item);}}}
             >
               <ZoomedImage src={item.src} alt={item.name} />
               <div className="inventory-item-details">
@@ -340,12 +255,12 @@ export default function InventoryPage({ pet, onFeedPet, onCleanPet, onPlayWithTo
               </div>
               {activeColorOptions?.id === item.id && item.itemCategory === "decoration" && (item as DecorationInventoryItem).colorOptions && (
                 <div className="inventory-item-color-options">
-                  {(item as DecorationInventoryItem).colorOptions!.map(option => (
+                  {(item as DecorationInventoryItem).colorOptions!.map(option => ( // Added non-null assertion here as well for safety
                     <button
                       key={option.label}
                       className="inventory-color-swatch"
                       onClick={(e) => {
-                        e.stopPropagation(); // Prevent triggering item click again
+                        e.stopPropagation();
                         applyDecorationItem(item as DecorationInventoryItem, option.src);
                       }}
                       style={{ backgroundImage: `url(${option.src})` }}
