@@ -6,20 +6,20 @@ import type {
   InventoryItem,
   DecorationInventoryItem,
   FoodInventoryItem,
-  CleaningInventoryItem,
+  GroomingInventoryItem, // MODIFIED
   ToyInventoryItem,
   FoodCategory,
-  CleaningCategory,
+  GroomingCategory, // MODIFIED
   ToyCategory,
   Pet as PetType,
   DecorationItemType,
   RoomDecorItem,
 } from "../types";
 import { calculateVisibleBounds } from "../utils/imageUtils";
-import "./InventoryPage.css"; // This will be the CSS for the square tabs
+import "./InventoryPage.css";
 
-// --- Constants for categories ---
-const mainCategories = ["Decorations", "Food", "Cleaning", "Toys"] as const;
+// MODIFIED: Renamed 'Cleaning' to 'Grooming'
+const mainCategories = ["Decorations", "Food", "Grooming", "Toys"] as const;
 type MainCategory = (typeof mainCategories)[number];
 
 const decorationSubCategories: DecorationItemType[] = [
@@ -28,7 +28,8 @@ const decorationSubCategories: DecorationItemType[] = [
 const foodSubCategories: FoodCategory[] = [
   "Treat", "Snack", "LightMeal", "HeartyMeal", "Feast",
 ];
-const cleaningSubCategories: CleaningCategory[] = [
+// MODIFIED: Renamed to groomingSubCategories and uses GroomingCategory
+const groomingSubCategories: GroomingCategory[] = [
   "QuickFix", "BasicKit", "StandardSet", "PremiumCare", "LuxurySpa",
 ];
 const toySubCategories: ToyCategory[] = [
@@ -43,7 +44,7 @@ interface InventoryLocationState {
 interface InventoryPageProps {
   pet: PetType | null;
   onFeedPet: (foodItem: FoodInventoryItem) => void;
-  onCleanPet: (cleaningItem: CleaningInventoryItem) => void;
+  onGroomPet: (groomingItem: GroomingInventoryItem) => void; // MODIFIED
   onPlayWithToy: (toyItem: ToyInventoryItem) => void;
 }
 
@@ -61,7 +62,7 @@ const capitalizeFirstLetter = (string: string) => {
 };
 
 function ZoomedImage({ src, alt }: { src: string; alt: string }) {
-  const containerSize = 64; // This should match the CSS for .sq-inventory-item-image-wrapper
+  const containerSize = 64;
   const [imageStyle, setImageStyle] = useState<React.CSSProperties>({
     visibility: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center',
     width: `${containerSize}px`, height: `${containerSize}px`, fontSize: '12px', color: '#aaa',
@@ -73,11 +74,9 @@ function ZoomedImage({ src, alt }: { src: string; alt: string }) {
     let isMounted = true;
     setLoaded(false); setError(false);
     setImageStyle(prev => ({ ...prev, visibility: 'hidden' }));
-
     const img = new Image();
     img.src = src;
     img.crossOrigin = "anonymous";
-
     img.onload = () => {
       if (!isMounted) return;
       calculateVisibleBounds(src).then(bounds => {
@@ -121,7 +120,7 @@ function ZoomedImage({ src, alt }: { src: string; alt: string }) {
   );
 }
 
-export default function InventoryPage({ pet, onFeedPet, onCleanPet, onPlayWithToy }: InventoryPageProps) {
+export default function InventoryPage({ pet, onFeedPet, onGroomPet, onPlayWithToy }: InventoryPageProps) { // MODIFIED: onCleanPet to onGroomPet
   const { items, setRoomLayer, addDecorItem, consumeItem } = useInventory();
   const location = useLocation();
   const navigate = useNavigate();
@@ -134,7 +133,7 @@ export default function InventoryPage({ pet, onFeedPet, onCleanPet, onPlayWithTo
       main = state.targetMainCategory;
       if (main === "Decorations") sub = (decorationSubCategories.includes(state.targetSubCategory as DecorationItemType) ? state.targetSubCategory : decorationSubCategories[0]) as string;
       else if (main === "Food") sub = (foodSubCategories.includes(state.targetSubCategory as FoodCategory) ? state.targetSubCategory : foodSubCategories[0]) as string;
-      else if (main === "Cleaning") sub = (cleaningSubCategories.includes(state.targetSubCategory as CleaningCategory) ? state.targetSubCategory : cleaningSubCategories[0]) as string;
+      else if (main === "Grooming") sub = (groomingSubCategories.includes(state.targetSubCategory as GroomingCategory) ? state.targetSubCategory : groomingSubCategories[0]) as string; // MODIFIED
       else if (main === "Toys") sub = (toySubCategories.includes(state.targetSubCategory as ToyCategory) ? state.targetSubCategory : toySubCategories[0]) as string;
     }
     return { main, sub };
@@ -154,7 +153,7 @@ export default function InventoryPage({ pet, onFeedPet, onCleanPet, onPlayWithTo
     setSelectedMainCategory(category);
     if (category === "Decorations") setSelectedSubCategory(decorationSubCategories[0]);
     else if (category === "Food") setSelectedSubCategory(foodSubCategories[0]);
-    else if (category === "Cleaning") setSelectedSubCategory(cleaningSubCategories[0]);
+    else if (category === "Grooming") setSelectedSubCategory(groomingSubCategories[0]); // MODIFIED
     else if (category === "Toys") setSelectedSubCategory(toySubCategories[0]);
     setActiveColorOptions(null);
   }, []);
@@ -168,9 +167,9 @@ export default function InventoryPage({ pet, onFeedPet, onCleanPet, onPlayWithTo
     } else if (selectedMainCategory === "Food") {
       currentSubIsValid = foodSubCategories.includes(selectedSubCategory as FoodCategory);
       if (!currentSubIsValid) setSelectedSubCategory(foodSubCategories[0]);
-    } else if (selectedMainCategory === "Cleaning") {
-      currentSubIsValid = cleaningSubCategories.includes(selectedSubCategory as CleaningCategory);
-      if (!currentSubIsValid) setSelectedSubCategory(cleaningSubCategories[0]);
+    } else if (selectedMainCategory === "Grooming") { // MODIFIED
+      currentSubIsValid = groomingSubCategories.includes(selectedSubCategory as GroomingCategory);
+      if (!currentSubIsValid) setSelectedSubCategory(groomingSubCategories[0]);
     } else if (selectedMainCategory === "Toys") {
       currentSubIsValid = toySubCategories.includes(selectedSubCategory as ToyCategory);
       if (!currentSubIsValid) setSelectedSubCategory(toySubCategories[0]);
@@ -182,7 +181,7 @@ export default function InventoryPage({ pet, onFeedPet, onCleanPet, onPlayWithTo
     if (["floor", "wall", "ceiling", "overlay"].includes(item.type)) {
       setRoomLayer(item.type as "floor" | "wall" | "ceiling" | "overlay", srcToApply);
     } else if (item.type === "backDecor" || item.type === "frontDecor") {
-      const decorItem: RoomDecorItem = { src: srcToApply, x: 100, y: 100 }; // Example coords
+      const decorItem: RoomDecorItem = { src: srcToApply, x: 100, y: 100 };
       addDecorItem(item.type, decorItem);
     }
     setActiveColorOptions(null);
@@ -199,19 +198,19 @@ export default function InventoryPage({ pet, onFeedPet, onCleanPet, onPlayWithTo
     } else if (item.itemCategory === "food") {
       if (pet) { onFeedPet(item as FoodInventoryItem); consumeItem(item.id); }
       else console.warn("Pet data not loaded! Cannot feed.");
-    } else if (item.itemCategory === "cleaning") {
-      if (pet) { onCleanPet(item as CleaningInventoryItem); consumeItem(item.id); }
-      else console.warn("Pet data not loaded! Cannot clean.");
+    } else if (item.itemCategory === "grooming") { // MODIFIED
+      if (pet) { onGroomPet(item as GroomingInventoryItem); consumeItem(item.id); } // MODIFIED
+      else console.warn("Pet data not loaded! Cannot groom."); // MODIFIED
     } else if (item.itemCategory === "toy") {
       if (pet) { onPlayWithToy(item as ToyInventoryItem); consumeItem(item.id); }
       else console.warn("Pet data not loaded! Cannot play.");
     }
-  }, [pet, onFeedPet, onCleanPet, onPlayWithToy, consumeItem, applyDecorationItem, activeColorOptions]);
+  }, [pet, onFeedPet, onGroomPet, onPlayWithToy, consumeItem, applyDecorationItem, activeColorOptions]); // MODIFIED onCleanPet to onGroomPet
 
   const filteredItems = useMemo(() => items.filter(item => {
     if (selectedMainCategory === "Decorations") return item.itemCategory === "decoration" && (item as DecorationInventoryItem).type === selectedSubCategory;
     if (selectedMainCategory === "Food") return item.itemCategory === "food" && (item as FoodInventoryItem).type === selectedSubCategory;
-    if (selectedMainCategory === "Cleaning") return item.itemCategory === "cleaning" && (item as CleaningInventoryItem).type === selectedSubCategory;
+    if (selectedMainCategory === "Grooming") return item.itemCategory === "grooming" && (item as GroomingInventoryItem).type === selectedSubCategory; // MODIFIED
     if (selectedMainCategory === "Toys") return item.itemCategory === "toy" && (item as ToyInventoryItem).type === selectedSubCategory;
     return false;
   }), [items, selectedMainCategory, selectedSubCategory]);
@@ -219,7 +218,7 @@ export default function InventoryPage({ pet, onFeedPet, onCleanPet, onPlayWithTo
   const currentSubcategories = useMemo(() => {
     if (selectedMainCategory === "Decorations") return decorationSubCategories;
     if (selectedMainCategory === "Food") return foodSubCategories;
-    if (selectedMainCategory === "Cleaning") return cleaningSubCategories;
+    if (selectedMainCategory === "Grooming") return groomingSubCategories; // MODIFIED
     if (selectedMainCategory === "Toys") return toySubCategories;
     return [];
   }, [selectedMainCategory]);
@@ -227,7 +226,6 @@ export default function InventoryPage({ pet, onFeedPet, onCleanPet, onPlayWithTo
   return (
     <div className="sq-inventory-page-wrapper">
       <h1 className="sq-inventory-title-bar">Inventory</h1>
-
       <div className="sq-inventory-item-display-area">
         <div className="sq-inventory-item-grid">
           {filteredItems.length > 0 ? (
@@ -245,7 +243,7 @@ export default function InventoryPage({ pet, onFeedPet, onCleanPet, onPlayWithTo
                 <div className="sq-inventory-item-info">
                   <span className="sq-inventory-item-name-text">{item.name}</span>
                   {item.itemCategory === "food" && <span className="sq-inventory-item-effect-text">Hunger +{(item as FoodInventoryItem).hungerRestored}</span>}
-                  {item.itemCategory === "cleaning" && <span className="sq-inventory-item-effect-text">Clean +{(item as CleaningInventoryItem).cleanlinessBoost}</span>}
+                  {item.itemCategory === "grooming" && <span className="sq-inventory-item-effect-text">Clean +{(item as GroomingInventoryItem).cleanlinessBoost}</span>} {/* MODIFIED */}
                   {item.itemCategory === "toy" && <span className="sq-inventory-item-effect-text">Happy +{(item as ToyInventoryItem).happinessBoost}</span>}
                 </div>
                 {activeColorOptions?.id === item.id && item.itemCategory === "decoration" && (item as DecorationInventoryItem).colorOptions && (
@@ -272,7 +270,6 @@ export default function InventoryPage({ pet, onFeedPet, onCleanPet, onPlayWithTo
           )}
         </div>
       </div>
-
       <div className="sq-inventory-navigation-bars">
         <div className="sq-inventory-sub-category-bar">
           {currentSubcategories.map(categoryValue => (
