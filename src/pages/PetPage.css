@@ -1,3 +1,4 @@
+/* src/pages/PetPage.css */
 .petPage {
   opacity: 0;
   transition: opacity 0.6s ease-in-out;
@@ -32,7 +33,7 @@
 
 .pet-display-area {
   position: absolute; 
-  top: 45%; /* Adjusted to pull pet slightly higher to make more room for needs bar */
+  top: 52%; /* Adjusted: Was 45%. Try 50% for true center, or slightly more to lower it. */
   left: 50%;
   transform: translate(-50%, -50%); 
   display: flex; 
@@ -88,17 +89,15 @@
 .pet-page-needs-container {
   position: absolute; 
   bottom: clamp(65px, 10vh, 85px); /* Responsive bottom position */
-  /* (NavBar 56px + small gap) -> trying 10vh as preferred */
-  left: 0; /* Span full width for centering content */
+  left: 0; 
   right: 0;
   display: flex;
   flex-direction: row;
   justify-content: center;
   align-items: center;
-  /* Responsive gap: min 8px, preferred 2.5vw, max 15px */
   gap: clamp(8px, 2.5vw, 15px); 
   padding: 8px 10px; 
-  width: 100%; /* Use full width to allow content to center */
+  width: 100%; 
   box-sizing: border-box;
   z-index: 10; 
   background-color: transparent;
@@ -111,7 +110,7 @@
   flex-direction: column;
   align-items: center;
   cursor: pointer;
-  padding: 3px; /* Reduced padding */
+  padding: 3px; 
   border-radius: 6px;
   transition: background-color 0.2s ease;
 }
@@ -122,7 +121,6 @@
 
 /* Responsive Need Circles */
 .pet-page-needs-container .need-circle {
-  /* Responsive size: min 48px, preferred 12vw, max 64px */
   width: clamp(48px, 13vw, 64px);  
   height: clamp(48px, 13vw, 64px); 
 }
@@ -135,7 +133,7 @@
 .pet-page-needs-container .circle-bg {
   fill: none;
   stroke: #e0e0e0; 
-  stroke-width: 3.8; /* Keep stroke width visually consistent */
+  stroke-width: 3.8; 
 }
 
 .pet-page-needs-container .circle {
@@ -148,15 +146,13 @@
 
 .pet-page-needs-container .emoji-text {
   fill: #333;
-  /* Responsive font size based on container size */
-  /* If .need-circle is 12vw, emoji could be ~5vw or use clamp */
-  font-size: clamp(12px, 5vw, 16px); /* SVG units, but effectively scales */
+  font-size: clamp(12px, 5vw, 16px); 
   text-anchor: middle;
   dominant-baseline: middle;
 }
 
 .need-name-label { 
-  font-size: clamp(8px, 1.8vw, 10px); /* Responsive font size */
+  font-size: clamp(8px, 1.8vw, 10px); 
   color: #555;
   margin-top: 3px;
   text-transform: capitalize;
@@ -165,8 +161,7 @@
 /* Responsive Paintbrush Icon */
 .paintbrush-icon {
   position: fixed; 
-  /* Responsive positioning from bottom-left */
-  bottom: clamp(60px, 8vh, 72px); /* Above NavBar */
+  bottom: clamp(60px, 8vh, 72px); 
   left: clamp(10px, 3vw, 16px);
   cursor: pointer;
   z-index: 20; 
@@ -177,7 +172,6 @@
 }
 
 .paintbrush-icon img {
-  /* Responsive size for the icon image */
   width: clamp(48px, 12vw, 64px);  
   height: clamp(48px, 12vw, 64px); 
   object-fit: contain;
