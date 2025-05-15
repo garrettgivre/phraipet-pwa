@@ -16,9 +16,9 @@ import type {
   RoomDecorItem,
 } from "../types";
 import { calculateVisibleBounds } from "../utils/imageUtils";
-import "./InventoryPage.css"; // We will create this new CSS file
+import "./InventoryPage.css"; // This will be the new CSS for Option 3
 
-// --- Constants for categories ---
+// --- Constants for categories (can be kept as is) ---
 const mainCategories = ["Decorations", "Food", "Cleaning", "Toys"] as const;
 type MainCategory = (typeof mainCategories)[number];
 
@@ -61,7 +61,7 @@ const capitalizeFirstLetter = (string: string) => {
 };
 
 function ZoomedImage({ src, alt }: { src: string; alt: string }) {
-  const containerSize = 64;
+  const containerSize = 64; // Or your desired thumbnail size
   const [imageStyle, setImageStyle] = useState<React.CSSProperties>({
     visibility: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center',
     width: `${containerSize}px`, height: `${containerSize}px`, fontSize: '12px', color: '#aaa',
@@ -111,11 +111,12 @@ function ZoomedImage({ src, alt }: { src: string; alt: string }) {
   }, [src]);
 
   return (
-    <div className="inventory-item-image-wrapper">
-      {!loaded && <div className="inventory-item-placeholder-text">...</div>}
-      {loaded && error && <div className="inventory-item-placeholder-text error" style={imageStyle} title={`Error: ${alt}`}>X</div>}
+    // Class names here match the new CSS for Option 3
+    <div className="opt3-inventory-item-image-wrapper">
+      {!loaded && <div className="opt3-inventory-item-placeholder-text">...</div>}
+      {loaded && error && <div className="opt3-inventory-item-placeholder-text error" style={imageStyle} title={`Error: ${alt}`}>X</div>}
       {loaded && !error && (
-        <img src={src} alt={alt} className="inventory-item-image-content" style={imageStyle} />
+        <img src={src} alt={alt} className="opt3-inventory-item-image-content" style={imageStyle} />
       )}
     </div>
   );
@@ -225,17 +226,17 @@ export default function InventoryPage({ pet, onFeedPet, onCleanPet, onPlayWithTo
   }, [selectedMainCategory]);
 
   return (
-    <div className="inventory-page-container"> {/* Overall flex column container */}
-      <h1 className="inventory-title-bar">Inventory</h1>
+    <div className="opt3-inventory-page-wrapper"> {/* Outermost container for Option 3 */}
+      <h1 className="opt3-inventory-title-bar">Inventory</h1>
 
       {/* Area for displaying items - this will grow and push its content (the grid) to the bottom */}
-      <div className="inventory-item-display-area">
-        <div className="inventory-item-grid"> {/* Actual grid for items */}
+      <div className="opt3-inventory-item-display-area">
+        <div className="opt3-inventory-item-grid"> {/* Actual grid for items */}
           {filteredItems.length > 0 ? (
             filteredItems.map(item => (
               <div
                 key={item.id}
-                className="inventory-item-slot" // Changed class name
+                className="opt3-inventory-item-slot"
                 onClick={() => handleItemClick(item)}
                 title={item.description || item.name}
                 role="button"
@@ -243,18 +244,18 @@ export default function InventoryPage({ pet, onFeedPet, onCleanPet, onPlayWithTo
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleItemClick(item);}}}
               >
                 <ZoomedImage src={item.src} alt={item.name} />
-                <div className="inventory-item-info">
-                  <span className="inventory-item-name-text">{item.name}</span>
-                  {item.itemCategory === "food" && <span className="inventory-item-effect-text">Hunger +{(item as FoodInventoryItem).hungerRestored}</span>}
-                  {item.itemCategory === "cleaning" && <span className="inventory-item-effect-text">Clean +{(item as CleaningInventoryItem).cleanlinessBoost}</span>}
-                  {item.itemCategory === "toy" && <span className="inventory-item-effect-text">Happy +{(item as ToyInventoryItem).happinessBoost}</span>}
+                <div className="opt3-inventory-item-info">
+                  <span className="opt3-inventory-item-name-text">{item.name}</span>
+                  {item.itemCategory === "food" && <span className="opt3-inventory-item-effect-text">Hunger +{(item as FoodInventoryItem).hungerRestored}</span>}
+                  {item.itemCategory === "cleaning" && <span className="opt3-inventory-item-effect-text">Clean +{(item as CleaningInventoryItem).cleanlinessBoost}</span>}
+                  {item.itemCategory === "toy" && <span className="opt3-inventory-item-effect-text">Happy +{(item as ToyInventoryItem).happinessBoost}</span>}
                 </div>
                 {activeColorOptions?.id === item.id && item.itemCategory === "decoration" && (item as DecorationInventoryItem).colorOptions && (
-                  <div className="inventory-item-color-picker"> {/* Changed class name */}
+                  <div className="opt3-inventory-item-color-picker">
                     {(item as DecorationInventoryItem).colorOptions!.map(option => (
                       <button
                         key={option.label}
-                        className="inventory-color-option-button" // Changed class name
+                        className="opt3-inventory-color-option-button"
                         onClick={(e) => {
                           e.stopPropagation();
                           applyDecorationItem(item as DecorationInventoryItem, option.src);
@@ -269,29 +270,29 @@ export default function InventoryPage({ pet, onFeedPet, onCleanPet, onPlayWithTo
               </div>
             ))
           ) : (
-            <p className="inventory-empty-message">No items in this category.</p>
+            <p className="opt3-inventory-empty-message">No items in this category.</p>
           )}
         </div>
       </div>
 
       {/* Container for both tab bars at the bottom */}
-      <div className="inventory-navigation-bars">
-        <div className="inventory-sub-category-bar">
+      <div className="opt3-inventory-navigation-bars">
+        <div className="opt3-inventory-sub-category-scroll-bar"> {/* Horizontally scrollable */}
           {currentSubcategories.map(categoryValue => (
             <button
               key={categoryValue}
-              className={`inventory-sub-tab ${selectedSubCategory === categoryValue ? "active" : ""}`}
+              className={`opt3-inventory-pill-tab ${selectedSubCategory === categoryValue ? "active" : ""}`}
               onClick={() => setSelectedSubCategory(categoryValue)}
             >
               {capitalizeFirstLetter(categoryValue)}
             </button>
           ))}
         </div>
-        <div className="inventory-main-category-bar">
+        <div className="opt3-inventory-main-category-scroll-bar"> {/* Horizontally scrollable */}
           {mainCategories.map(category => (
             <button
               key={category}
-              className={`inventory-main-tab ${selectedMainCategory === category ? "active" : ""}`}
+              className={`opt3-inventory-pill-tab main-cat-pill ${selectedMainCategory === category ? "active" : ""}`}
               onClick={() => handleMainCategoryChange(category)}
             >
               {category}
