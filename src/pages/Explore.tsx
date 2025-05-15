@@ -1,5 +1,5 @@
 // src/pages/Explore.tsx
-import { useEffect, useState } from 'react'; 
+import { useEffect, useState, useRef } from 'react'; // Added useRef
 import MapCanvas from '../components/MapCanvas'; 
 import type { AppHotspot, TiledMapData, TiledObject } from '../types'; 
 import './Explore.css'; 
@@ -11,14 +11,18 @@ const getTiledObjectProperty = (object: TiledObject, propertyName: string): any 
   return object.properties.find(p => p.name === propertyName)?.value;
 };
 
-const WORLD_PIXEL_WIDTH = 7200; 
-const WORLD_PIXEL_HEIGHT = 4800;
+// Define the conceptual size of your scrollable world.
+// Make these significantly larger than any expected screen size for more "infinite" feel.
+const WORLD_PIXEL_WIDTH = 7200; // Example: 6 * 1200 (if your tile is 1200px wide)
+const WORLD_PIXEL_HEIGHT = 4800; // Example: 6 * 800 (if your tile is 800px high)
 
 export default function Explore() {
   const [hotspots, setHotspots] = useState<AppHotspot[]>([]);
   const [isLoading, setIsLoading] = useState(true); 
   const [error, setError] = useState<string | null>(null);
+  const explorePageRef = useRef<HTMLDivElement>(null); // Ref for the scrollable div
 
+  // Path to your world map background image (this image will be tiled by CSS)
   const mapTileImageUrl = "/maps/world_map_background.png"; 
 
   useEffect(() => {
@@ -66,21 +70,22 @@ export default function Explore() {
 
     fetchMapHotspotData();
 
-    // Optional: Scroll to the center of the map on initial load
-    const scrollableArea = document.querySelector('.explore-page'); 
-    if (scrollableArea) {
-        // Ensure clientHeight/Width are available (component is mounted and rendered)
-        if (scrollableArea.clientHeight > 0 && scrollableArea.clientWidth > 0) {
+    // Scroll to the center of the map on initial load, after a brief delay for rendering
+    const timerId = setTimeout(() => {
+        if (isMounted && explorePageRef.current) {
+            const scrollableArea = explorePageRef.current;
             scrollableArea.scrollTop = (WORLD_PIXEL_HEIGHT - scrollableArea.clientHeight) / 2;
             scrollableArea.scrollLeft = (WORLD_PIXEL_WIDTH - scrollableArea.clientWidth) / 2;
         }
-    }
+    }, 100); // Small delay to ensure layout is stable
 
     return () => {
         isMounted = false; 
+        clearTimeout(timerId);
     };
-  }, []); 
+  }, []); // Empty dependency array, runs once on mount
 
+  // Render loading or error state directly, preventing other content from rendering
   if (isLoading) {
     return <div className="explore-status-message explore-loading">Loading Map Data...</div>;
   }
@@ -89,8 +94,10 @@ export default function Explore() {
     return <div className="explore-status-message explore-error">Error loading map: {error}</div>;
   }
   
+  // Render the map if no loading or error
   return (
-    <div className="explore-page"> 
+    // Assign ref to the scrollable div
+    <div ref={explorePageRef} className="explore-page"> 
       <div 
         className="map-scrollable-content" 
         style={{ 

@@ -1,20 +1,27 @@
 /* src/pages/Explore.css */
 .explore-page {
   width: 100%;
-  height: 100%; 
-  overflow: auto; /* Changed to auto for production, use 'scroll' for debugging */
-  background-color: #121212; 
+  height: 100%; /* Fill the <main> content area from App.tsx */
+  overflow: auto; /* Use 'auto' to show scrollbars only when content overflows */
+  background-color: #121212; /* Background of the scrollable viewport area */
   box-sizing: border-box;
-  position: relative; 
+  /* position: relative; Not strictly needed if status messages are handled by conditional rendering */
+  /* Ensure no transforms or filters here that might create a new stacking context
+     and interfere with the fixed NavBar's z-index. */
 }
 
 .map-scrollable-content {
-  position: relative; 
-  background-repeat: repeat; 
-  background-position: top left; 
-  background-color: #282828; 
+  position: relative; /* For the absolutely positioned canvas overlay */
+  /* Width and height are set by inline styles in Explore.tsx to WORLD_PIXEL_WIDTH/HEIGHT.
+     This div needs to be large enough to cause .explore-page to scroll. */
+  background-repeat: repeat; /* Tile the background image */
+  background-position: top left; /* Ensure tiling starts from top-left */
+  background-color: #282828; /* Background of the actual map tiled area */
+  /* The display:block or other properties are less critical here as long as width/height are set
+     and it's a direct child of the overflow container. */
 }
 
+/* Status messages (loading/error) - these are now returned directly from Explore.tsx */
 .explore-status-message { 
   display: flex;
   align-items: center;
@@ -23,14 +30,11 @@
   font-size: 1.2em;
   text-align: center;
   padding: 20px;
-  width: 100%;
-  height: 100%; 
+  width: 100%; /* Full width of viewport */
+  height: 100%; /* Full height of viewport */
   box-sizing: border-box;
-  position: absolute; 
-  top: 0;
-  left: 0;
+  /* No position:absolute needed as it's the only element rendered in these states */
   background-color: rgba(0, 0, 0, 0.9); 
-  z-index: 200; 
 }
 
 .explore-error {
