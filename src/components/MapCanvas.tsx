@@ -2,120 +2,76 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { AppHotspot } from '../types';
-import './MapCanvas.css'; // Standard CSS import
+import './MapCanvas.css'; 
 
 interface MapCanvasProps {
-  mapImageUrl: string;
+  // mapImageUrl is removed; canvas is now transparent
   hotspots: AppHotspot[];
-  mapPixelWidth: number;    // Intrinsic pixel width of the map image
-  mapPixelHeight: number;   // Intrinsic pixel height of the map image
+  canvasWidth: number;    // Full width of the conceptual map area (drawing surface)
+  canvasHeight: number;   // Full height of the conceptual map area
 }
 
 const MapCanvas: React.FC<MapCanvasProps> = ({ 
-  mapImageUrl, 
   hotspots,
-  mapPixelWidth,
-  mapPixelHeight 
+  canvasWidth, // Renamed from mapPixelWidth
+  canvasHeight // Renamed from mapPixelHeight
 }) => {
   const navigate = useNavigate();
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null); 
-  const [mapImage, setMapImage] = useState<HTMLImageElement | null>(null);
-  const [isMapImageInternalLoading, setIsMapImageInternalLoading] = useState(true);
-  const [mapImageInternalError, setMapImageInternalError] = useState<string | null>(null);
+  // containerRef is removed, canvas directly uses its parent's flow for CSS sizing if needed
   const [loadedHotspotImages, setLoadedHotspotImages] = useState<Record<string, HTMLImageElement>>({});
 
-  // Effect to load the main map background image
-  useEffect(() => {
-    let isMounted = true;
-    setIsMapImageInternalLoading(true);
-    setMapImageInternalError(null);
-    setMapImage(null); 
-
-    if (!mapImageUrl) {
-        if (isMounted) {
-            setMapImageInternalError("Map image URL is missing.");
-            setIsMapImageInternalLoading(false);
-        }
-        return;
-    }
-
-    const img = new Image();
-    img.src = mapImageUrl;
-    img.onload = () => {
-      if (isMounted) {
-        setMapImage(img);
-        setIsMapImageInternalLoading(false);
-      }
-    };
-    img.onerror = () => {
-      if (isMounted) {
-        console.error(`MapCanvas.tsx: Failed to load map image: ${mapImageUrl}`);
-        setMapImageInternalError(`Failed to load map image.`);
-        setIsMapImageInternalLoading(false);
-      }
-    };
-    // Cleanup function to set isMounted to false when the component unmounts
-    return () => { isMounted = false; };
-  }, [mapImageUrl]);
-
-  // Effect to preload hotspot icon images
+  // Preload hotspot icon images
   useEffect(() => {
     let isMounted = true;
     const images: Record<string, HTMLImageElement> = {};
-    // Filter hotspots that have an iconSrc defined
     const iconHotspots = hotspots.filter(h => h.iconSrc);
     
     if (iconHotspots.length === 0) {
-      if (isMounted) setLoadedHotspotImages({}); // No icons to load
+      if (isMounted) setLoadedHotspotImages({});
       return;
     }
 
     let imagesToLoadCount = 0;
-    // Count how many new unique icons need to be loaded
     iconHotspots.forEach(hotspot => {
         if (hotspot.iconSrc && !loadedHotspotImages[hotspot.iconSrc] && !images[hotspot.iconSrc]) {
             imagesToLoadCount++;
         }
     });
 
-    if (imagesToLoadCount === 0) { // All icons already processed or no new icons
+    if (imagesToLoadCount === 0) {
         if (isMounted) setLoadedHotspotImages(current => ({...current, ...images}));
         return;
     }
     
     let imagesLoadedCount = 0;
     iconHotspots.forEach(hotspot => {
-      // Load only if iconSrc exists and not already loaded/loading
       if (hotspot.iconSrc && !loadedHotspotImages[hotspot.iconSrc] && !images[hotspot.iconSrc]) { 
         const img = new Image();
         img.src = hotspot.iconSrc;
-        images[hotspot.iconSrc] = img; // Add to current batch to avoid re-triggering
+        images[hotspot.iconSrc] = img; 
         img.onload = () => {
           imagesLoadedCount++;
           if (imagesLoadedCount === imagesToLoadCount && isMounted) {
-            // All new icons in this batch are loaded, update state
             setLoadedHotspotImages(prev => ({...prev, ...images}));
           }
         };
         img.onerror = () => {
           console.error(`Failed to load hotspot icon: ${hotspot.iconSrc}`);
-          imagesLoadedCount++; // Count as "attempted"
+          imagesLoadedCount++; 
           if (imagesLoadedCount === imagesToLoadCount && isMounted) {
-            setLoadedHotspotImages(prev => ({...prev, ...images})); // Update state even if some failed
+            setLoadedHotspotImages(prev => ({...prev, ...images}));
           }
         };
       }
     });
     return () => { isMounted = false; };
-  }, [hotspots, loadedHotspotImages]); // Depend on hotspots and loadedHotspotImages to handle dynamic changes
+  }, [hotspots, loadedHotspotImages]);
 
-  // Memoized function to draw everything on the canvas
+  // Drawing logic for hotspots on a transparent canvas
   const drawCanvas = useCallback(() => {
     const canvas = canvasRef.current;
-    const container = containerRef.current;
-    // Ensure all necessary elements and dimensions are available
-    if (!canvas || !container || mapPixelWidth === 0 || mapPixelHeight === 0) {
+    if (!canvas || canvasWidth === 0 || canvasHeight === 0) {
       return;
     }
     
@@ -125,159 +81,103 @@ const MapCanvas: React.FC<MapCanvasProps> = ({
       return;
     }
 
-    const containerWidth = container.clientWidth;
-    const containerHeight = container.clientHeight;
-    // If container has no size yet, don't attempt to draw
-    if (containerWidth === 0 || containerHeight === 0) return;
+    // Set canvas drawing surface size to the full world dimensions
+    canvas.width = canvasWidth;
+    canvas.height = canvasHeight;
 
-    // Calculate canvas drawing dimensions to maintain aspect ratio
-    const mapAspectRatio = mapPixelWidth / mapPixelHeight;
-    let canvasDrawWidth = containerWidth;
-    let canvasDrawHeight = containerWidth / mapAspectRatio;
-
-    if (canvasDrawHeight > containerHeight) {
-        canvasDrawHeight = containerHeight;
-        canvasDrawWidth = containerHeight * mapAspectRatio;
-    }
-    
-    // Set the actual drawing size of the canvas
-    canvas.width = canvasDrawWidth;
-    canvas.height = canvasDrawHeight;
-
-    // Clear the canvas before drawing
+    // Clear the canvas (it's transparent, so this ensures no old drawings)
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Display loading message if map image is still loading
-    if (isMapImageInternalLoading) {
-        ctx.fillStyle = '#555'; // Dark grey for loading text
-        ctx.font = '16px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText("Loading map image...", canvas.width / 2, canvas.height / 2);
-        return; // Don't draw further if image isn't ready
-    }
-
-    // Display error message if map image failed to load
-    if (mapImageInternalError || !mapImage) {
-        ctx.fillStyle = 'red';
-        ctx.font = 'bold 16px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText(mapImageInternalError || "Error: Map image unavailable.", canvas.width / 2, canvas.height / 2);
-        return; // Don't draw further if image is errored
-    }
-    
-    // Draw the main map image, scaled to fit the canvas
-    ctx.drawImage(mapImage, 0, 0, canvas.width, canvas.height);
-
-    // Calculate scaling factors from original map pixels to canvas pixels
-    const scaleX = canvas.width / mapPixelWidth;
-    const scaleY = canvas.height / mapPixelHeight;
-    // Use a single effective scale for icons to maintain their aspect ratio
-    const effectiveScale = Math.min(scaleX, scaleY);
-
-    // Draw each hotspot
+    // Hotspots are drawn at their absolute world coordinates. No scaling needed here
+    // as the canvas drawing surface IS the world.
     hotspots.forEach(hotspot => {
-      const drawX = hotspot.x * scaleX; // Scaled X position
-      const drawY = hotspot.y * scaleY; // Scaled Y position
+      const drawX = hotspot.x; // Use direct world coordinates
+      const drawY = hotspot.y; // Use direct world coordinates
       const icon = hotspot.iconSrc ? loadedHotspotImages[hotspot.iconSrc] : null;
-      const baseIconSize = 32; // Base size of icon in pixels (can be adjusted)
-      const iconDrawSize = baseIconSize * effectiveScale; // Scaled icon size
+      const baseIconSize = 32; // Base size of icon in pixels for the world map
+      // Icon size remains constant relative to the world map, no scaling based on canvas view needed.
 
-      // Draw icon if loaded, otherwise draw a fallback circle
       if (icon && icon.complete && icon.naturalHeight !== 0) {
-        ctx.drawImage(icon, drawX - iconDrawSize / 2, drawY - iconDrawSize / 2, iconDrawSize, iconDrawSize);
+        ctx.drawImage(icon, drawX - baseIconSize / 2, drawY - baseIconSize / 2, baseIconSize, baseIconSize);
       } else {
-        const fallbackRadius = Math.max(5, 10 * effectiveScale); // Ensure a minimum visible size
+        const fallbackRadius = 10; 
         ctx.beginPath();
         ctx.arc(drawX, drawY, fallbackRadius, 0, 2 * Math.PI, false);
-        // Orange if icon was specified but failed to load, Red if no icon was specified
-        ctx.fillStyle = hotspot.iconSrc ? 'rgba(255, 165, 0, 0.6)' : 'rgba(255, 0, 0, 0.6)'; 
+        ctx.fillStyle = hotspot.iconSrc ? 'rgba(255, 165, 0, 0.7)' : 'rgba(255, 0, 0, 0.7)'; 
         ctx.fill();
-        ctx.lineWidth = Math.max(1, 2 * effectiveScale);
+        ctx.lineWidth = 2;
         ctx.strokeStyle = hotspot.iconSrc ? '#FFA500' : '#FF0000';
         ctx.stroke();
       }
 
-      // Draw hotspot name below the icon/circle
-      const fontSize = Math.max(10, 12 * effectiveScale); // Minimum font size 10px
+      const fontSize = 12; // Fixed font size for world map
       ctx.fillStyle = 'black';
       ctx.font = `bold ${fontSize}px Arial`;
       ctx.textAlign = 'center';
-      ctx.strokeStyle = 'white'; // White outline for better readability
-      ctx.lineWidth = Math.max(1, 3 * effectiveScale); // Outline thickness
-      // Position text below the icon
-      const textYPosition = drawY + iconDrawSize / 2 + fontSize * 1.2; 
+      ctx.strokeStyle = 'white'; 
+      ctx.lineWidth = 3; 
+      const textYPosition = drawY + baseIconSize / 2 + fontSize * 1.2; 
       ctx.strokeText(hotspot.name, drawX, textYPosition); 
       ctx.fillText(hotspot.name, drawX, textYPosition);
     });
-  }, [mapImage, hotspots, loadedHotspotImages, mapPixelWidth, mapPixelHeight, isMapImageInternalLoading, mapImageInternalError]); // Dependencies for useCallback
+  }, [hotspots, loadedHotspotImages, canvasWidth, canvasHeight]); // Depend on world dimensions
 
-  // Effect for initial drawing and handling window resize
+  // Effect for initial drawing
   useEffect(() => {
-    drawCanvas(); // Initial draw when component mounts or dependencies change
-    
-    const container = containerRef.current;
-    if (!container) return;
+    drawCanvas(); 
+  }, [drawCanvas]); // Redraw when hotspots or dimensions change
 
-    // Use ResizeObserver to redraw canvas when its container size changes
-    const resizeObserver = new ResizeObserver(() => {
-      drawCanvas();
-    });
-    resizeObserver.observe(container);
-
-    // Cleanup: unobserve on component unmount
-    return () => { 
-      if (container) { // Check if container still exists
-        resizeObserver.unobserve(container);
-      }
-    };
-  }, [drawCanvas]); // Re-run effect if drawCanvas function instance changes
-
-  // Handles clicks on the canvas to detect hotspot interaction
+  // Click handler for hotspots
   const handleCanvasClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
-    // Ensure canvas and map image are ready, and no loading/error states
-    if (!canvasRef.current || !mapImage || mapPixelWidth === 0 || mapPixelHeight === 0 || isMapImageInternalLoading || mapImageInternalError) return;
+    if (!canvasRef.current || canvasWidth === 0 || canvasHeight === 0) return;
 
     const canvas = canvasRef.current;
-    const rect = canvas.getBoundingClientRect(); // Get canvas position and size on screen
+    const rect = canvas.getBoundingClientRect(); // Position of canvas element on screen
     
-    // Calculate click coordinates relative to the canvas's internal coordinate system
-    const scaleXDisplay = canvas.width / rect.width;
-    const scaleYDisplay = canvas.height / rect.height;
-    const clickXCanvas = (event.clientX - rect.left) * scaleXDisplay;
-    const clickYCanvas = (event.clientY - rect.top) * scaleYDisplay;
+    // Calculate click coordinates relative to the canvas element
+    const clickXOnElement = event.clientX - rect.left;
+    const clickYOnElement = event.clientY - rect.top;
 
-    // Scaling factors from original map image pixels to current canvas drawing pixels
-    const mapToCanvasScaleX = canvas.width / mapPixelWidth;
-    const mapToCanvasScaleY = canvas.height / mapPixelHeight;
-    const effectiveIconScale = Math.min(mapToCanvasScaleX, mapToCanvasScaleY); // For consistent icon hit area scaling
+    // Convert click coordinates on the (potentially CSS-scaled) canvas element
+    // to coordinates on the canvas's internal drawing surface (world coordinates).
+    const worldX = (clickXOnElement / canvas.clientWidth) * canvas.width;
+    const worldY = (clickYOnElement / canvas.clientHeight) * canvas.height;
+    
+    const baseIconHitRadius = 16; // Base hit radius (half of 32px base icon size)
 
-    // Iterate through hotspots to find if any was clicked
     for (const hotspot of hotspots) {
-      const hotspotCanvasX = hotspot.x * mapToCanvasScaleX; // Hotspot's center X on canvas
-      const hotspotCanvasY = hotspot.y * mapToCanvasScaleY; // Hotspot's center Y on canvas
-      const baseIconHitRadius = 16; // Base hit radius (e.g., half of 32px base icon size)
-      const clickableRadius = Math.max(10, baseIconHitRadius * effectiveIconScale); // Scaled hit radius, with a minimum
-
-      // Calculate distance from click to hotspot center
+      // Hotspot x,y are already world coordinates
       const distance = Math.sqrt(
-        Math.pow(clickXCanvas - hotspotCanvasX, 2) + 
-        Math.pow(clickYCanvas - hotspotCanvasY, 2)
+        Math.pow(worldX - hotspot.x, 2) + 
+        Math.pow(worldY - hotspot.y, 2)
       );
 
-      // If click is within the hotspot's clickable radius
-      if (distance < clickableRadius) {
+      if (distance < baseIconHitRadius) {
         if (hotspot.route) {
-          navigate(hotspot.route); // Navigate to the hotspot's defined route
+          navigate(hotspot.route); 
         }
-        break; // Stop checking other hotspots once one is found
+        break; 
       }
     }
   };
 
   return (
-    <div ref={containerRef} className="map-canvas-container"> 
-      <canvas ref={canvasRef} onClick={handleCanvasClick} />
-    </div>
+    // The canvas element itself will be sized by CSS to match its parent (.map-scrollable-content)
+    // but its drawing surface (width/height attributes) is set to the full world size.
+    <canvas 
+        ref={canvasRef} 
+        onClick={handleCanvasClick} 
+        className="hotspot-canvas-overlay"
+        style={{
+            position: 'absolute', // Overlay on top of the background div
+            top: 0,
+            left: 0,
+            // CSS width/height make the canvas element responsive to its container
+            // The drawing inside is on a larger surface if canvasWidth/Height are large
+            width: `${canvasWidth}px`,  // CSS width should match drawing surface width
+            height: `${canvasHeight}px`, // CSS height should match drawing surface height
+        }}
+    />
   );
 };
 

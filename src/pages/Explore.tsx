@@ -1,5 +1,5 @@
 // src/pages/Explore.tsx
-// 'React' import removed as it's not explicitly needed with modern JSX transforms
+// 'React' import removed as it's not needed with modern JSX transforms.
 import { useEffect, useState } from 'react'; 
 import MapCanvas from '../components/MapCanvas'; 
 import type { AppHotspot, TiledMapData, TiledObject } from '../types'; 
@@ -13,84 +13,48 @@ const getTiledObjectProperty = (object: TiledObject, propertyName: string): any 
   return object.properties.find(p => p.name === propertyName)?.value;
 };
 
+// Define the conceptual size of your scrollable world.
+// This could be based on how many tiles you want or a fixed large area.
+// For example, if your tile is 1200x800, and you want a 3x3 grid of it:
+const WORLD_PIXEL_WIDTH = 3600; // Example: 3 * 1200
+const WORLD_PIXEL_HEIGHT = 2400; // Example: 3 * 800
+
 export default function Explore() {
   const [hotspots, setHotspots] = useState<AppHotspot[]>([]);
-  const [mapPixelWidth, setMapPixelWidth] = useState(0);
-  const [mapPixelHeight, setMapPixelHeight] = useState(0);
   const [isLoading, setIsLoading] = useState(true); 
   const [error, setError] = useState<string | null>(null);
 
-  // Path to your world map background image in the `public` folder
-  const mapImageUrl = "/maps/world_map_background.png"; 
+  // Path to your world map background image (this image will be tiled)
+  const mapTileImageUrl = "/maps/world_map_background.png"; 
 
   useEffect(() => {
     let isMounted = true; 
 
-    const fetchMapDataAndDimensions = async () => {
+    const fetchMapHotspotData = async () => {
       if (!isMounted) return;
       setIsLoading(true); 
       setError(null);
-      setMapPixelWidth(0); 
-      setMapPixelHeight(0);
       setHotspots([]); 
 
-      let dimensionsAttempted = false;
-
-      // 1. Attempt to get map dimensions from the image
       try {
-        const img = new Image();
-        img.src = mapImageUrl;
-        // Use a promise to await image loading for dimensions
-        // 'reject' parameter removed as it's not used in this promise's logic
-        await new Promise<void>((resolve) => { 
-            img.onload = () => {
-                if (isMounted) {
-                    setMapPixelWidth(img.naturalWidth);
-                    setMapPixelHeight(img.naturalHeight);
-                }
-                dimensionsAttempted = true;
-                resolve();
-            };
-            img.onerror = () => {
-                console.error(`Explore.tsx: Failed to load map image at ${mapImageUrl} to determine dimensions. Using fallback.`);
-                if (isMounted) {
-                    setMapPixelWidth(1200); // Fallback width
-                    setMapPixelHeight(800); // Fallback height
-                }
-                dimensionsAttempted = true; 
-                resolve(); // Resolve even on error to allow JSON fetching to proceed with fallbacks
-            };
-        });
-      } catch (e) {
-          console.error("Explore.tsx: Exception during image dimension loading:", e);
-          if (isMounted) {
-            setMapPixelWidth(1200); 
-            setMapPixelHeight(800);
-          }
-          dimensionsAttempted = true;
-      }
-
-      // Ensure dimensions are set (even to fallback) before proceeding
-      if (!isMounted || !dimensionsAttempted) {
-        if (dimensionsAttempted && isMounted) setIsLoading(false); 
-        return;
-      }
-
-      // 2. Fetch the Tiled JSON data
-      try {
-        const response = await fetch('/maps/world_map_data.json');
+        // Fetch the Tiled JSON data for hotspot locations
+        const response = await fetch('/maps/world_map_data.json'); // This JSON defines hotspot locations
         if (!response.ok) {
           throw new Error(`Failed to fetch map data: ${response.statusText} (status: ${response.status})`);
         }
         const tiledMapData: TiledMapData = await response.json();
+        
+        // Hotspots are defined relative to the Tiled map's origin (0,0)
+        // which we are treating as the top-left of our conceptual WORLD_PIXEL_WIDTH/HEIGHT.
         const hotspotLayer = tiledMapData.layers.find(layer => layer.name === "Hotspots" && layer.type === "objectgroup");
         
         if (hotspotLayer && hotspotLayer.objects) {
           const processedHotspots: AppHotspot[] = hotspotLayer.objects.map(obj => ({
             id: getTiledObjectProperty(obj, 'id_string') || `tiled-obj-${obj.id}`,
             name: getTiledObjectProperty(obj, 'name') || obj.name || 'Unnamed Hotspot',
-            x: obj.x + (obj.width / 2), // Use center of Tiled object
-            y: obj.y + (obj.height / 2), // Use center of Tiled object
+            // Coordinates from Tiled are used directly as they are in world space
+            x: obj.x + (obj.width / 2), 
+            y: obj.y + (obj.height / 2), 
             route: getTiledObjectProperty(obj, 'route') || '/',
             iconSrc: getTiledObjectProperty(obj, 'iconSrc') || undefined,
           }));
@@ -106,16 +70,16 @@ export default function Explore() {
             setHotspots([]);
         }
       } finally {
-        if (isMounted) setIsLoading(false); // All loading attempts (dimensions + JSON) are done
+        if (isMounted) setIsLoading(false);
       }
     };
 
-    fetchMapDataAndDimensions();
+    fetchMapHotspotData();
 
     return () => {
         isMounted = false; 
     };
-  }, [mapImageUrl]);
+  }, []); // mapTileImageUrl is static, so not needed in deps if defined outside
 
   if (isLoading) {
     return <div className="explore-status-message explore-loading">Loading Map Data...</div>;
@@ -125,19 +89,24 @@ export default function Explore() {
     return <div className="explore-status-message explore-error">Error loading map: {error}</div>;
   }
   
-  if (mapPixelWidth === 0 || mapPixelHeight === 0) {
-    // This state should ideally be covered by isLoading, but acts as a safeguard
-    return <div className="explore-status-message explore-loading">Initializing map dimensions...</div>;
-  }
-
   return (
-    <div className="explore-page">
-      <MapCanvas 
-        mapImageUrl={mapImageUrl} 
-        hotspots={hotspots}
-        mapPixelWidth={mapPixelWidth}
-        mapPixelHeight={mapPixelHeight}
-      />
+    <div className="explore-page"> {/* This div will handle scrolling */}
+      <div 
+        className="map-scrollable-content" 
+        style={{ 
+          width: `${WORLD_PIXEL_WIDTH}px`, 
+          height: `${WORLD_PIXEL_HEIGHT}px`,
+          backgroundImage: `url(${mapTileImageUrl})`,
+        }}
+      >
+        <MapCanvas 
+          // mapImageUrl is no longer passed, canvas is transparent
+          hotspots={hotspots}
+          // Pass the full world dimensions for the canvas drawing surface
+          canvasWidth={WORLD_PIXEL_WIDTH} 
+          canvasHeight={WORLD_PIXEL_HEIGHT}
+        />
+      </div>
     </div>
   );
 }

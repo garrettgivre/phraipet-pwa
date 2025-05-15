@@ -1,18 +1,23 @@
 /* src/pages/Explore.css */
 .explore-page {
   width: 100%;
-  height: 100%; 
-  display: flex;
-  flex-direction: column;
-  align-items: stretch; 
-  justify-content: stretch; 
-  background-color: #1e1e1e; 
-  overflow: hidden; 
+  height: 100%; /* Fill the <main> content area */
+  overflow: auto; /* CRITICAL: This makes the page scrollable if content is larger */
+  background-color: #1e1e1e; /* Fallback, actual background is on .map-scrollable-content */
+  position: relative; /* For potential absolute children if any, though not used now */
   box-sizing: border-box;
 }
 
+.map-scrollable-content {
+  position: relative; /* For the absolutely positioned canvas overlay */
+  /* Width and height are set by inline styles in Explore.tsx to WORLD_PIXEL_WIDTH/HEIGHT */
+  background-repeat: repeat; /* Tile the background image */
+  background-position: top left; /* Ensure tiling starts from top-left */
+  /* Add a default background color in case the image doesn't load or is transparent */
+  background-color: #3a3a3a; 
+}
+
 .explore-status-message { 
-  flex-grow: 1; 
   display: flex;
   align-items: center;
   justify-content: center;
@@ -21,15 +26,16 @@
   text-align: center;
   padding: 20px;
   width: 100%;
-  height: 100%;
+  height: 100%; /* Take full height of .explore-page if it's the only child */
   box-sizing: border-box;
-}
-
-.explore-loading {
-  background-color: #333; 
+  position: absolute; /* Overlay on top of everything if needed */
+  top: 0;
+  left: 0;
+  background-color: rgba(0,0,0,0.7); /* Semi-transparent background for message */
 }
 
 .explore-error {
-  background-color: #502222; 
+  /* Specific styles for error message if different from generic status */
+  /* background-color: #502222; */ /* Covered by explore-status-message background */
   color: #ffdddd;
 }
