@@ -1,21 +1,20 @@
 /* src/pages/Explore.css */
 .explore-page {
   width: 100%;
-  height: 100%; /* This should make it fill the content area of App.tsx's <main> tag */
-  overflow: scroll; /* Changed from auto to scroll to force scrollbars if content overflows. Helps debugging. */
-  background-color: #1e1e1e; /* Dark background for the entire Explore page viewport */
+  height: 100%; /* Fill the <main> content area from App.tsx */
+  overflow: scroll; /* Use 'scroll' to force scrollbars if content overflows, 'auto' for production */
+  background-color: #121212; /* Dark background for the scrollable viewport area */
   box-sizing: border-box;
-  position: relative; /* Establishes a stacking context and positioning context for absolute children like status messages */
+  position: relative; /* Establishes a stacking context for absolute positioned children like status messages */
 }
 
 .map-scrollable-content {
   position: relative; /* For the absolutely positioned canvas overlay */
-  /* Width and height are set by inline styles in Explore.tsx to WORLD_PIXEL_WIDTH/HEIGHT */
-  /* This div needs to be large enough to cause .explore-page to scroll */
-  background-repeat: repeat;
-  background-position: top left;
-  background-color: #3a3a3a; /* Different background for the actual map area if explore-page bg shows through */
-  display: block; /* Ensure it behaves as a block-level element taking up its specified dimensions */
+  /* Width and height are set by inline styles in Explore.tsx to WORLD_PIXEL_WIDTH/HEIGHT.
+     This div needs to be large enough to cause .explore-page to scroll. */
+  background-repeat: repeat; /* Tile the background image */
+  background-position: top left; /* Ensure tiling starts from top-left */
+  background-color: #282828; /* Slightly lighter background for the actual map tiled area, visible if tile image has transparency */
 }
 
 /* Status messages (loading/error) */
@@ -33,11 +32,10 @@
   position: absolute; /* Overlay on top of the .explore-page content */
   top: 0;
   left: 0;
-  background-color: rgba(0, 0, 0, 0.85); /* Dark, semi-transparent background */
-  z-index: 10; /* Should be above .map-scrollable-content but below global UI like Header/NavBar if they had lower z-index (they don't, they are fixed and higher) */
-                 /* This z-index is relative to .explore-page */
+  background-color: rgba(0, 0, 0, 0.9); /* Darker, more opaque background for messages */
+  z-index: 200; /* High z-index to be above map content */
 }
 
 .explore-error {
-  color: #ffdddd; /* Lighter text for error on dark background */
+  color: #ff8a8a; /* Lighter red for error text on dark background */
 }

@@ -1,22 +1,19 @@
 /* src/components/MapCanvas.css */
 
-/* The .map-canvas-container div is removed from MapCanvas.tsx.
-  The canvas is now directly a child of .map-scrollable-content in Explore.tsx.
-  The canvas element itself will be styled via inline styles in MapCanvas.tsx
-  to be position: absolute and match the dimensions of .map-scrollable-content.
-*/
-
+/* This class is applied to the <canvas> element itself in MapCanvas.tsx */
 .hotspot-canvas-overlay {
-  display: block; /* Removes extra space below canvas */
+  display: block; /* Removes extra space below canvas if it were inline */
   position: absolute;
   top: 0;
   left: 0;
-  background-color: transparent; /* CRITICAL: Canvas must be transparent */
+  background-color: transparent; /* CRITICAL: Canvas must be transparent to see tiled background underneath */
   cursor: pointer;
-  /* The width and height attributes of the canvas are set by JS to mapWorldWidth/Height.
-     The CSS width and height are also set by JS inline styles to match those attributes,
-     making the canvas element itself take up the full world space.
-     The parent (.map-scrollable-content) provides the clipping viewport if it's smaller
-     than the canvas, due to .explore-page having overflow: auto.
+  /* The actual 'width' and 'height' attributes (drawing surface) of the canvas 
+    are set by JavaScript to canvasWidth/canvasHeight (e.g., WORLD_PIXEL_WIDTH).
+    The CSS 'width' and 'height' (visual size of the element) are also set by 
+    inline styles in MapCanvas.tsx to match these drawing surface dimensions.
+    This makes the canvas element itself as large as the scrollable world.
+    The parent div (.map-scrollable-content in Explore.tsx/Sunnybrook.tsx) 
+    is then scrolled by the .explore-page or .sunnybrook-page.
   */
 }

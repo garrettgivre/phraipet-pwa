@@ -1,16 +1,18 @@
 // src/types.ts
-// Define all the possible pet needs
+
+// Defines the possible categories for a pet's needs.
 export type Need = "hunger" | "happiness" | "cleanliness" | "affection" | "spirit";
 
-// Individual need info with description for UI purposes
+// Represents the information for displaying a single need in the UI.
 export type NeedInfo = {
-  need: Need;
-  emoji: string;
-  value: number;
-  desc: string;
+  need: Need;          // The category of the need.
+  emoji: string;       // Emoji representing the need.
+  value: number;       // Current numerical value of the need (e.g., 0-120).
+  desc: string;        // Textual description of the current need state (e.g., "Famished").
 };
 
-// The Pet object structure stored in Firebase and state
+// Defines the structure for a pet object.
+// This is used for both local state and Firebase storage.
 export interface Pet {
   hunger: number;
   happiness: number;
@@ -18,12 +20,12 @@ export interface Pet {
   affection: number;
   spirit: number;
   image: string;
-  lastNeedsUpdateTime?: number;
-  affectionGainedToday?: number;
-  lastAffectionGainDate?: string;
+  lastNeedsUpdateTime?: number;    // Optional: Timestamp of the last time needs were calculated and updated.
+  affectionGainedToday?: number; // Optional: Tracks how much affection has been gained on the current day.
+  lastAffectionGainDate?: string;  // Optional: The date (e.g., "YYYY-MM-DD") of the last affection gain.
 }
 
-// Type for decor items placed in a room
+// Defines the structure for a decor item that can be placed in a room.
 export type RoomDecorItem = {
   src: string;
   x: number;
@@ -32,20 +34,20 @@ export type RoomDecorItem = {
   height?: number;
 };
 
-// Decoration item types (for inventory items)
+// Defines the types of decoration items available in the inventory.
 export type DecorationItemType = "floor" | "wall" | "ceiling" | "backDecor" | "frontDecor" | "overlay";
 
-// Food item categories
+// Defines the categories for food items.
 export type FoodCategory = "Treat" | "Snack" | "LightMeal" | "HeartyMeal" | "Feast";
 
-// Cleaning item categories
+// Defines the categories for cleaning items.
 export type CleaningCategory = "QuickFix" | "BasicKit" | "StandardSet" | "PremiumCare" | "LuxurySpa";
 
-// Toy item categories
+// Defines the categories for toy items.
 export type ToyCategory = "ChewToy" | "Plushie" | "PuzzleToy" | "ActivityCenter" | "RoboticPal";
 
 
-// Base Inventory Item
+// Base interface for all inventory items.
 interface BaseInventoryItem {
   id: string;
   name: string;
@@ -53,35 +55,35 @@ interface BaseInventoryItem {
   description?: string;
 }
 
-// Decoration Inventory Item
+// Interface for decoration items as they appear in the inventory.
 export interface DecorationInventoryItem extends BaseInventoryItem {
   itemCategory: "decoration";
   type: DecorationItemType;
   colorOptions?: { label: string; src: string }[];
 }
 
-// Food Inventory Item
+// Interface for food items as they appear in the inventory.
 export interface FoodInventoryItem extends BaseInventoryItem {
   itemCategory: "food";
   type: FoodCategory;
   hungerRestored: number;
 }
 
-// Cleaning Inventory Item
+// Interface for cleaning items as they appear in the inventory.
 export interface CleaningInventoryItem extends BaseInventoryItem {
   itemCategory: "cleaning";
   type: CleaningCategory;
   cleanlinessBoost: number; 
 }
 
-// Toy Inventory Item
+// Interface for toy items as they appear in the inventory.
 export interface ToyInventoryItem extends BaseInventoryItem {
   itemCategory: "toy";
   type: ToyCategory;
   happinessBoost: number; 
 }
 
-// Union type for all inventory items
+// A union type representing any item that can be in the inventory.
 export type InventoryItem = 
   | DecorationInventoryItem 
   | FoodInventoryItem
@@ -104,9 +106,9 @@ export interface TiledObject {
   name: string;       // Name given to the object in Tiled editor
   type: string;       // Type string, if assigned in Tiled
   x: number;          // X-coordinate (top-left)
-  y: number;          // Y-coordinate (top-left) - Note: Tiled Y is often top of object, not baseline
-  width: number;      // Width of the object (often 0 for point objects)
-  height: number;     // Height of the object (often 0 for point objects)
+  y: number;          // Y-coordinate (top-left)
+  width: number;      // Width of the object
+  height: number;     // Height of the object
   rotation: number;
   gid?: number;       // Tile GID if it's a tile object
   visible: boolean;
@@ -151,8 +153,8 @@ export interface TiledMapData {
 export interface AppHotspot {
   id: string;         // Unique string ID (e.g., from "id_string" custom property)
   name: string;       // Display name (from "name" custom property or object name)
-  x: number;          // X-coordinate for placement on your canvas
-  y: number;          // Y-coordinate
+  x: number;          // X-coordinate for placement on your canvas (center of hotspot)
+  y: number;          // Y-coordinate for placement on your canvas (center of hotspot)
   route: string;      // Navigation route (from "route" custom property)
   iconSrc?: string;   // Optional path to an icon image (from "iconSrc" custom property)
 }

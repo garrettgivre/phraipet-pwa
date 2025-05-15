@@ -1,5 +1,4 @@
 // src/pages/Explore.tsx
-// 'React' import removed as it's not needed with modern JSX transforms.
 import { useEffect, useState } from 'react'; 
 import MapCanvas from '../components/MapCanvas'; 
 import type { AppHotspot, TiledMapData, TiledObject } from '../types'; 
@@ -14,17 +13,15 @@ const getTiledObjectProperty = (object: TiledObject, propertyName: string): any 
 };
 
 // Define the conceptual size of your scrollable world.
-// This could be based on how many tiles you want or a fixed large area.
-// For example, if your tile is 1200x800, and you want a 3x3 grid of it:
-const WORLD_PIXEL_WIDTH = 3600; // Example: 3 * 1200
-const WORLD_PIXEL_HEIGHT = 2400; // Example: 3 * 800
+const WORLD_PIXEL_WIDTH = 3600; // Example: 3 times your background tile width
+const WORLD_PIXEL_HEIGHT = 2400; // Example: 3 times your background tile height
 
 export default function Explore() {
   const [hotspots, setHotspots] = useState<AppHotspot[]>([]);
   const [isLoading, setIsLoading] = useState(true); 
   const [error, setError] = useState<string | null>(null);
 
-  // Path to your world map background image (this image will be tiled)
+  // Path to your world map background image (this image will be tiled by CSS)
   const mapTileImageUrl = "/maps/world_map_background.png"; 
 
   useEffect(() => {
@@ -37,22 +34,20 @@ export default function Explore() {
       setHotspots([]); 
 
       try {
-        // Fetch the Tiled JSON data for hotspot locations
-        const response = await fetch('/maps/world_map_data.json'); // This JSON defines hotspot locations
+        // Fetch the Tiled JSON data which defines hotspot locations
+        const response = await fetch('/maps/world_map_data.json'); 
         if (!response.ok) {
           throw new Error(`Failed to fetch map data: ${response.statusText} (status: ${response.status})`);
         }
         const tiledMapData: TiledMapData = await response.json();
         
-        // Hotspots are defined relative to the Tiled map's origin (0,0)
-        // which we are treating as the top-left of our conceptual WORLD_PIXEL_WIDTH/HEIGHT.
         const hotspotLayer = tiledMapData.layers.find(layer => layer.name === "Hotspots" && layer.type === "objectgroup");
         
         if (hotspotLayer && hotspotLayer.objects) {
           const processedHotspots: AppHotspot[] = hotspotLayer.objects.map(obj => ({
             id: getTiledObjectProperty(obj, 'id_string') || `tiled-obj-${obj.id}`,
             name: getTiledObjectProperty(obj, 'name') || obj.name || 'Unnamed Hotspot',
-            // Coordinates from Tiled are used directly as they are in world space
+            // Coordinates from Tiled are used directly as they are in world space (center of object)
             x: obj.x + (obj.width / 2), 
             y: obj.y + (obj.height / 2), 
             route: getTiledObjectProperty(obj, 'route') || '/',
@@ -81,28 +76,29 @@ export default function Explore() {
     };
   }, []); // mapTileImageUrl is static, so not needed in deps if defined outside
 
+  // Render loading state
   if (isLoading) {
     return <div className="explore-status-message explore-loading">Loading Map Data...</div>;
   }
 
+  // Render error state
   if (error) {
     return <div className="explore-status-message explore-error">Error loading map: {error}</div>;
   }
   
+  // Render the map
   return (
-    <div className="explore-page"> {/* This div will handle scrolling */}
+    <div className="explore-page"> {/* This div handles scrolling */}
       <div 
         className="map-scrollable-content" 
         style={{ 
           width: `${WORLD_PIXEL_WIDTH}px`, 
           height: `${WORLD_PIXEL_HEIGHT}px`,
-          backgroundImage: `url(${mapTileImageUrl})`,
+          backgroundImage: `url(${mapTileImageUrl})`, // CSS will tile this
         }}
       >
         <MapCanvas 
-          // mapImageUrl is no longer passed, canvas is transparent
           hotspots={hotspots}
-          // Pass the full world dimensions for the canvas drawing surface
           canvasWidth={WORLD_PIXEL_WIDTH} 
           canvasHeight={WORLD_PIXEL_HEIGHT}
         />
