@@ -1,3 +1,4 @@
+// src/types.ts
 // Define all the possible pet needs
 export type Need = "hunger" | "happiness" | "cleanliness" | "affection" | "spirit";
 
@@ -112,7 +113,6 @@ export interface TiledObject {
   properties?: TiledProperty[]; // Array of custom properties
   point?: boolean;    // True if it's a point object
   ellipse?: boolean;  // True if it's an ellipse object
-  // Add other Tiled object properties if needed (e.g., polygon, polyline)
 }
 
 // Represents a layer from a Tiled map
@@ -126,7 +126,7 @@ export interface TiledLayer {
   y: number;           // Layer offset Y
   objects?: TiledObject[]; // For "objectgroup" layers
   image?: string;      // For "imagelayer" layers (path to image)
-  // Add other Tiled layer properties if needed (e.g., data for tilelayer)
+  properties?: TiledProperty[]; // Layer custom properties
 }
 
 // Represents the overall structure of a Tiled map JSON file
@@ -136,8 +136,7 @@ export interface TiledMapData {
   tilewidth: number;    // Width of a single tile in pixels
   tileheight: number;   // Height of a single tile in pixels
   layers: TiledLayer[]; // Array of layers in the map
-  // Add other Tiled map properties (e.g., orientation, version, properties)
-  properties?: TiledProperty[];
+  properties?: TiledProperty[]; // Map custom properties
   orientation?: string;
   renderorder?: string;
   version?: string | number;
