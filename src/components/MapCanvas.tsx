@@ -1,165 +1,116 @@
 // src/components/MapCanvas.tsx
-import React, { useRef, useEffect, useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-import type { AppHotspot } from '../types';
-import './MapCanvas.css'; // Standard CSS import
+import React, { useEffect, useRef } from 'react';
+import type { AppHotspot } from '../types'; // Ensure AppHotspot is imported from your types file
+import './MapCanvas.css'; // Styles for the canvas container if any (e.g., .hotspot-canvas-overlay)
 
 interface MapCanvasProps {
   hotspots: AppHotspot[];
-  canvasWidth: number;    // Full width of the conceptual map area (drawing surface)
-  canvasHeight: number;   // Full height of the conceptual map area
+  canvasWidth: number;
+  canvasHeight: number;
+  onHotspotClick?: (hotspot: AppHotspot) => void;
 }
 
-const MapCanvas: React.FC<MapCanvasProps> = ({ 
+const MapCanvas: React.FC<MapCanvasProps> = ({
   hotspots,
-  canvasWidth, 
-  canvasHeight 
+  canvasWidth,
+  canvasHeight,
+  onHotspotClick,
 }) => {
-  const navigate = useNavigate();
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [loadedHotspotImages, setLoadedHotspotImages] = useState<Record<string, HTMLImageElement>>({});
 
-  // Preload hotspot icon images
   useEffect(() => {
-    let isMounted = true;
-    const images: Record<string, HTMLImageElement> = {};
-    const iconHotspots = hotspots.filter(h => h.iconSrc);
-    
-    if (iconHotspots.length === 0) {
-      if (isMounted) setLoadedHotspotImages({});
-      return;
-    }
-
-    let imagesToLoadCount = 0;
-    iconHotspots.forEach(hotspot => {
-        if (hotspot.iconSrc && !loadedHotspotImages[hotspot.iconSrc] && !images[hotspot.iconSrc]) {
-            imagesToLoadCount++;
-        }
-    });
-
-    if (imagesToLoadCount === 0) { 
-        if (isMounted) setLoadedHotspotImages(current => ({...current, ...images}));
-        return;
-    }
-    
-    let imagesLoadedCount = 0;
-    iconHotspots.forEach(hotspot => {
-      if (hotspot.iconSrc && !loadedHotspotImages[hotspot.iconSrc] && !images[hotspot.iconSrc]) { 
-        const img = new Image();
-        img.src = hotspot.iconSrc;
-        images[hotspot.iconSrc] = img; 
-        img.onload = () => {
-          imagesLoadedCount++;
-          if (imagesLoadedCount === imagesToLoadCount && isMounted) {
-            setLoadedHotspotImages(prev => ({...prev, ...images}));
-          }
-        };
-        img.onerror = () => {
-          console.error(`MapCanvas: Failed to load hotspot icon: ${hotspot.iconSrc}`);
-          imagesLoadedCount++; 
-          if (imagesLoadedCount === imagesToLoadCount && isMounted) {
-            setLoadedHotspotImages(prev => ({...prev, ...images})); // Update state even if some failed
-          }
-        };
-      }
-    });
-    return () => { isMounted = false; };
-  }, [hotspots, loadedHotspotImages]); 
-
-  // Drawing logic for hotspots on a transparent canvas
-  const drawCanvas = useCallback(() => {
     const canvas = canvasRef.current;
-    if (!canvas || canvasWidth === 0 || canvasHeight === 0) {
-      return;
-    }
-    
+    if (!canvas) return;
     const ctx = canvas.getContext('2d');
-    if (!ctx) {
-      console.error("MapCanvas: Failed to get 2D context from canvas.");
-      return;
-    }
+    if (!ctx) return;
 
+    // Set canvas actual drawing surface size
+    // This should match the conceptual size of the map area being displayed
     canvas.width = canvasWidth;
     canvas.height = canvasHeight;
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Clear canvas before drawing
+    ctx.clearRect(0, 0, canvasWidth, canvasHeight);
 
+    // Draw hotspots
     hotspots.forEach(hotspot => {
-      const drawX = hotspot.x; 
-      const drawY = hotspot.y; 
-      const icon = hotspot.iconSrc ? loadedHotspotImages[hotspot.iconSrc] : null;
-      const baseIconSize = 32; 
-
-      if (icon && icon.complete && icon.naturalHeight !== 0) {
-        ctx.drawImage(icon, drawX - baseIconSize / 2, drawY - baseIconSize / 2, baseIconSize, baseIconSize);
+      if (hotspot.iconSrc) {
+        const img = new Image();
+        img.onload = () => {
+          const iconSize = hotspot.iconSize || 32; // Default icon size if not specified
+          try {
+            ctx.drawImage(img, hotspot.x - iconSize / 2, hotspot.y - iconSize / 2, iconSize, iconSize);
+          } catch (e) {
+            console.error("Error drawing image for hotspot:", hotspot.name, e);
+            // Fallback drawing if image draw fails
+            drawFallbackHotspot(ctx, hotspot);
+          }
+        };
+        img.onerror = () => {
+          console.warn(`Failed to load icon for hotspot: ${hotspot.name} from ${hotspot.iconSrc}`);
+          // Fallback drawing if icon fails to load
+          drawFallbackHotspot(ctx, hotspot);
+        };
+        img.src = hotspot.iconSrc;
       } else {
-        const fallbackRadius = 10; 
-        ctx.beginPath();
-        ctx.arc(drawX, drawY, fallbackRadius, 0, 2 * Math.PI, false);
-        ctx.fillStyle = hotspot.iconSrc ? 'rgba(255, 165, 0, 0.7)' : 'rgba(255, 0, 0, 0.7)'; 
-        ctx.fill();
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = hotspot.iconSrc ? '#FFA500' : '#FF0000';
-        ctx.stroke();
+        // Fallback drawing if no iconSrc
+        drawFallbackHotspot(ctx, hotspot);
       }
-
-      const fontSize = 12; 
-      ctx.fillStyle = 'black';
-      ctx.font = `bold ${fontSize}px Arial`;
-      ctx.textAlign = 'center';
-      ctx.strokeStyle = 'white'; 
-      ctx.lineWidth = 3; 
-      const textYPosition = drawY + baseIconSize / 2 + fontSize * 1.2; 
-      ctx.strokeText(hotspot.name, drawX, textYPosition); 
-      ctx.fillText(hotspot.name, drawX, textYPosition);
     });
-  }, [hotspots, loadedHotspotImages, canvasWidth, canvasHeight]);
+  }, [hotspots, canvasWidth, canvasHeight]); // Redraw when these change
 
-  useEffect(() => {
-    drawCanvas(); 
-  }, [drawCanvas]); 
+  const drawFallbackHotspot = (ctx: CanvasRenderingContext2D, hotspot: AppHotspot) => {
+    const radius = hotspot.radius || 20;
+    ctx.fillStyle = 'rgba(0, 100, 255, 0.7)'; // A visible fallback color
+    ctx.beginPath();
+    ctx.arc(hotspot.x, hotspot.y, radius, 0, 2 * Math.PI);
+    ctx.fill();
+
+    if (hotspot.name) {
+      ctx.fillStyle = 'white';
+      ctx.font = '12px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText(hotspot.name, hotspot.x, hotspot.y + radius + 12); // Adjust text position
+    }
+  };
 
   const handleCanvasClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!canvasRef.current || canvasWidth === 0 || canvasHeight === 0) return;
-
     const canvas = canvasRef.current;
-    const rect = canvas.getBoundingClientRect(); 
-    
-    const clickXOnElement = event.clientX - rect.left;
-    const clickYOnElement = event.clientY - rect.top;
+    if (!canvas || !onHotspotClick) return;
 
-    const worldX = (clickXOnElement / canvas.clientWidth) * canvas.width;
-    const worldY = (clickYOnElement / canvas.clientHeight) * canvas.height;
-    
-    const baseIconHitRadius = 16; 
+    const rect = canvas.getBoundingClientRect();
+    // Calculate mouse click position relative to the canvas's drawing surface
+    // This accounts for CSS scaling of the canvas element vs. its internal resolution
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
 
-    for (const hotspot of hotspots) {
+    const clickX = (event.clientX - rect.left) * scaleX;
+    const clickY = (event.clientY - rect.top) * scaleY;
+
+    // Find clicked hotspot (simple circular collision detection)
+    // Iterate in reverse if you want to prioritize hotspots drawn last (topmost)
+    for (let i = hotspots.length - 1; i >= 0; i--) {
+      const hotspot = hotspots[i];
       const distance = Math.sqrt(
-        Math.pow(worldX - hotspot.x, 2) + 
-        Math.pow(worldY - hotspot.y, 2)
+        Math.pow(clickX - hotspot.x, 2) + Math.pow(clickY - hotspot.y, 2)
       );
+      const clickRadius = hotspot.radius || 20; // Use hotspot's defined radius or a default
 
-      if (distance < baseIconHitRadius) {
-        if (hotspot.route) {
-          navigate(hotspot.route); 
-        }
-        break; 
+      if (distance < clickRadius) {
+        onHotspotClick(hotspot);
+        return; // Found and handled a hotspot, no need to check others
       }
     }
   };
 
   return (
-    <canvas 
-        ref={canvasRef} 
-        onClick={handleCanvasClick} 
-        className="hotspot-canvas-overlay"
-        style={{
-            position: 'absolute', 
-            top: 0,
-            left: 0,
-            width: `${canvasWidth}px`,  
-            height: `${canvasHeight}px`, 
-        }}
+    <canvas
+      ref={canvasRef}
+      className="hotspot-canvas-overlay" // Make sure this class styles position, width, height correctly
+      onClick={handleCanvasClick}
+      style={{ display: 'block' }} // Common practice for canvas elements
+      // width and height attributes are set in useEffect to control drawing surface
+      // CSS width/height (via className or style prop) control element's display size
     />
   );
 };

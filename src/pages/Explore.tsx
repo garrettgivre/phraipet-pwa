@@ -1,31 +1,33 @@
-// src/pages/Explore.tsx (Revised for Robust Layout)
+// src/pages/Explore.tsx
 import { useEffect, useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import MapCanvas from '../components/MapCanvas';
-import type { AppHotspot, TiledMapData, TiledObject } from '../types';
-import './Explore.css'; // This will use the CSS provided in the next block
+import type { AppHotspot, TiledMapData, TiledObject, TiledProperty } from '../types'; // Ensure TiledProperty is imported
+import './Explore.css';
 
 // Helper function to get properties from Tiled objects
 const getTiledObjectProperty = (object: TiledObject, propertyName: string): any | undefined => {
   if (!object.properties) {
     return undefined;
   }
-  const property = object.properties.find(p => p.name === propertyName);
+  const property: TiledProperty | undefined = object.properties.find(p => p.name === propertyName);
   return property?.value;
 };
 
-// Define the large dimensions for your scrollable world map
+// Configuration for the world map
 const WORLD_MAP_PIXEL_WIDTH = 7200;
 const WORLD_MAP_PIXEL_HEIGHT = 4800;
+const MAP_BACKGROUND_IMAGE_URL = "/maps/world_map_background.png"; // Ensure this path is correct in your public folder
+const TILED_MAP_DATA_URL = '/maps/world_map_data.json'; // Path to your Tiled JSON
 
 export default function Explore() {
   const [hotspots, setHotspots] = useState<AppHotspot[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const scrollablePageRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
 
-  const mapTileBackgroundImageUrl = "/maps/world_map_background.png";
-
-  // Effect to fetch hotspot data
+  // Effect to fetch and process Tiled map data for hotspots
   useEffect(() => {
     let isMounted = true;
     const fetchMapData = async () => {
@@ -35,32 +37,43 @@ export default function Explore() {
       setHotspots([]);
 
       try {
-        const response = await fetch('/maps/world_map_data.json');
+        const response = await fetch(TILED_MAP_DATA_URL);
         if (!response.ok) {
-          throw new Error(`Failed to fetch map data: ${response.statusText} (status: ${response.status})`);
+          throw new Error(`Failed to fetch map data from ${TILED_MAP_DATA_URL}: ${response.statusText} (status: ${response.status})`);
         }
         const tiledMapData: TiledMapData = await response.json();
         const hotspotLayer = tiledMapData.layers.find(layer => layer.name === "Hotspots" && layer.type === "objectgroup");
 
         if (hotspotLayer && hotspotLayer.objects) {
-          const processedHotspots: AppHotspot[] = hotspotLayer.objects.map(obj => ({
-            id: getTiledObjectProperty(obj, 'id_string') || `tiled-obj-${obj.id}`,
-            name: getTiledObjectProperty(obj, 'name') || obj.name || 'Unnamed Hotspot',
-            x: obj.x + (obj.width / 2),
-            y: obj.y + (obj.height / 2),
-            route: getTiledObjectProperty(obj, 'route') || '/',
-            iconSrc: getTiledObjectProperty(obj, 'iconSrc') || undefined,
-          }));
+          const processedHotspots: AppHotspot[] = hotspotLayer.objects.map((obj: TiledObject) => {
+            // Tiled object's x,y is top-left. For centering, add half width/height.
+            const centerX = obj.x + (obj.width / 2);
+            const centerY = obj.y + (obj.height / 2);
+            // Use object's width/height for radius if it's a rectangle, or a custom 'radius' property, or a default
+            const tiledRadius = getTiledObjectProperty(obj, 'radius');
+            const clickRadius = typeof tiledRadius === 'number' ? tiledRadius : Math.max(obj.width, obj.height) / 1.5 || 20; // A bit more generous for clicks
+
+            return {
+              id: getTiledObjectProperty(obj, 'id_string') || `tiled-obj-${obj.id}`,
+              name: getTiledObjectProperty(obj, 'name') || obj.name || 'Unnamed Hotspot',
+              x: centerX,
+              y: centerY,
+              radius: clickRadius,
+              route: getTiledObjectProperty(obj, 'route') || '/', // Default to home if no route
+              iconSrc: getTiledObjectProperty(obj, 'iconSrc') || undefined,
+              iconSize: getTiledObjectProperty(obj, 'iconSize') || undefined,
+            };
+          });
           if (isMounted) setHotspots(processedHotspots);
         } else {
-          console.warn("Could not find 'Hotspots' object layer in map data for Explore page.");
-          if (isMounted) setHotspots([]);
+          console.warn(`Explore: Could not find 'Hotspots' object layer in Tiled map data at ${TILED_MAP_DATA_URL}.`);
+          if (isMounted) setHotspots([]); // Set to empty array if no hotspots found
         }
       } catch (err) {
-        console.error("Error loading or processing Tiled JSON data for Explore page:", err);
+        console.error("Explore: Error loading or processing Tiled JSON data:", err);
         if (isMounted) {
           setError(err instanceof Error ? err.message : String(err));
-          setHotspots([]);
+          setHotspots([]); // Clear hotspots on error
         }
       } finally {
         if (isMounted) setIsLoading(false);
@@ -68,46 +81,71 @@ export default function Explore() {
     };
 
     fetchMapData();
-    return () => { isMounted = false; };
+    return () => { isMounted = false; }; // Cleanup on unmount
   }, []);
 
-  // Effect to scroll the map to its center
+  // Effect to center the map view after it has loaded and dimensions are available
   useEffect(() => {
     if (!isLoading && !error && scrollablePageRef.current) {
       const scrollableArea = scrollablePageRef.current;
-      if (scrollableArea.clientHeight > 0 && scrollableArea.clientWidth > 0 && WORLD_MAP_PIXEL_HEIGHT > 0 && WORLD_MAP_PIXEL_WIDTH > 0) {
+      // Ensure client dimensions are positive before attempting to scroll
+      if (scrollableArea.clientHeight > 0 && scrollableArea.clientWidth > 0 &&
+          WORLD_MAP_PIXEL_HEIGHT > 0 && WORLD_MAP_PIXEL_WIDTH > 0) {
+        
         const scrollTop = (WORLD_MAP_PIXEL_HEIGHT - scrollableArea.clientHeight) / 2;
         const scrollLeft = (WORLD_MAP_PIXEL_WIDTH - scrollableArea.clientWidth) / 2;
+        
+        // Only scroll if the content is larger than the viewport
         scrollableArea.scrollTop = scrollTop > 0 ? scrollTop : 0;
         scrollableArea.scrollLeft = scrollLeft > 0 ? scrollLeft : 0;
       }
     }
-  }, [isLoading, error]);
+  }, [isLoading, error]); // Rerun when loading/error state changes, or if dimensions were initially zero
+
+  // Handler for navigating when a hotspot is clicked
+  const handleHotspotNavigate = (hotspot: AppHotspot) => {
+    console.log(`Hotspot clicked: ${hotspot.name}, attempting to navigate to route: ${hotspot.route}`);
+    if (hotspot.route) {
+      navigate(hotspot.route);
+    } else {
+      console.warn(`Hotspot "${hotspot.name}" (ID: ${hotspot.id}) has no route defined.`);
+    }
+  };
 
   // Conditional rendering for loading and error states
   if (isLoading) {
-    return <div className="explore-status-message explore-loading-state">Loading Map Data...</div>;
+    return (
+      <div className="explore-page-container"> {/* Keep basic structure for consistency */}
+        <div className="explore-status-message explore-loading-state">Loading Map Data...</div>
+      </div>
+    );
   }
   if (error) {
-    return <div className="explore-status-message explore-error-state">Error loading map: {error}</div>;
+    return (
+      <div className="explore-page-container"> {/* Keep basic structure for consistency */}
+        <div className="explore-status-message explore-error-state">
+          Error loading map: {error}
+        </div>
+      </div>
+    );
   }
 
-  // Main render for the Explore page
+  // Render the main explore page content
   return (
-    <div ref={scrollablePageRef} className="explore-page-scroll-wrapper">
+    <div ref={scrollablePageRef} className="explore-page-container">
       <div
-        className="explore-map-content-holder"
+        className="explore-map-content-wrapper"
         style={{
           width: `${WORLD_MAP_PIXEL_WIDTH}px`,
           height: `${WORLD_MAP_PIXEL_HEIGHT}px`,
-          backgroundImage: `url(${mapTileBackgroundImageUrl})`,
-          // position: 'relative' is handled by the CSS class
+          backgroundImage: `url(${MAP_BACKGROUND_IMAGE_URL})`,
         }}
       >
         <MapCanvas
           hotspots={hotspots}
           canvasWidth={WORLD_MAP_PIXEL_WIDTH}
           canvasHeight={WORLD_MAP_PIXEL_HEIGHT}
+          onHotspotClick={handleHotspotNavigate}
         />
       </div>
     </div>

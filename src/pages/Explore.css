@@ -1,60 +1,53 @@
-/* src/pages/Explore.css (Revised for Robust Layout) */
+/* src/pages/Explore.css (New Method) */
 
 /*
-  This is the main scrollable container for the Explore page.
-  It's a direct child of App.tsx's <main> element.
+  This is the top-level container for the Explore page content.
+  It will fill the space provided by App.tsx's <main> element and handle scrolling.
 */
-.explore-page-scroll-wrapper {
+.explore-page-container {
   width: 100%;
-  height: 100%; /* Fill the available space within <main> */
-  overflow: auto; /* Enable scrolling for the large map content */
-  background-color: #12121F; /* A dark background for the page */
-  box-sizing: border-box;
-
-  /*
-    MODIFIED: Removed transform and z-index to simplify stacking context.
-    `position: relative` is kept as it's likely needed for child positioning
-    (e.g., .explore-map-content-holder or MapCanvas if it were a direct child).
-  */
-  position: relative;
-  /* z-index: 1; */ /* Removed or set to auto */
-  /* transform: translateZ(0); */ /* Removed */
-  /* -webkit-transform: translateZ(0); */ /* Removed */
+  height: 100%; /* Takes full height of the padded <main> area */
+  overflow: auto; /* This element is responsible for scrolling its large child */
+  background-color: #12121F; /* Dark background for the page, visible in "empty" scroll areas */
+  position: relative; /* Establishes a positioning context for absolute children like status messages */
+  /* No explicit z-index or transform here to keep stacking simple */
 }
 
 /*
-  This div is inside .explore-page-scroll-wrapper and will be very large,
-  containing the map background and the MapCanvas.
+  This div is inside .explore-page-container and will be very large.
+  It holds the map background image and the MapCanvas.
 */
-.explore-map-content-holder {
-  position: relative; /* Necessary for the absolutely positioned MapCanvas to be relative to this */
-  /* width and height are set by inline styles in Explore.tsx */
-  background-repeat: repeat; /* Or 'no-repeat' if your map image is a single large tile */
-  background-position: top left;
-  background-color: #202030; /* A slightly lighter dark color for the map area itself, visible if image is transparent */
-  /* This element should not have overflow properties; its parent handles scrolling. */
+.explore-map-content-wrapper {
+  position: relative; /* Canvas will be absolutely positioned inside this */
+  /* width and height are set by inline styles in Explore.tsx to WORLD_MAP_PIXEL_WIDTH/HEIGHT */
+  background-repeat: no-repeat; /* Assuming one large map image */
+  background-position: top left; /* Or center center if preferred and image is sized appropriately */
+  background-size: contain; /* Or 'cover' or actual pixel values, depending on image */
+  /* background-color: #202030; */ /* Optional: Color for map area if image has transparency */
 }
 
 /*
-  Reminder for MapCanvas.css (.hotspot-canvas-overlay):
-  It should be absolutely positioned to cover its parent, .explore-map-content-holder.
+  The MapCanvas (with class .hotspot-canvas-overlay from MapCanvas.css) will be
+  absolutely positioned within .explore-map-content-wrapper by its own styles.
+  Example from MapCanvas.css for reference:
   .hotspot-canvas-overlay {
     position: absolute;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 2; / Above the background image of .explore-map-content-holder /
-    cursor: pointer; / Or as needed for hotspot interaction /
-    background-color: transparent; / Ensure it's see-through /
+    width: 100%; / Makes it fill .explore-map-content-wrapper /
+    height: 100%; / Makes it fill .explore-map-content-wrapper /
+    z-index: 2; / Only relevant for stacking *within* .explore-map-content-wrapper /
+    cursor: pointer;
+    background-color: transparent;
   }
 */
 
-/*
-  Styling for loading and error messages.
-  These will fill the .explore-page-scroll-wrapper if rendered.
-*/
+/* Styling for loading and error messages */
 .explore-status-message {
+  /* These styles make the message overlay the .explore-page-container */
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   display: flex;
@@ -64,17 +57,16 @@
   padding: 20px;
   box-sizing: border-box;
   text-align: center;
-  color: #e0e0e0; /* Light text for dark backgrounds */
-  background-color: #12121F; /* Match the page wrapper background */
+  color: #e0e0e0;
+  background-color: rgba(18, 18, 31, 0.9); /* Semi-transparent version of page background */
+  z-index: 10; /* Above the map content but below Header/NavBar */
 }
 
 .explore-loading-state {
-  /* Specific styles for loading, if any */
   font-style: italic;
 }
 
 .explore-error-state {
-  /* Specific styles for error, if any */
-  color: #ff6b6b; /* A noticeable error color */
+  color: #ff6b6b;
   font-weight: bold;
 }
