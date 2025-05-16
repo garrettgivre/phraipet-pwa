@@ -163,7 +163,7 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
   const [roomLayersLoading, setRoomLayersLoading] = useState<boolean>(true);
   const [filteredItemsCache, setFilteredItemsCache] = useState<Record<string, InventoryItem[]>>({});
 
-  // Preload all category combinations
+  // Preload all category combinations only once when the component mounts
   useEffect(() => {
     const mainCategories = ["Decorations", "Food", "Grooming", "Toys"];
     const subCategories = {
@@ -189,7 +189,7 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
     });
 
     setFilteredItemsCache(newCache);
-  }, [items]);
+  }, []); // Only run once on mount
 
   useEffect(() => {
     setRoomLayersLoading(true);
@@ -237,8 +237,22 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
     saveRoomToFirebase(updatedLayers);
   };
 
+  // Update cache only when items are consumed
   const consumeItem = (itemId: string) => {
-    setItems(prevItems => prevItems.filter(item => item.id !== itemId));
+    setItems(prevItems => {
+      const newItems = prevItems.filter(item => item.id !== itemId);
+      
+      // Update cache for the affected categories
+      setFilteredItemsCache(prevCache => {
+        const newCache = { ...prevCache };
+        Object.keys(newCache).forEach(key => {
+          newCache[key] = newCache[key].filter(item => item.id !== itemId);
+        });
+        return newCache;
+      });
+      
+      return newItems;
+    });
     console.log(`Item ${itemId} consumed from local list.`);
   };
 
