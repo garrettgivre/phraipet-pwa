@@ -191,27 +191,6 @@ const defaultToyItems: ToyInventoryItem[] = [
     ]
   },
   {
-    id: "toys-classic-fun-flatsqueaker",
-    name: "Flat Squeaker",
-    src: "/assets/toys/toys-classic-fun-flatsqueaker.png",
-    happinessBoost: 20,
-    description: "A classic squeaky toy that's flat and fun!",
-    itemCategory: "toy",
-    type: "Classic",
-    phrases: [
-      "Squeak squeak!",
-      "I love this sound!",
-      "This is fun!",
-      "Watch me play with it!",
-      "The best squeaker!",
-      "I'm good at this!",
-      "This squeaker is mine!",
-      "So much fun to squeak!",
-      "I love the squeaking!",
-      "This is a great toy!"
-    ]
-  },
-  {
     id: "toys-classic-dull-flatsqueaker",
     name: "Flat Squeaker",
     src: "/assets/toys/toys-classic-dull-flatsqueaker.png",
