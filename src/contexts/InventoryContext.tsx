@@ -107,13 +107,13 @@ const defaultGroomingItems: GroomingInventoryItem[] = [
 
 const defaultToyItems: ToyInventoryItem[] = [
   {
-    id: "ball",
-    name: "Ball",
-    src: "/assets/toys/ball.png",
+    id: "toy-basic-basicball",
+    name: "Basic Ball",
+    src: "/assets/toys/toy-basic-basicball.png",
     happinessBoost: 10,
-    description: "A classic red ball for endless fun!",
+    description: "A simple ball for basic play.",
     itemCategory: "toy",
-    type: "Classic",
+    type: "Basic",
     phrases: [
       "Bounce bounce bounce!",
       "I love chasing this ball!",
@@ -128,11 +128,11 @@ const defaultToyItems: ToyInventoryItem[] = [
     ]
   },
   {
-    id: "mouse",
+    id: "toy-classic-mousetoy",
     name: "Mouse Toy",
-    src: "/assets/toys/mouse.png",
+    src: "/assets/toys/toy-classic-mousetoy.png",
     happinessBoost: 15,
-    description: "A cute mouse toy that squeaks!",
+    description: "A classic mouse toy that squeaks!",
     itemCategory: "toy",
     type: "Classic",
     phrases: [
@@ -149,9 +149,9 @@ const defaultToyItems: ToyInventoryItem[] = [
     ]
   },
   {
-    id: "feather",
+    id: "toy-gadget-featherwand",
     name: "Feather Wand",
-    src: "/assets/toys/feather.png",
+    src: "/assets/toys/toy-gadget-featherwand.png",
     happinessBoost: 20,
     description: "A magical feather wand for interactive play!",
     itemCategory: "toy",
@@ -170,9 +170,9 @@ const defaultToyItems: ToyInventoryItem[] = [
     ]
   },
   {
-    id: "laser",
+    id: "toy-gadget-laserpointer",
     name: "Laser Pointer",
-    src: "/assets/toys/laser.png",
+    src: "/assets/toys/toy-gadget-laserpointer.png",
     happinessBoost: 25,
     description: "A mysterious red dot to chase!",
     itemCategory: "toy",
