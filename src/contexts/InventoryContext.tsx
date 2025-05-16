@@ -254,9 +254,9 @@ const defaultToyItems: ToyInventoryItem[] = [
     ]
   },
   {
-    id: "pingu_plushie",
+    id: "toys-plushie-fun-pingu",
     name: "Pingu Plushie",
-    src: "/assets/toys/pingu_plushie.png",
+    src: "/assets/toys/toys-plushie-fun-pingu.png",
     happinessBoost: 15,
     description: "A cozy plushie of the famous claymation penguin.",
     itemCategory: "toy",
