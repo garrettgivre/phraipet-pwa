@@ -1,6 +1,6 @@
 // src/pages/Explore.tsx
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState, useRef } from 'react';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import MapCanvas from '../components/MapCanvas';
 import type { AppHotspot, TiledMapData, TiledObject, TiledProperty } from '../types';
 import './Explore.css';
@@ -18,35 +18,69 @@ const getTiledObjectProperty = (object: TiledObject, propertyName: string): any 
 const MAP_BACKGROUND_IMAGE_URL = "/maps/world_map_background.png";
 const TILED_MAP_DATA_URL = '/maps/world_map_data.json';
 const MAP_ASPECT_RATIO = 1.5; // Width to height ratio of the map
-const MAP_GRID_SIZE = 3; // Number of maps in each direction (3x3 grid)
-
-function getViewportSize() {
-  return {
-    width: window.innerWidth,
-    height: window.innerHeight,
-  };
-}
+const GRID_SIZE = 3; // We only need 3x3 for infinite scrolling
 
 export default function Explore() {
+  const location = useLocation();
+  const isExploreRoot = location.pathname === "/explore";
+  const navigate = useNavigate();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [mapDimensions, setMapDimensions] = useState({ width: 0, height: 0 });
   const [hotspots, setHotspots] = useState<AppHotspot[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [viewport, setViewport] = useState(getViewportSize());
-  const navigate = useNavigate();
 
   // Calculate map dimensions based on viewport height
-  const mapHeight = viewport.height;
-  const mapWidth = mapHeight * MAP_ASPECT_RATIO;
-
-  // Calculate grid dimensions
-  const gridWidth = mapWidth * MAP_GRID_SIZE;
-  const gridHeight = mapHeight * MAP_GRID_SIZE;
-
   useEffect(() => {
-    const handleResize = () => setViewport(getViewportSize());
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    const updateMapDimensions = () => {
+      const viewportHeight = window.innerHeight;
+      const mapHeight = viewportHeight * 0.8; // 80% of viewport height
+      const mapWidth = mapHeight * MAP_ASPECT_RATIO;
+      setMapDimensions({ width: mapWidth, height: mapHeight });
+    };
+
+    updateMapDimensions();
+    window.addEventListener('resize', updateMapDimensions);
+    return () => window.removeEventListener('resize', updateMapDimensions);
   }, []);
+
+  // Handle infinite scrolling
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container || !mapDimensions.width || !mapDimensions.height) return;
+
+    const handleScroll = () => {
+      const { scrollLeft, scrollTop } = container;
+      const mapWidth = mapDimensions.width;
+      const mapHeight = mapDimensions.height;
+
+      // Calculate new scroll position for infinite loop
+      let newScrollLeft = scrollLeft;
+      let newScrollTop = scrollTop;
+
+      // Horizontal wrapping
+      if (scrollLeft < mapWidth) {
+        newScrollLeft = scrollLeft + mapWidth;
+      } else if (scrollLeft > mapWidth * 2) {
+        newScrollLeft = scrollLeft - mapWidth;
+      }
+
+      // Vertical wrapping
+      if (scrollTop < mapHeight) {
+        newScrollTop = scrollTop + mapHeight;
+      } else if (scrollTop > mapHeight * 2) {
+        newScrollTop = scrollTop - mapHeight;
+      }
+
+      // Apply new scroll position if it changed
+      if (newScrollLeft !== scrollLeft || newScrollTop !== scrollTop) {
+        container.scrollTo(newScrollLeft, newScrollTop);
+      }
+    };
+
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, [mapDimensions]);
 
   // Effect to fetch and process Tiled map data for hotspots
   useEffect(() => {
@@ -103,70 +137,63 @@ export default function Explore() {
     return () => { isMounted = false; };
   }, []);
 
-  const handleHotspotNavigate = (hotspot: AppHotspot) => {
-    if (hotspot.route) navigate(hotspot.route);
-  };
-
-  if (isLoading) {
-    return (
-      <div className="explore-page-container">
-        <div className="explore-status-message explore-loading-state">Loading Map Data...</div>
-      </div>
-    );
-  }
-  if (error) {
-    return (
-      <div className="explore-page-container">
-        <div className="explore-status-message explore-error-state">
-          Error loading map: {error}
-        </div>
-      </div>
-    );
-  }
-
-  // Create a grid of maps
-  const mapGrid = [];
-  for (let y = 0; y < MAP_GRID_SIZE; y++) {
-    for (let x = 0; x < MAP_GRID_SIZE; x++) {
-      mapGrid.push(
-        <div
-          key={`map-${x}-${y}`}
-          className="explore-map-tile"
-          style={{
-            width: mapWidth,
-            height: mapHeight,
-            backgroundImage: `url(${MAP_BACKGROUND_IMAGE_URL})`,
-            backgroundSize: '100% 100%',
-            backgroundRepeat: 'no-repeat',
-            position: 'absolute',
-            left: x * mapWidth,
-            top: y * mapHeight,
-          }}
-        />
-      );
-    }
+  if (!isExploreRoot) {
+    return <Outlet />;
   }
 
   return (
-    <div className="explore-page-container">
-      <div
-        className="explore-map-content-wrapper"
+    <div className="explore-page">
+      <div 
+        ref={containerRef}
+        className="map-container"
         style={{
-          width: gridWidth,
-          height: gridHeight,
-          position: 'relative',
+          width: '100%',
+          height: '100vh',
+          overflow: 'auto',
+          position: 'relative'
         }}
       >
-        {mapGrid}
-        <MapCanvas
-          hotspots={hotspots}
-          canvasWidth={gridWidth}
-          canvasHeight={gridHeight}
-          onHotspotClick={handleHotspotNavigate}
-          mapWidth={mapWidth}
-          mapHeight={mapHeight}
-          gridSize={MAP_GRID_SIZE}
-        />
+        <div 
+          className="map-grid"
+          style={{
+            width: mapDimensions.width * GRID_SIZE,
+            height: mapDimensions.height * GRID_SIZE,
+            position: 'relative'
+          }}
+        >
+          {/* Render map tiles */}
+          {Array.from({ length: GRID_SIZE * GRID_SIZE }).map((_, index) => {
+            const row = Math.floor(index / GRID_SIZE);
+            const col = index % GRID_SIZE;
+            return (
+              <div
+                key={index}
+                className="map-tile"
+                style={{
+                  position: 'absolute',
+                  left: col * mapDimensions.width,
+                  top: row * mapDimensions.height,
+                  width: mapDimensions.width,
+                  height: mapDimensions.height,
+                  backgroundImage: `url(${MAP_BACKGROUND_IMAGE_URL})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center'
+                }}
+              />
+            );
+          })}
+          
+          {/* Render hotspots canvas */}
+          <MapCanvas
+            hotspots={hotspots}
+            canvasWidth={mapDimensions.width * GRID_SIZE}
+            canvasHeight={mapDimensions.height * GRID_SIZE}
+            onHotspotClick={(hotspot) => navigate(hotspot.route)}
+            mapWidth={mapDimensions.width}
+            mapHeight={mapDimensions.height}
+            gridSize={GRID_SIZE}
+          />
+        </div>
       </div>
     </div>
   );
