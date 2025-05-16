@@ -89,7 +89,7 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
           <img 
             src={activeToy.src} 
             alt={activeToy.name} 
-            className={`toy ${isPlaying ? 'playing' : ''}`}
+            className={`toy left ${isPlaying ? 'playing' : ''}`}
           />
         )}
         <img 
@@ -101,7 +101,7 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
           <img 
             src={activeToy.src} 
             alt={activeToy.name} 
-            className={`toy ${isPlaying ? 'playing' : ''}`}
+            className={`toy right ${isPlaying ? 'playing' : ''}`}
           />
         )}
       </div>
