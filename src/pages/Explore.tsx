@@ -50,6 +50,8 @@ export default function Explore() {
     if (!container || !mapDimensions.width || !mapDimensions.height) return;
 
     let isScrolling = false;
+    let lastScrollLeft = 0;
+    let lastScrollTop = 0;
     const mapWidth = mapDimensions.width;
     const mapHeight = mapDimensions.height;
 
@@ -77,13 +79,30 @@ export default function Explore() {
 
       // Apply new scroll position if it changed
       if (newScrollLeft !== scrollLeft || newScrollTop !== scrollTop) {
+        // Preserve scroll momentum
+        const momentumX = scrollLeft - lastScrollLeft;
+        const momentumY = scrollTop - lastScrollTop;
+        
         container.scrollTo({
           left: newScrollLeft,
           top: newScrollTop,
           behavior: 'auto'
         });
+
+        // Apply momentum to the new position
+        if (momentumX !== 0 || momentumY !== 0) {
+          requestAnimationFrame(() => {
+            container.scrollTo({
+              left: newScrollLeft + momentumX,
+              top: newScrollTop + momentumY,
+              behavior: 'auto'
+            });
+          });
+        }
       }
 
+      lastScrollLeft = scrollLeft;
+      lastScrollTop = scrollTop;
       isScrolling = false;
     };
 
