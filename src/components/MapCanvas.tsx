@@ -10,6 +10,9 @@ interface MapCanvasProps {
   onHotspotClick?: (hotspot: AppHotspot) => void;
 }
 
+const MAP_TILE_WIDTH = 7200;
+const MAP_TILE_HEIGHT = 4800;
+
 const MapCanvas: React.FC<MapCanvasProps> = ({
   hotspots,
   canvasWidth,
@@ -24,40 +27,41 @@ const MapCanvas: React.FC<MapCanvasProps> = ({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Set canvas actual drawing surface size
-    // This should match the conceptual size of the map area being displayed
     canvas.width = canvasWidth;
     canvas.height = canvasHeight;
-
-    // Clear canvas before drawing
     ctx.clearRect(0, 0, canvasWidth, canvasHeight);
 
-    // Draw hotspots
-    hotspots.forEach(hotspot => {
-      if (hotspot.iconSrc) {
-        const img = new Image();
-        img.onload = () => {
-          const iconSize = hotspot.iconSize || 32; // Default icon size if not specified
-          try {
-            ctx.drawImage(img, hotspot.x - iconSize / 2, hotspot.y - iconSize / 2, iconSize, iconSize);
-          } catch (e) {
-            console.error("Error drawing image for hotspot:", hotspot.name, e);
-            // Fallback drawing if image draw fails
-            drawFallbackHotspot(ctx, hotspot);
+    // Draw hotspots at every visible tile position
+    const xTiles = Math.ceil(canvasWidth / MAP_TILE_WIDTH) + 2;
+    const yTiles = Math.ceil(canvasHeight / MAP_TILE_HEIGHT) + 2;
+    for (let xTile = -1; xTile < xTiles - 1; xTile++) {
+      for (let yTile = -1; yTile < yTiles - 1; yTile++) {
+        const xOffset = xTile * MAP_TILE_WIDTH;
+        const yOffset = yTile * MAP_TILE_HEIGHT;
+        hotspots.forEach(hotspot => {
+          const drawX = hotspot.x + xOffset;
+          const drawY = hotspot.y + yOffset;
+          if (hotspot.iconSrc) {
+            const img = new window.Image();
+            img.onload = () => {
+              const iconSize = hotspot.iconSize || 32;
+              try {
+                ctx.drawImage(img, drawX - iconSize / 2, drawY - iconSize / 2, iconSize, iconSize);
+              } catch (e) {
+                drawFallbackHotspot(ctx, { ...hotspot, x: drawX, y: drawY });
+              }
+            };
+            img.onerror = () => {
+              drawFallbackHotspot(ctx, { ...hotspot, x: drawX, y: drawY });
+            };
+            img.src = hotspot.iconSrc;
+          } else {
+            drawFallbackHotspot(ctx, { ...hotspot, x: drawX, y: drawY });
           }
-        };
-        img.onerror = () => {
-          console.warn(`Failed to load icon for hotspot: ${hotspot.name} from ${hotspot.iconSrc}`);
-          // Fallback drawing if icon fails to load
-          drawFallbackHotspot(ctx, hotspot);
-        };
-        img.src = hotspot.iconSrc;
-      } else {
-        // Fallback drawing if no iconSrc
-        drawFallbackHotspot(ctx, hotspot);
+        });
       }
-    });
-  }, [hotspots, canvasWidth, canvasHeight]); // Redraw when these change
+    }
+  }, [hotspots, canvasWidth, canvasHeight]);
 
   const drawFallbackHotspot = (ctx: CanvasRenderingContext2D, hotspot: AppHotspot) => {
     const radius = hotspot.radius || 20;

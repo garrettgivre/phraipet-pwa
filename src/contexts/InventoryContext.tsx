@@ -50,12 +50,7 @@ const defaultDecorationItems: DecorationInventoryItem[] = [
   { id: "deco-krazy-wall", name: "Krazy Wall", itemCategory: "decoration", type: "wall", src: "/assets/walls/krazy-wall.png" },
   { id: "deco-krazy-ceiling", name: "Krazy Ceiling", itemCategory: "decoration", type: "ceiling", src: "/assets/ceilings/krazy-ceiling.png" },
 
-  // Example Decor Items
-  { id: "deco-plant-1", name: "Potted Plant", itemCategory: "decoration", type: "backDecor", src: "/assets/decor/plant_1.png", description: "A lovely green plant." },
-  { id: "deco-lamp-1", name: "Floor Lamp", itemCategory: "decoration", type: "frontDecor", src: "/assets/decor/lamp_1.png", description: "Lights up the room." },
-
-  // Example Overlay
-  { id: "deco-rainy-overlay", name: "Rainy Window", itemCategory: "decoration", type: "overlay", src: "/assets/overlays/rainy_window.png", description: "A cozy rainy day view."}
+  // Removed Example Decor Items (Potted Plant, Floor Lamp, Rainy Window)
 ];
 
 const defaultFoodItems: FoodInventoryItem[] = [

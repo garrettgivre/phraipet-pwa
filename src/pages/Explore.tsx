@@ -20,12 +20,25 @@ const WORLD_MAP_PIXEL_HEIGHT = 4800;
 const MAP_BACKGROUND_IMAGE_URL = "/maps/world_map_background.png"; // Ensure this path is correct in your public folder
 const TILED_MAP_DATA_URL = '/maps/world_map_data.json'; // Path to your Tiled JSON
 
+function getViewportSize() {
+  return {
+    width: window.innerWidth,
+    height: window.innerHeight,
+  };
+}
+
 export default function Explore() {
   const [hotspots, setHotspots] = useState<AppHotspot[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const scrollablePageRef = useRef<HTMLDivElement>(null);
+  const [viewport, setViewport] = useState(getViewportSize());
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const handleResize = () => setViewport(getViewportSize());
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Effect to fetch and process Tiled map data for hotspots
   useEffect(() => {
@@ -84,32 +97,9 @@ export default function Explore() {
     return () => { isMounted = false; }; // Cleanup on unmount
   }, []);
 
-  // Effect to center the map view after it has loaded and dimensions are available
-  useEffect(() => {
-    if (!isLoading && !error && scrollablePageRef.current) {
-      const scrollableArea = scrollablePageRef.current;
-      // Ensure client dimensions are positive before attempting to scroll
-      if (scrollableArea.clientHeight > 0 && scrollableArea.clientWidth > 0 &&
-          WORLD_MAP_PIXEL_HEIGHT > 0 && WORLD_MAP_PIXEL_WIDTH > 0) {
-        
-        const scrollTop = (WORLD_MAP_PIXEL_HEIGHT - scrollableArea.clientHeight) / 2;
-        const scrollLeft = (WORLD_MAP_PIXEL_WIDTH - scrollableArea.clientWidth) / 2;
-        
-        // Only scroll if the content is larger than the viewport
-        scrollableArea.scrollTop = scrollTop > 0 ? scrollTop : 0;
-        scrollableArea.scrollLeft = scrollLeft > 0 ? scrollLeft : 0;
-      }
-    }
-  }, [isLoading, error]); // Rerun when loading/error state changes, or if dimensions were initially zero
-
   // Handler for navigating when a hotspot is clicked
   const handleHotspotNavigate = (hotspot: AppHotspot) => {
-    console.log(`Hotspot clicked: ${hotspot.name}, attempting to navigate to route: ${hotspot.route}`);
-    if (hotspot.route) {
-      navigate(hotspot.route);
-    } else {
-      console.warn(`Hotspot "${hotspot.name}" (ID: ${hotspot.id}) has no route defined.`);
-    }
+    if (hotspot.route) navigate(hotspot.route);
   };
 
   // Conditional rendering for loading and error states
@@ -132,19 +122,21 @@ export default function Explore() {
 
   // Render the main explore page content
   return (
-    <div ref={scrollablePageRef} className="explore-page-container">
+    <div className="explore-page-container" style={{width: '100vw', height: '100vh', overflow: 'hidden'}}>
       <div
         className="explore-map-content-wrapper"
         style={{
-          width: `${WORLD_MAP_PIXEL_WIDTH}px`,
-          height: `${WORLD_MAP_PIXEL_HEIGHT}px`,
+          width: '100vw',
+          height: '100vh',
           backgroundImage: `url(${MAP_BACKGROUND_IMAGE_URL})`,
+          backgroundRepeat: 'repeat',
+          position: 'relative',
         }}
       >
         <MapCanvas
           hotspots={hotspots}
-          canvasWidth={WORLD_MAP_PIXEL_WIDTH}
-          canvasHeight={WORLD_MAP_PIXEL_HEIGHT}
+          canvasWidth={viewport.width}
+          canvasHeight={viewport.height}
           onHotspotClick={handleHotspotNavigate}
         />
       </div>
