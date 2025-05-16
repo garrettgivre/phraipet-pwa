@@ -119,7 +119,7 @@ function ZoomedImage({ src, alt }: { src: string; alt: string }) {
 }
 
 export default function InventoryPage({ pet, onFeedPet, onGroomPet, onPlayWithToy }: InventoryPageProps) {
-  const { items, setRoomLayer, addDecorItem, consumeItem, getFilteredItems } = useInventory();
+  const { setRoomLayer, addDecorItem, consumeItem, getFilteredItems } = useInventory();
   const location = useLocation();
   const navigate = useNavigate();
 
