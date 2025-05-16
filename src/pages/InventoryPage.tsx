@@ -59,6 +59,8 @@ const capitalizeFirstLetter = (string: string) => {
   return string.charAt(0).toUpperCase() + string.slice(1).replace(/([A-Z])/g, ' $1').trim();
 };
 
+const imageCache = new Map<string, HTMLImageElement>();
+
 function ZoomedImage({ src, alt }: { src: string; alt: string }) {
   const containerSize = 64;
   const [imageStyle, setImageStyle] = useState<React.CSSProperties>({
@@ -70,40 +72,148 @@ function ZoomedImage({ src, alt }: { src: string; alt: string }) {
 
   useEffect(() => {
     let isMounted = true;
-    setLoaded(false); setError(false);
+    setLoaded(false);
+    setError(false);
     setImageStyle(prev => ({ ...prev, visibility: 'hidden' }));
-    const img = new Image();
-    img.src = src;
-    img.crossOrigin = "anonymous";
-    img.onload = () => {
-      if (!isMounted) return;
-      calculateVisibleBounds(src).then(bounds => {
+
+    // Check if image is already in cache
+    if (imageCache.has(src)) {
+      const cachedImg = imageCache.get(src)!;
+      if (cachedImg.complete) {
         if (!isMounted) return;
-        if (bounds.width <= 0 || bounds.height <= 0 || bounds.naturalWidth <= 0 || bounds.naturalHeight <= 0) {
-          setError(true); setLoaded(true);
-          setImageStyle({ display: 'flex', alignItems: 'center', justifyContent: 'center', width: `${containerSize}px`, height: `${containerSize}px`, fontSize: '20px', color: 'red', border: '1px solid #ddd', boxSizing: 'border-box', visibility: 'visible' });
-          return;
-        }
-        const scale = Math.min(containerSize / bounds.width, containerSize / bounds.height);
-        const scaledNaturalWidth = bounds.naturalWidth * scale;
-        const scaledNaturalHeight = bounds.naturalHeight * scale;
-        const offsetX = (containerSize - (bounds.width * scale)) / 2 - (bounds.x * scale);
-        const offsetY = (containerSize - (bounds.height * scale)) / 2 - (bounds.y * scale);
-        setImageStyle({ position: "absolute", left: `${offsetX}px`, top: `${offsetY}px`, width: `${scaledNaturalWidth}px`, height: `${scaledNaturalHeight}px`, visibility: 'visible' });
+        calculateVisibleBounds(src).then(bounds => {
+          if (!isMounted) return;
+          if (bounds.width <= 0 || bounds.height <= 0 || bounds.naturalWidth <= 0 || bounds.naturalHeight <= 0) {
+            setError(true);
+            setLoaded(true);
+            setImageStyle({
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: `${containerSize}px`,
+              height: `${containerSize}px`,
+              fontSize: '20px',
+              color: 'red',
+              border: '1px solid #ddd',
+              boxSizing: 'border-box',
+              visibility: 'visible'
+            });
+            return;
+          }
+          const scale = Math.min(containerSize / bounds.width, containerSize / bounds.height);
+          const scaledNaturalWidth = bounds.naturalWidth * scale;
+          const scaledNaturalHeight = bounds.naturalHeight * scale;
+          const offsetX = (containerSize - (bounds.width * scale)) / 2 - (bounds.x * scale);
+          const offsetY = (containerSize - (bounds.height * scale)) / 2 - (bounds.y * scale);
+          setImageStyle({
+            position: "absolute",
+            left: `${offsetX}px`,
+            top: `${offsetY}px`,
+            width: `${scaledNaturalWidth}px`,
+            height: `${scaledNaturalHeight}px`,
+            visibility: 'visible'
+          });
+          setLoaded(true);
+        }).catch((err) => {
+          if (!isMounted) return;
+          console.error("Error in calculateVisibleBounds for src:", src, err);
+          setError(true);
+          setLoaded(true);
+          setImageStyle({
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: `${containerSize}px`,
+            height: `${containerSize}px`,
+            fontSize: '20px',
+            color: 'red',
+            border: '1px solid #ddd',
+            boxSizing: 'border-box',
+            visibility: 'visible'
+          });
+        });
+      }
+    } else {
+      const img = new Image();
+      img.src = src;
+      img.crossOrigin = "anonymous";
+      imageCache.set(src, img);
+
+      img.onload = () => {
+        if (!isMounted) return;
+        calculateVisibleBounds(src).then(bounds => {
+          if (!isMounted) return;
+          if (bounds.width <= 0 || bounds.height <= 0 || bounds.naturalWidth <= 0 || bounds.naturalHeight <= 0) {
+            setError(true);
+            setLoaded(true);
+            setImageStyle({
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: `${containerSize}px`,
+              height: `${containerSize}px`,
+              fontSize: '20px',
+              color: 'red',
+              border: '1px solid #ddd',
+              boxSizing: 'border-box',
+              visibility: 'visible'
+            });
+            return;
+          }
+          const scale = Math.min(containerSize / bounds.width, containerSize / bounds.height);
+          const scaledNaturalWidth = bounds.naturalWidth * scale;
+          const scaledNaturalHeight = bounds.naturalHeight * scale;
+          const offsetX = (containerSize - (bounds.width * scale)) / 2 - (bounds.x * scale);
+          const offsetY = (containerSize - (bounds.height * scale)) / 2 - (bounds.y * scale);
+          setImageStyle({
+            position: "absolute",
+            left: `${offsetX}px`,
+            top: `${offsetY}px`,
+            width: `${scaledNaturalWidth}px`,
+            height: `${scaledNaturalHeight}px`,
+            visibility: 'visible'
+          });
+          setLoaded(true);
+        }).catch((err) => {
+          if (!isMounted) return;
+          console.error("Error in calculateVisibleBounds for src:", src, err);
+          setError(true);
+          setLoaded(true);
+          setImageStyle({
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: `${containerSize}px`,
+            height: `${containerSize}px`,
+            fontSize: '20px',
+            color: 'red',
+            border: '1px solid #ddd',
+            boxSizing: 'border-box',
+            visibility: 'visible'
+          });
+        });
+      };
+
+      img.onerror = () => {
+        if (!isMounted) return;
+        console.error("Failed to load image for ZoomedImage:", src);
+        setError(true);
         setLoaded(true);
-      }).catch((err) => {
-        if (!isMounted) return;
-        console.error("Error in calculateVisibleBounds for src:", src, err);
-        setError(true); setLoaded(true);
-        setImageStyle({ display: 'flex', alignItems: 'center', justifyContent: 'center', width: `${containerSize}px`, height: `${containerSize}px`, fontSize: '20px', color: 'red', border: '1px solid #ddd', boxSizing: 'border-box', visibility: 'visible' });
-      });
-    };
-    img.onerror = () => {
-      if (!isMounted) return;
-      console.error("Failed to load image for ZoomedImage:", src);
-      setError(true); setLoaded(true);
-      setImageStyle({ display: 'flex', alignItems: 'center', justifyContent: 'center', width: `${containerSize}px`, height: `${containerSize}px`, fontSize: '20px', color: 'red', border: '1px solid #ddd', boxSizing: 'border-box', visibility: 'visible' });
-    };
+        setImageStyle({
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: `${containerSize}px`,
+          height: `${containerSize}px`,
+          fontSize: '20px',
+          color: 'red',
+          border: '1px solid #ddd',
+          boxSizing: 'border-box',
+          visibility: 'visible'
+        });
+      };
+    }
+
     return () => { isMounted = false; };
   }, [src]);
 
@@ -123,6 +233,35 @@ export default function InventoryPage({ pet, onFeedPet, onGroomPet, onPlayWithTo
   const location = useLocation();
   const navigate = useNavigate();
   const [isTransitioning, setIsTransitioning] = useState(false);
+
+  // Preload all images when the component mounts
+  useEffect(() => {
+    const preloadImages = async () => {
+      const allItems = getFilteredItems(selectedMainCategory, selectedSubCategory);
+      const imagePromises = allItems.map(item => {
+        return new Promise((resolve, reject) => {
+          if (imageCache.has(item.src)) {
+            resolve(null);
+            return;
+          }
+          const img = new Image();
+          img.src = item.src;
+          img.crossOrigin = "anonymous";
+          imageCache.set(item.src, img);
+          img.onload = () => resolve(null);
+          img.onerror = () => reject(new Error(`Failed to load image: ${item.src}`));
+        });
+      });
+
+      try {
+        await Promise.all(imagePromises);
+      } catch (error) {
+        console.error("Error preloading images:", error);
+      }
+    };
+
+    preloadImages();
+  }, []); // Only run once on mount
 
   const initialTabs = useMemo(() => {
     const state = location.state as InventoryLocationState | null;
