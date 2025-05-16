@@ -1,8 +1,9 @@
 // src/App.tsx
 import { useEffect, useState } from "react";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation, useNavigate } from "react-router-dom";
 import type { Pet, Need, NeedInfo, FoodInventoryItem, GroomingInventoryItem, ToyInventoryItem } from "./types";
 import { InventoryProvider } from "./contexts/InventoryContext";
+import { ToyAnimationProvider, useToyAnimation } from "./contexts/ToyAnimationContext";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { petService, withErrorHandling } from "./services/firebase";
 import { createRoutes } from "./routes";
@@ -107,6 +108,8 @@ defaultPetData.spirit = Math.max(MIN_NEED_VALUE, Math.min(MAX_NEED_VALUE, Math.r
 
 export default function App() {
   const [pet, setPet] = useState<Pet | null>(null);
+  const { setActiveToy, setIsPlaying } = useToyAnimation();
+  const navigate = useNavigate();
 
   const needInfo: NeedInfo[] = pet && typeof pet.hunger === 'number' && typeof pet.cleanliness === 'number' && typeof pet.happiness === 'number' && typeof pet.affection === 'number' && typeof pet.spirit === 'number'
     ? [
@@ -154,6 +157,20 @@ export default function App() {
       happiness: newHappiness,
       spirit: Math.max(MIN_NEED_VALUE, Math.min(MAX_NEED_VALUE, Math.round((pet.hunger + newHappiness + pet.cleanliness + pet.affection) / 4)))
     };
+    
+    // Set the active toy and start animation
+    setActiveToy(toyItem);
+    setIsPlaying(true);
+    
+    // Navigate back to pet page
+    navigate('/');
+    
+    // Stop animation after 5 seconds
+    setTimeout(() => {
+      setIsPlaying(false);
+      setActiveToy(null);
+    }, 5000);
+
     await withErrorHandling(
       () => petService.updatePetNeeds(updates),
       "Failed to update pet happiness"
@@ -265,16 +282,18 @@ export default function App() {
   return (
     <BrowserRouter>
       <InventoryProvider>
-        <ErrorBoundary>
-          <AppShell
-            pet={pet}
-            handleFeedPet={handleFeedPet}
-            handleGroomPet={handleGroomPet}
-            handlePlayWithToy={handlePlayWithToy}
-            handleIncreaseAffection={handleIncreaseAffection}
-            needInfo={needInfo}
-          />
-        </ErrorBoundary>
+        <ToyAnimationProvider>
+          <ErrorBoundary>
+            <AppShell
+              pet={pet}
+              handleFeedPet={handleFeedPet}
+              handleGroomPet={handleGroomPet}
+              handlePlayWithToy={handlePlayWithToy}
+              handleIncreaseAffection={handleIncreaseAffection}
+              needInfo={needInfo}
+            />
+          </ErrorBoundary>
+        </ToyAnimationProvider>
       </InventoryProvider>
     </BrowserRouter>
   );

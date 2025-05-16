@@ -1,6 +1,7 @@
 // src/pages/PetPage.tsx
 import { useNavigate } from "react-router-dom";
 import { useInventory } from "../contexts/InventoryContext";
+import { useToyAnimation } from "../contexts/ToyAnimationContext";
 import type { NeedInfo, Pet as PetType, RoomDecorItem, Need as NeedType } from "../types";
 import { getPetMoodPhrase } from "../utils/petMoodUtils";
 import "./PetPage.css";
@@ -13,6 +14,7 @@ interface PetPageProps {
 
 export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageProps) {
   const { roomLayers, roomLayersLoading } = useInventory();
+  const { activeToy, isPlaying } = useToyAnimation();
   const navigate = useNavigate();
 
   const moodPhrase = getPetMoodPhrase(pet);
@@ -77,7 +79,18 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
 
       <div className="pet-display-area">
         {pet && moodPhrase && ( <div className="pet-mood-bubble"> <p>{moodPhrase}</p> </div> )}
-        <img src={pet?.image || "/pet/Neutral.png"} alt="Your Pet" className="petHero" />
+        <img 
+          src={pet?.image || "/pet/Neutral.png"} 
+          alt="Your Pet" 
+          className={`petHero ${isPlaying ? 'playing' : ''}`} 
+        />
+        {activeToy && (
+          <img 
+            src={activeToy.src} 
+            alt={activeToy.name} 
+            className={`toy ${isPlaying ? 'playing' : ''}`}
+          />
+        )}
       </div>
 
       <div className="pet-page-needs-container">

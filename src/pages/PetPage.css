@@ -49,7 +49,12 @@
   width: clamp(280px, 60vw, 600px); /* Max also reduced slightly */
   height: auto;   
   object-fit: contain; 
-  display: block; 
+  display: block;
+  transition: transform 0.3s ease;
+}
+
+.petHero.playing {
+  animation: petPlay 2s infinite;
 }
 
 .pet-mood-bubble {
@@ -176,4 +181,52 @@
   height: clamp(48px, 12vw, 64px); 
   object-fit: contain;
   display: block; 
+}
+
+.toy {
+  position: absolute;
+  width: clamp(100px, 20vw, 200px);
+  height: auto;
+  object-fit: contain;
+  transition: transform 0.3s ease;
+}
+
+.toy.playing {
+  animation: toyPlay 2s infinite;
+}
+
+@keyframes petPlay {
+  0% {
+    transform: translateY(0) scale(1);
+  }
+  25% {
+    transform: translateY(-20px) scale(0.95);
+  }
+  50% {
+    transform: translateY(0) scale(1);
+  }
+  75% {
+    transform: translateY(-20px) scale(0.95);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes toyPlay {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  25% {
+    transform: translate(20px, -20px) rotate(15deg);
+  }
+  50% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  75% {
+    transform: translate(-20px, -20px) rotate(-15deg);
+  }
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
 }
