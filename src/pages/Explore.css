@@ -17,11 +17,14 @@
   overflow: auto;
   position: relative;
   -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+  scroll-behavior: auto; /* Use auto for better performance */
+  overscroll-behavior: none; /* Prevent bounce effect */
 }
 
 .map-grid {
   position: relative;
   transform-origin: center center;
+  will-change: transform; /* Optimize for animations */
 }
 
 .map-tile {

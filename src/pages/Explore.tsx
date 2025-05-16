@@ -74,11 +74,19 @@ export default function Explore() {
 
       // Apply new scroll position if it changed
       if (newScrollLeft !== scrollLeft || newScrollTop !== scrollTop) {
-        container.scrollTo(newScrollLeft, newScrollTop);
+        // Use requestAnimationFrame to ensure smooth scrolling
+        requestAnimationFrame(() => {
+          container.scrollTo({
+            left: newScrollLeft,
+            top: newScrollTop,
+            behavior: 'auto' // Use 'auto' instead of 'smooth' for better performance
+          });
+        });
       }
     };
 
-    container.addEventListener('scroll', handleScroll);
+    // Add scroll event listener with passive option for better performance
+    container.addEventListener('scroll', handleScroll, { passive: true });
     return () => container.removeEventListener('scroll', handleScroll);
   }, [mapDimensions]);
 
