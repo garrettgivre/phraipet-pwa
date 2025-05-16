@@ -45,6 +45,10 @@
   transform: translateZ(0);
   backface-visibility: hidden;
   pointer-events: none;
+  /* Ensure tiles overlap slightly to prevent gaps */
+  width: calc(100% + 1px);
+  height: calc(100% + 1px);
+  margin: -0.5px;
 }
 
 /* Hide scrollbars but keep functionality */
