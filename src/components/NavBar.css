@@ -25,13 +25,29 @@
 .nav-item {
   position: relative; /* For positioning of bubble elements if needed */
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  text-decoration: none;
+  color: #666;
+  padding: 8px;
+  border-radius: 8px;
+  transition: background-color 0.2s ease;
+  -webkit-tap-highlight-color: transparent; /* Remove blue highlight on mobile */
+  outline: none; /* Remove focus outline */
   cursor: pointer;
   transition: transform 0.3s ease; /* For hover/active effects */
   flex: 1; /* Allow nav items to take up equal space if needed, or adjust as per design */
   text-align: center; /* Center text within the nav item */
   height: 100%; /* Make nav items fill the height of the bar */
+}
+
+.nav-item:focus {
+  outline: none; /* Remove focus outline */
+}
+
+.nav-item:active {
+  background-color: transparent; /* Remove active state background */
 }
 
 .bubble-container {
