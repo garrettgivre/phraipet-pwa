@@ -69,6 +69,8 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
   const { activeToy, isPlaying } = useToyAnimation();
   const navigate = useNavigate();
   const [toyPosition, setToyPosition] = useState<'left' | 'right'>('right');
+  const [isWalking, setIsWalking] = useState(false);
+  const [walkDirection, setWalkDirection] = useState<'left' | 'right'>('right');
 
   // Set random toy position when a new toy becomes active
   useEffect(() => {
@@ -77,8 +79,35 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
     }
   }, [activeToy]);
 
+  // Handle random walking
+  useEffect(() => {
+    if (isPlaying) return; // Don't walk while playing with toy
+
+    const startWalking = () => {
+      if (Math.random() < 0.3) { // 30% chance to start walking
+        setIsWalking(true);
+        setWalkDirection(Math.random() < 0.5 ? 'left' : 'right');
+      }
+    };
+
+    const stopWalking = () => {
+      setIsWalking(false);
+    };
+
+    // Start walking after a random delay
+    const walkTimer = setTimeout(startWalking, Math.random() * 10000 + 5000); // 5-15 seconds
+
+    // Stop walking after 3-5 seconds
+    const stopTimer = setTimeout(stopWalking, Math.random() * 2000 + 3000);
+
+    return () => {
+      clearTimeout(walkTimer);
+      clearTimeout(stopTimer);
+    };
+  }, [isPlaying, isWalking]);
+
   const moodPhrase = isPlaying && activeToy ? getRandomToyPhrase(activeToy) : getPetMoodPhrase(pet);
-  const petImage = getPetImage(pet, isPlaying);
+  const petImage = isWalking ? "/pet/Walk-Sideways.png" : getPetImage(pet, isPlaying);
 
   const currentCeiling = roomLayers?.ceiling || "/assets/ceilings/classic-ceiling.png";
   const currentWall = roomLayers?.wall || "/assets/walls/classic-wall.png";
@@ -148,7 +177,7 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
         <img 
           src={petImage}
           alt="Your Pet" 
-          className={`petHero ${isPlaying ? 'playing' : ''}`} 
+          className={`petHero ${isPlaying ? 'playing' : ''} ${isWalking ? 'walking' : ''} ${walkDirection === 'left' ? 'flip' : ''}`} 
         />
         {activeToy && toyPosition === 'right' && (
           <img 

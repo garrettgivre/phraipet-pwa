@@ -54,6 +54,14 @@
   margin-bottom: -20px; /* Add a small margin to make it appear to be standing on the floor */
 }
 
+.petHero.flip {
+  transform: scaleX(-1);
+}
+
+.petHero.walking {
+  animation: walkAcross 3s linear;
+}
+
 .petHero.playing {
   animation: petPlay 2s infinite;
 }
@@ -240,4 +248,26 @@
 .back-decor,
 .front-decor {
   display: none;
+}
+
+@keyframes walkAcross {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.petHero.flip.walking {
+  animation: walkAcrossFlip 3s linear;
+}
+
+@keyframes walkAcrossFlip {
+  0% {
+    transform: translateX(100%) scaleX(-1);
+  }
+  100% {
+    transform: translateX(-100%) scaleX(-1);
+  }
 }
