@@ -13,6 +13,46 @@ interface PetPageProps {
   onIncreaseAffection: (amount: number) => void;
 }
 
+const getPetImage = (pet: PetType | null, isPlaying: boolean): string => {
+  if (!pet) return "/pet/Neutral.png";
+  
+  // Always use Happy image when playing with toy
+  if (isPlaying) return "/pet/Happy.png";
+
+  // Get the lowest need value to determine overall mood
+  const needs = [
+    { value: pet.hunger, type: "hunger" },
+    { value: pet.happiness, type: "happiness" },
+    { value: pet.cleanliness, type: "cleanliness" },
+    { value: pet.affection, type: "affection" },
+    { value: pet.spirit, type: "spirit" }
+  ];
+
+  const lowestNeed = needs.reduce((min, current) => 
+    current.value < min.value ? current : min
+  );
+
+  // Map need values to emotions
+  if (lowestNeed.value <= 15) {
+    switch (lowestNeed.type) {
+      case "hunger": return "/pet/Defeated.png";
+      case "happiness": return "/pet/Sad.png";
+      case "cleanliness": return "/pet/Confused.png";
+      case "affection": return "/pet/Scared.png";
+      case "spirit": return "/pet/Tired.png";
+      default: return "/pet/Neutral.png";
+    }
+  } else if (lowestNeed.value <= 35) {
+    return "/pet/Sad.png";
+  } else if (lowestNeed.value >= 85) {
+    return "/pet/Happy.png";
+  } else if (pet.affection >= 85) {
+    return "/pet/Love.png";
+  }
+
+  return "/pet/Neutral.png";
+};
+
 export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageProps) {
   const { roomLayers, roomLayersLoading } = useInventory();
   const { activeToy, isPlaying } = useToyAnimation();
@@ -27,6 +67,7 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
   }, [activeToy]);
 
   const moodPhrase = getPetMoodPhrase(pet);
+  const petImage = getPetImage(pet, isPlaying);
 
   const currentCeiling = roomLayers?.ceiling || "/assets/ceilings/classic-ceiling.png";
   const currentWall = roomLayers?.wall || "/assets/walls/classic-wall.png";
@@ -93,7 +134,7 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
           />
         )}
         <img 
-          src={pet?.image || "/pet/Neutral.png"} 
+          src={petImage}
           alt="Your Pet" 
           className={`petHero ${isPlaying ? 'playing' : ''}`} 
         />
