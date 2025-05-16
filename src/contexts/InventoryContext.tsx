@@ -170,6 +170,27 @@ const defaultToyItems: ToyInventoryItem[] = [
     ]
   },
   {
+    id: "toys-classic-fun-rainbowspinner",
+    name: "Rainbow Spinner",
+    src: "/assets/toys/toys-classic-fun-rainbowspinner.png",
+    happinessBoost: 10,
+    description: "A colorful spinning toy that creates beautiful patterns.",
+    itemCategory: "toy",
+    type: "Classic",
+    phrases: [
+      "Watch the colors spin!",
+      "So many pretty colors!",
+      "It's like a rainbow in motion!",
+      "The patterns are mesmerizing!",
+      "Spin spin spin!",
+      "Look at all those colors!",
+      "It's like a mini rainbow!",
+      "The colors are so vibrant!",
+      "Spin it faster!",
+      "What beautiful patterns!"
+    ]
+  },
+  {
     id: "toys-classic-fun-flatsqueaker",
     name: "Flat Squeaker",
     src: "/assets/toys/toys-classic-fun-flatsqueaker.png",
@@ -192,7 +213,7 @@ const defaultToyItems: ToyInventoryItem[] = [
   },
   {
     id: "toys-classic-dull-flatsqueaker",
-    name: "Old Flat Squeaker",
+    name: "Flat Squeaker",
     src: "/assets/toys/toys-classic-dull-flatsqueaker.png",
     happinessBoost: 10,
     description: "An old but still fun squeaky toy.",
@@ -272,27 +293,6 @@ const defaultToyItems: ToyInventoryItem[] = [
       "Noot noot! *builds snowman*",
       "Noot! *plays with sled*",
       "Noot noot! *makes snow angels*"
-    ]
-  },
-  {
-    id: "toys-classic-fun-rainbowspinner",
-    name: "Rainbow Spinner",
-    src: "/assets/toys/toys-classic-fun-rainbowspinner.png",
-    happinessBoost: 10,
-    description: "A colorful spinning toy that creates beautiful patterns.",
-    itemCategory: "toy",
-    type: "Classic",
-    phrases: [
-      "Watch the colors spin!",
-      "So many pretty colors!",
-      "It's like a rainbow in motion!",
-      "The patterns are mesmerizing!",
-      "Spin spin spin!",
-      "Look at all those colors!",
-      "It's like a mini rainbow!",
-      "The colors are so vibrant!",
-      "Spin it faster!",
-      "What beautiful patterns!"
     ]
   },
   {
