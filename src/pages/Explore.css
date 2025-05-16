@@ -4,12 +4,41 @@
   This is the top-level container for the Explore page content.
   It will fill the space provided by App.tsx's <main> element and handle scrolling.
 */
-.explore-page-container {
+.explore-page {
   width: 100%;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
+}
+
+.map-container {
+  width: 100%;
+  height: 100%;
   overflow: auto;
   position: relative;
-  background-color: #1a1a1a;
+  -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+}
+
+.map-grid {
+  position: relative;
+  transform-origin: center center;
+}
+
+.map-tile {
+  position: absolute;
+  background-size: cover;
+  background-position: center;
+  image-rendering: pixelated; /* For crisp pixel art */
+}
+
+/* Hide scrollbars but keep functionality */
+.map-container::-webkit-scrollbar {
+  display: none;
+}
+
+.map-container {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 /*
