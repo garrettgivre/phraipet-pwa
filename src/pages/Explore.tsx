@@ -44,6 +44,19 @@ export default function Explore() {
     return () => window.removeEventListener('resize', updateMapDimensions);
   }, []);
 
+  // Set initial scroll position to center
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container || !mapDimensions.width || !mapDimensions.height) return;
+
+    // Scroll to the middle tile
+    container.scrollTo({
+      left: mapDimensions.width,
+      top: mapDimensions.height,
+      behavior: 'auto'
+    });
+  }, [mapDimensions]);
+
   // Handle infinite scrolling
   useEffect(() => {
     const container = containerRef.current;
