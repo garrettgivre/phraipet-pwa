@@ -31,7 +31,6 @@ export default function Explore() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [viewport, setViewport] = useState(getViewportSize());
-  const [scrollPosition, setScrollPosition] = useState(0);
   const navigate = useNavigate();
 
   // Calculate map dimensions based on viewport height
@@ -40,15 +39,8 @@ export default function Explore() {
 
   useEffect(() => {
     const handleResize = () => setViewport(getViewportSize());
-    const handleScroll = () => setScrollPosition(window.scrollY);
-    
     window.addEventListener('resize', handleResize);
-    window.addEventListener('scroll', handleScroll);
-    
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      window.removeEventListener('scroll', handleScroll);
-    };
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   // Effect to fetch and process Tiled map data for hotspots
