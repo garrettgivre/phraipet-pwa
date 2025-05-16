@@ -32,6 +32,9 @@ export default function Explore() {
 
   // Calculate map dimensions based on viewport height
   useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
     const updateMapDimensions = () => {
       const viewportHeight = window.innerHeight;
       const viewportWidth = window.innerWidth;
@@ -60,12 +63,14 @@ export default function Explore() {
     const container = containerRef.current;
     if (!container || !mapDimensions.width || !mapDimensions.height) return;
 
-    // Scroll to the middle tile
-    container.scrollTo({
-      left: mapDimensions.width,
-      top: mapDimensions.height,
-      behavior: 'auto'
-    });
+    // Only set initial position if we're at the default scroll position
+    if (container.scrollLeft === 0 && container.scrollTop === 0) {
+      container.scrollTo({
+        left: mapDimensions.width,
+        top: mapDimensions.height,
+        behavior: 'auto'
+      });
+    }
   }, [mapDimensions]);
 
   // Handle infinite scrolling
