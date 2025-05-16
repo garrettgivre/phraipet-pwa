@@ -13,9 +13,6 @@ interface MapCanvasProps {
   gridSize: number;
 }
 
-const MAP_TILE_WIDTH = 7200;
-const MAP_TILE_HEIGHT = 4800;
-
 const MapCanvas: React.FC<MapCanvasProps> = ({
   hotspots,
   canvasWidth,
@@ -87,18 +84,18 @@ const MapCanvas: React.FC<MapCanvasProps> = ({
     if (!canvas) return;
 
     const rect = canvas.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
+    const clickX = event.clientX - rect.left;
+    const clickY = event.clientY - rect.top;
 
     // Check each map in the grid for clicked hotspots
-    for (let y = 0; y < gridSize; y++) {
-      for (let x = 0; x < gridSize; x++) {
-        const offsetX = x * mapWidth;
-        const offsetY = y * mapHeight;
+    for (let gridY = 0; gridY < gridSize; gridY++) {
+      for (let gridX = 0; gridX < gridSize; gridX++) {
+        const offsetX = gridX * mapWidth;
+        const offsetY = gridY * mapHeight;
 
         hotspots.forEach(hotspot => {
-          const dx = x - (hotspot.x + offsetX);
-          const dy = y - (hotspot.y + offsetY);
+          const dx = clickX - (hotspot.x + offsetX);
+          const dy = clickY - (hotspot.y + offsetY);
           const distance = Math.sqrt(dx * dx + dy * dy);
 
           if (distance <= (hotspot.radius || 20)) {

@@ -1,9 +1,16 @@
 // src/pages/Sunnybrook.tsx
 import { useEffect, useState } from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import MapCanvas from '../components/MapCanvas';
 import type { AppHotspot, TiledMapData, TiledObject } from '../types'; 
 import './Sunnybrook.css';
+
+function getViewportSize() {
+  return {
+    width: window.innerWidth,
+    height: window.innerHeight,
+  };
+}
 
 const getTiledObjectProperty = (object: TiledObject, propertyName: string): any | undefined => {
   if (!object.properties) {
@@ -25,6 +32,8 @@ export default function Sunnybrook() {
   const [mapPixelHeight, setMapPixelHeight] = useState(0); 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [viewport, setViewport] = useState(getViewportSize());
+  const navigate = useNavigate();
 
   const mapTileImageUrl = "/maps/sunnybrook_background.png"; 
 
@@ -108,6 +117,10 @@ export default function Sunnybrook() {
     return () => { isMounted = false; };
   }, [isSunnybrookRoot, mapTileImageUrl]);
 
+  const handleHotspotNavigate = (hotspot: AppHotspot) => {
+    if (hotspot.route) navigate(hotspot.route);
+  };
+
   if (!isSunnybrookRoot) {
     return <Outlet />; 
   }
@@ -131,10 +144,14 @@ export default function Sunnybrook() {
           backgroundPosition: 'center center',
         }}
       >
-        <MapCanvas 
+        <MapCanvas
           hotspots={hotspots}
           canvasWidth={mapPixelWidth}
           canvasHeight={mapPixelHeight}
+          onHotspotClick={handleHotspotNavigate}
+          mapWidth={mapPixelWidth}
+          mapHeight={mapPixelHeight}
+          gridSize={1}
         />
       </div>
     </div>
