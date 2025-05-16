@@ -19,6 +19,8 @@ const MAP_BACKGROUND_IMAGE_URL = "/maps/world_map_background.png";
 const TILED_MAP_DATA_URL = '/maps/world_map_data.json';
 const MAP_ASPECT_RATIO = 1.5; // Width to height ratio of the map
 const GRID_SIZE = 3; // We only need 3x3 for infinite scrolling
+const TILED_MAP_WIDTH = 1600; // Original Tiled map width
+const TILED_MAP_HEIGHT = 1200; // Original Tiled map height
 
 export default function Explore() {
   const location = useLocation();
@@ -101,12 +103,19 @@ export default function Explore() {
             const tiledRadius = getTiledObjectProperty(obj, 'radius');
             const clickRadius = typeof tiledRadius === 'number' ? tiledRadius : Math.max(obj.width, obj.height) / 1.5 || 20;
 
+            // Scale coordinates based on current map dimensions
+            const scaleX = mapDimensions.width / TILED_MAP_WIDTH;
+            const scaleY = mapDimensions.height / TILED_MAP_HEIGHT;
+            const scaledX = centerX * scaleX;
+            const scaledY = centerY * scaleY;
+            const scaledRadius = clickRadius * Math.min(scaleX, scaleY);
+
             return {
               id: getTiledObjectProperty(obj, 'id_string') || `tiled-obj-${obj.id}`,
               name: getTiledObjectProperty(obj, 'name') || obj.name || 'Unnamed Hotspot',
-              x: centerX,
-              y: centerY,
-              radius: clickRadius,
+              x: scaledX,
+              y: scaledY,
+              radius: scaledRadius,
               route: getTiledObjectProperty(obj, 'route') || '/',
               iconSrc: getTiledObjectProperty(obj, 'iconSrc') || undefined,
               iconSize: getTiledObjectProperty(obj, 'iconSize') || undefined,
@@ -127,7 +136,7 @@ export default function Explore() {
 
     fetchMapData();
     return () => { isMounted = false; };
-  }, []);
+  }, [mapDimensions]);
 
   if (!isExploreRoot) {
     return <Outlet />;
