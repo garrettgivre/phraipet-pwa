@@ -107,7 +107,6 @@ defaultPetData.spirit = Math.max(MIN_NEED_VALUE, Math.min(MAX_NEED_VALUE, Math.r
 
 export default function App() {
   const [pet, setPet] = useState<Pet | null>(null);
-  const [lastUpdate, setLastUpdate] = useState<number>(Date.now());
 
   const needInfo: NeedInfo[] = pet && typeof pet.hunger === 'number' && typeof pet.cleanliness === 'number' && typeof pet.happiness === 'number' && typeof pet.affection === 'number' && typeof pet.spirit === 'number'
     ? [
