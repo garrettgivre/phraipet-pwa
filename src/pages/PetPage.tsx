@@ -19,6 +19,9 @@ const getPetImage = (pet: PetType | null, isPlaying: boolean): string => {
   // Always use Happy image when playing with toy
   if (isPlaying) return "/pet/Happy.png";
 
+  // Check for overstuffed condition first
+  if (pet.hunger >= 100) return "/pet/Tired.png";
+
   // Get the lowest need value to determine overall mood
   const needs = [
     { value: pet.hunger, type: "hunger" },
@@ -44,7 +47,7 @@ const getPetImage = (pet: PetType | null, isPlaying: boolean): string => {
     }
   } else if (lowestNeed.value <= 35) {
     return "/pet/Sad.png";
-  } else if (lowestNeed.value >= 85) {
+  } else if (lowestNeed.value >= 50) {
     return "/pet/Happy.png";
   } else if (pet.affection >= 85) {
     return "/pet/Love.png";
