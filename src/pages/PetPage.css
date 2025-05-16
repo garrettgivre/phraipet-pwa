@@ -79,6 +79,7 @@
   text-align: center;
   z-index: 6;
   font-size: clamp(12px, 3vw, 14px);
+  animation: fadeInOut 0.3s ease-in-out;
 }
 
 .pet-mood-bubble::after { 
@@ -269,5 +270,16 @@
   }
   100% {
     transform: translateX(-100%) scaleX(-1);
+  }
+}
+
+@keyframes fadeInOut {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
   }
 }

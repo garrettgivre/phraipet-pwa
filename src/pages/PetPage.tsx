@@ -71,6 +71,7 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
   const [toyPosition, setToyPosition] = useState<'left' | 'right'>('right');
   const [isWalking, setIsWalking] = useState(false);
   const [walkDirection, setWalkDirection] = useState<'left' | 'right'>('right');
+  const [showSpeechBubble, setShowSpeechBubble] = useState(false);
 
   // Set random toy position when a new toy becomes active
   useEffect(() => {
@@ -78,6 +79,31 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
       setToyPosition(Math.random() < 0.5 ? 'left' : 'right');
     }
   }, [activeToy]);
+
+  // Handle speech bubble visibility
+  useEffect(() => {
+    if (isPlaying) {
+      setShowSpeechBubble(true);
+      return;
+    }
+
+    const toggleSpeechBubble = () => {
+      if (Math.random() < 0.3) { // 30% chance to show speech bubble
+        setShowSpeechBubble(true);
+        // Hide speech bubble after 3-5 seconds
+        setTimeout(() => {
+          setShowSpeechBubble(false);
+        }, Math.random() * 2000 + 3000);
+      } else {
+        setShowSpeechBubble(false);
+      }
+    };
+
+    // Toggle speech bubble every 5-15 seconds
+    const timer = setTimeout(toggleSpeechBubble, Math.random() * 10000 + 5000);
+
+    return () => clearTimeout(timer);
+  }, [isPlaying, showSpeechBubble]);
 
   // Handle random walking
   useEffect(() => {
@@ -162,7 +188,7 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
       {!roomLayersLoading && currentFloor && <img src={currentFloor} alt="Floor" className="layer floor" />}
 
       <div className="pet-display-area">
-        {pet && moodPhrase && (
+        {pet && moodPhrase && showSpeechBubble && (
           <div className="pet-mood-bubble">
             <p>{moodPhrase}</p>
           </div>
