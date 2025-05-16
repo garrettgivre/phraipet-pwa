@@ -34,9 +34,20 @@ export default function Explore() {
   useEffect(() => {
     const updateMapDimensions = () => {
       const viewportHeight = window.innerHeight;
-      const mapHeight = viewportHeight * 0.8; // 80% of viewport height
+      const viewportWidth = window.innerWidth;
+      
+      // Calculate dimensions to ensure map fills viewport without duplicates
+      const mapHeight = viewportHeight * 1.2; // 120% of viewport height
       const mapWidth = mapHeight * MAP_ASPECT_RATIO;
-      setMapDimensions({ width: mapWidth, height: mapHeight });
+      
+      // If map is too wide for viewport, scale it down
+      if (mapWidth < viewportWidth * 1.2) {
+        const scaledWidth = viewportWidth * 1.2;
+        const scaledHeight = scaledWidth / MAP_ASPECT_RATIO;
+        setMapDimensions({ width: scaledWidth, height: scaledHeight });
+      } else {
+        setMapDimensions({ width: mapWidth, height: mapHeight });
+      }
     };
 
     updateMapDimensions();
