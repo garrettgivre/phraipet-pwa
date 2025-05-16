@@ -1,8 +1,8 @@
 // src/pages/Explore.tsx
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MapCanvas from '../components/MapCanvas';
-import type { AppHotspot, TiledMapData, TiledObject, TiledProperty } from '../types'; // Ensure TiledProperty is imported
+import type { AppHotspot, TiledMapData, TiledObject, TiledProperty } from '../types';
 import './Explore.css';
 
 // Helper function to get properties from Tiled objects
@@ -15,10 +15,8 @@ const getTiledObjectProperty = (object: TiledObject, propertyName: string): any 
 };
 
 // Configuration for the world map
-const WORLD_MAP_PIXEL_WIDTH = 7200;
-const WORLD_MAP_PIXEL_HEIGHT = 4800;
-const MAP_BACKGROUND_IMAGE_URL = "/maps/world_map_background.png"; // Ensure this path is correct in your public folder
-const TILED_MAP_DATA_URL = '/maps/world_map_data.json'; // Path to your Tiled JSON
+const MAP_BACKGROUND_IMAGE_URL = "/maps/world_map_background.png";
+const TILED_MAP_DATA_URL = '/maps/world_map_data.json';
 
 function getViewportSize() {
   return {
