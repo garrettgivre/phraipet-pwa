@@ -275,9 +275,9 @@ const defaultToyItems: ToyInventoryItem[] = [
     ]
   },
   {
-    id: "rainbow_spinner",
+    id: "toys-classic-fun-rainbowspinner",
     name: "Rainbow Spinner",
-    src: "/assets/toys/rainbow_spinner.png",
+    src: "/assets/toys/toys-classic-fun-rainbowspinner.png",
     happinessBoost: 10,
     description: "A colorful spinning toy that creates beautiful patterns.",
     itemCategory: "toy",
