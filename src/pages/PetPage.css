@@ -61,16 +61,18 @@
 }
 
 .pet-mood-bubble {
+  position: absolute;
+  top: -40px; /* Position above the pet */
+  left: 50%;
+  transform: translateX(-50%);
   background-color: rgba(255, 255, 255, 0.9); 
-  padding: 6px 12px; /* Slightly smaller padding */
+  padding: 6px 12px;
   border-radius: 15px; 
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  margin-bottom: 8px; /* Reduced margin */
-  max-width: 200px; /* Slightly smaller max-width */
+  max-width: 200px;
   text-align: center;
-  position: relative; 
-  z-index: 6; 
-  font-size: 13px; /* Slightly smaller font */
+  z-index: 6;
+  font-size: 13px;
 }
 
 .pet-mood-bubble::after { 
@@ -88,7 +90,7 @@
 
 .pet-mood-bubble p {
   margin: 0;
-  font-size: 13px; /* Consistent with bubble font-size */
+  font-size: 13px;
   color: #333;
   line-height: 1.3;
 }
@@ -232,4 +234,10 @@
   100% {
     transform: translateX(0) rotate(0deg);
   }
+}
+
+/* Remove old background decoration styles */
+.back-decor,
+.front-decor {
+  display: none;
 }
