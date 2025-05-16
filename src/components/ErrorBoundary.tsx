@@ -1,5 +1,6 @@
-import React, { Component } from 'react';
-import type { ErrorInfo, ReactNode } from 'react';
+import { Component } from "react";
+import type { ErrorInfo, ReactNode } from "react";
+import "./ErrorBoundary.css";
 
 interface Props {
   children: ReactNode;
@@ -12,35 +13,30 @@ interface State {
 }
 
 export class ErrorBoundary extends Component<Props, State> {
-  public state: State = {
-    hasError: false,
-    error: null
-  };
+  constructor(props: Props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
 
-  public static getDerivedStateFromError(error: Error): State {
+  static getDerivedStateFromError(error: Error): State {
     return { hasError: true, error };
   }
 
-  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('Uncaught error:', error, errorInfo);
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error("Error caught by boundary:", error, errorInfo);
   }
 
-  public render() {
+  render() {
     if (this.state.hasError) {
       return this.props.fallback || (
         <div className="error-boundary">
           <h2>Something went wrong</h2>
-          <p>We're sorry, but there was an error loading this component.</p>
-          <button
-            onClick={() => this.setState({ hasError: false, error: null })}
-            className="error-boundary-retry-button"
-          >
-            Try again
-          </button>
+          <p>We're sorry, but there was an error loading this page.</p>
+          <button onClick={() => window.location.reload()}>Retry</button>
           {process.env.NODE_ENV === 'development' && this.state.error && (
-            <pre className="error-boundary-details">
-              {this.state.error.toString()}
-            </pre>
+            <div className="error-details">
+              <pre>{this.state.error.toString()}</pre>
+            </div>
           )}
         </div>
       );
