@@ -18,6 +18,7 @@ const getTiledObjectProperty = (object: TiledObject, propertyName: string): any 
 const MAP_BACKGROUND_IMAGE_URL = "/maps/world_map_background.png";
 const TILED_MAP_DATA_URL = '/maps/world_map_data.json';
 const MAP_ASPECT_RATIO = 1.5; // Width to height ratio of the map
+const MAP_GRID_SIZE = 3; // Number of maps in each direction (3x3 grid)
 
 function getViewportSize() {
   return {
@@ -36,6 +37,10 @@ export default function Explore() {
   // Calculate map dimensions based on viewport height
   const mapHeight = viewport.height;
   const mapWidth = mapHeight * MAP_ASPECT_RATIO;
+
+  // Calculate grid dimensions
+  const gridWidth = mapWidth * MAP_GRID_SIZE;
+  const gridHeight = mapHeight * MAP_GRID_SIZE;
 
   useEffect(() => {
     const handleResize = () => setViewport(getViewportSize());
@@ -119,24 +124,48 @@ export default function Explore() {
     );
   }
 
+  // Create a grid of maps
+  const mapGrid = [];
+  for (let y = 0; y < MAP_GRID_SIZE; y++) {
+    for (let x = 0; x < MAP_GRID_SIZE; x++) {
+      mapGrid.push(
+        <div
+          key={`map-${x}-${y}`}
+          className="explore-map-tile"
+          style={{
+            width: mapWidth,
+            height: mapHeight,
+            backgroundImage: `url(${MAP_BACKGROUND_IMAGE_URL})`,
+            backgroundSize: '100% 100%',
+            backgroundRepeat: 'no-repeat',
+            position: 'absolute',
+            left: x * mapWidth,
+            top: y * mapHeight,
+          }}
+        />
+      );
+    }
+  }
+
   return (
     <div className="explore-page-container">
       <div
         className="explore-map-content-wrapper"
         style={{
-          width: mapWidth,
-          height: mapHeight,
-          backgroundImage: `url(${MAP_BACKGROUND_IMAGE_URL})`,
-          backgroundSize: '100% 100%',
-          backgroundRepeat: 'no-repeat',
+          width: gridWidth,
+          height: gridHeight,
           position: 'relative',
         }}
       >
+        {mapGrid}
         <MapCanvas
           hotspots={hotspots}
-          canvasWidth={mapWidth}
-          canvasHeight={mapHeight}
+          canvasWidth={gridWidth}
+          canvasHeight={gridHeight}
           onHotspotClick={handleHotspotNavigate}
+          mapWidth={mapWidth}
+          mapHeight={mapHeight}
+          gridSize={MAP_GRID_SIZE}
         />
       </div>
     </div>

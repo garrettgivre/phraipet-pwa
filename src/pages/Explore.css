@@ -7,8 +7,7 @@
 .explore-page-container {
   width: 100%;
   min-height: 100vh;
-  overflow-x: auto;
-  overflow-y: scroll;
+  overflow: auto;
   position: relative;
   background-color: #1a1a1a;
 }
@@ -18,13 +17,9 @@
   It holds the map background image and the MapCanvas.
 */
 .explore-map-content-wrapper {
-  margin: 0 auto;
   position: relative;
-  /* width and height are set by inline styles in Explore.tsx to WORLD_MAP_PIXEL_WIDTH/HEIGHT */
-  background-repeat: no-repeat; /* Assuming one large map image */
-  background-position: top left; /* Or center center if preferred and image is sized appropriately */
-  background-size: contain; /* Or 'cover' or actual pixel values, depending on image */
-  /* background-color: #202030; */ /* Optional: Color for map area if image has transparency */
+  margin: 0;
+  /* The wrapper's size is set by inline styles in Explore.tsx */
 }
 
 /*
@@ -43,9 +38,14 @@
   }
 */
 
+.explore-map-tile {
+  position: absolute;
+  /* Size and position are set by inline styles in Explore.tsx */
+}
+
 /* Styling for loading and error messages */
 .explore-status-message {
-  position: absolute;
+  position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
