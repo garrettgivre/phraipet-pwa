@@ -106,17 +106,90 @@ const defaultGroomingItems: GroomingInventoryItem[] = [
 ];
 
 const defaultToyItems: ToyInventoryItem[] = [
-  { id: "toys-basic-dull-lintlump", name: "Lint Lump", itemCategory: "toy", type: "Basic", happinessBoost: 10, src: "/assets/toys/toys-basic-dull-lintlump.png", description: "A surprisingly amusing lump of lint." },
-  { id: "toys-basic-exciting-rattlecube", name: "Rattle Cube", itemCategory: "toy", type: "Basic", happinessBoost: 12, src: "/assets/toys/toys-basic-exciting-rattlecube.png", description: "A cube that rattles with excitement." },
-  { id: "toys-basic-fun-paperfrisbee", name: "Paper Frisbee", itemCategory: "toy", type: "Basic", happinessBoost: 10, src: "/assets/toys/toys-basic-fun-paperfrisbee.png", description: "Simple, light, and fun to chase." },
-  { id: "toys-classic-dull-flatsqueaker", name: "Flat Squeaker (Dull)", itemCategory: "toy", type: "Classic", happinessBoost: 15, src: "/assets/toys/toys-classic-dull-flatsqueaker.png", description: "A classic squeaky toy, a bit flat." },
-  { id: "toys-classic-fun-flatsqueaker", name: "Flat Squeaker (Fun)", itemCategory: "toy", type: "Classic", happinessBoost: 18, src: "/assets/toys/toys-classic-fun-flatsqueaker.png", description: "A more engaging flat squeaker." },
-  { id: "toys-gadget-fun-clickomatic", name: "Click-o-matic", itemCategory: "toy", type: "Gadget", happinessBoost: 25, src: "/assets/toys/toys-gadget-fun-clickomatic.png", description: "Makes satisfying clicking sounds." },
-  { id: "toys-gadget-thrilling-starlightprojector", name: "Starlight Projector", itemCategory: "toy", type: "Gadget", happinessBoost: 28, src: "/assets/toys/toys-gadget-thrilling-starlightprojector.png", description: "Projects thrilling stars." },
-  { id: "toys-plushie-fun-pingu", name: "Pingu Plushie", itemCategory: "toy", type: "Plushie", happinessBoost: 20, src: "/assets/toys/toys-plushie-fun-pingu.png", description: "A fun penguin plushie." },
-  { id: "toys-plushie-mindblowing-sentientsnugglepod", name: "Sentient Snugglepod", itemCategory: "toy", type: "Plushie", happinessBoost: 22, src: "/assets/toys/toys-plushie-mindblowing-sentientsnugglepod.png", description: "A surprisingly sentient pod." },
-  { id: "toys-wonder-exciting-skyboundyoyo", name: "Skybound Yo-yo", itemCategory: "toy", type: "Wonder", happinessBoost: 30, src: "/assets/toys/toys-wonder-exciting-skyboundyoyo.png", description: "A yo-yo that reaches for the sky." },
-  { id: "toys-wonder-mindblowing-cosmicwonderbox", name: "Cosmic Wonderbox", itemCategory: "toy", type: "Wonder", happinessBoost: 35, src: "/assets/toys/toys-wonder-mindblowing-cosmicwonderbox.png", description: "A box full of cosmic wonders." },
+  {
+    id: "ball",
+    name: "Ball",
+    src: "/assets/toys/ball.png",
+    happinessBoost: 10,
+    description: "A classic red ball for endless fun!",
+    itemCategory: "toy",
+    type: "Classic",
+    phrases: [
+      "Bounce bounce bounce!",
+      "I love chasing this ball!",
+      "Watch me catch it!",
+      "This is so much fun!",
+      "I could play with this all day!",
+      "Look how high it goes!",
+      "My favorite toy!",
+      "Perfect for playing fetch!",
+      "So bouncy and fun!",
+      "Can't get enough of this ball!"
+    ]
+  },
+  {
+    id: "mouse",
+    name: "Mouse Toy",
+    src: "/assets/toys/mouse.png",
+    happinessBoost: 15,
+    description: "A cute mouse toy that squeaks!",
+    itemCategory: "toy",
+    type: "Classic",
+    phrases: [
+      "Squeak squeak!",
+      "I caught the mouse!",
+      "This is so realistic!",
+      "My hunting instincts are tingling!",
+      "Look at me pounce!",
+      "The best mouse toy ever!",
+      "I'm the best hunter!",
+      "This mouse is mine!",
+      "So much fun to chase!",
+      "I love the squeaking sound!"
+    ]
+  },
+  {
+    id: "feather",
+    name: "Feather Wand",
+    src: "/assets/toys/feather.png",
+    happinessBoost: 20,
+    description: "A magical feather wand for interactive play!",
+    itemCategory: "toy",
+    type: "Gadget",
+    phrases: [
+      "The feather is so pretty!",
+      "I love how it floats!",
+      "Watch me jump for it!",
+      "This is magical!",
+      "I could chase this forever!",
+      "The best wand ever!",
+      "Look at me fly!",
+      "So graceful and fun!",
+      "I'm a feather dancer!",
+      "This makes me feel special!"
+    ]
+  },
+  {
+    id: "laser",
+    name: "Laser Pointer",
+    src: "/assets/toys/laser.png",
+    happinessBoost: 25,
+    description: "A mysterious red dot to chase!",
+    itemCategory: "toy",
+    type: "Gadget",
+    phrases: [
+      "I see the red dot!",
+      "I'm going to catch it!",
+      "This is so mysterious!",
+      "Look at me zoom!",
+      "The dot is mine!",
+      "I'm the fastest chaser!",
+      "This is so exciting!",
+      "I love the challenge!",
+      "Watch me pounce!",
+      "The best game ever!"
+    ]
+  }
 ];
 
 const defaultAllItems: InventoryItem[] = [

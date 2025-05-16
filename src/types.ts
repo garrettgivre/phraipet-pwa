@@ -80,6 +80,8 @@ export interface ToyInventoryItem extends BaseInventoryItem {
   itemCategory: "toy";
   type: ToyCategory;
   happinessBoost: number;
+  description: string;
+  phrases: string[]; // Array of phrases the pet says when playing with this toy
 }
 
 // A union type representing any item that can be in the inventory.

@@ -2,7 +2,7 @@
 import { useNavigate } from "react-router-dom";
 import { useInventory } from "../contexts/InventoryContext";
 import { useToyAnimation } from "../contexts/ToyAnimationContext";
-import type { NeedInfo, Pet as PetType, Need as NeedType } from "../types";
+import type { NeedInfo, Pet as PetType, Need as NeedType, ToyInventoryItem } from "../types";
 import { getPetMoodPhrase } from "../utils/petMoodUtils";
 import "./PetPage.css";
 import { useState, useEffect } from "react";
@@ -56,6 +56,13 @@ const getPetImage = (pet: PetType | null, isPlaying: boolean): string => {
   return "/pet/Neutral.png";
 };
 
+const getRandomToyPhrase = (toy: ToyInventoryItem | null): string => {
+  if (!toy || !toy.phrases || toy.phrases.length === 0) {
+    return "This is fun!";
+  }
+  return toy.phrases[Math.floor(Math.random() * toy.phrases.length)];
+};
+
 export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageProps) {
   const { roomLayers, roomLayersLoading } = useInventory();
   const { activeToy, isPlaying } = useToyAnimation();
@@ -69,7 +76,7 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
     }
   }, [activeToy]);
 
-  const moodPhrase = getPetMoodPhrase(pet);
+  const moodPhrase = isPlaying && activeToy ? getRandomToyPhrase(activeToy) : getPetMoodPhrase(pet);
   const petImage = getPetImage(pet, isPlaying);
 
   const currentCeiling = roomLayers?.ceiling || "/assets/ceilings/classic-ceiling.png";
