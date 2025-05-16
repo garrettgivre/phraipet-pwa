@@ -149,6 +149,27 @@ const defaultToyItems: ToyInventoryItem[] = [
     ]
   },
   {
+    id: "toys-basic-dull-lintlump",
+    name: "Lint Lump",
+    src: "/assets/toys/toys-basic-dull-lintlump.png",
+    happinessBoost: 5,
+    description: "A simple lump of lint to play with.",
+    itemCategory: "toy",
+    type: "Basic",
+    phrases: [
+      "It's so soft!",
+      "I love playing with this!",
+      "This is my comfort toy!",
+      "Watch me roll it around!",
+      "The best lint ever!",
+      "I'm a lint expert!",
+      "This lint is mine!",
+      "So much fun to play with!",
+      "I love how soft it is!",
+      "This is my favorite toy!"
+    ]
+  },
+  {
     id: "toys-classic-fun-flatsqueaker",
     name: "Flat Squeaker",
     src: "/assets/toys/toys-classic-fun-flatsqueaker.png",
@@ -170,6 +191,27 @@ const defaultToyItems: ToyInventoryItem[] = [
     ]
   },
   {
+    id: "toys-classic-dull-flatsqueaker",
+    name: "Old Flat Squeaker",
+    src: "/assets/toys/toys-classic-dull-flatsqueaker.png",
+    happinessBoost: 10,
+    description: "An old but still fun squeaky toy.",
+    itemCategory: "toy",
+    type: "Classic",
+    phrases: [
+      "Squeak... squeak...",
+      "Still works!",
+      "This is fun!",
+      "Watch me play!",
+      "My old favorite!",
+      "I still love it!",
+      "This squeaker is mine!",
+      "Still fun to squeak!",
+      "I love the old squeak!",
+      "This is my comfort toy!"
+    ]
+  },
+  {
     id: "toys-gadget-fun-clickomatic",
     name: "Click-o-matic",
     src: "/assets/toys/toys-gadget-fun-clickomatic.png",
@@ -188,6 +230,111 @@ const defaultToyItems: ToyInventoryItem[] = [
       "So much fun to click!",
       "I love the clicking sound!",
       "This is my favorite gadget!"
+    ]
+  },
+  {
+    id: "toys-gadget-thrilling-starlightprojector",
+    name: "Starlight Projector",
+    src: "/assets/toys/toys-gadget-thrilling-starlightprojector.png",
+    happinessBoost: 30,
+    description: "A magical projector that creates star patterns!",
+    itemCategory: "toy",
+    type: "Gadget",
+    phrases: [
+      "Look at the stars!",
+      "This is magical!",
+      "I love the patterns!",
+      "Watch me chase the stars!",
+      "The best projector ever!",
+      "I'm a star chaser!",
+      "These stars are mine!",
+      "So much fun to chase!",
+      "I love the star patterns!",
+      "This is my favorite gadget!"
+    ]
+  },
+  {
+    id: "toys-plushie-fun-pingu",
+    name: "Pingu Plushie",
+    src: "/assets/toys/toys-plushie-fun-pingu.png",
+    happinessBoost: 20,
+    description: "A cute and cuddly Pingu plushie!",
+    itemCategory: "toy",
+    type: "Plushie",
+    phrases: [
+      "So soft and cuddly!",
+      "I love my Pingu!",
+      "This is so cozy!",
+      "Watch me snuggle!",
+      "The best plushie ever!",
+      "I'm a cuddle expert!",
+      "This Pingu is mine!",
+      "So much fun to cuddle!",
+      "I love how soft it is!",
+      "This is my favorite plushie!"
+    ]
+  },
+  {
+    id: "toys-plushie-mindblowing-sentientsnugglepod",
+    name: "Sentient Snuggle Pod",
+    src: "/assets/toys/toys-plushie-mindblowing-sentientsnugglepod.png",
+    happinessBoost: 35,
+    description: "A magical plushie that responds to cuddles!",
+    itemCategory: "toy",
+    type: "Plushie",
+    phrases: [
+      "It's alive!",
+      "I love how it responds!",
+      "This is amazing!",
+      "Watch it react!",
+      "The best pod ever!",
+      "I'm a pod whisperer!",
+      "This pod is mine!",
+      "So much fun to play with!",
+      "I love how it moves!",
+      "This is my favorite plushie!"
+    ]
+  },
+  {
+    id: "toys-wonder-exciting-skyboundyoyo",
+    name: "Skybound Yo-yo",
+    src: "/assets/toys/toys-wonder-exciting-skyboundyoyo.png",
+    happinessBoost: 30,
+    description: "A magical yo-yo that floats in the air!",
+    itemCategory: "toy",
+    type: "Wonder",
+    phrases: [
+      "It floats!",
+      "I love how it hovers!",
+      "This is so cool!",
+      "Watch it fly!",
+      "The best yo-yo ever!",
+      "I'm a yo-yo master!",
+      "This yo-yo is mine!",
+      "So much fun to play with!",
+      "I love how it floats!",
+      "This is my favorite toy!"
+    ]
+  },
+  {
+    id: "toys-wonder-mindblowing-cosmicwonderbox",
+    name: "Cosmic Wonder Box",
+    src: "/assets/toys/toys-wonder-mindblowing-cosmicwonderbox.png",
+    happinessBoost: 40,
+    description: "A mysterious box that creates cosmic wonders!",
+    itemCategory: "toy",
+    type: "Wonder",
+    phrases: [
+      "It's magical!",
+      "I love the cosmic effects!",
+      "This is mind-blowing!",
+      "Watch the wonders!",
+      "The best box ever!",
+      "I'm a cosmic master!",
+      "This box is mine!",
+      "So much fun to explore!",
+      "I love the cosmic patterns!",
+      "This is my favorite wonder!"
     ]
   }
 ];
