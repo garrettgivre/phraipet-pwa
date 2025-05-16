@@ -50,63 +50,43 @@ export default function Explore() {
     if (!container || !mapDimensions.width || !mapDimensions.height) return;
 
     let isScrolling = false;
-    let lastScrollTime = 0;
-    const SCROLL_THRESHOLD = 16; // ~60fps
+    const mapWidth = mapDimensions.width;
+    const mapHeight = mapDimensions.height;
 
     const handleScroll = () => {
-      const now = performance.now();
-      if (now - lastScrollTime < SCROLL_THRESHOLD) return;
-      lastScrollTime = now;
-
       if (isScrolling) return;
       isScrolling = true;
 
       const { scrollLeft, scrollTop } = container;
-      const mapWidth = mapDimensions.width;
-      const mapHeight = mapDimensions.height;
-
-      // Calculate relative position within the middle map
-      const relativeX = scrollLeft % mapWidth;
-      const relativeY = scrollTop % mapHeight;
-
-      // Calculate which map we're in (0, 1, or 2)
-      const mapX = Math.floor(scrollLeft / mapWidth);
-      const mapY = Math.floor(scrollTop / mapHeight);
-
-      // Calculate new scroll position
       let newScrollLeft = scrollLeft;
       let newScrollTop = scrollTop;
 
       // Handle horizontal wrapping
-      if (mapX === 0) {
-        newScrollLeft = mapWidth + relativeX;
-      } else if (mapX === 2) {
-        newScrollLeft = mapWidth + relativeX;
+      if (scrollLeft < mapWidth) {
+        newScrollLeft = scrollLeft + mapWidth;
+      } else if (scrollLeft > mapWidth * 2) {
+        newScrollLeft = scrollLeft - mapWidth;
       }
 
       // Handle vertical wrapping
-      if (mapY === 0) {
-        newScrollTop = mapHeight + relativeY;
-      } else if (mapY === 2) {
-        newScrollTop = mapHeight + relativeY;
+      if (scrollTop < mapHeight) {
+        newScrollTop = scrollTop + mapHeight;
+      } else if (scrollTop > mapHeight * 2) {
+        newScrollTop = scrollTop - mapHeight;
       }
 
       // Apply new scroll position if it changed
       if (newScrollLeft !== scrollLeft || newScrollTop !== scrollTop) {
-        requestAnimationFrame(() => {
-          container.scrollTo({
-            left: newScrollLeft,
-            top: newScrollTop,
-            behavior: 'auto'
-          });
-          isScrolling = false;
+        container.scrollTo({
+          left: newScrollLeft,
+          top: newScrollTop,
+          behavior: 'auto'
         });
-      } else {
-        isScrolling = false;
       }
+
+      isScrolling = false;
     };
 
-    // Add scroll event listener with passive option for better performance
     container.addEventListener('scroll', handleScroll, { passive: true });
     return () => container.removeEventListener('scroll', handleScroll);
   }, [mapDimensions]);

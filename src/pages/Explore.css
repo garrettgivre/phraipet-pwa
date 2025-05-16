@@ -18,29 +18,32 @@
   height: 100%;
   overflow: auto;
   position: relative;
-  -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
-  scroll-behavior: auto; /* Use auto for better performance */
-  overscroll-behavior: none; /* Prevent bounce effect */
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: auto;
+  overscroll-behavior: none;
   transform: translateZ(0);
   backface-visibility: hidden;
   perspective: 1000px;
+  will-change: scroll-position;
 }
 
 .map-grid {
   position: relative;
   transform-origin: center center;
-  will-change: transform; /* Optimize for animations */
+  will-change: transform;
   transform: translateZ(0);
   backface-visibility: hidden;
+  pointer-events: none;
 }
 
 .map-tile {
   position: absolute;
   background-size: cover;
   background-position: center;
-  image-rendering: pixelated; /* For crisp pixel art */
+  image-rendering: pixelated;
   transform: translateZ(0);
   backface-visibility: hidden;
+  pointer-events: none;
 }
 
 /* Hide scrollbars but keep functionality */
