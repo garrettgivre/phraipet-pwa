@@ -1,26 +1,13 @@
 // src/App.tsx
 import { useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
-import { ref, onValue, set, serverTimestamp, update } from "firebase/database";
-import { db } from "./firebase";
-// MODIFIED: Import GroomingInventoryItem instead of CleaningInventoryItem
 import type { Pet, Need, NeedInfo, FoodInventoryItem, GroomingInventoryItem, ToyInventoryItem } from "./types";
 import { InventoryProvider } from "./contexts/InventoryContext";
+import { ErrorBoundary } from "./components/ErrorBoundary";
+import { petService, withErrorHandling } from "./services/firebase";
+import { createRoutes } from "./routes";
 import Header from "./components/Header";
 import NavBar from "./components/NavBar";
-import PetPage from "./pages/PetPage";
-import Explore from "./pages/Explore";
-import Play from "./pages/Play";
-import Sunnybrook from "./pages/Sunnybrook";
-import SBAdoption from "./pages/Sunnybrook/SBAdoption";
-import SBClinic from "./pages/Sunnybrook/SBClinic";
-import SBClock from "./pages/Sunnybrook/SBClock";
-import SBFountain from "./pages/Sunnybrook/SBFountain";
-import SBFurniture from "./pages/Sunnybrook/SBFurniture";
-import SBMart from "./pages/Sunnybrook/SBMart";
-import SBStall from "./pages/Sunnybrook/SBStall";
-import SBToy from "./pages/Sunnybrook/SBToy";
-import InventoryPage from "./pages/InventoryPage";
 
 import "./App.css";
 
@@ -66,12 +53,12 @@ const descriptor = (need: Exclude<Need, "spirit">, value: number | undefined): s
 interface AppShellProps {
   pet: Pet | null;
   handleFeedPet: (foodItem: FoodInventoryItem) => void;
-  handleGroomPet: (groomingItem: GroomingInventoryItem) => void; // MODIFIED
+  handleGroomPet: (groomingItem: GroomingInventoryItem) => void;
   handlePlayWithToy: (toyItem: ToyInventoryItem) => void;
   handleIncreaseAffection: (amount: number) => void;
 }
 
-function AppShell({ pet, handleFeedPet, handleGroomPet, handlePlayWithToy, handleIncreaseAffection }: AppShellProps) { // MODIFIED
+function AppShell({ pet, handleFeedPet, handleGroomPet, handlePlayWithToy, handleIncreaseAffection }: AppShellProps) {
   const location = useLocation();
   const isPetPage = location.pathname === "/";
 
@@ -100,29 +87,19 @@ function AppShell({ pet, handleFeedPet, handleGroomPet, handlePlayWithToy, handl
         position: "relative",
         zIndex: 0
       }}>
-        <Routes>
-          <Route path="/" element={<PetPage pet={pet} needInfo={needInfo} onIncreaseAffection={handleIncreaseAffection} />} />
-          <Route path="/explore" element={<Explore />} />
-          <Route path="/play" element={<Play />} />
-          <Route
-            path="/inventory"
-            element={<InventoryPage
-                        pet={pet}
-                        onFeedPet={handleFeedPet}
-                        onGroomPet={handleGroomPet} // MODIFIED
-                        onPlayWithToy={handlePlayWithToy}
-                      />}
-          />
-          <Route path="/sunnybrook" element={<Sunnybrook />} />
-          <Route path="/sunnybrook/Adoption" element={<SBAdoption />} />
-          <Route path="/sunnybrook/SBClinic" element={<SBClinic />} />
-          <Route path="/sunnybrook/SBClock" element={<SBClock />} />
-          <Route path="/sunnybrook/SBFountain" element={<SBFountain />} />
-          <Route path="/sunnybrook/SBFurniture" element={<SBFurniture />} />
-          <Route path="/sunnybrook/SBMart" element={<SBMart />} />
-          <Route path="/sunnybrook/SBStall" element={<SBStall />} />
-          <Route path="/sunnybrook/SBToy" element={<SBToy />} />
-        </Routes>
+        <ErrorBoundary>
+          <Routes>
+            {createRoutes({
+              pet,
+              handleFeedPet,
+              handleGroomPet,
+              handlePlayWithToy,
+              handleIncreaseAffection
+            }).map((route, index) => (
+              <Route key={index} path={route.path} element={route.element} />
+            ))}
+          </Routes>
+        </ErrorBoundary>
       </main>
       <NavBar />
     </>
@@ -139,47 +116,49 @@ defaultPetData.spirit = Math.max(MIN_NEED_VALUE, Math.min(MAX_NEED_VALUE, Math.r
 export default function App() {
   const [pet, setPet] = useState<Pet | null>(null);
 
-  const handleFeedPet = (foodItem: FoodInventoryItem) => {
+  const handleFeedPet = async (foodItem: FoodInventoryItem) => {
     if (!pet || typeof pet.hunger !== 'number') return;
     let newHunger = Math.min(MAX_NEED_VALUE, pet.hunger + foodItem.hungerRestored);
     newHunger = Math.max(MIN_NEED_VALUE, newHunger);
-    const petRef = ref(db, `pets/sharedPet`);
     const updates: Partial<Pet> = {
       hunger: newHunger,
-      lastNeedsUpdateTime: serverTimestamp() as any,
       spirit: Math.max(MIN_NEED_VALUE, Math.min(MAX_NEED_VALUE, Math.round((newHunger + pet.happiness + pet.cleanliness + pet.affection) / 4)))
     };
-    update(petRef, updates).catch(err => console.error("Failed to update pet hunger:", err));
+    await withErrorHandling(
+      () => petService.updatePetNeeds(updates),
+      "Failed to update pet hunger"
+    );
   };
 
-  // MODIFIED: Renamed handleCleanPet to handleGroomPet
-  const handleGroomPet = (groomingItem: GroomingInventoryItem) => {
+  const handleGroomPet = async (groomingItem: GroomingInventoryItem) => {
     if (!pet || typeof pet.cleanliness !== 'number') return;
     let newCleanliness = Math.min(MAX_NEED_VALUE, pet.cleanliness + groomingItem.cleanlinessBoost);
     newCleanliness = Math.max(MIN_NEED_VALUE, newCleanliness);
-    const petRef = ref(db, `pets/sharedPet`);
     const updates: Partial<Pet> = {
-      cleanliness: newCleanliness, // The pet stat is still 'cleanliness'
-      lastNeedsUpdateTime: serverTimestamp() as any,
+      cleanliness: newCleanliness,
       spirit: Math.max(MIN_NEED_VALUE, Math.min(MAX_NEED_VALUE, Math.round((pet.hunger + pet.happiness + newCleanliness + pet.affection) / 4)))
     };
-    update(petRef, updates).catch(err => console.error("Failed to update pet cleanliness:", err));
+    await withErrorHandling(
+      () => petService.updatePetNeeds(updates),
+      "Failed to update pet cleanliness"
+    );
   };
 
-  const handlePlayWithToy = (toyItem: ToyInventoryItem) => {
+  const handlePlayWithToy = async (toyItem: ToyInventoryItem) => {
     if (!pet || typeof pet.happiness !== 'number') return;
     let newHappiness = Math.min(MAX_NEED_VALUE, pet.happiness + toyItem.happinessBoost);
     newHappiness = Math.max(MIN_NEED_VALUE, newHappiness);
-    const petRef = ref(db, `pets/sharedPet`);
     const updates: Partial<Pet> = {
       happiness: newHappiness,
-      lastNeedsUpdateTime: serverTimestamp() as any,
       spirit: Math.max(MIN_NEED_VALUE, Math.min(MAX_NEED_VALUE, Math.round((pet.hunger + newHappiness + pet.cleanliness + pet.affection) / 4)))
     };
-    update(petRef, updates).catch(err => console.error("Failed to update pet happiness:", err));
+    await withErrorHandling(
+      () => petService.updatePetNeeds(updates),
+      "Failed to update pet happiness"
+    );
   };
 
-  const handleIncreaseAffection = (amount: number) => {
+  const handleIncreaseAffection = async (amount: number) => {
     if (!pet) return;
     let currentPetData = { ...pet };
     const todayStr = getTodayDateString();
@@ -192,13 +171,19 @@ export default function App() {
     const currentGainedToday = currentPetData.affectionGainedToday || 0;
     if (currentGainedToday >= AFFECTION_DAILY_GAIN_CAP) {
       console.log("Affection daily cap reached.");
-      update(ref(db, `pets/sharedPet`), { lastNeedsUpdateTime: serverTimestamp() as any });
+      await withErrorHandling(
+        () => petService.updatePetNeeds({ lastNeedsUpdateTime: Date.now() }),
+        "Failed to update pet affection"
+      );
       return;
     }
 
     const gainableAmount = Math.min(amount, AFFECTION_DAILY_GAIN_CAP - currentGainedToday);
     if (gainableAmount <= 0) {
-      update(ref(db, `pets/sharedPet`), { lastNeedsUpdateTime: serverTimestamp() as any });
+      await withErrorHandling(
+        () => petService.updatePetNeeds({ lastNeedsUpdateTime: Date.now() }),
+        "Failed to update pet affection"
+      );
       return;
     }
 
@@ -206,88 +191,88 @@ export default function App() {
     newAffection = Math.max(MIN_NEED_VALUE, newAffection);
     const newAffectionGainedToday = currentGainedToday + gainableAmount;
 
-    const petRef = ref(db, `pets/sharedPet`);
     const updates: Partial<Pet> = {
       affection: newAffection,
       affectionGainedToday: newAffectionGainedToday,
       lastAffectionGainDate: todayStr,
-      lastNeedsUpdateTime: serverTimestamp() as any,
       spirit: Math.max(MIN_NEED_VALUE, Math.min(MAX_NEED_VALUE, Math.round((currentPetData.hunger + currentPetData.happiness + currentPetData.cleanliness + newAffection) / 4)))
     };
-    update(petRef, updates).catch(err => console.error("Failed to update pet affection:", err));
+    await withErrorHandling(
+      () => petService.updatePetNeeds(updates),
+      "Failed to update pet affection"
+    );
   };
 
   useEffect(() => {
-    const petRef = ref(db, `pets/sharedPet`);
-    const unsubscribe = onValue(petRef, (snapshot) => {
+    const unsubscribe = petService.subscribeToPet((petData) => {
       const currentTime = Date.now();
-      let petDataFromFirebase: Pet;
       let needsFirebaseUpdate = false;
 
-      if (snapshot.exists()) {
-        const rawData = snapshot.val();
-        petDataFromFirebase = {
+      if (petData) {
+        const processedPetData: Pet = {
           ...defaultPetData,
-          ...rawData,
-          hunger: (typeof rawData.hunger === 'number' && !isNaN(rawData.hunger)) ? rawData.hunger : defaultPetData.hunger,
-          happiness: (typeof rawData.happiness === 'number' && !isNaN(rawData.happiness)) ? rawData.happiness : defaultPetData.happiness,
-          cleanliness: (typeof rawData.cleanliness === 'number' && !isNaN(rawData.cleanliness)) ? rawData.cleanliness : defaultPetData.cleanliness,
-          affection: (typeof rawData.affection === 'number' && !isNaN(rawData.affection)) ? rawData.affection : defaultPetData.affection,
-          image: rawData.image || defaultPetData.image,
+          ...petData,
+          hunger: (typeof petData.hunger === 'number' && !isNaN(petData.hunger)) ? petData.hunger : defaultPetData.hunger,
+          happiness: (typeof petData.happiness === 'number' && !isNaN(petData.happiness)) ? petData.happiness : defaultPetData.happiness,
+          cleanliness: (typeof petData.cleanliness === 'number' && !isNaN(petData.cleanliness)) ? petData.cleanliness : defaultPetData.cleanliness,
+          affection: (typeof petData.affection === 'number' && !isNaN(petData.affection)) ? petData.affection : defaultPetData.affection,
+          image: petData.image || defaultPetData.image,
         };
-        const lastUpdate = petDataFromFirebase.lastNeedsUpdateTime;
-        petDataFromFirebase.lastNeedsUpdateTime = (typeof lastUpdate === 'number' && lastUpdate > 0 && !isNaN(lastUpdate)) ? lastUpdate : currentTime;
-        petDataFromFirebase.affectionGainedToday = petDataFromFirebase.affectionGainedToday ?? 0;
-        petDataFromFirebase.lastAffectionGainDate = petDataFromFirebase.lastAffectionGainDate || getTodayDateString();
+        const lastUpdate = processedPetData.lastNeedsUpdateTime;
+        processedPetData.lastNeedsUpdateTime = (typeof lastUpdate === 'number' && lastUpdate > 0 && !isNaN(lastUpdate)) ? lastUpdate : currentTime;
+        processedPetData.affectionGainedToday = processedPetData.affectionGainedToday ?? 0;
+        processedPetData.lastAffectionGainDate = processedPetData.lastAffectionGainDate || getTodayDateString();
         const todayStr = getTodayDateString();
-        if (petDataFromFirebase.lastAffectionGainDate !== todayStr) {
-          petDataFromFirebase.affectionGainedToday = 0;
-          petDataFromFirebase.lastAffectionGainDate = todayStr;
+        if (processedPetData.lastAffectionGainDate !== todayStr) {
+          processedPetData.affectionGainedToday = 0;
+          processedPetData.lastAffectionGainDate = todayStr;
           needsFirebaseUpdate = true;
         }
-        const timeElapsedMs = currentTime - petDataFromFirebase.lastNeedsUpdateTime;
+        const timeElapsedMs = currentTime - processedPetData.lastNeedsUpdateTime;
         if (timeElapsedMs > 1000) {
           needsFirebaseUpdate = true;
           const hoursElapsed = timeElapsedMs / MILLISECONDS_IN_HOUR;
-          const calculateDecay = (currentValue: number, decayPerDay: number): number => Math.max(MIN_NEED_VALUE, Math.min(MAX_NEED_VALUE, currentValue - (decayPerDay / 24) * hoursElapsed));
-          petDataFromFirebase.hunger = calculateDecay(petDataFromFirebase.hunger, HUNGER_DECAY_PER_DAY);
-          petDataFromFirebase.happiness = calculateDecay(petDataFromFirebase.happiness, HAPPINESS_DECAY_PER_DAY);
-          petDataFromFirebase.cleanliness = calculateDecay(petDataFromFirebase.cleanliness, CLEANLINESS_DECAY_PER_DAY);
-          petDataFromFirebase.affection = calculateDecay(petDataFromFirebase.affection, AFFECTION_DECAY_PER_DAY);
+          const calculateDecay = (currentValue: number, decayPerDay: number): number => 
+            Math.max(MIN_NEED_VALUE, Math.min(MAX_NEED_VALUE, currentValue - (decayPerDay / 24) * hoursElapsed));
+
+          processedPetData.hunger = calculateDecay(processedPetData.hunger, HUNGER_DECAY_PER_DAY);
+          processedPetData.happiness = calculateDecay(processedPetData.happiness, HAPPINESS_DECAY_PER_DAY);
+          processedPetData.cleanliness = calculateDecay(processedPetData.cleanliness, CLEANLINESS_DECAY_PER_DAY);
+          processedPetData.affection = calculateDecay(processedPetData.affection, AFFECTION_DECAY_PER_DAY);
+          processedPetData.spirit = Math.max(MIN_NEED_VALUE, Math.min(MAX_NEED_VALUE, Math.round((processedPetData.hunger + processedPetData.happiness + processedPetData.cleanliness + processedPetData.affection) / 4)));
         }
-        petDataFromFirebase.spirit = Math.max(MIN_NEED_VALUE, Math.min(MAX_NEED_VALUE, Math.round((petDataFromFirebase.hunger + petDataFromFirebase.happiness + petDataFromFirebase.cleanliness + petDataFromFirebase.affection) / 4)));
-        setPet({...petDataFromFirebase});
+        setPet(processedPetData);
         if (needsFirebaseUpdate) {
-          const updateForFirebase = { ...petDataFromFirebase, lastNeedsUpdateTime: serverTimestamp() as any };
-          set(petRef, updateForFirebase).catch(err => console.error("Error updating pet needs in Firebase:", err));
+          withErrorHandling(
+            () => petService.updatePetNeeds(processedPetData),
+            "Failed to update pet needs"
+          );
         }
       } else {
-        console.log("No pet data in Firebase, creating starter pet.");
-        const initialPetDataForFirebase = { ...defaultPetData, lastNeedsUpdateTime: serverTimestamp() as any };
-        set(petRef, initialPetDataForFirebase)
-          .then(() => { setPet({...defaultPetData, lastNeedsUpdateTime: Date.now() }); })
-          .catch((error) => console.error("Failed to set starter pet in Firebase:", error));
+        setPet(defaultPetData);
+        withErrorHandling(
+          () => petService.updatePetNeeds(defaultPetData),
+          "Failed to initialize pet data"
+        );
       }
-    }, (error) => {
-      console.error("Firebase onValue error:", error);
-      const fallbackPet = { ...defaultPetData, lastNeedsUpdateTime: Date.now(), affectionGainedToday: 0, lastAffectionGainDate: getTodayDateString() };
-      fallbackPet.spirit = Math.max(MIN_NEED_VALUE, Math.min(MAX_NEED_VALUE, Math.round((fallbackPet.hunger + fallbackPet.happiness + fallbackPet.cleanliness + fallbackPet.affection) / 4)));
-      setPet(fallbackPet);
     });
+
     return () => unsubscribe();
   }, []);
 
   return (
-    <InventoryProvider>
-      <BrowserRouter>
-        <AppShell
-          pet={pet}
-          handleFeedPet={handleFeedPet}
-          handleGroomPet={handleGroomPet} // MODIFIED
-          handlePlayWithToy={handlePlayWithToy}
-          handleIncreaseAffection={handleIncreaseAffection}
-        />
-      </BrowserRouter>
-    </InventoryProvider>
+    <BrowserRouter>
+      <InventoryProvider>
+        <ErrorBoundary>
+          <AppShell
+            pet={pet}
+            handleFeedPet={handleFeedPet}
+            handleGroomPet={handleGroomPet}
+            handlePlayWithToy={handlePlayWithToy}
+            handleIncreaseAffection={handleIncreaseAffection}
+          />
+        </ErrorBoundary>
+      </InventoryProvider>
+    </BrowserRouter>
   );
 }

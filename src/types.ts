@@ -149,3 +149,12 @@ export interface AppHotspot {
   iconSize?: number;
   radius?: number;
 }
+
+export interface RoomLayers {
+  floor: string;
+  wall: string;
+  ceiling: string;
+  backDecor: RoomDecorItem[];
+  frontDecor: RoomDecorItem[];
+  overlay: string;
+}
