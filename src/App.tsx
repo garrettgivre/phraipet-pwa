@@ -106,7 +106,7 @@ const defaultPetData: Pet = {
 };
 defaultPetData.spirit = Math.max(MIN_NEED_VALUE, Math.min(MAX_NEED_VALUE, Math.round((defaultPetData.hunger + defaultPetData.happiness + defaultPetData.cleanliness + defaultPetData.affection) / 4)));
 
-export default function App() {
+function AppContent() {
   const [pet, setPet] = useState<Pet | null>(null);
   const { setActiveToy, setIsPlaying } = useToyAnimation();
   const navigate = useNavigate();
@@ -280,18 +280,24 @@ export default function App() {
   }, []);
 
   return (
+    <AppShell
+      pet={pet}
+      handleFeedPet={handleFeedPet}
+      handleGroomPet={handleGroomPet}
+      handlePlayWithToy={handlePlayWithToy}
+      handleIncreaseAffection={handleIncreaseAffection}
+      needInfo={needInfo}
+    />
+  );
+}
+
+export default function App() {
+  return (
     <BrowserRouter>
       <InventoryProvider>
         <ToyAnimationProvider>
           <ErrorBoundary>
-            <AppShell
-              pet={pet}
-              handleFeedPet={handleFeedPet}
-              handleGroomPet={handleGroomPet}
-              handlePlayWithToy={handlePlayWithToy}
-              handleIncreaseAffection={handleIncreaseAffection}
-              needInfo={needInfo}
-            />
+            <AppContent />
           </ErrorBoundary>
         </ToyAnimationProvider>
       </InventoryProvider>
