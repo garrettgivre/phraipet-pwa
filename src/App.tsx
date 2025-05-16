@@ -69,15 +69,19 @@ function AppShell({ pet, handleFeedPet, handleGroomPet, handlePlayWithToy, handl
       <ScrollToTop />
       {!isPetPage && ( <Header coins={100} petImage={pet?.image || "/pet/Neutral.png"} needs={needInfo} /> )}
       <main style={{
-        paddingTop: isPetPage ? "0px" : "80px",
-        paddingBottom: "56px",
-        height: "100vh",
+        paddingTop: isPetPage ? "0px" : "var(--header-height)",
+        paddingBottom: "var(--nav-height)",
+        height: "100%",
+        width: "100%",
         boxSizing: "border-box",
         display: "flex",
         flexDirection: "column",
         overflow: "hidden",
         position: "relative",
-        zIndex: 0
+        zIndex: 0,
+        // Ensure content is properly contained
+        maxHeight: "100%",
+        maxWidth: "100vw"
       }}>
         <ErrorBoundary>
           <Routes>
