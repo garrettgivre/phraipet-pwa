@@ -200,10 +200,10 @@ export default function Explore() {
                 className="map-tile"
                 style={{
                   position: 'absolute',
-                  left: col * mapDimensions.width,
-                  top: row * mapDimensions.height,
-                  width: mapDimensions.width,
-                  height: mapDimensions.height,
+                  left: Math.round(col * mapDimensions.width),
+                  top: Math.round(row * mapDimensions.height),
+                  width: Math.round(mapDimensions.width),
+                  height: Math.round(mapDimensions.height),
                   backgroundImage: `url(${MAP_BACKGROUND_IMAGE_URL})`,
                   backgroundSize: 'cover',
                   backgroundPosition: 'center'

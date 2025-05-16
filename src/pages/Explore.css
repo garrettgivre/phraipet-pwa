@@ -45,6 +45,11 @@
   transform: translateZ(0);
   backface-visibility: hidden;
   pointer-events: none;
+  /* Fix sub-pixel rendering issues */
+  background-repeat: no-repeat;
+  background-origin: border-box;
+  background-clip: border-box;
+  box-sizing: border-box;
   /* Ensure tiles overlap slightly to prevent gaps */
   width: calc(100% + 1px);
   height: calc(100% + 1px);
