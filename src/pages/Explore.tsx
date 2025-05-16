@@ -27,8 +27,6 @@ export default function Explore() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [mapDimensions, setMapDimensions] = useState({ width: 0, height: 0 });
   const [hotspots, setHotspots] = useState<AppHotspot[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   // Calculate map dimensions based on viewport height
   useEffect(() => {
@@ -87,9 +85,6 @@ export default function Explore() {
     let isMounted = true;
     const fetchMapData = async () => {
       if (!isMounted) return;
-      setIsLoading(true);
-      setError(null);
-      setHotspots([]);
 
       try {
         const response = await fetch(TILED_MAP_DATA_URL);
@@ -125,11 +120,8 @@ export default function Explore() {
       } catch (err) {
         console.error("Explore: Error loading or processing Tiled JSON data:", err);
         if (isMounted) {
-          setError(err instanceof Error ? err.message : String(err));
           setHotspots([]);
         }
-      } finally {
-        if (isMounted) setIsLoading(false);
       }
     };
 
