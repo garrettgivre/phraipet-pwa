@@ -42,6 +42,7 @@
   z-index: 5; 
   width: 100%; 
   gap: clamp(10px, 2vw, 20px);
+  pointer-events: none; /* Prevent any mouse interaction with the area */
 }
 
 .petHero {
@@ -50,9 +51,10 @@
   height: auto;   
   object-fit: contain; 
   display: block;
-  transition: left 3s linear, transform 0.3s ease;
+  transition: left 3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s ease;
   transform-origin: bottom center;
   margin-bottom: -20px;
+  will-change: left, transform; /* Optimize animation performance */
 }
 
 .petHero.flip {
@@ -60,7 +62,7 @@
 }
 
 .petHero.walking {
-  transition: left 3s linear;
+  transition: left 3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .petHero.playing {

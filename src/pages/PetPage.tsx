@@ -72,7 +72,16 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
   const [isWalking, setIsWalking] = useState(false);
   const [walkDirection, setWalkDirection] = useState<'left' | 'right'>('right');
   const [showSpeechBubble, setShowSpeechBubble] = useState(false);
-  const [petPosition, setPetPosition] = useState(50); // Track pet's position as percentage (0-100)
+  const [petPosition, setPetPosition] = useState(() => {
+    // Initialize position from localStorage or default to center
+    const savedPosition = localStorage.getItem('petPosition');
+    return savedPosition ? parseFloat(savedPosition) : 50;
+  });
+
+  // Save position to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('petPosition', petPosition.toString());
+  }, [petPosition]);
 
   // Set random toy position when a new toy becomes active
   useEffect(() => {
@@ -116,8 +125,8 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
         const newDirection = Math.random() < 0.5 ? 'left' : 'right';
         setWalkDirection(newDirection);
         
-        // Calculate new position based on current position and direction
-        const walkDistance = 30; // How far to walk (percentage of screen width)
+        // Calculate random walk distance between 10% and 30% of screen width
+        const walkDistance = Math.random() * 20 + 10;
         const newPosition = newDirection === 'left' 
           ? Math.max(0, petPosition - walkDistance)
           : Math.min(100, petPosition + walkDistance);
