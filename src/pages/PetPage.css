@@ -33,25 +33,26 @@
 .pet-display-area {
   position: absolute; 
   top: 60%;
-  left: 50%;
-  transform: translate(-50%, -50%); 
+  left: 0;
+  right: 0;
   display: flex; 
   flex-direction: row;
   align-items: center;
   justify-content: center;
   z-index: 5; 
-  width: fit-content; 
+  width: 100%; 
   gap: clamp(10px, 2vw, 20px);
 }
 
 .petHero {
+  position: absolute;
   width: clamp(200px, 50vw, 400px);
   height: auto;   
   object-fit: contain; 
   display: block;
-  transition: transform 0.3s ease;
+  transition: left 3s linear, transform 0.3s ease;
   transform-origin: bottom center;
-  margin-bottom: -20px; /* Add a small margin to make it appear to be standing on the floor */
+  margin-bottom: -20px;
 }
 
 .petHero.flip {
@@ -59,7 +60,7 @@
 }
 
 .petHero.walking {
-  animation: walkAcross 3s linear;
+  transition: left 3s linear;
 }
 
 .petHero.playing {
