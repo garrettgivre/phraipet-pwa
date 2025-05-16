@@ -116,15 +116,15 @@ const defaultToyItems: ToyInventoryItem[] = [
     type: "Basic",
     phrases: [
       "Watch me catch it!",
-      "This is so much fun!",
-      "I could play with this all day!",
+      "This is fun!",
+      "I like playing with this!",
       "Look how far it flies!",
       "My favorite toy!",
       "Perfect for playing catch!",
       "So light and fun!",
       "Can't get enough of this frisbee!",
-      "I'm getting really good at this!",
-      "This is the best frisbee ever!"
+      "I'm getting good at this!",
+      "This is a nice toy!"
     ]
   },
   {
@@ -138,14 +138,14 @@ const defaultToyItems: ToyInventoryItem[] = [
     phrases: [
       "Rattle rattle!",
       "I love the sound!",
-      "This is so exciting!",
+      "This is exciting!",
       "Watch me shake it!",
       "The best cube ever!",
       "I'm a cube master!",
       "This cube is mine!",
       "So much fun to play with!",
       "I love the rattling sound!",
-      "This is my favorite toy!"
+      "This is really cool!"
     ]
   },
   {
@@ -157,16 +157,16 @@ const defaultToyItems: ToyInventoryItem[] = [
     itemCategory: "toy",
     type: "Basic",
     phrases: [
-      "It's so soft!",
-      "I love playing with this!",
-      "This is my comfort toy!",
-      "Watch me roll it around!",
-      "The best lint ever!",
-      "I'm a lint expert!",
-      "This lint is mine!",
-      "So much fun to play with!",
-      "I love how soft it is!",
-      "This is my favorite toy!"
+      "It's soft...",
+      "I guess it's okay...",
+      "This is... something to do.",
+      "Watch me... roll it.",
+      "It's a toy.",
+      "I'm playing with it.",
+      "This lint is here.",
+      "It's something to do.",
+      "It's soft, at least.",
+      "Well, it's a toy."
     ]
   },
   {
@@ -180,14 +180,14 @@ const defaultToyItems: ToyInventoryItem[] = [
     phrases: [
       "Squeak squeak!",
       "I love this sound!",
-      "This is so much fun!",
+      "This is fun!",
       "Watch me play with it!",
-      "The best squeaker ever!",
-      "I'm a squeaker expert!",
+      "The best squeaker!",
+      "I'm good at this!",
       "This squeaker is mine!",
       "So much fun to squeak!",
       "I love the squeaking!",
-      "This is my favorite toy!"
+      "This is a great toy!"
     ]
   },
   {
@@ -199,16 +199,16 @@ const defaultToyItems: ToyInventoryItem[] = [
     itemCategory: "toy",
     type: "Classic",
     phrases: [
-      "Squeak... squeak...",
-      "Still works!",
-      "This is fun!",
-      "Watch me play!",
-      "My old favorite!",
-      "I still love it!",
-      "This squeaker is mine!",
-      "Still fun to squeak!",
-      "I love the old squeak!",
-      "This is my comfort toy!"
+      "Squeak...",
+      "It still works...",
+      "This is... okay.",
+      "Watch me... play.",
+      "My old toy.",
+      "It's still here.",
+      "This squeaker exists.",
+      "Still makes noise.",
+      "The squeak is old.",
+      "It's a toy, I guess."
     ]
   },
   {
@@ -222,14 +222,14 @@ const defaultToyItems: ToyInventoryItem[] = [
     phrases: [
       "Click click!",
       "I love this gadget!",
-      "This is so cool!",
+      "This is fun!",
       "Watch me click it!",
-      "The best gadget ever!",
-      "I'm a gadget master!",
+      "The best clicker!",
+      "I'm good at clicking!",
       "This clicker is mine!",
       "So much fun to click!",
-      "I love the clicking sound!",
-      "This is my favorite gadget!"
+      "I love the clicking!",
+      "This is a cool gadget!"
     ]
   },
   {
@@ -241,16 +241,16 @@ const defaultToyItems: ToyInventoryItem[] = [
     itemCategory: "toy",
     type: "Gadget",
     phrases: [
-      "Look at the stars!",
-      "This is magical!",
-      "I love the patterns!",
-      "Watch me chase the stars!",
-      "The best projector ever!",
-      "I'm a star chaser!",
-      "These stars are mine!",
-      "So much fun to chase!",
-      "I love the star patterns!",
-      "This is my favorite gadget!"
+      "WOW! Look at the stars!",
+      "This is INCREDIBLE!",
+      "I'm in AWE!",
+      "Watch these AMAZING patterns!",
+      "The MOST AMAZING projector!",
+      "I'm a STAR CHASER!",
+      "These stars are MAGICAL!",
+      "This is THRILLING!",
+      "I'm LOST in the stars!",
+      "This is the COOLEST gadget EVER!"
     ]
   },
   {
@@ -264,14 +264,14 @@ const defaultToyItems: ToyInventoryItem[] = [
     phrases: [
       "So soft and cuddly!",
       "I love my Pingu!",
-      "This is so cozy!",
+      "This is cozy!",
       "Watch me snuggle!",
-      "The best plushie ever!",
-      "I'm a cuddle expert!",
+      "The best plushie!",
+      "I'm good at cuddling!",
       "This Pingu is mine!",
       "So much fun to cuddle!",
       "I love how soft it is!",
-      "This is my favorite plushie!"
+      "This is a great plushie!"
     ]
   },
   {
@@ -283,16 +283,16 @@ const defaultToyItems: ToyInventoryItem[] = [
     itemCategory: "toy",
     type: "Plushie",
     phrases: [
-      "It's alive!",
-      "I love how it responds!",
-      "This is amazing!",
-      "Watch it react!",
-      "The best pod ever!",
-      "I'm a pod whisperer!",
-      "This pod is mine!",
-      "So much fun to play with!",
-      "I love how it moves!",
-      "This is my favorite plushie!"
+      "OH MY GOODNESS! It's ALIVE!",
+      "This is MINDBLOWING!",
+      "I can't BELIEVE it responds!",
+      "Watch it REACT to my cuddles!",
+      "The MOST AMAZING pod EVER!",
+      "I'm a POD WHISPERER!",
+      "This pod is MAGICAL!",
+      "This is BEYOND incredible!",
+      "I'm in AWE of how it moves!",
+      "This is the MOST AMAZING plushie EVER!"
     ]
   },
   {
@@ -304,16 +304,16 @@ const defaultToyItems: ToyInventoryItem[] = [
     itemCategory: "toy",
     type: "Wonder",
     phrases: [
-      "It floats!",
+      "WOW! It floats!",
+      "This is AMAZING!",
       "I love how it hovers!",
-      "This is so cool!",
-      "Watch it fly!",
-      "The best yo-yo ever!",
-      "I'm a yo-yo master!",
-      "This yo-yo is mine!",
-      "So much fun to play with!",
-      "I love how it floats!",
-      "This is my favorite toy!"
+      "Watch it FLY through the air!",
+      "The COOLEST yo-yo ever!",
+      "I'm a yo-yo MASTER!",
+      "This yo-yo is MAGICAL!",
+      "So EXCITING to play with!",
+      "I love how it DEFIES gravity!",
+      "This is the MOST FUN toy!"
     ]
   },
   {
@@ -325,16 +325,16 @@ const defaultToyItems: ToyInventoryItem[] = [
     itemCategory: "toy",
     type: "Wonder",
     phrases: [
-      "It's magical!",
-      "I love the cosmic effects!",
-      "This is mind-blowing!",
-      "Watch the wonders!",
-      "The best box ever!",
-      "I'm a cosmic master!",
-      "This box is mine!",
-      "So much fun to explore!",
-      "I love the cosmic patterns!",
-      "This is my favorite wonder!"
+      "OH MY STARS! It's MAGICAL!",
+      "This is BEYOND INCREDIBLE!",
+      "I'm LOST in the COSMIC WONDERS!",
+      "Watch these MIND-BENDING effects!",
+      "The MOST AMAZING box in the UNIVERSE!",
+      "I'm a COSMIC MASTER!",
+      "This box is from ANOTHER DIMENSION!",
+      "This is BEYOND IMAGINATION!",
+      "I'm in AWE of the COSMIC PATTERNS!",
+      "This is the MOST MIND-BLOWING wonder EVER!"
     ]
   }
 ];
