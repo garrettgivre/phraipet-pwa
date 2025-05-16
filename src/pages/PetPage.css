@@ -32,7 +32,7 @@
 
 .pet-display-area {
   position: absolute; 
-  top: 50%;
+  top: 60%;
   left: 50%;
   transform: translate(-50%, -50%); 
   display: flex; 
@@ -51,6 +51,7 @@
   display: block;
   transition: transform 0.3s ease;
   transform-origin: bottom center;
+  margin-bottom: -20px; /* Add a small margin to make it appear to be standing on the floor */
 }
 
 .petHero.playing {
@@ -116,16 +117,36 @@
   padding: clamp(2px, 0.5vw, 3px);
   border-radius: 6px;
   transition: background-color 0.2s ease;
+  background: transparent;
+}
+
+.need-item-interactive:hover {
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
 .pet-page-needs-container .need-circle {
   width: clamp(40px, 12vw, 56px);
   height: clamp(40px, 12vw, 56px);
+  background: transparent;
 }
 
 .pet-page-needs-container .circular-chart {
   width: 100%;
   height: 100%;
+}
+
+.pet-page-needs-container .circle-bg {
+  fill: none;
+  stroke: #e6e6e6;
+  stroke-width: 2.8;
+}
+
+.pet-page-needs-container .circle {
+  fill: none;
+  stroke: #4CAF50;
+  stroke-width: 2.8;
+  stroke-linecap: round;
+  animation: progress 1s ease-out forwards;
 }
 
 .pet-page-needs-container .emoji-text {
