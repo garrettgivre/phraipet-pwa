@@ -98,19 +98,19 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
     }
 
     const toggleSpeechBubble = () => {
-      if (Math.random() < 0.3) { // 30% chance to show speech bubble
+      if (Math.random() < 0.5) { // Increased from 0.3 to 0.5 (50% chance to show speech bubble)
         setShowSpeechBubble(true);
-        // Hide speech bubble after 3-5 seconds
+        // Hide speech bubble after 2-4 seconds (reduced from 3-5)
         setTimeout(() => {
           setShowSpeechBubble(false);
-        }, Math.random() * 2000 + 3000);
+        }, Math.random() * 2000 + 2000);
       } else {
         setShowSpeechBubble(false);
       }
     };
 
-    // Toggle speech bubble every 5-15 seconds
-    const timer = setTimeout(toggleSpeechBubble, Math.random() * 10000 + 5000);
+    // Toggle speech bubble every 3-8 seconds (reduced from 5-15)
+    const timer = setTimeout(toggleSpeechBubble, Math.random() * 5000 + 3000);
 
     return () => clearTimeout(timer);
   }, [isPlaying, showSpeechBubble]);
