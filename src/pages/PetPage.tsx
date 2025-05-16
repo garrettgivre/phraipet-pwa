@@ -5,6 +5,7 @@ import { useToyAnimation } from "../contexts/ToyAnimationContext";
 import type { NeedInfo, Pet as PetType, RoomDecorItem, Need as NeedType } from "../types";
 import { getPetMoodPhrase } from "../utils/petMoodUtils";
 import "./PetPage.css";
+import { useState, useEffect } from "react";
 
 interface PetPageProps {
   pet: PetType | null;
@@ -16,6 +17,14 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
   const { roomLayers, roomLayersLoading } = useInventory();
   const { activeToy, isPlaying } = useToyAnimation();
   const navigate = useNavigate();
+  const [toyPosition, setToyPosition] = useState<'left' | 'right'>('right');
+
+  // Set random toy position when a new toy becomes active
+  useEffect(() => {
+    if (activeToy) {
+      setToyPosition(Math.random() < 0.5 ? 'left' : 'right');
+    }
+  }, [activeToy]);
 
   const moodPhrase = getPetMoodPhrase(pet);
 
@@ -79,12 +88,19 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
 
       <div className="pet-display-area">
         {pet && moodPhrase && ( <div className="pet-mood-bubble"> <p>{moodPhrase}</p> </div> )}
+        {activeToy && toyPosition === 'left' && (
+          <img 
+            src={activeToy.src} 
+            alt={activeToy.name} 
+            className={`toy ${isPlaying ? 'playing' : ''}`}
+          />
+        )}
         <img 
           src={pet?.image || "/pet/Neutral.png"} 
           alt="Your Pet" 
           className={`petHero ${isPlaying ? 'playing' : ''}`} 
         />
-        {activeToy && (
+        {activeToy && toyPosition === 'right' && (
           <img 
             src={activeToy.src} 
             alt={activeToy.name} 

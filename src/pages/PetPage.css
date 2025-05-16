@@ -33,14 +33,16 @@
 
 .pet-display-area {
   position: absolute; 
-  top: 52%; /* Adjusted: Was 45%. Try 50% for true center, or slightly more to lower it. */
+  top: 52%;
   left: 50%;
   transform: translate(-50%, -50%); 
   display: flex; 
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
+  justify-content: center;
   z-index: 5; 
   width: fit-content; 
+  gap: 20px;
 }
 
 .petHero {
@@ -51,6 +53,7 @@
   object-fit: contain; 
   display: block;
   transition: transform 0.3s ease;
+  transform-origin: bottom center;
 }
 
 .petHero.playing {
@@ -184,7 +187,7 @@
 }
 
 .toy {
-  position: absolute;
+  position: relative;
   width: clamp(100px, 20vw, 200px);
   height: auto;
   object-fit: contain;
@@ -197,36 +200,36 @@
 
 @keyframes petPlay {
   0% {
-    transform: translateY(0) scale(1);
+    transform: scaleY(1);
   }
   25% {
-    transform: translateY(-20px) scale(0.95);
+    transform: scaleY(0.8);
   }
   50% {
-    transform: translateY(0) scale(1);
+    transform: scaleY(1);
   }
   75% {
-    transform: translateY(-20px) scale(0.95);
+    transform: scaleY(0.8);
   }
   100% {
-    transform: translateY(0) scale(1);
+    transform: scaleY(1);
   }
 }
 
 @keyframes toyPlay {
   0% {
-    transform: translate(0, 0) rotate(0deg);
+    transform: translateX(0) rotate(0deg);
   }
   25% {
-    transform: translate(20px, -20px) rotate(15deg);
+    transform: translateX(20px) rotate(15deg);
   }
   50% {
-    transform: translate(0, 0) rotate(0deg);
+    transform: translateX(0) rotate(0deg);
   }
   75% {
-    transform: translate(-20px, -20px) rotate(-15deg);
+    transform: translateX(-20px) rotate(-15deg);
   }
   100% {
-    transform: translate(0, 0) rotate(0deg);
+    transform: translateX(0) rotate(0deg);
   }
 }
