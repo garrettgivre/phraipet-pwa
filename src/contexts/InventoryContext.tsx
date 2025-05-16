@@ -254,24 +254,45 @@ const defaultToyItems: ToyInventoryItem[] = [
     ]
   },
   {
-    id: "toys-plushie-fun-pingu",
+    id: "pingu_plushie",
     name: "Pingu Plushie",
-    src: "/assets/toys/toys-plushie-fun-pingu.png",
-    happinessBoost: 20,
-    description: "A cute and cuddly Pingu plushie!",
+    src: "/assets/toys/pingu_plushie.png",
+    happinessBoost: 15,
+    description: "A cozy plushie of the famous claymation penguin.",
     itemCategory: "toy",
     type: "Plushie",
     phrases: [
-      "So soft and cuddly!",
-      "I love my Pingu!",
-      "This is cozy!",
-      "Watch me snuggle!",
-      "The best plushie!",
-      "I'm good at cuddling!",
-      "This Pingu is mine!",
-      "So much fun to cuddle!",
-      "I love how soft it is!",
-      "This is a great plushie!"
+      "NOOT NOOT!",
+      "Noot noot noot!",
+      "Noot! *waddles excitedly*",
+      "Noot noot! *slips on ice*",
+      "Noot! *makes seal noises*",
+      "Noot noot! *dances like Pingu*",
+      "Noot! *pretends to fish*",
+      "Noot noot! *builds snowman*",
+      "Noot! *plays with sled*",
+      "Noot noot! *makes snow angels*"
+    ]
+  },
+  {
+    id: "rainbow_spinner",
+    name: "Rainbow Spinner",
+    src: "/assets/toys/rainbow_spinner.png",
+    happinessBoost: 10,
+    description: "A colorful spinning toy that creates beautiful patterns.",
+    itemCategory: "toy",
+    type: "Classic",
+    phrases: [
+      "Watch the colors spin!",
+      "So many pretty colors!",
+      "It's like a rainbow in motion!",
+      "The patterns are mesmerizing!",
+      "Spin spin spin!",
+      "Look at all those colors!",
+      "It's like a mini rainbow!",
+      "The colors are so vibrant!",
+      "Spin it faster!",
+      "What beautiful patterns!"
     ]
   },
   {

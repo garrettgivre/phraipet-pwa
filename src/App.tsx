@@ -155,6 +155,8 @@ function AppContent() {
     newHappiness = Math.max(MIN_NEED_VALUE, newHappiness);
     const updates: Partial<Pet> = {
       happiness: newHappiness,
+      hunger: pet.hunger,
+      cleanliness: pet.cleanliness,
       spirit: Math.max(MIN_NEED_VALUE, Math.min(MAX_NEED_VALUE, Math.round((pet.hunger + newHappiness + pet.cleanliness + pet.affection) / 4)))
     };
     
