@@ -1,7 +1,7 @@
 // src/pages/InventoryPage.tsx
 import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useInventory } from "../contexts/InventoryContext";
+import { useInventory, imageCache } from "../contexts/InventoryContext";
 import type {
   InventoryItem,
   DecorationInventoryItem,
@@ -58,8 +58,6 @@ const capitalizeFirstLetter = (string: string) => {
   // Generic capitalization for single words or rely on direct enum value if it's already capitalized
   return string.charAt(0).toUpperCase() + string.slice(1).replace(/([A-Z])/g, ' $1').trim();
 };
-
-const imageCache = new Map<string, HTMLImageElement>();
 
 function ZoomedImage({ src, alt }: { src: string; alt: string }) {
   const containerSize = 64;
@@ -233,35 +231,6 @@ export default function InventoryPage({ pet, onFeedPet, onGroomPet, onPlayWithTo
   const location = useLocation();
   const navigate = useNavigate();
   const [isTransitioning, setIsTransitioning] = useState(false);
-
-  // Preload all images when the component mounts
-  useEffect(() => {
-    const preloadImages = async () => {
-      const allItems = getFilteredItems(selectedMainCategory, selectedSubCategory);
-      const imagePromises = allItems.map(item => {
-        return new Promise((resolve, reject) => {
-          if (imageCache.has(item.src)) {
-            resolve(null);
-            return;
-          }
-          const img = new Image();
-          img.src = item.src;
-          img.crossOrigin = "anonymous";
-          imageCache.set(item.src, img);
-          img.onload = () => resolve(null);
-          img.onerror = () => reject(new Error(`Failed to load image: ${item.src}`));
-        });
-      });
-
-      try {
-        await Promise.all(imagePromises);
-      } catch (error) {
-        console.error("Error preloading images:", error);
-      }
-    };
-
-    preloadImages();
-  }, []); // Only run once on mount
 
   const initialTabs = useMemo(() => {
     const state = location.state as InventoryLocationState | null;

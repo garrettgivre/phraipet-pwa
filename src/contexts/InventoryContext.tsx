@@ -157,38 +157,71 @@ const InventoryContext = createContext<InventoryContextType>({
 
 export const useInventory = () => useContext(InventoryContext);
 
+export const imageCache = new Map<string, HTMLImageElement>();
+
+const preloadImages = async (items: InventoryItem[]) => {
+  const imagePromises = items.map(item => {
+    return new Promise((resolve, reject) => {
+      if (imageCache.has(item.src)) {
+        resolve(null);
+        return;
+      }
+      const img = new Image();
+      img.src = item.src;
+      img.crossOrigin = "anonymous";
+      imageCache.set(item.src, img);
+      img.onload = () => resolve(null);
+      img.onerror = () => reject(new Error(`Failed to load image: ${item.src}`));
+    });
+  });
+
+  try {
+    await Promise.all(imagePromises);
+  } catch (error) {
+    console.error("Error preloading images:", error);
+  }
+};
+
 export function InventoryProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<InventoryItem[]>(defaultAllItems);
   const [roomLayers, setRoomLayers] = useState<RoomLayers>(defaultRoomLayersData);
   const [roomLayersLoading, setRoomLayersLoading] = useState<boolean>(true);
   const [filteredItemsCache, setFilteredItemsCache] = useState<Record<string, InventoryItem[]>>({});
 
-  // Preload all category combinations only once when the component mounts
+  // Preload all images and cache all category combinations when the component mounts
   useEffect(() => {
-    const mainCategories = ["Decorations", "Food", "Grooming", "Toys"];
-    const subCategories = {
-      Decorations: ["wall", "floor", "ceiling", "backDecor", "frontDecor", "overlay"],
-      Food: ["Treat", "Snack", "LightMeal", "HeartyMeal", "Feast"],
-      Grooming: ["QuickFix", "BasicKit", "StandardSet", "PremiumCare", "LuxurySpa"],
-      Toys: ["Basic", "Classic", "Plushie", "Gadget", "Wonder"]
-    };
+    const initializeCache = async () => {
+      // Preload all images
+      await preloadImages(items);
 
-    const newCache: Record<string, InventoryItem[]> = {};
-    
-    mainCategories.forEach(mainCategory => {
-      subCategories[mainCategory as keyof typeof subCategories].forEach(subCategory => {
-        const cacheKey = `${mainCategory}-${subCategory}`;
-        newCache[cacheKey] = items.filter(item => {
-          if (mainCategory === "Decorations") return item.itemCategory === "decoration" && (item as DecorationInventoryItem).type === subCategory;
-          if (mainCategory === "Food") return item.itemCategory === "food" && (item as FoodInventoryItem).type === subCategory;
-          if (mainCategory === "Grooming") return item.itemCategory === "grooming" && (item as GroomingInventoryItem).type === subCategory;
-          if (mainCategory === "Toys") return item.itemCategory === "toy" && (item as ToyInventoryItem).type === subCategory;
-          return false;
+      // Preload all category combinations
+      const mainCategories = ["Decorations", "Food", "Grooming", "Toys"];
+      const subCategories = {
+        Decorations: ["wall", "floor", "ceiling", "backDecor", "frontDecor", "overlay"],
+        Food: ["Treat", "Snack", "LightMeal", "HeartyMeal", "Feast"],
+        Grooming: ["QuickFix", "BasicKit", "StandardSet", "PremiumCare", "LuxurySpa"],
+        Toys: ["Basic", "Classic", "Plushie", "Gadget", "Wonder"]
+      };
+
+      const newCache: Record<string, InventoryItem[]> = {};
+      
+      mainCategories.forEach(mainCategory => {
+        subCategories[mainCategory as keyof typeof subCategories].forEach(subCategory => {
+          const cacheKey = `${mainCategory}-${subCategory}`;
+          newCache[cacheKey] = items.filter(item => {
+            if (mainCategory === "Decorations") return item.itemCategory === "decoration" && (item as DecorationInventoryItem).type === subCategory;
+            if (mainCategory === "Food") return item.itemCategory === "food" && (item as FoodInventoryItem).type === subCategory;
+            if (mainCategory === "Grooming") return item.itemCategory === "grooming" && (item as GroomingInventoryItem).type === subCategory;
+            if (mainCategory === "Toys") return item.itemCategory === "toy" && (item as ToyInventoryItem).type === subCategory;
+            return false;
+          });
         });
       });
-    });
 
-    setFilteredItemsCache(newCache);
+      setFilteredItemsCache(newCache);
+    };
+
+    initializeCache();
   }, []); // Only run once on mount
 
   useEffect(() => {
