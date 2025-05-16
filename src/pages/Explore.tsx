@@ -17,6 +17,7 @@ const getTiledObjectProperty = (object: TiledObject, propertyName: string): any 
 // Configuration for the world map
 const MAP_BACKGROUND_IMAGE_URL = "/maps/world_map_background.png";
 const TILED_MAP_DATA_URL = '/maps/world_map_data.json';
+const MAP_ASPECT_RATIO = 1.5; // Width to height ratio of the map
 
 function getViewportSize() {
   return {
@@ -30,12 +31,24 @@ export default function Explore() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [viewport, setViewport] = useState(getViewportSize());
+  const [scrollPosition, setScrollPosition] = useState(0);
   const navigate = useNavigate();
+
+  // Calculate map dimensions based on viewport height
+  const mapHeight = viewport.height;
+  const mapWidth = mapHeight * MAP_ASPECT_RATIO;
 
   useEffect(() => {
     const handleResize = () => setViewport(getViewportSize());
+    const handleScroll = () => setScrollPosition(window.scrollY);
+    
     window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener('scroll', handleScroll);
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('scroll', handleScroll);
+    };
   }, []);
 
   // Effect to fetch and process Tiled map data for hotspots
@@ -57,12 +70,10 @@ export default function Explore() {
 
         if (hotspotLayer && hotspotLayer.objects) {
           const processedHotspots: AppHotspot[] = hotspotLayer.objects.map((obj: TiledObject) => {
-            // Tiled object's x,y is top-left. For centering, add half width/height.
             const centerX = obj.x + (obj.width / 2);
             const centerY = obj.y + (obj.height / 2);
-            // Use object's width/height for radius if it's a rectangle, or a custom 'radius' property, or a default
             const tiledRadius = getTiledObjectProperty(obj, 'radius');
-            const clickRadius = typeof tiledRadius === 'number' ? tiledRadius : Math.max(obj.width, obj.height) / 1.5 || 20; // A bit more generous for clicks
+            const clickRadius = typeof tiledRadius === 'number' ? tiledRadius : Math.max(obj.width, obj.height) / 1.5 || 20;
 
             return {
               id: getTiledObjectProperty(obj, 'id_string') || `tiled-obj-${obj.id}`,
@@ -70,7 +81,7 @@ export default function Explore() {
               x: centerX,
               y: centerY,
               radius: clickRadius,
-              route: getTiledObjectProperty(obj, 'route') || '/', // Default to home if no route
+              route: getTiledObjectProperty(obj, 'route') || '/',
               iconSrc: getTiledObjectProperty(obj, 'iconSrc') || undefined,
               iconSize: getTiledObjectProperty(obj, 'iconSize') || undefined,
             };
@@ -78,13 +89,13 @@ export default function Explore() {
           if (isMounted) setHotspots(processedHotspots);
         } else {
           console.warn(`Explore: Could not find 'Hotspots' object layer in Tiled map data at ${TILED_MAP_DATA_URL}.`);
-          if (isMounted) setHotspots([]); // Set to empty array if no hotspots found
+          if (isMounted) setHotspots([]);
         }
       } catch (err) {
         console.error("Explore: Error loading or processing Tiled JSON data:", err);
         if (isMounted) {
           setError(err instanceof Error ? err.message : String(err));
-          setHotspots([]); // Clear hotspots on error
+          setHotspots([]);
         }
       } finally {
         if (isMounted) setIsLoading(false);
@@ -92,25 +103,23 @@ export default function Explore() {
     };
 
     fetchMapData();
-    return () => { isMounted = false; }; // Cleanup on unmount
+    return () => { isMounted = false; };
   }, []);
 
-  // Handler for navigating when a hotspot is clicked
   const handleHotspotNavigate = (hotspot: AppHotspot) => {
     if (hotspot.route) navigate(hotspot.route);
   };
 
-  // Conditional rendering for loading and error states
   if (isLoading) {
     return (
-      <div className="explore-page-container"> {/* Keep basic structure for consistency */}
+      <div className="explore-page-container">
         <div className="explore-status-message explore-loading-state">Loading Map Data...</div>
       </div>
     );
   }
   if (error) {
     return (
-      <div className="explore-page-container"> {/* Keep basic structure for consistency */}
+      <div className="explore-page-container">
         <div className="explore-status-message explore-error-state">
           Error loading map: {error}
         </div>
@@ -118,23 +127,23 @@ export default function Explore() {
     );
   }
 
-  // Render the main explore page content
   return (
-    <div className="explore-page-container" style={{width: '100vw', height: '100vh', overflow: 'hidden'}}>
+    <div className="explore-page-container">
       <div
         className="explore-map-content-wrapper"
         style={{
-          width: '100vw',
-          height: '100vh',
+          width: mapWidth,
+          height: mapHeight,
           backgroundImage: `url(${MAP_BACKGROUND_IMAGE_URL})`,
-          backgroundRepeat: 'repeat',
+          backgroundSize: '100% 100%',
+          backgroundRepeat: 'no-repeat',
           position: 'relative',
         }}
       >
         <MapCanvas
           hotspots={hotspots}
-          canvasWidth={viewport.width}
-          canvasHeight={viewport.height}
+          canvasWidth={mapWidth}
+          canvasHeight={mapHeight}
           onHotspotClick={handleHotspotNavigate}
         />
       </div>
