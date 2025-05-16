@@ -42,10 +42,14 @@
 /* Actual grid for items */
 .sq-inventory-item-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
-  width: 100%;
-  box-sizing: border-box;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 16px;
+  padding: 16px;
+  transition: opacity 0.15s ease-in-out;
+}
+
+.sq-inventory-item-grid.transitioning {
+  opacity: 0.5;
 }
 
 /* Message for empty categories */

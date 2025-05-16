@@ -163,6 +163,34 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
   const [roomLayersLoading, setRoomLayersLoading] = useState<boolean>(true);
   const [filteredItemsCache, setFilteredItemsCache] = useState<Record<string, InventoryItem[]>>({});
 
+  // Preload all category combinations
+  useEffect(() => {
+    const mainCategories = ["Decorations", "Food", "Grooming", "Toys"];
+    const subCategories = {
+      Decorations: ["wall", "floor", "ceiling", "backDecor", "frontDecor", "overlay"],
+      Food: ["Treat", "Snack", "LightMeal", "HeartyMeal", "Feast"],
+      Grooming: ["QuickFix", "BasicKit", "StandardSet", "PremiumCare", "LuxurySpa"],
+      Toys: ["Basic", "Classic", "Plushie", "Gadget", "Wonder"]
+    };
+
+    const newCache: Record<string, InventoryItem[]> = {};
+    
+    mainCategories.forEach(mainCategory => {
+      subCategories[mainCategory as keyof typeof subCategories].forEach(subCategory => {
+        const cacheKey = `${mainCategory}-${subCategory}`;
+        newCache[cacheKey] = items.filter(item => {
+          if (mainCategory === "Decorations") return item.itemCategory === "decoration" && (item as DecorationInventoryItem).type === subCategory;
+          if (mainCategory === "Food") return item.itemCategory === "food" && (item as FoodInventoryItem).type === subCategory;
+          if (mainCategory === "Grooming") return item.itemCategory === "grooming" && (item as GroomingInventoryItem).type === subCategory;
+          if (mainCategory === "Toys") return item.itemCategory === "toy" && (item as ToyInventoryItem).type === subCategory;
+          return false;
+        });
+      });
+    });
+
+    setFilteredItemsCache(newCache);
+  }, [items]);
+
   useEffect(() => {
     setRoomLayersLoading(true);
     const roomRef = ref(db, "roomLayers/sharedRoom");
@@ -216,34 +244,8 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
 
   const getFilteredItems = useCallback((mainCategory: string, subCategory: string) => {
     const cacheKey = `${mainCategory}-${subCategory}`;
-    
-    // Return cached result if available
-    if (filteredItemsCache[cacheKey]) {
-      return filteredItemsCache[cacheKey];
-    }
-
-    // Filter items based on category
-    const filtered = items.filter(item => {
-      if (mainCategory === "Decorations") return item.itemCategory === "decoration" && (item as DecorationInventoryItem).type === subCategory;
-      if (mainCategory === "Food") return item.itemCategory === "food" && (item as FoodInventoryItem).type === subCategory;
-      if (mainCategory === "Grooming") return item.itemCategory === "grooming" && (item as GroomingInventoryItem).type === subCategory;
-      if (mainCategory === "Toys") return item.itemCategory === "toy" && (item as ToyInventoryItem).type === subCategory;
-      return false;
-    });
-
-    // Cache the result
-    setFilteredItemsCache(prev => ({
-      ...prev,
-      [cacheKey]: filtered
-    }));
-
-    return filtered;
-  }, [items, filteredItemsCache]);
-
-  // Clear cache when items change
-  useEffect(() => {
-    setFilteredItemsCache({});
-  }, [items]);
+    return filteredItemsCache[cacheKey] || [];
+  }, [filteredItemsCache]);
 
   return (
     <InventoryContext.Provider value={{

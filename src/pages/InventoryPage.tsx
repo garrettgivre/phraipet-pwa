@@ -122,6 +122,7 @@ export default function InventoryPage({ pet, onFeedPet, onGroomPet, onPlayWithTo
   const { setRoomLayer, addDecorItem, consumeItem, getFilteredItems } = useInventory();
   const location = useLocation();
   const navigate = useNavigate();
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
   const initialTabs = useMemo(() => {
     const state = location.state as InventoryLocationState | null;
@@ -148,12 +149,30 @@ export default function InventoryPage({ pet, onFeedPet, onGroomPet, onPlayWithTo
   }, [location.state, location.pathname, navigate]);
 
   const handleMainCategoryChange = useCallback((category: MainCategory) => {
+    setIsTransitioning(true);
     setSelectedMainCategory(category);
     if (category === "Decorations") setSelectedSubCategory(decorationSubCategories[0]);
     else if (category === "Food") setSelectedSubCategory(foodSubCategories[0]);
     else if (category === "Grooming") setSelectedSubCategory(groomingSubCategories[0]);
     else if (category === "Toys") setSelectedSubCategory(toySubCategories[0]);
     setActiveColorOptions(null);
+    // Use requestAnimationFrame to ensure state updates are processed before removing transition
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setIsTransitioning(false);
+      });
+    });
+  }, []);
+
+  const handleSubCategoryChange = useCallback((category: string) => {
+    setIsTransitioning(true);
+    setSelectedSubCategory(category);
+    // Use requestAnimationFrame to ensure state updates are processed before removing transition
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setIsTransitioning(false);
+      });
+    });
   }, []);
 
   useEffect(() => {
@@ -222,7 +241,7 @@ export default function InventoryPage({ pet, onFeedPet, onGroomPet, onPlayWithTo
     <div className="sq-inventory-page-wrapper">
       <h1 className="sq-inventory-title-bar">Inventory</h1>
       <div className="sq-inventory-item-display-area">
-        <div className="sq-inventory-item-grid">
+        <div className={`sq-inventory-item-grid ${isTransitioning ? 'transitioning' : ''}`}>
           {filteredItems.length > 0 ? (
             filteredItems.map(item => (
               <div
@@ -271,7 +290,7 @@ export default function InventoryPage({ pet, onFeedPet, onGroomPet, onPlayWithTo
             <button
               key={categoryValue}
               className={`sq-inventory-tab-button ${selectedSubCategory === categoryValue ? "active" : ""}`}
-              onClick={() => setSelectedSubCategory(categoryValue)}
+              onClick={() => handleSubCategoryChange(categoryValue)}
             >
               {capitalizeFirstLetter(categoryValue)}
             </button>
