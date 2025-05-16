@@ -1,5 +1,5 @@
 // src/contexts/InventoryContext.tsx
-import { createContext, useState, useEffect, type ReactNode, useContext } from "react";
+import { createContext, useState, useEffect, type ReactNode, useContext, useCallback } from "react";
 import { db } from "../firebase";
 import { ref, onValue, set } from "firebase/database";
 import type {
@@ -142,6 +142,7 @@ interface InventoryContextType {
   setRoomLayer: (type: "floor" | "wall" | "ceiling" | "overlay", src: string) => void;
   addDecorItem: (type: "backDecor" | "frontDecor", decor: RoomDecorItem) => void;
   consumeItem: (itemId: string) => void;
+  getFilteredItems: (mainCategory: string, subCategory: string) => InventoryItem[];
 }
 
 const InventoryContext = createContext<InventoryContextType>({
@@ -151,6 +152,7 @@ const InventoryContext = createContext<InventoryContextType>({
   setRoomLayer: () => { console.warn("setRoomLayer called on default context"); },
   addDecorItem: () => { console.warn("addDecorItem called on default context"); },
   consumeItem: (itemId: string) => { console.warn(`consumeItem(${itemId}) called on default context`); },
+  getFilteredItems: () => [],
 });
 
 export const useInventory = () => useContext(InventoryContext);
@@ -159,6 +161,7 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<InventoryItem[]>(defaultAllItems);
   const [roomLayers, setRoomLayers] = useState<RoomLayers>(defaultRoomLayersData);
   const [roomLayersLoading, setRoomLayersLoading] = useState<boolean>(true);
+  const [filteredItemsCache, setFilteredItemsCache] = useState<Record<string, InventoryItem[]>>({});
 
   useEffect(() => {
     setRoomLayersLoading(true);
@@ -211,6 +214,37 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
     console.log(`Item ${itemId} consumed from local list.`);
   };
 
+  const getFilteredItems = useCallback((mainCategory: string, subCategory: string) => {
+    const cacheKey = `${mainCategory}-${subCategory}`;
+    
+    // Return cached result if available
+    if (filteredItemsCache[cacheKey]) {
+      return filteredItemsCache[cacheKey];
+    }
+
+    // Filter items based on category
+    const filtered = items.filter(item => {
+      if (mainCategory === "Decorations") return item.itemCategory === "decoration" && (item as DecorationInventoryItem).type === subCategory;
+      if (mainCategory === "Food") return item.itemCategory === "food" && (item as FoodInventoryItem).type === subCategory;
+      if (mainCategory === "Grooming") return item.itemCategory === "grooming" && (item as GroomingInventoryItem).type === subCategory;
+      if (mainCategory === "Toys") return item.itemCategory === "toy" && (item as ToyInventoryItem).type === subCategory;
+      return false;
+    });
+
+    // Cache the result
+    setFilteredItemsCache(prev => ({
+      ...prev,
+      [cacheKey]: filtered
+    }));
+
+    return filtered;
+  }, [items, filteredItemsCache]);
+
+  // Clear cache when items change
+  useEffect(() => {
+    setFilteredItemsCache({});
+  }, [items]);
+
   return (
     <InventoryContext.Provider value={{
       items,
@@ -218,7 +252,8 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
       roomLayersLoading,
       setRoomLayer,
       addDecorItem,
-      consumeItem
+      consumeItem,
+      getFilteredItems
     }}>
       {children}
     </InventoryContext.Provider>

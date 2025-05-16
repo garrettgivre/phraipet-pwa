@@ -119,7 +119,7 @@ function ZoomedImage({ src, alt }: { src: string; alt: string }) {
 }
 
 export default function InventoryPage({ pet, onFeedPet, onGroomPet, onPlayWithToy }: InventoryPageProps) {
-  const { items, setRoomLayer, addDecorItem, consumeItem } = useInventory();
+  const { items, setRoomLayer, addDecorItem, consumeItem, getFilteredItems } = useInventory();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -205,13 +205,10 @@ export default function InventoryPage({ pet, onFeedPet, onGroomPet, onPlayWithTo
     }
   }, [pet, onFeedPet, onGroomPet, onPlayWithToy, consumeItem, applyDecorationItem, activeColorOptions]);
 
-  const filteredItems = useMemo(() => items.filter(item => {
-    if (selectedMainCategory === "Decorations") return item.itemCategory === "decoration" && (item as DecorationInventoryItem).type === selectedSubCategory;
-    if (selectedMainCategory === "Food") return item.itemCategory === "food" && (item as FoodInventoryItem).type === selectedSubCategory;
-    if (selectedMainCategory === "Grooming") return item.itemCategory === "grooming" && (item as GroomingInventoryItem).type === selectedSubCategory;
-    if (selectedMainCategory === "Toys") return item.itemCategory === "toy" && (item as ToyInventoryItem).type === selectedSubCategory;
-    return false;
-  }), [items, selectedMainCategory, selectedSubCategory]);
+  const filteredItems = useMemo(() => 
+    getFilteredItems(selectedMainCategory, selectedSubCategory),
+    [getFilteredItems, selectedMainCategory, selectedSubCategory]
+  );
 
   const currentSubcategories = useMemo(() => {
     if (selectedMainCategory === "Decorations") return decorationSubCategories;
