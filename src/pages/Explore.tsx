@@ -58,29 +58,12 @@ export default function Explore() {
     return () => window.removeEventListener('resize', updateMapDimensions);
   }, []);
 
-  // Set initial scroll position to center
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container || !mapDimensions.width || !mapDimensions.height) return;
-
-    // Only set initial position if we're at the default scroll position
-    if (container.scrollLeft === 0 && container.scrollTop === 0) {
-      container.scrollTo({
-        left: mapDimensions.width,
-        top: mapDimensions.height,
-        behavior: 'auto'
-      });
-    }
-  }, [mapDimensions]);
-
   // Handle infinite scrolling
   useEffect(() => {
     const container = containerRef.current;
     if (!container || !mapDimensions.width || !mapDimensions.height) return;
 
     let isScrolling = false;
-    let lastScrollLeft = 0;
-    let lastScrollTop = 0;
     const mapWidth = mapDimensions.width;
     const mapHeight = mapDimensions.height;
 
@@ -108,35 +91,35 @@ export default function Explore() {
 
       // Apply new scroll position if it changed
       if (newScrollLeft !== scrollLeft || newScrollTop !== scrollTop) {
-        // Preserve scroll momentum
-        const momentumX = scrollLeft - lastScrollLeft;
-        const momentumY = scrollTop - lastScrollTop;
-        
         container.scrollTo({
           left: newScrollLeft,
           top: newScrollTop,
           behavior: 'auto'
         });
-
-        // Apply momentum to the new position
-        if (momentumX !== 0 || momentumY !== 0) {
-          requestAnimationFrame(() => {
-            container.scrollTo({
-              left: newScrollLeft + momentumX,
-              top: newScrollTop + momentumY,
-              behavior: 'auto'
-            });
-          });
-        }
       }
 
-      lastScrollLeft = scrollLeft;
-      lastScrollTop = scrollTop;
       isScrolling = false;
     };
 
     container.addEventListener('scroll', handleScroll, { passive: true });
     return () => container.removeEventListener('scroll', handleScroll);
+  }, [mapDimensions]);
+
+  // Set initial scroll position to center
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container || !mapDimensions.width || !mapDimensions.height) return;
+
+    // Only set initial position if we're at the default scroll position
+    if (container.scrollLeft === 0 && container.scrollTop === 0) {
+      requestAnimationFrame(() => {
+        container.scrollTo({
+          left: mapDimensions.width,
+          top: mapDimensions.height,
+          behavior: 'auto'
+        });
+      });
+    }
   }, [mapDimensions]);
 
   // Effect to fetch and process Tiled map data for hotspots
