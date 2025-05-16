@@ -5,13 +5,6 @@ import MapCanvas from '../components/MapCanvas';
 import type { AppHotspot, TiledMapData, TiledObject } from '../types'; 
 import './Sunnybrook.css';
 
-function getViewportSize() {
-  return {
-    width: window.innerWidth,
-    height: window.innerHeight,
-  };
-}
-
 const getTiledObjectProperty = (object: TiledObject, propertyName: string): any | undefined => {
   if (!object.properties) {
     return undefined;
@@ -32,7 +25,6 @@ export default function Sunnybrook() {
   const [mapPixelHeight, setMapPixelHeight] = useState(0); 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [viewport, setViewport] = useState(getViewportSize());
   const navigate = useNavigate();
 
   const mapTileImageUrl = "/maps/sunnybrook_background.png"; 
