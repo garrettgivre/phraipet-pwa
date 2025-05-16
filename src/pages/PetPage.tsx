@@ -6,6 +6,7 @@ import type { NeedInfo, Pet as PetType, Need as NeedType, ToyInventoryItem } fro
 import { getPetMoodPhrase } from "../utils/petMoodUtils";
 import "./PetPage.css";
 import { useState, useEffect } from "react";
+import CoinDisplay from "../components/CoinDisplay";
 
 interface PetPageProps {
   pet: PetType | null;
@@ -126,6 +127,7 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
 
   return (
     <div className={`petPage ${!roomLayersLoading ? 'loaded' : ''}`} key={currentFloor + currentWall}>
+      <CoinDisplay coins={100} />
       {!roomLayersLoading && currentCeiling && <img src={currentCeiling} alt="Ceiling" className="layer ceiling" />}
       {!roomLayersLoading && currentWall && <img src={currentWall} alt="Wall" className="layer wall" />}
       {!roomLayersLoading && currentFloor && <img src={currentFloor} alt="Floor" className="layer floor" />}
