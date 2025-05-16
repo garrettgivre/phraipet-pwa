@@ -42,7 +42,7 @@
   z-index: 5; 
   width: 100%; 
   gap: clamp(10px, 2vw, 20px);
-  pointer-events: none; /* Prevent any mouse interaction with the area */
+  pointer-events: none;
 }
 
 .petHero {
@@ -54,7 +54,8 @@
   transition: left 3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s ease;
   transform-origin: bottom center;
   margin-bottom: -20px;
-  will-change: left, transform; /* Optimize animation performance */
+  will-change: left, transform;
+  z-index: 6;
 }
 
 .petHero.flip {
@@ -71,18 +72,16 @@
 
 .pet-mood-bubble {
   position: absolute;
-  top: -40px;
-  left: 50%;
-  transform: translateX(-50%);
   background-color: rgba(255, 255, 255, 0.9); 
   padding: clamp(4px, 1vw, 6px) clamp(8px, 2vw, 12px);
   border-radius: 15px; 
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   max-width: min(200px, 80vw);
   text-align: center;
-  z-index: 6;
+  z-index: 7;
   font-size: clamp(12px, 3vw, 14px);
   animation: fadeInOut 0.3s ease-in-out;
+  pointer-events: none;
 }
 
 .pet-mood-bubble::after { 
@@ -191,12 +190,13 @@
 }
 
 .toy {
-  position: relative;
+  position: absolute;
   width: clamp(80px, 18vw, 160px);
   height: auto;
   object-fit: contain;
   transition: transform 0.3s ease;
   transform-origin: center center;
+  z-index: 5;
 }
 
 .toy.playing {
