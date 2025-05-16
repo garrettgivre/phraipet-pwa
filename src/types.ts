@@ -146,4 +146,6 @@ export interface AppHotspot {
   y: number;
   route: string;
   iconSrc?: string;
+  iconSize?: number;
+  radius?: number;
 }
