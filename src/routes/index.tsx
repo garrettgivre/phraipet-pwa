@@ -1,5 +1,5 @@
 import type { RouteObject } from "react-router-dom";
-import type { Pet, FoodInventoryItem, GroomingInventoryItem, ToyInventoryItem } from "../types";
+import type { Pet, FoodInventoryItem, GroomingInventoryItem, ToyInventoryItem, NeedInfo } from "../types";
 import PetPage from "../pages/PetPage";
 import Explore from "../pages/Explore";
 import Play from "../pages/Play";
@@ -20,13 +20,14 @@ export interface RouteProps {
   handleGroomPet: (groomingItem: GroomingInventoryItem) => void;
   handlePlayWithToy: (toyItem: ToyInventoryItem) => void;
   handleIncreaseAffection: (amount: number) => void;
+  needInfo: NeedInfo[];
 }
 
 export function createRoutes(props: RouteProps): RouteObject[] {
   return [
     {
       path: "/",
-      element: <PetPage pet={props.pet} needInfo={[]} onIncreaseAffection={props.handleIncreaseAffection} />
+      element: <PetPage pet={props.pet} needInfo={props.needInfo} onIncreaseAffection={props.handleIncreaseAffection} />
     },
     {
       path: "/explore",

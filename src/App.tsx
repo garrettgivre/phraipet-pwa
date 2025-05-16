@@ -56,21 +56,12 @@ interface AppShellProps {
   handleGroomPet: (groomingItem: GroomingInventoryItem) => void;
   handlePlayWithToy: (toyItem: ToyInventoryItem) => void;
   handleIncreaseAffection: (amount: number) => void;
+  needInfo: NeedInfo[];
 }
 
-function AppShell({ pet, handleFeedPet, handleGroomPet, handlePlayWithToy, handleIncreaseAffection }: AppShellProps) {
+function AppShell({ pet, handleFeedPet, handleGroomPet, handlePlayWithToy, handleIncreaseAffection, needInfo }: AppShellProps) {
   const location = useLocation();
   const isPetPage = location.pathname === "/";
-
-  const needInfo: NeedInfo[] = pet && typeof pet.hunger === 'number' && typeof pet.cleanliness === 'number' && typeof pet.happiness === 'number' && typeof pet.affection === 'number' && typeof pet.spirit === 'number'
-    ? [
-        { need: "hunger", iconSrc: "/assets/icons/needs/hunger.png", value: pet.hunger, desc: descriptor("hunger", pet.hunger) },
-        { need: "cleanliness", iconSrc: "/assets/icons/needs/cleanliness.png", value: pet.cleanliness, desc: descriptor("cleanliness", pet.cleanliness) },
-        { need: "happiness", iconSrc: "/assets/icons/needs/happiness.png", value: pet.happiness, desc: descriptor("happiness", pet.happiness) },
-        { need: "affection", iconSrc: "/assets/icons/needs/affection.png", value: pet.affection, desc: descriptor("affection", pet.affection) },
-        { need: "spirit", iconSrc: "/assets/icons/needs/spirit.png", value: pet.spirit, desc: descriptor("happiness", pet.spirit) },
-      ]
-    : [];
 
   return (
     <>
@@ -94,7 +85,8 @@ function AppShell({ pet, handleFeedPet, handleGroomPet, handlePlayWithToy, handl
               handleFeedPet,
               handleGroomPet,
               handlePlayWithToy,
-              handleIncreaseAffection
+              handleIncreaseAffection,
+              needInfo
             }).map((route, index) => (
               <Route key={index} path={route.path} element={route.element} />
             ))}
@@ -115,6 +107,17 @@ defaultPetData.spirit = Math.max(MIN_NEED_VALUE, Math.min(MAX_NEED_VALUE, Math.r
 
 export default function App() {
   const [pet, setPet] = useState<Pet | null>(null);
+  const [lastUpdate, setLastUpdate] = useState<number>(Date.now());
+
+  const needInfo: NeedInfo[] = pet && typeof pet.hunger === 'number' && typeof pet.cleanliness === 'number' && typeof pet.happiness === 'number' && typeof pet.affection === 'number' && typeof pet.spirit === 'number'
+    ? [
+        { need: "hunger", iconSrc: "/assets/icons/needs/hunger.png", value: pet.hunger, desc: descriptor("hunger", pet.hunger) },
+        { need: "cleanliness", iconSrc: "/assets/icons/needs/cleanliness.png", value: pet.cleanliness, desc: descriptor("cleanliness", pet.cleanliness) },
+        { need: "happiness", iconSrc: "/assets/icons/needs/happiness.png", value: pet.happiness, desc: descriptor("happiness", pet.happiness) },
+        { need: "affection", iconSrc: "/assets/icons/needs/affection.png", value: pet.affection, desc: descriptor("affection", pet.affection) },
+        { need: "spirit", iconSrc: "/assets/icons/needs/spirit.png", value: pet.spirit, desc: descriptor("happiness", pet.spirit) },
+      ]
+    : [];
 
   const handleFeedPet = async (foodItem: FoodInventoryItem) => {
     if (!pet || typeof pet.hunger !== 'number') return;
@@ -270,6 +273,7 @@ export default function App() {
             handleGroomPet={handleGroomPet}
             handlePlayWithToy={handlePlayWithToy}
             handleIncreaseAffection={handleIncreaseAffection}
+            needInfo={needInfo}
           />
         </ErrorBoundary>
       </InventoryProvider>
