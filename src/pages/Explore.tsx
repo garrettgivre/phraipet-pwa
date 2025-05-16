@@ -49,39 +49,60 @@ export default function Explore() {
     const container = containerRef.current;
     if (!container || !mapDimensions.width || !mapDimensions.height) return;
 
+    let isScrolling = false;
+    let lastScrollTime = 0;
+    const SCROLL_THRESHOLD = 16; // ~60fps
+
     const handleScroll = () => {
+      const now = performance.now();
+      if (now - lastScrollTime < SCROLL_THRESHOLD) return;
+      lastScrollTime = now;
+
+      if (isScrolling) return;
+      isScrolling = true;
+
       const { scrollLeft, scrollTop } = container;
       const mapWidth = mapDimensions.width;
       const mapHeight = mapDimensions.height;
 
-      // Calculate new scroll position for infinite loop
+      // Calculate relative position within the middle map
+      const relativeX = scrollLeft % mapWidth;
+      const relativeY = scrollTop % mapHeight;
+
+      // Calculate which map we're in (0, 1, or 2)
+      const mapX = Math.floor(scrollLeft / mapWidth);
+      const mapY = Math.floor(scrollTop / mapHeight);
+
+      // Calculate new scroll position
       let newScrollLeft = scrollLeft;
       let newScrollTop = scrollTop;
 
-      // Horizontal wrapping
-      if (scrollLeft < mapWidth) {
-        newScrollLeft = scrollLeft + mapWidth;
-      } else if (scrollLeft > mapWidth * 2) {
-        newScrollLeft = scrollLeft - mapWidth;
+      // Handle horizontal wrapping
+      if (mapX === 0) {
+        newScrollLeft = mapWidth + relativeX;
+      } else if (mapX === 2) {
+        newScrollLeft = mapWidth + relativeX;
       }
 
-      // Vertical wrapping
-      if (scrollTop < mapHeight) {
-        newScrollTop = scrollTop + mapHeight;
-      } else if (scrollTop > mapHeight * 2) {
-        newScrollTop = scrollTop - mapHeight;
+      // Handle vertical wrapping
+      if (mapY === 0) {
+        newScrollTop = mapHeight + relativeY;
+      } else if (mapY === 2) {
+        newScrollTop = mapHeight + relativeY;
       }
 
       // Apply new scroll position if it changed
       if (newScrollLeft !== scrollLeft || newScrollTop !== scrollTop) {
-        // Use requestAnimationFrame to ensure smooth scrolling
         requestAnimationFrame(() => {
           container.scrollTo({
             left: newScrollLeft,
             top: newScrollTop,
-            behavior: 'auto' // Use 'auto' instead of 'smooth' for better performance
+            behavior: 'auto'
           });
+          isScrolling = false;
         });
+      } else {
+        isScrolling = false;
       }
     };
 

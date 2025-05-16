@@ -9,6 +9,8 @@
   height: 100vh;
   overflow: hidden;
   position: relative;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .map-container {
@@ -19,12 +21,17 @@
   -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
   scroll-behavior: auto; /* Use auto for better performance */
   overscroll-behavior: none; /* Prevent bounce effect */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
 }
 
 .map-grid {
   position: relative;
   transform-origin: center center;
   will-change: transform; /* Optimize for animations */
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .map-tile {
@@ -32,6 +39,8 @@
   background-size: cover;
   background-position: center;
   image-rendering: pixelated; /* For crisp pixel art */
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 /* Hide scrollbars but keep functionality */
