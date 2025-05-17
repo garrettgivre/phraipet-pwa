@@ -21,27 +21,27 @@
 
 .wall {
   top: 0;
-  z-index: 2;
-}
-
-.trim-layer {
-  top: 0;
-  z-index: 3;
+  z-index: 1;
 }
 
 .floor {
   bottom: 0;
-  z-index: 4;
+  z-index: 1;
+}
+
+.trim-layer {
+  top: 0;
+  z-index: 2;
 }
 
 .decor {
-  z-index: 5;
+  z-index: 3;
   position: absolute;
   pointer-events: none;
 }
 
 .overlay {
-  z-index: 6;
+  z-index: 4;
   pointer-events: none;
 }
 
@@ -50,6 +50,6 @@
   bottom: 0;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 7;
+  z-index: 5;
   pointer-events: none;
 }
