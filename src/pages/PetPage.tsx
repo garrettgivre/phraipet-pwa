@@ -5,8 +5,9 @@ import { useToyAnimation } from "../contexts/ToyAnimationContext";
 import type { NeedInfo, Pet as PetType, Need as NeedType, ToyInventoryItem } from "../types";
 import { getPetMoodPhrase } from "../utils/petMoodUtils";
 import "./PetPage.css";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import CoinDisplay from "../components/CoinDisplay";
+import PetRoom from "../components/PetRoom";
 
 interface PetPageProps {
   pet: PetType | null;
@@ -68,10 +69,29 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
   const { roomLayers, roomLayersLoading } = useInventory();
   const { activeToy, isPlaying } = useToyAnimation();
   const navigate = useNavigate();
-  const [petPosition] = useState(() => {
+  const [petPosition, setPetPosition] = useState(() => {
     const savedPosition = localStorage.getItem('petPosition');
     return savedPosition ? parseFloat(savedPosition) : 50;
   });
+
+  // Add pet movement logic
+  useEffect(() => {
+    if (!pet) return;
+
+    const moveInterval = setInterval(() => {
+      setPetPosition(prevPos => {
+        // Randomly move left or right
+        const direction = Math.random() > 0.5 ? 1 : -1;
+        const newPos = prevPos + (direction * (Math.random() * 2));
+        // Keep pet within bounds (10% to 90% of screen width)
+        const boundedPos = Math.max(10, Math.min(90, newPos));
+        localStorage.setItem('petPosition', boundedPos.toString());
+        return boundedPos;
+      });
+    }, 2000); // Move every 2 seconds
+
+    return () => clearInterval(moveInterval);
+  }, [pet]);
 
   const moodPhrase = isPlaying && activeToy ? getRandomToyPhrase(activeToy) : getPetMoodPhrase(pet);
   const petImage = getPetImage(pet, isPlaying);
@@ -79,6 +99,7 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
   const currentCeiling = roomLayers?.ceiling || "/assets/ceilings/classic-ceiling.png";
   const currentWall = roomLayers?.wall || "/assets/walls/classic-wall.png";
   const currentFloor = roomLayers?.floor || "/assets/floors/classic-floor.png";
+  const currentTrim = roomLayers?.trim || "";
   const overlaySrc = roomLayers?.overlay || "";
 
   const iconDisplaySize = 24;
@@ -124,9 +145,15 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
   return (
     <div className={`petPage ${!roomLayersLoading ? 'loaded' : ''}`} key={currentFloor + currentWall}>
       <CoinDisplay coins={100} />
-      {!roomLayersLoading && currentCeiling && <img src={currentCeiling} alt="Ceiling" className="layer ceiling" />}
-      {!roomLayersLoading && currentWall && <img src={currentWall} alt="Wall" className="layer wall" />}
-      {!roomLayersLoading && currentFloor && <img src={currentFloor} alt="Floor" className="layer floor" />}
+      
+      <PetRoom
+        floor={currentFloor}
+        wall={currentWall}
+        ceiling={currentCeiling}
+        trim={currentTrim}
+        decor={roomLayers?.decor || []}
+        overlay={overlaySrc}
+      />
 
       <div className="pet-display-area">
         {pet && moodPhrase && (
@@ -181,10 +208,6 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
           </div>
         ))}
       </div>
-
-      {!roomLayersLoading && overlaySrc && (
-        <img src={overlaySrc} alt="Room Overlay" className="layer overlay" />
-      )}
 
       <div className="paintbrush-icon" onClick={() => navigate("/inventory")}>
         <img src="/assets/icons/paintbrush.png" alt="Customize Room" />
