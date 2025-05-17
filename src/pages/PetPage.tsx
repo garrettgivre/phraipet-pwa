@@ -115,7 +115,7 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
         
         // Calculate number of steps based on distance
         const distance = Math.abs(boundedPos - prevPos);
-        const stepsPerPixel = 0.5; // Adjust this value to control animation speed
+        const stepsPerPixel = 0.2; // Reduced from 0.5 to make steps less frequent
         const totalSteps = Math.floor(distance * stepsPerPixel);
         
         // Start walking animation
@@ -129,7 +129,7 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
             setIsWalking(false);
             setWalkingStep(0);
           }
-        }, 200); // Adjust timing between steps
+        }, 300); // Increased from 200ms to 300ms for slower step transitions
         
         return boundedPos;
       });
