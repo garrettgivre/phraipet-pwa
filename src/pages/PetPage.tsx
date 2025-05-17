@@ -5,7 +5,7 @@ import { useToyAnimation } from "../contexts/ToyAnimationContext";
 import type { NeedInfo, Pet as PetType, Need as NeedType, ToyInventoryItem } from "../types";
 import { getPetMoodPhrase } from "../utils/petMoodUtils";
 import "./PetPage.css";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import CoinDisplay from "../components/CoinDisplay";
 
 interface PetPageProps {
@@ -68,7 +68,7 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
   const { roomLayers, roomLayersLoading } = useInventory();
   const { activeToy, isPlaying } = useToyAnimation();
   const navigate = useNavigate();
-  const [petPosition, setPetPosition] = useState(() => {
+  const [petPosition] = useState(() => {
     const savedPosition = localStorage.getItem('petPosition');
     return savedPosition ? parseFloat(savedPosition) : 50;
   });
