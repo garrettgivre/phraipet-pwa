@@ -14,7 +14,7 @@ interface PetPageProps {
   onIncreaseAffection: (amount: number) => void;
 }
 
-const getPetImage = (pet: PetType | null, isPlaying: boolean, isWalking: boolean, walkFrame: number): string => {
+const getPetImage = (pet: PetType | null, isPlaying: boolean): string => {
   if (!pet) return "/pet/Neutral.png";
   
   // Always use Happy image when playing with toy
@@ -68,63 +68,13 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
   const { roomLayers, roomLayersLoading } = useInventory();
   const { activeToy, isPlaying } = useToyAnimation();
   const navigate = useNavigate();
-  const [toyPosition, setToyPosition] = useState<'left' | 'right'>('right');
-  const [isWalking, setIsWalking] = useState(false);
-  const [walkDirection, setWalkDirection] = useState<'left' | 'right'>('right');
-  const [walkFrame, setWalkFrame] = useState(0);
-  const [showSpeechBubble, setShowSpeechBubble] = useState(false);
   const [petPosition, setPetPosition] = useState(() => {
     const savedPosition = localStorage.getItem('petPosition');
     return savedPosition ? parseFloat(savedPosition) : 50;
   });
 
-  // Handle walking animation frame
-  useEffect(() => {
-    if (isWalking) {
-      const frameInterval = setInterval(() => {
-        setWalkFrame(prev => (prev + 1) % 2); // Toggle between 0 and 1
-      }, 300); // Switch frames every 300ms
-      return () => clearInterval(frameInterval);
-    }
-  }, [isWalking]);
-
-  // Handle random walking
-  useEffect(() => {
-    if (isPlaying) return;
-
-    const startWalking = () => {
-      if (Math.random() < 0.3) {
-        setIsWalking(true);
-        const newDirection = Math.random() < 0.5 ? 'left' : 'right';
-        setWalkDirection(newDirection);
-        
-        // Calculate random walk distance between 10% and 30% of screen width
-        const walkDistance = Math.random() * 20 + 10;
-        const newPosition = newDirection === 'left' 
-          ? Math.max(20, petPosition - walkDistance) // Keep at least 20% from left edge
-          : Math.min(80, petPosition + walkDistance); // Keep at least 20% from right edge
-        
-        setPetPosition(newPosition);
-      }
-    };
-
-    const stopWalking = () => {
-      setIsWalking(false);
-    };
-
-    const walkTimer = setTimeout(startWalking, Math.random() * 10000 + 5000);
-    const stopTimer = setTimeout(stopWalking, Math.random() * 2000 + 3000);
-
-    return () => {
-      clearTimeout(walkTimer);
-      clearTimeout(stopTimer);
-    };
-  }, [isPlaying, isWalking, petPosition]);
-
   const moodPhrase = isPlaying && activeToy ? getRandomToyPhrase(activeToy) : getPetMoodPhrase(pet);
-  const petImage = isWalking 
-    ? `/pet/Walk-Sideways${walkFrame === 0 ? 'A' : 'B'}.png` 
-    : getPetImage(pet, isPlaying, isWalking, walkFrame);
+  const petImage = getPetImage(pet, isPlaying);
 
   const currentCeiling = roomLayers?.ceiling || "/assets/ceilings/classic-ceiling.png";
   const currentWall = roomLayers?.wall || "/assets/walls/classic-wall.png";
@@ -179,7 +129,7 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
       {!roomLayersLoading && currentFloor && <img src={currentFloor} alt="Floor" className="layer floor" />}
 
       <div className="pet-display-area">
-        {pet && moodPhrase && showSpeechBubble && (
+        {pet && moodPhrase && (
           <div 
             className="pet-mood-bubble"
             style={{
@@ -192,31 +142,23 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
             <p>{moodPhrase}</p>
           </div>
         )}
-        {activeToy && toyPosition === 'left' && (
+        {activeToy && (
           <img 
             src={activeToy.src} 
             alt={activeToy.name} 
-            className={`toy left ${isPlaying ? 'playing' : ''}`}
+            className={`toy ${isPlaying ? 'playing' : ''}`}
             style={{ position: 'absolute', left: `${petPosition - 15}%` }}
           />
         )}
         <img 
           src={petImage}
           alt="Your Pet" 
-          className={`petHero ${isPlaying ? 'playing' : ''} ${isWalking ? 'walking' : ''} ${walkDirection === 'left' ? 'flip' : ''}`}
+          className={`petHero ${isPlaying ? 'playing' : ''}`}
           style={{ 
             left: `${petPosition}%`,
-            transform: `translateX(-50%) ${walkDirection === 'left' ? 'scaleX(-1)' : ''}`
+            transform: `translateX(-50%)`
           }}
         />
-        {activeToy && toyPosition === 'right' && (
-          <img 
-            src={activeToy.src} 
-            alt={activeToy.name} 
-            className={`toy right ${isPlaying ? 'playing' : ''}`}
-            style={{ position: 'absolute', left: `${petPosition + 15}%` }}
-          />
-        )}
       </div>
 
       <div className="pet-page-needs-container">
