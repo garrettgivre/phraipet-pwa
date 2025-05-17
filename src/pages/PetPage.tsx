@@ -15,11 +15,17 @@ interface PetPageProps {
   onIncreaseAffection: (amount: number) => void;
 }
 
-const getPetImage = (pet: PetType | null, isPlaying: boolean): string => {
+const getPetImage = (pet: PetType | null, isPlaying: boolean, isWalking: boolean, walkingStep: number, isFacingRight: boolean): string => {
   if (!pet) return "/pet/Neutral.png";
   
   // Always use Happy image when playing with toy
   if (isPlaying) return "/pet/Happy.png";
+
+  // Use walking animation when moving
+  if (isWalking) {
+    const baseImage = walkingStep === 0 ? "/pet/Walk-Sideways-A.png" : "/pet/Walk-Sideways-B.png";
+    return baseImage;
+  }
 
   // Check for overstuffed condition first
   if (pet.hunger >= 100) return "/pet/Neutral.png";
@@ -73,6 +79,9 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
     const savedPosition = localStorage.getItem('petPosition');
     return savedPosition ? parseFloat(savedPosition) : 50;
   });
+  const [isWalking, setIsWalking] = useState(false);
+  const [walkingStep, setWalkingStep] = useState(0);
+  const [isFacingRight, setIsFacingRight] = useState(true);
 
   // Add pet movement logic
   useEffect(() => {
@@ -86,6 +95,17 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
         // Keep pet within bounds (10% to 90% of screen width)
         const boundedPos = Math.max(10, Math.min(90, newPos));
         localStorage.setItem('petPosition', boundedPos.toString());
+        
+        // Update walking state and direction
+        setIsWalking(true);
+        setIsFacingRight(direction > 0);
+        
+        // Alternate walking steps
+        setWalkingStep(prev => (prev + 1) % 2);
+        
+        // Stop walking after a short delay
+        setTimeout(() => setIsWalking(false), 500);
+        
         return boundedPos;
       });
     }, 2000); // Move every 2 seconds
@@ -94,7 +114,7 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
   }, [pet]);
 
   const moodPhrase = isPlaying && activeToy ? getRandomToyPhrase(activeToy) : getPetMoodPhrase(pet);
-  const petImage = getPetImage(pet, isPlaying);
+  const petImage = getPetImage(pet, isPlaying, isWalking, walkingStep, isFacingRight);
 
   const currentCeiling = roomLayers?.ceiling || "/assets/ceilings/classic-ceiling.png";
   const currentWall = roomLayers?.wall || "/assets/walls/classic-wall.png";
@@ -158,6 +178,7 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
         moodPhrase={moodPhrase}
         activeToy={activeToy}
         isPlaying={isPlaying}
+        isFacingRight={isFacingRight}
       />
 
       <div className="pet-page-needs-container">

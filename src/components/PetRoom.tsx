@@ -22,6 +22,7 @@ interface PetRoomProps {
   moodPhrase?: string;
   activeToy?: ToyInventoryItem | null;
   isPlaying?: boolean;
+  isFacingRight: boolean;
 }
 
 export default function PetRoom({ 
@@ -35,7 +36,8 @@ export default function PetRoom({
   petPosition,
   moodPhrase,
   activeToy,
-  isPlaying
+  isPlaying,
+  isFacingRight
 }: PetRoomProps) {
   return (
     <div className="pet-room">
@@ -98,7 +100,7 @@ export default function PetRoom({
         alt="Pet"
         style={{ 
           left: `${petPosition}%`,
-          transform: 'translateX(-50%)',
+          transform: `translateX(-50%) ${isFacingRight ? '' : 'scaleX(-1)'}`,
           zIndex: 8
         }}
       />
