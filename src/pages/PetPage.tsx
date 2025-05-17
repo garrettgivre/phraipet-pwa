@@ -153,40 +153,12 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
         trim={currentTrim}
         decor={roomLayers?.decor || []}
         overlay={overlaySrc}
+        petImage={petImage}
+        petPosition={petPosition}
+        moodPhrase={moodPhrase}
+        activeToy={activeToy}
+        isPlaying={isPlaying}
       />
-
-      <div className="pet-display-area">
-        {pet && moodPhrase && (
-          <div 
-            className="pet-mood-bubble"
-            style={{
-              position: 'absolute',
-              left: `${petPosition}%`,
-              transform: 'translateX(-50%)',
-              top: '-120px'
-            }}
-          >
-            <p>{moodPhrase}</p>
-          </div>
-        )}
-        {activeToy && (
-          <img 
-            src={activeToy.src} 
-            alt={activeToy.name} 
-            className={`toy ${isPlaying ? 'playing' : ''}`}
-            style={{ position: 'absolute', left: `${petPosition - 15}%` }}
-          />
-        )}
-        <img 
-          src={petImage}
-          alt="Your Pet" 
-          className={`petHero ${isPlaying ? 'playing' : ''}`}
-          style={{ 
-            left: `${petPosition}%`,
-            transform: `translateX(-50%)`
-          }}
-        />
-      </div>
 
       <div className="pet-page-needs-container">
         {pet && needInfo && needInfo.length > 0 && needInfo.map((n) => (

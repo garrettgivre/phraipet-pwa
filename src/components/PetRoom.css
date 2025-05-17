@@ -35,19 +35,19 @@
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: 6;
+  z-index: 2;
   object-fit: cover;
   pointer-events: none;
 }
 
 .decor {
-  z-index: 5;
+  z-index: 3;
   position: absolute;
   pointer-events: none;
 }
 
 .overlay {
-  z-index: 7;
+  z-index: 4;
   pointer-events: none;
 }
 
@@ -58,4 +58,43 @@
   transform: translateX(-50%);
   z-index: 8;
   pointer-events: none;
+  transition: left 0.5s ease-in-out;
+}
+
+.toy {
+  position: absolute;
+  bottom: 0;
+  z-index: 7;
+  pointer-events: none;
+  transition: left 0.5s ease-in-out;
+}
+
+.pet-mood-bubble {
+  position: absolute;
+  background: white;
+  padding: 8px 12px;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 9;
+  pointer-events: none;
+  transition: left 0.5s ease-in-out;
+}
+
+.pet-mood-bubble p {
+  margin: 0;
+  font-size: 14px;
+  color: #333;
+}
+
+.playing {
+  animation: bounce 0.5s infinite alternate;
+}
+
+@keyframes bounce {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-10px);
+  }
 }
