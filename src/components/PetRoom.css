@@ -17,16 +17,19 @@
 .ceiling {
   top: 0;
   z-index: 1;
+  height: 100%;
 }
 
 .wall {
   top: 0;
   z-index: 1;
+  height: 100%;
 }
 
 .floor {
   top: 0;
   z-index: 1;
+  height: 100%;
 }
 
 .trim-layer {

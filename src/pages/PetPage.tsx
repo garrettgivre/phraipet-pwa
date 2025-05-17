@@ -114,11 +114,14 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
         setIsWalking(true);
         setIsFacingRight(direction > 0);
         
-        // Alternate walking steps
-        setWalkingStep(prev => (prev + 1) % 2);
+        // Start walking animation
+        const walkInterval = setInterval(() => {
+          setWalkingStep(prev => (prev + 1) % 2);
+        }, 200); // Alternate walking steps every 200ms
         
         // Stop walking after movement completes
         setTimeout(() => {
+          clearInterval(walkInterval);
           setIsWalking(false);
           setWalkingStep(0);
         }, 1000);
