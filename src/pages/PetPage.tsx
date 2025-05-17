@@ -56,8 +56,6 @@ const getPetImage = (pet: PetType | null, isPlaying: boolean, isWalking: boolean
     return "/pet/Sad.png";
   } else if (lowestNeed.value >= 50) {
     return "/pet/Happy.png";
-  } else if (pet.affection >= 85) {
-    return "/pet/Love.png";
   }
 
   return "/pet/Neutral.png";

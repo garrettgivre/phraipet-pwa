@@ -71,7 +71,7 @@ export default function PetRoom({
             position: 'absolute',
             left: `${petPosition}%`,
             transform: 'translateX(-50%)',
-            top: '-120px',
+            bottom: 'calc(20% + 25%)',
             zIndex: 9
           }}
         >
