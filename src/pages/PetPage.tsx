@@ -23,8 +23,7 @@ const getPetImage = (pet: PetType | null, isPlaying: boolean, isWalking: boolean
 
   // Use walking animation when moving
   if (isWalking) {
-    const baseImage = walkingStep === 0 ? "/pet/Walk-Sideways-A.png" : "/pet/Walk-Sideways-B.png";
-    return baseImage;
+    return walkingStep === 0 ? "/pet/Walk-Sideways-A.png" : "/pet/Walk-Sideways-B.png";
   }
 
   // Check for overstuffed condition first
@@ -112,12 +111,13 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
         
         // Update walking state and direction
         setIsWalking(true);
-        // Since the walking images face left, we only flip when moving right
         setIsFacingRight(direction > 0);
         
         // Start walking animation
+        let step = 0;
         const walkInterval = setInterval(() => {
-          setWalkingStep(prev => (prev + 1) % 2);
+          setWalkingStep(step);
+          step = (step + 1) % 2;
         }, 200); // Alternate walking steps every 200ms
         
         // Stop walking after movement completes
