@@ -225,9 +225,14 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
         const newPos = prevPos + (direction * movementAmount);
         const boundedPos = Math.max(10, Math.min(90, newPos));
 
-        // Update depth position (forward/backward)
+        // Update depth position (forward/backward) - make it rarer
         setDepthPosition(prevDepth => {
-          // Only move forward/backward when moving in the primary direction
+          // 80% chance to stay at current depth (sideways movement)
+          if (Math.random() < 0.8) {
+            return prevDepth;
+          }
+          
+          // Only 20% chance to move forward/backward
           const depthChange = Math.random() > 0.5 ? 1 : -1;
           const newDepth = prevDepth + depthChange;
           
