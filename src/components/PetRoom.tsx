@@ -50,12 +50,12 @@ export default function PetRoom({
 }: PetRoomProps) {
   // Calculate scale based on depth position
   const getPetScale = () => {
-    // Calculate perspective scale
+    // Calculate perspective scale with smoother transitions
     // When depthPosition is negative (moving away), scale down
     // When depthPosition is positive (moving closer), scale up
-    const perspectiveScale = 1 + (depthPosition * 0.15);
+    const perspectiveScale = 1 + (depthPosition * 0.1); // Reduced scaling factor for smoother transitions
     
-    // Apply smooth transition
+    // Apply smooth transition with consistent base size
     return `scale(${perspectiveScale})`;
   };
 
@@ -129,7 +129,7 @@ export default function PetRoom({
           left: `${petPosition}%`,
           transform: `translateX(-50%) ${isFacingRight ? 'scaleX(-1)' : ''} ${getPetScale()}`,
           zIndex: 8,
-          transition: 'transform 0.3s ease-out'
+          transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)'
         }}
       />
 

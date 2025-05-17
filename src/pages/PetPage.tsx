@@ -23,10 +23,16 @@ const getPetImage = (pet: PetType | null, isPlaying: boolean, isWalking: boolean
 
   // Use walking animation when moving
   if (isWalking) {
+    // When moving sideways (left/right), always use sideways walking animation
+    if (depthPosition === 0) {
+      return walkingStep === 0 ? "/pet/Walk-Sideways-A.png" : "/pet/Walk-Sideways-B.png";
+    }
+    
     // When moving backward (away from camera), use Walk-Back
     if (depthPosition < 0) {
       return "/pet/Walk-Back.png";
     }
+    
     // When moving forward (toward camera), use current mood
     if (depthPosition > 0) {
       // Get the lowest need value to determine overall mood
@@ -58,8 +64,6 @@ const getPetImage = (pet: PetType | null, isPlaying: boolean, isWalking: boolean
       }
       return "/pet/Neutral.png";
     }
-    // When moving sideways, use sideways walking animation
-    return walkingStep === 0 ? "/pet/Walk-Sideways-A.png" : "/pet/Walk-Sideways-B.png";
   }
 
   // Check for overstuffed condition first
