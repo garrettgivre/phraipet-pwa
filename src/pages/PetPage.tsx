@@ -189,6 +189,7 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
         moodPhrase={moodPhrase}
         activeToy={activeToy}
         isPlaying={isPlaying}
+        isFacingRight={isFacingRight}
       />
 
       <div className="pet-page-needs-container">
