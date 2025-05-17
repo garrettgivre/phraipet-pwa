@@ -1,6 +1,7 @@
 // src/components/PetRoom.tsx
 import "./PetRoom.css";
 import type { ToyInventoryItem } from "../types";
+import FoodItem from "./FoodItem";
 
 type DecorItem = {
   src: string;
@@ -23,6 +24,10 @@ interface PetRoomProps {
   activeToy?: ToyInventoryItem | null;
   isPlaying?: boolean;
   isFacingRight?: boolean;
+  foodItem?: { src: string; position: number } | null;
+  onFoodEaten?: () => void;
+  depthPosition?: number;
+  isWaddling?: boolean;
 }
 
 export default function PetRoom({ 
@@ -37,8 +42,24 @@ export default function PetRoom({
   moodPhrase,
   activeToy,
   isPlaying,
-  isFacingRight
+  isFacingRight,
+  foodItem,
+  onFoodEaten,
+  depthPosition = 0,
+  isWaddling = false
 }: PetRoomProps) {
+  // Calculate scale based on depth position
+  const getPetScale = () => {
+    if (depthPosition < 0) {
+      // When walking back, scale down slightly
+      return 0.9 + (depthPosition * 0.05);
+    } else if (depthPosition > 0) {
+      // When walking forward, scale up slightly
+      return 1 + (depthPosition * 0.05);
+    }
+    return 1;
+  };
+
   return (
     <div className="pet-room">
       {/* Base Layers */}
@@ -63,12 +84,22 @@ export default function PetRoom({
         />
       ))}
 
+      {/* Food Item */}
+      {foodItem && (
+        <FoodItem
+          src={foodItem.src}
+          position={foodItem.position}
+          onEaten={onFoodEaten || (() => {})}
+        />
+      )}
+
       {/* Mood Bubble */}
       {moodPhrase && (
         <div 
           className="pet-mood-bubble"
           style={{
-            left: `${petPosition}%`
+            left: `${petPosition}%`,
+            transform: `translateX(-50%) scale(${getPetScale()})`
           }}
         >
           <p>{moodPhrase}</p>
@@ -84,6 +115,7 @@ export default function PetRoom({
           style={{ 
             position: 'absolute', 
             left: `${petPosition - 15}%`,
+            transform: `scale(${getPetScale()})`,
             zIndex: 8
           }}
         />
@@ -91,12 +123,12 @@ export default function PetRoom({
 
       {/* Pet Layer */}
       <img 
-        className={`pet-layer ${isPlaying ? 'playing' : ''}`}
+        className={`pet-layer ${isPlaying ? 'playing' : ''} ${isWaddling ? 'waddling' : ''}`}
         src={petImage}
         alt="Pet"
         style={{ 
           left: `${petPosition}%`,
-          transform: `translateX(-50%) ${isFacingRight ? 'scaleX(-1)' : ''}`,
+          transform: `translateX(-50%) ${isFacingRight ? 'scaleX(-1)' : ''} scale(${getPetScale()})`,
           zIndex: 8
         }}
       />

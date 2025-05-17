@@ -3,11 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { useInventory } from "../contexts/InventoryContext";
 import { useToyAnimation } from "../contexts/ToyAnimationContext";
 import type { NeedInfo, Pet as PetType, Need as NeedType, ToyInventoryItem } from "../types";
-import { getPetMoodPhrase } from "../utils/petMoodUtils";
 import "./PetPage.css";
 import { useState, useEffect } from "react";
 import CoinDisplay from "../components/CoinDisplay";
 import PetRoom from "../components/PetRoom";
+import ConfirmationDialog from "../components/ConfirmationDialog";
 
 interface PetPageProps {
   pet: PetType | null;
@@ -15,7 +15,7 @@ interface PetPageProps {
   onIncreaseAffection: (amount: number) => void;
 }
 
-const getPetImage = (pet: PetType | null, isPlaying: boolean, isWalking: boolean, walkingStep: number): string => {
+const getPetImage = (pet: PetType | null, isPlaying: boolean, isWalking: boolean, walkingStep: number, isWalkingBack: boolean): string => {
   if (!pet) return "/pet/Neutral.png";
   
   // Always use Happy image when playing with toy
@@ -23,6 +23,9 @@ const getPetImage = (pet: PetType | null, isPlaying: boolean, isWalking: boolean
 
   // Use walking animation when moving
   if (isWalking) {
+    if (isWalkingBack) {
+      return "/pet/Walk-Back.png";
+    }
     return walkingStep === 0 ? "/pet/Walk-Sideways-A.png" : "/pet/Walk-Sideways-B.png";
   }
 
@@ -68,17 +71,102 @@ const getRandomToyPhrase = (toy: ToyInventoryItem | null): string => {
   return toy.phrases[Math.floor(Math.random() * toy.phrases.length)];
 };
 
+const getRandomMoodPhrase = (pet: PetType | null): string | undefined => {
+  if (!pet) return undefined;
+
+  // Random chance to say something even when needs are fine
+  if (Math.random() > 0.7) {
+    const phrases = [
+      // Greetings
+      "Hello!",
+      "Hi there!",
+      "Hey!",
+      "How are you?",
+      "What's up?",
+      "Good to see you!",
+      
+      // Happy expressions
+      "I'm happy!",
+      "Life is good!",
+      "Having a great day!",
+      "So much fun!",
+      "I love you!",
+      "You're the best!",
+      
+      // Playful phrases
+      "Let's play!",
+      "Wanna play?",
+      "I'm so excited!",
+      "This is fun!",
+      "Yay!",
+      "Wheee!",
+      
+      // Casual conversation
+      "Nice day!",
+      "Beautiful weather!",
+      "What's new?",
+      "Tell me a story!",
+      "I'm listening!",
+      "That's interesting!",
+      
+      // Affectionate phrases
+      "You're my favorite!",
+      "I missed you!",
+      "You're awesome!",
+      "Best friend ever!",
+      "You make me happy!",
+      "I love spending time with you!",
+      
+      // Silly phrases
+      "Boop!",
+      "Waddle waddle!",
+      "I'm a happy pet!",
+      "Look at me go!",
+      "I'm so cute!",
+      "Being adorable is my job!"
+    ];
+    return phrases[Math.floor(Math.random() * phrases.length)];
+  }
+
+  // Check needs for important messages
+  const needs = [
+    { value: pet.hunger, type: "hunger" },
+    { value: pet.happiness, type: "happiness" },
+    { value: pet.cleanliness, type: "cleanliness" },
+    { value: pet.affection, type: "affection" },
+    { value: pet.spirit, type: "spirit" }
+  ];
+
+  const lowestNeed = needs.reduce((min, current) => 
+    current.value < min.value ? current : min
+  );
+
+  if (lowestNeed.value <= 30) {
+    switch (lowestNeed.type) {
+      case "hunger": return "I'm hungry!";
+      case "happiness": return "I'm bored...";
+      case "cleanliness": return "I need a bath!";
+      case "affection": return "I need attention!";
+      case "spirit": return "I'm feeling down...";
+    }
+  }
+
+  return undefined;
+};
+
 export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageProps) {
   const { roomLayers, roomLayersLoading } = useInventory();
   const { activeToy, isPlaying } = useToyAnimation();
   const navigate = useNavigate();
-  const [petPosition, setPetPosition] = useState(() => {
-    const savedPosition = localStorage.getItem('petPosition');
-    return savedPosition ? parseFloat(savedPosition) : 50;
-  });
+  const [petPosition, setPetPosition] = useState(50);
   const [isWalking, setIsWalking] = useState(false);
   const [walkingStep, setWalkingStep] = useState(0);
-  const [isFacingRight, setIsFacingRight] = useState(true);
+  const [isFacingRight, setIsFacingRight] = useState(false);
+  const [foodItem, setFoodItem] = useState<{ src: string; position: number } | null>(null);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [pendingFoodItem, setPendingFoodItem] = useState<{ src: string; position: number } | null>(null);
+  const [isWalkingBack, setIsWalkingBack] = useState(false);
+  const [depthPosition, setDepthPosition] = useState(0); // 0 is normal, negative is back, positive is forward
 
   // Add pet movement logic
   useEffect(() => {
@@ -89,32 +177,37 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
         // Determine direction based on current position
         let direction;
         if (prevPos <= 15) {
-          // If near left edge, move right
           direction = 1;
         } else if (prevPos >= 85) {
-          // If near right edge, move left
           direction = -1;
         } else {
-          // Otherwise, randomly choose direction
           direction = Math.random() > 0.5 ? 1 : -1;
         }
 
         // Calculate new position with a larger movement range
-        const movementAmount = 5 + (Math.random() * 5); // Move 5-10% of screen width
+        const movementAmount = 5 + (Math.random() * 5);
         const newPos = prevPos + (direction * movementAmount);
-        
-        // Keep pet within bounds (10% to 90% of screen width)
         const boundedPos = Math.max(10, Math.min(90, newPos));
-        localStorage.setItem('petPosition', boundedPos.toString());
-        
+
+        // Update depth position (forward/backward)
+        setDepthPosition(prevDepth => {
+          // Randomly decide to move forward or backward
+          const depthChange = Math.random() > 0.5 ? 1 : -1;
+          const newDepth = prevDepth + depthChange;
+          
+          // Keep depth within bounds (-2 to 2)
+          return Math.max(-2, Math.min(2, newDepth));
+        });
+
         // Update walking state and direction
         setIsWalking(true);
         setIsFacingRight(direction > 0);
-        
+        setIsWalkingBack(depthPosition < 0);
+
         // Calculate number of steps based on distance
         const distance = Math.abs(boundedPos - prevPos);
-        const stepsPerPixel = 0.1; // Reduced to make steps less frequent but ensure at least one transition
-        const totalSteps = Math.max(2, Math.floor(distance * stepsPerPixel)); // Ensure at least 2 steps for one complete cycle
+        const stepsPerPixel = 0.1;
+        const totalSteps = Math.max(2, Math.floor(distance * stepsPerPixel));
         
         // Start walking animation
         let currentStep = 0;
@@ -127,17 +220,17 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
             setIsWalking(false);
             setWalkingStep(0);
           }
-        }, 400); // Slower step transitions for more natural movement
+        }, 400);
         
         return boundedPos;
       });
-    }, 3000); // Move every 3 seconds
+    }, 3000);
 
     return () => clearInterval(moveInterval);
-  }, [pet]);
+  }, [pet, depthPosition]);
 
-  const moodPhrase = isPlaying && activeToy ? getRandomToyPhrase(activeToy) : getPetMoodPhrase(pet);
-  const petImage = getPetImage(pet, isPlaying, isWalking, walkingStep);
+  const moodPhrase = isPlaying && activeToy ? getRandomToyPhrase(activeToy) : getRandomMoodPhrase(pet);
+  const petImage = getPetImage(pet, isPlaying, isWalking, walkingStep, isWalkingBack);
 
   const currentCeiling = roomLayers?.ceiling || "/assets/ceilings/classic-ceiling.png";
   const currentWall = roomLayers?.wall || "/assets/walls/classic-wall.png";
@@ -185,6 +278,29 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
     }
   };
 
+  const handleFoodEaten = () => {
+    setFoodItem(null);
+    // Add any additional logic for when food is eaten
+  };
+
+  const handleUseFood = (foodItem: { src: string; position: number }) => {
+    setPendingFoodItem(foodItem);
+    setShowConfirmDialog(true);
+  };
+
+  const confirmUseFood = () => {
+    if (pendingFoodItem) {
+      setFoodItem(pendingFoodItem);
+      setShowConfirmDialog(false);
+      setPendingFoodItem(null);
+    }
+  };
+
+  const cancelUseFood = () => {
+    setShowConfirmDialog(false);
+    setPendingFoodItem(null);
+  };
+
   return (
     <div className={`petPage ${!roomLayersLoading ? 'loaded' : ''}`} key={currentFloor + currentWall}>
       <CoinDisplay coins={100} />
@@ -202,6 +318,18 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
         activeToy={activeToy}
         isPlaying={isPlaying}
         isFacingRight={isFacingRight}
+        foodItem={foodItem}
+        onFoodEaten={handleFoodEaten}
+        depthPosition={depthPosition}
+        isWaddling={isWalking && (depthPosition !== 0)}
+      />
+
+      <ConfirmationDialog
+        isOpen={showConfirmDialog}
+        title="Use Food Item"
+        message="Would you like to give this food to your pet?"
+        onConfirm={confirmUseFood}
+        onCancel={cancelUseFood}
       />
 
       <div className="pet-page-needs-container">
