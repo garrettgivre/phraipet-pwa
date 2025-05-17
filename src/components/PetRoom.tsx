@@ -22,9 +22,9 @@ export default function PetRoom({ floor, wall, ceiling, trim, decor, overlay }: 
   return (
     <div className="pet-room">
       {/* Behind Pet */}
-      <img className="floor-layer" src={floor} alt="Floor" />
-      <img className="wall-layer" src={wall} alt="Wall" />
-      <img className="ceiling-layer" src={ceiling} alt="Ceiling" />
+      <img className="floor" src={floor} alt="Floor" />
+      <img className="wall" src={wall} alt="Wall" />
+      <img className="ceiling" src={ceiling} alt="Ceiling" />
       {trim && <img className="trim-layer" src={trim} alt="Trim" />}
 
       {decor.map((item, idx) => (
@@ -46,7 +46,7 @@ export default function PetRoom({ floor, wall, ceiling, trim, decor, overlay }: 
       <img className="pet-layer" src="/assets/pets/default_pet.png" alt="Pet" />
 
       {overlay && (
-        <img className="overlay-layer" src={overlay} alt="Overlay" />
+        <img className="overlay" src={overlay} alt="Overlay" />
       )}
     </div>
   );

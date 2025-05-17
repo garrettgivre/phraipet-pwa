@@ -21,14 +21,7 @@ import "./InventoryPage.css";
 const mainCategories = ["Decorations", "Food", "Grooming", "Toys"] as const;
 type MainCategory = (typeof mainCategories)[number];
 
-const decorationSubCategories = [
-  "wall",
-  "floor",
-  "ceiling",
-  "trim",
-  "decor",
-  "overlay",
-];
+const decorationSubCategories: DecorationItemType[] = ["wall", "floor", "ceiling", "trim", "decor", "overlay"];
 const foodSubCategories: FoodCategory[] = [
   "Treat", "Snack", "LightMeal", "HeartyMeal", "Feast",
 ];

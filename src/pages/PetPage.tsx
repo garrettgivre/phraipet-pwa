@@ -79,6 +79,7 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
   const currentCeiling = roomLayers?.ceiling || "/assets/ceilings/classic-ceiling.png";
   const currentWall = roomLayers?.wall || "/assets/walls/classic-wall.png";
   const currentFloor = roomLayers?.floor || "/assets/floors/classic-floor.png";
+  const currentTrim = roomLayers?.trim || "";
   const overlaySrc = roomLayers?.overlay || "";
 
   const iconDisplaySize = 24;
@@ -127,6 +128,7 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
       {!roomLayersLoading && currentCeiling && <img src={currentCeiling} alt="Ceiling" className="layer ceiling" />}
       {!roomLayersLoading && currentWall && <img src={currentWall} alt="Wall" className="layer wall" />}
       {!roomLayersLoading && currentFloor && <img src={currentFloor} alt="Floor" className="layer floor" />}
+      {!roomLayersLoading && currentTrim && <img src={currentTrim} alt="Trim" className="layer trim-layer" />}
 
       <div className="pet-display-area">
         {pet && moodPhrase && (
