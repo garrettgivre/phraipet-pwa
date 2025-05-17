@@ -115,8 +115,8 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
         
         // Calculate number of steps based on distance
         const distance = Math.abs(boundedPos - prevPos);
-        const stepsPerPixel = 0.2; // Reduced from 0.5 to make steps less frequent
-        const totalSteps = Math.floor(distance * stepsPerPixel);
+        const stepsPerPixel = 0.1; // Reduced to make steps less frequent but ensure at least one transition
+        const totalSteps = Math.max(2, Math.floor(distance * stepsPerPixel)); // Ensure at least 2 steps for one complete cycle
         
         // Start walking animation
         let currentStep = 0;
@@ -129,7 +129,7 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
             setIsWalking(false);
             setWalkingStep(0);
           }
-        }, 300); // Increased from 200ms to 300ms for slower step transitions
+        }, 400); // Slower step transitions for more natural movement
         
         return boundedPos;
       });
