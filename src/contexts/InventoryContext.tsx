@@ -376,7 +376,7 @@ interface InventoryContextType {
   items: InventoryItem[];
   roomLayers: RoomLayers;
   roomLayersLoading: boolean;
-  setRoomLayer: (type: "floor" | "wall" | "ceiling" | "overlay", src: string) => void;
+  setRoomLayer: (type: "floor" | "wall" | "ceiling" | "trim" | "overlay", src: string) => void;
   addDecorItem: (type: "decor", decor: RoomDecorItem) => void;
   consumeItem: (itemId: string) => void;
   getFilteredItems: (mainCategory: string, subCategory: string) => InventoryItem[];
@@ -492,7 +492,7 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
     set(roomRef, updatedLayers).catch(err => console.error("Failed to save room layers to Firebase:", err));
   };
 
-  const setRoomLayer = (type: "floor" | "wall" | "ceiling" | "overlay", src: string) => {
+  const setRoomLayer = (type: "floor" | "wall" | "ceiling" | "trim" | "overlay", src: string) => {
     const updatedLayers = { ...roomLayers, [type]: src };
     setRoomLayers(updatedLayers);
     saveRoomToFirebase(updatedLayers);

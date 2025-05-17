@@ -21,8 +21,13 @@ import "./InventoryPage.css";
 const mainCategories = ["Decorations", "Food", "Grooming", "Toys"] as const;
 type MainCategory = (typeof mainCategories)[number];
 
-const decorationSubCategories: DecorationItemType[] = [
-  "wall", "floor", "ceiling", "trim", "decor", "overlay",
+const decorationSubCategories = [
+  "wall",
+  "floor",
+  "ceiling",
+  "trim",
+  "decor",
+  "overlay",
 ];
 const foodSubCategories: FoodCategory[] = [
   "Treat", "Snack", "LightMeal", "HeartyMeal", "Feast",
@@ -303,11 +308,11 @@ export default function InventoryPage({ pet, onFeedPet, onGroomPet, onPlayWithTo
 
   const applyDecorationItem = useCallback((item: DecorationInventoryItem, chosenSrc?: string) => {
     const srcToApply = chosenSrc || item.src;
-    if (["floor", "wall", "ceiling", "overlay"].includes(item.type)) {
-      setRoomLayer(item.type as "floor" | "wall" | "ceiling" | "overlay", srcToApply);
-    } else if (item.type === "backDecor" || item.type === "frontDecor") {
+    if (["floor", "wall", "ceiling", "overlay", "trim"].includes(item.type)) {
+      setRoomLayer(item.type as "floor" | "wall" | "ceiling" | "trim" | "overlay", srcToApply);
+    } else if (item.type === "decor") {
       const decorItem: RoomDecorItem = { src: srcToApply, x: 100, y: 100 };
-      addDecorItem(item.type, decorItem);
+      addDecorItem("decor", decorItem);
     }
     setActiveColorOptions(null);
   }, [setRoomLayer, addDecorItem]);
