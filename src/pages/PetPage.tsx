@@ -136,7 +136,7 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
               position: 'absolute',
               left: `${petPosition}%`,
               transform: 'translateX(-50%)',
-              top: '-80px'
+              top: '-120px'
             }}
           >
             <p>{moodPhrase}</p>
