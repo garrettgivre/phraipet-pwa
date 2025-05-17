@@ -18,18 +18,21 @@
   top: 0;
   z-index: 1;
   height: 100%;
+  opacity: 1;
 }
 
 .wall {
   top: 0;
   z-index: 1;
   height: 100%;
+  opacity: 1;
 }
 
 .floor {
   top: 0;
   z-index: 1;
   height: 100%;
+  opacity: 1;
 }
 
 .trim-layer {

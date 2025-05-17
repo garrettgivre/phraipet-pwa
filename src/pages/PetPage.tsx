@@ -112,6 +112,7 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
         
         // Update walking state and direction
         setIsWalking(true);
+        // Since the walking images face left, we only flip when moving right
         setIsFacingRight(direction > 0);
         
         // Start walking animation
