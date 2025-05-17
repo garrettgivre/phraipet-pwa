@@ -17,18 +17,15 @@
 .ceiling {
   top: 0;
   z-index: 1;
-  height: 30%;
 }
 
 .wall {
-  top: 30%;
-  height: 70%;
+  top: 0;
   z-index: 1;
 }
 
 .floor {
-  bottom: 0;
-  height: 30%;
+  top: 0;
   z-index: 1;
 }
 
@@ -56,23 +53,23 @@
 
 .pet-layer {
   position: absolute;
-  bottom: 30%;
+  bottom: 20%;
   left: 50%;
   transform: translateX(-50%);
   z-index: 8;
   pointer-events: none;
   transition: left 0.5s ease-in-out;
-  height: 40%;
+  height: 25%;
   width: auto;
 }
 
 .toy {
   position: absolute;
-  bottom: 30%;
+  bottom: 20%;
   z-index: 7;
   pointer-events: none;
   transition: left 0.5s ease-in-out;
-  height: 20%;
+  height: 15%;
   width: auto;
 }
 
