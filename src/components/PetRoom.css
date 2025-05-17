@@ -100,6 +100,8 @@
   z-index: 9;
   pointer-events: none;
   transition: left 0.5s ease-in-out;
+  bottom: calc(20% + 25%);
+  transform: translateX(-50%);
 }
 
 .pet-mood-bubble p {

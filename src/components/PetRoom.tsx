@@ -68,11 +68,7 @@ export default function PetRoom({
         <div 
           className="pet-mood-bubble"
           style={{
-            position: 'absolute',
-            left: `${petPosition}%`,
-            transform: 'translateX(-50%)',
-            bottom: 'calc(20% + 25%)',
-            zIndex: 9
+            left: `${petPosition}%`
           }}
         >
           <p>{moodPhrase}</p>
