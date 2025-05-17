@@ -209,9 +209,9 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
         // Determine direction based on current position
         let direction;
         if (prevPos <= 15) {
-          direction = 1;
+          direction = 1; // Must move right
         } else if (prevPos >= 85) {
-          direction = -1;
+          direction = -1; // Must move left
         } else {
           direction = Math.random() > 0.5 ? 1 : -1;
         }
@@ -223,7 +223,7 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
 
         // Update depth position (forward/backward)
         setDepthPosition(prevDepth => {
-          // Randomly decide to move forward or backward
+          // Only move forward/backward when moving in the primary direction
           const depthChange = Math.random() > 0.5 ? 1 : -1;
           const newDepth = prevDepth + depthChange;
           
@@ -233,6 +233,7 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
 
         // Update walking state and direction
         setIsWalking(true);
+        // Always face the direction of movement
         setIsFacingRight(direction > 0);
 
         // Calculate number of steps based on distance
@@ -240,25 +241,31 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
         const stepsPerPixel = 0.1;
         const totalSteps = Math.max(2, Math.floor(distance * stepsPerPixel));
         
-        // Start walking animation
+        // Start walking animation with synchronized steps
         let currentStep = 0;
-        const walkInterval = setInterval(() => {
+        const stepInterval = setInterval(() => {
           if (currentStep < totalSteps) {
+            // Update step and position together
             setWalkingStep(currentStep % 2);
+            setPetPosition(prevPos => {
+              const stepProgress = (currentStep + 1) / totalSteps;
+              const stepDistance = boundedPos - prevPos;
+              return prevPos + (stepDistance * stepProgress);
+            });
             currentStep++;
           } else {
-            clearInterval(walkInterval);
+            clearInterval(stepInterval);
             setIsWalking(false);
             setWalkingStep(0);
           }
-        }, 400);
+        }, 200); // Faster step interval for smoother movement
         
-        return boundedPos;
+        return prevPos; // Return current position, actual movement happens in step interval
       });
     }, 3000);
 
     return () => clearInterval(moveInterval);
-  }, [pet, depthPosition]);
+  }, [pet]);
 
   const moodPhrase = isPlaying && activeToy ? getRandomToyPhrase(activeToy) : getRandomMoodPhrase(pet);
   const petImage = getPetImage(pet, isPlaying, isWalking, walkingStep, depthPosition);

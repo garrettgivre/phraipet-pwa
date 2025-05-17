@@ -50,14 +50,16 @@ export default function PetRoom({
 }: PetRoomProps) {
   // Calculate scale based on depth position
   const getPetScale = () => {
-    if (depthPosition < 0) {
-      // When walking back, scale down slightly
-      return 0.9 + (depthPosition * 0.05);
-    } else if (depthPosition > 0) {
-      // When walking forward, scale up slightly
-      return 1 + (depthPosition * 0.05);
-    }
-    return 1;
+    // Base scale is 1.0
+    const baseScale = 1.0;
+    
+    // Calculate perspective scale
+    // When depthPosition is negative (moving away), scale down
+    // When depthPosition is positive (moving closer), scale up
+    const perspectiveScale = 1 + (depthPosition * 0.15);
+    
+    // Apply smooth transition
+    return `scale(${perspectiveScale})`;
   };
 
   return (
@@ -99,7 +101,7 @@ export default function PetRoom({
           className="pet-mood-bubble"
           style={{
             left: `${petPosition}%`,
-            transform: `translateX(-50%) scale(${getPetScale()})`
+            transform: `translateX(-50%) ${getPetScale()}`
           }}
         >
           <p>{moodPhrase}</p>
@@ -115,7 +117,7 @@ export default function PetRoom({
           style={{ 
             position: 'absolute', 
             left: `${petPosition - 15}%`,
-            transform: `scale(${getPetScale()})`,
+            transform: getPetScale(),
             zIndex: 8
           }}
         />
@@ -128,8 +130,9 @@ export default function PetRoom({
         alt="Pet"
         style={{ 
           left: `${petPosition}%`,
-          transform: `translateX(-50%) ${isFacingRight ? 'scaleX(-1)' : ''} scale(${getPetScale()})`,
-          zIndex: 8
+          transform: `translateX(-50%) ${isFacingRight ? 'scaleX(-1)' : ''} ${getPetScale()}`,
+          zIndex: 8,
+          transition: 'transform 0.3s ease-out'
         }}
       />
 
