@@ -1,6 +1,7 @@
 // src/components/PetRoom.tsx
 import "./PetRoom.css";
 import { useEffect } from "react";
+import type { ToyInventoryItem } from "../types";
 
 interface PetRoomProps {
   floor: string;
@@ -12,7 +13,7 @@ interface PetRoomProps {
   petImage: string;
   petPosition: number;
   moodPhrase?: string;
-  activeToy?: string | null;
+  activeToy?: ToyInventoryItem | string | null;
   isPlaying?: boolean;
   foodItem?: { src: string; position: number } | null;
   onFoodEaten?: () => void;
@@ -71,7 +72,9 @@ export default function PetRoom({
       {activeToy && isPlaying && (
         <img 
           className="toy"
-          src={typeof activeToy === 'string' ? activeToy : '/assets/toys/ball.png'} 
+          src={typeof activeToy === 'string' 
+               ? activeToy 
+               : activeToy.src || '/assets/toys/ball.png'} 
           alt="Toy"
           style={{ left: `${petPosition - 5}%` }}
         />
