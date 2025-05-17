@@ -26,8 +26,6 @@ interface PetRoomProps {
   isFacingRight?: boolean;
   foodItem?: { src: string; position: number } | null;
   onFoodEaten?: () => void;
-  depthPosition?: number;
-  isWaddling?: boolean;
 }
 
 export default function PetRoom({ 
@@ -44,21 +42,8 @@ export default function PetRoom({
   isPlaying,
   isFacingRight,
   foodItem,
-  onFoodEaten,
-  depthPosition = 0,
-  isWaddling = false
+  onFoodEaten
 }: PetRoomProps) {
-  // Calculate scale based on depth position
-  const getPetScale = () => {
-    // Calculate perspective scale with smoother transitions
-    // When depthPosition is negative (moving away), scale down
-    // When depthPosition is positive (moving closer), scale up
-    const perspectiveScale = 1 + (depthPosition * 0.1); // Reduced scaling factor for smoother transitions
-    
-    // Apply smooth transition with consistent base size
-    return `scale(${perspectiveScale})`;
-  };
-
   return (
     <div className="pet-room">
       {/* Base Layers */}
@@ -98,7 +83,7 @@ export default function PetRoom({
           className="pet-mood-bubble"
           style={{
             left: `${petPosition}%`,
-            transform: `translateX(-50%) ${getPetScale()}`
+            transform: `translateX(-50%)`
           }}
         >
           <p>{moodPhrase}</p>
@@ -114,7 +99,6 @@ export default function PetRoom({
           style={{ 
             position: 'absolute', 
             left: `${petPosition - 15}%`,
-            transform: getPetScale(),
             zIndex: 8
           }}
         />
@@ -122,12 +106,12 @@ export default function PetRoom({
 
       {/* Pet Layer */}
       <img 
-        className={`pet-layer ${isPlaying ? 'playing' : ''} ${isWaddling ? 'waddling' : ''}`}
+        className={`pet-layer ${isPlaying ? 'playing' : ''}`}
         src={petImage}
         alt="Pet"
         style={{ 
           left: `${petPosition}%`,
-          transform: `translateX(-50%) ${isFacingRight ? 'scaleX(-1)' : ''} ${getPetScale()}`,
+          transform: `translateX(-50%) ${isFacingRight ? 'scaleX(-1)' : ''}`,
           zIndex: 8,
           transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)'
         }}

@@ -68,7 +68,11 @@ const defaultDecorationItems: DecorationInventoryItem[] = [
   { id: "deco-artdeco-ceiling", name: "Art Deco Ceiling", itemCategory: "decoration", type: "ceiling", src: "/assets/ceilings/artdeco-ceiling.png" },
   { id: "deco-artdeco-trim", name: "Art Deco Trim", itemCategory: "decoration", type: "trim", src: "/assets/trim/artdeco-trim.png" },
 
-  // Removed Example Decor Items (Potted Plant, Floor Lamp, Rainy Window)
+  // Tugi Theme
+  { id: "deco-tugi-floor", name: "Tugi Floor", itemCategory: "decoration", type: "floor", src: "/assets/floors/tugi-floor.png" },
+  { id: "deco-tugi-wall", name: "Tugi Wall", itemCategory: "decoration", type: "wall", src: "/assets/walls/tugi-wall.png" },
+  { id: "deco-tugi-ceiling", name: "Tugi Ceiling", itemCategory: "decoration", type: "ceiling", src: "/assets/ceilings/tugi-ceiling.png" },
+  { id: "deco-tugi-trim", name: "Tugi Trim", itemCategory: "decoration", type: "trim", src: "/assets/trim/tugi-trim.png" }
 ];
 
 const defaultFoodItems: FoodInventoryItem[] = [
