@@ -434,7 +434,7 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
       // Preload all category combinations
       const mainCategories = ["Decorations", "Food", "Grooming", "Toys"];
       const subCategories = {
-        Decorations: ["wall", "floor", "ceiling", "backDecor", "frontDecor", "overlay"],
+        Decorations: ["wall", "floor", "ceiling", "trim", "decor", "overlay"],
         Food: ["Treat", "Snack", "LightMeal", "HeartyMeal", "Feast"],
         Grooming: ["QuickFix", "BasicKit", "StandardSet", "PremiumCare", "LuxurySpa"],
         Toys: ["Basic", "Classic", "Plushie", "Gadget", "Wonder"]
