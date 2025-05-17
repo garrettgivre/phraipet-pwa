@@ -17,15 +17,18 @@
 .ceiling {
   top: 0;
   z-index: 1;
+  height: 30%;
 }
 
 .wall {
-  top: 0;
+  top: 30%;
+  height: 70%;
   z-index: 1;
 }
 
 .floor {
   bottom: 0;
+  height: 30%;
   z-index: 1;
 }
 
@@ -53,20 +56,24 @@
 
 .pet-layer {
   position: absolute;
-  bottom: 0;
+  bottom: 30%;
   left: 50%;
   transform: translateX(-50%);
   z-index: 8;
   pointer-events: none;
   transition: left 0.5s ease-in-out;
+  height: 40%;
+  width: auto;
 }
 
 .toy {
   position: absolute;
-  bottom: 0;
+  bottom: 30%;
   z-index: 7;
   pointer-events: none;
   transition: left 0.5s ease-in-out;
+  height: 20%;
+  width: auto;
 }
 
 .pet-mood-bubble {

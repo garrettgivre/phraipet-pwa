@@ -22,7 +22,7 @@ interface PetRoomProps {
   moodPhrase?: string;
   activeToy?: ToyInventoryItem | null;
   isPlaying?: boolean;
-  isFacingRight: boolean;
+  isFacingRight?: boolean;
 }
 
 export default function PetRoom({ 

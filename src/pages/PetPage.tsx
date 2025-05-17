@@ -15,7 +15,7 @@ interface PetPageProps {
   onIncreaseAffection: (amount: number) => void;
 }
 
-const getPetImage = (pet: PetType | null, isPlaying: boolean, isWalking: boolean, walkingStep: number, isFacingRight: boolean): string => {
+const getPetImage = (pet: PetType | null, isPlaying: boolean, isWalking: boolean, walkingStep: number): string => {
   if (!pet) return "/pet/Neutral.png";
   
   // Always use Happy image when playing with toy
@@ -81,7 +81,6 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
   });
   const [isWalking, setIsWalking] = useState(false);
   const [walkingStep, setWalkingStep] = useState(0);
-  const [isFacingRight, setIsFacingRight] = useState(true);
 
   // Add pet movement logic
   useEffect(() => {
@@ -98,7 +97,6 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
         
         // Update walking state and direction
         setIsWalking(true);
-        setIsFacingRight(direction > 0);
         
         // Alternate walking steps
         setWalkingStep(prev => (prev + 1) % 2);
@@ -114,7 +112,7 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
   }, [pet]);
 
   const moodPhrase = isPlaying && activeToy ? getRandomToyPhrase(activeToy) : getPetMoodPhrase(pet);
-  const petImage = getPetImage(pet, isPlaying, isWalking, walkingStep, isFacingRight);
+  const petImage = getPetImage(pet, isPlaying, isWalking, walkingStep);
 
   const currentCeiling = roomLayers?.ceiling || "/assets/ceilings/classic-ceiling.png";
   const currentWall = roomLayers?.wall || "/assets/walls/classic-wall.png";
@@ -178,7 +176,6 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
         moodPhrase={moodPhrase}
         activeToy={activeToy}
         isPlaying={isPlaying}
-        isFacingRight={isFacingRight}
       />
 
       <div className="pet-page-needs-container">
