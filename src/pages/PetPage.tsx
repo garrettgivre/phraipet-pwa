@@ -79,7 +79,6 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
   const currentCeiling = roomLayers?.ceiling || "/assets/ceilings/classic-ceiling.png";
   const currentWall = roomLayers?.wall || "/assets/walls/classic-wall.png";
   const currentFloor = roomLayers?.floor || "/assets/floors/classic-floor.png";
-  const currentTrim = roomLayers?.trim || "";
   const overlaySrc = roomLayers?.overlay || "";
 
   const iconDisplaySize = 24;
