@@ -50,9 +50,6 @@ export default function PetRoom({
 }: PetRoomProps) {
   // Calculate scale based on depth position
   const getPetScale = () => {
-    // Base scale is 1.0
-    const baseScale = 1.0;
-    
     // Calculate perspective scale
     // When depthPosition is negative (moving away), scale down
     // When depthPosition is positive (moving closer), scale up
