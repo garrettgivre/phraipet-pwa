@@ -102,7 +102,10 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
           direction = Math.random() > 0.5 ? 1 : -1;
         }
 
-        const newPos = prevPos + (direction * (Math.random() * 2));
+        // Calculate new position with a larger movement range
+        const movementAmount = 5 + (Math.random() * 5); // Move 5-10% of screen width
+        const newPos = prevPos + (direction * movementAmount);
+        
         // Keep pet within bounds (10% to 90% of screen width)
         const boundedPos = Math.max(10, Math.min(90, newPos));
         localStorage.setItem('petPosition', boundedPos.toString());
@@ -114,12 +117,15 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
         // Alternate walking steps
         setWalkingStep(prev => (prev + 1) % 2);
         
-        // Stop walking after a short delay
-        setTimeout(() => setIsWalking(false), 500);
+        // Stop walking after movement completes
+        setTimeout(() => {
+          setIsWalking(false);
+          setWalkingStep(0);
+        }, 1000);
         
         return boundedPos;
       });
-    }, 2000); // Move every 2 seconds
+    }, 3000); // Move every 3 seconds
 
     return () => clearInterval(moveInterval);
   }, [pet]);
