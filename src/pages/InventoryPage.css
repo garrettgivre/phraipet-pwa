@@ -207,3 +207,40 @@
   color: #263238;
 }
 
+.inventory-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px;
+  cursor: pointer;
+  transition: transform 0.2s;
+  border: none;
+  background: none;
+}
+
+.inventory-item:hover {
+  transform: scale(1.05);
+}
+
+.inventory-item img {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  margin-bottom: 4px;
+}
+
+.inventory-item-name {
+  font-size: 0.8rem;
+  text-align: center;
+  color: #333;
+  margin-top: 2px;
+}
+
+.inventory-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 8px;
+  padding: 8px;
+  background: none;
+}
+
