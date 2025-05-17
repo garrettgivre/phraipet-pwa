@@ -4,12 +4,12 @@
 export type Need = "hunger" | "happiness" | "cleanliness" | "affection" | "spirit";
 
 // Represents the information for displaying a single need in the UI.
-export type NeedInfo = {
+export interface NeedInfo {
   need: Need;
+  desc: string;
   iconSrc: string;
   value: number;
-  desc: string;
-};
+}
 
 // Defines the structure for a pet object.
 export interface Pet {

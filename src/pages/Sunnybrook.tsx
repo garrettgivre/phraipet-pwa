@@ -5,12 +5,9 @@ import MapCanvas from '../components/MapCanvas';
 import type { AppHotspot, TiledMapData, TiledObject } from '../types'; 
 import './Sunnybrook.css';
 
-const getTiledObjectProperty = (object: TiledObject, propertyName: string): any | undefined => {
-  if (!object.properties) {
-    return undefined;
-  }
-  const property = object.properties.find(p => p.name === propertyName);
-  return property?.value;
+const getTiledObjectProperty = (object: TiledObject, propertyName: string): string | undefined => {
+  const property = object.properties?.find(prop => prop.name === propertyName);
+  return property?.value?.toString();
 };
 
 const SUNNYBROOK_MAP_PIXEL_WIDTH_FALLBACK = 1600; 
@@ -82,7 +79,7 @@ export default function Sunnybrook() {
         
         if (hotspotLayer && hotspotLayer.objects) {
           const processedHotspots: AppHotspot[] = hotspotLayer.objects.map(obj => ({
-            id: getTiledObjectProperty(obj, 'id_string') || `tiled-obj-${obj.id}`,
+            id: getTiledObjectProperty(obj, 'id') || `tiled-obj-${obj.id}`,
             name: getTiledObjectProperty(obj, 'name') || obj.name || 'Unnamed Location',
             x: obj.x + (obj.width / 2), 
             y: obj.y + (obj.height / 2), 

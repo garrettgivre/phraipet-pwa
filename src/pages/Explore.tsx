@@ -6,12 +6,9 @@ import type { AppHotspot, TiledMapData, TiledObject, TiledProperty } from '../ty
 import './Explore.css';
 
 // Helper function to get properties from Tiled objects
-const getTiledObjectProperty = (object: TiledObject, propertyName: string): any | undefined => {
-  if (!object.properties) {
-    return undefined;
-  }
-  const property: TiledProperty | undefined = object.properties.find(p => p.name === propertyName);
-  return property?.value;
+const getTiledObjectProperty = (object: TiledObject, propertyName: string): string | undefined => {
+  const property = object.properties?.find(prop => prop.name === propertyName);
+  return property?.value?.toString();
 };
 
 // Configuration for the world map
@@ -158,7 +155,7 @@ export default function Explore() {
               radius: scaledRadius,
               route: getTiledObjectProperty(obj, 'route') || '/',
               iconSrc: getTiledObjectProperty(obj, 'iconSrc') || undefined,
-              iconSize: getTiledObjectProperty(obj, 'iconSize') || undefined,
+              iconSize: Number(getTiledObjectProperty(obj, 'iconSize')) || undefined,
             };
           });
           if (isMounted) setHotspots(processedHotspots);
