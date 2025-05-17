@@ -36,13 +36,12 @@ export const usePetMovement = (pet: Pet | null): PetMovementState => {
 
         // Update walking state and direction
         setIsWalking(true);
-        // Update facing direction without flipping
         setIsFacingRight(direction > 0);
 
         // Calculate number of steps based on distance
         const distance = Math.abs(boundedPos - prevPos);
-        const stepsPerPixel = 0.1;
-        const totalSteps = Math.max(2, Math.floor(distance * stepsPerPixel));
+        const stepsPerPixel = 0.2; // Increased for smoother animation
+        const totalSteps = Math.max(4, Math.floor(distance * stepsPerPixel));
         
         // Start walking animation with synchronized steps
         let currentStep = 0;
@@ -53,7 +52,11 @@ export const usePetMovement = (pet: Pet | null): PetMovementState => {
             setPosition(prevPos => {
               const stepProgress = (currentStep + 1) / totalSteps;
               const stepDistance = boundedPos - prevPos;
-              return prevPos + (stepDistance * stepProgress);
+              // Use easeInOutQuad for smoother movement
+              const easedProgress = stepProgress < 0.5
+                ? 2 * stepProgress * stepProgress
+                : 1 - Math.pow(-2 * stepProgress + 2, 2) / 2;
+              return prevPos + (stepDistance * easedProgress);
             });
             currentStep++;
           } else {
@@ -61,7 +64,7 @@ export const usePetMovement = (pet: Pet | null): PetMovementState => {
             setIsWalking(false);
             setWalkingStep(0);
           }
-        }, 200); // Faster step interval for smoother movement
+        }, 100); // Faster step interval for smoother movement
         
         return prevPos; // Return current position, actual movement happens in step interval
       });

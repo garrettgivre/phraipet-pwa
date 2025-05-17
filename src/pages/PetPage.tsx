@@ -29,7 +29,7 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
   const [pendingFoodItem, setPendingFoodItem] = useState<{ src: string; position: number } | null>(null);
 
   const moodPhrase = isPlaying && activeToy ? getRandomToyPhrase(activeToy) : getRandomMoodPhrase(pet);
-  const petImage = getPetImage(pet, isPlaying, isWalking, walkingStep);
+  const petImage = getPetImage(pet, isPlaying, isWalking, walkingStep, isFacingRight);
 
   const currentCeiling = roomLayers?.ceiling || "/assets/ceilings/classic-ceiling.png";
   const currentWall = roomLayers?.wall || "/assets/walls/classic-wall.png";
@@ -108,7 +108,6 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
         moodPhrase={moodPhrase}
         activeToy={activeToy}
         isPlaying={isPlaying}
-        isFacingRight={isFacingRight}
         foodItem={foodItem}
         onFoodEaten={handleFoodEaten}
       />
