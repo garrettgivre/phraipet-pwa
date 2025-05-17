@@ -1,5 +1,6 @@
 // src/components/PetRoom.tsx
 import "./PetRoom.css";
+import { useEffect } from "react";
 
 interface PetRoomProps {
   floor: string;
@@ -11,7 +12,7 @@ interface PetRoomProps {
   petImage: string;
   petPosition: number;
   moodPhrase?: string;
-  activeToy?: string;
+  activeToy?: string | null;
   isPlaying?: boolean;
   foodItem?: { src: string; position: number } | null;
   onFoodEaten?: () => void;
@@ -32,6 +33,17 @@ export default function PetRoom({
   foodItem, 
   onFoodEaten 
 }: PetRoomProps) {
+  // Handle food eaten after it's displayed for a while
+  useEffect(() => {
+    if (foodItem && onFoodEaten) {
+      const timer = setTimeout(() => {
+        onFoodEaten();
+      }, 3000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [foodItem, onFoodEaten]);
+
   return (
     <div className="pet-room">
       {/* Behind Pet */}
@@ -55,6 +67,26 @@ export default function PetRoom({
         />
       ))}
 
+      {/* Active toy display */}
+      {activeToy && isPlaying && (
+        <img 
+          className="toy"
+          src={typeof activeToy === 'string' ? activeToy : '/assets/toys/ball.png'} 
+          alt="Toy"
+          style={{ left: `${petPosition - 5}%` }}
+        />
+      )}
+
+      {/* Food item display */}
+      {foodItem && (
+        <img 
+          className="food-item"
+          src={foodItem.src}
+          style={{ left: `${foodItem.position}%` }}
+          alt="Food"
+        />
+      )}
+
       {/* Pet Layer */}
       <img 
         className={`pet-layer ${isPlaying ? 'playing' : ''}`}
@@ -62,6 +94,16 @@ export default function PetRoom({
         style={{ left: `${petPosition}%` }}
         alt="Pet"
       />
+
+      {/* Mood phrase bubble */}
+      {moodPhrase && (
+        <div 
+          className="pet-mood-bubble"
+          style={{ left: `${petPosition}%` }}
+        >
+          <p>{moodPhrase}</p>
+        </div>
+      )}
 
       {overlay && (
         <img className="overlay" src={overlay} alt="Overlay" />
