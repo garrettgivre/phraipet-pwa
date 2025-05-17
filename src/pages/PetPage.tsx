@@ -81,6 +81,7 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
   });
   const [isWalking, setIsWalking] = useState(false);
   const [walkingStep, setWalkingStep] = useState(0);
+  const [isFacingRight, setIsFacingRight] = useState(true);
 
   // Add pet movement logic
   useEffect(() => {
@@ -88,8 +89,19 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
 
     const moveInterval = setInterval(() => {
       setPetPosition(prevPos => {
-        // Randomly move left or right
-        const direction = Math.random() > 0.5 ? 1 : -1;
+        // Determine direction based on current position
+        let direction;
+        if (prevPos <= 15) {
+          // If near left edge, move right
+          direction = 1;
+        } else if (prevPos >= 85) {
+          // If near right edge, move left
+          direction = -1;
+        } else {
+          // Otherwise, randomly choose direction
+          direction = Math.random() > 0.5 ? 1 : -1;
+        }
+
         const newPos = prevPos + (direction * (Math.random() * 2));
         // Keep pet within bounds (10% to 90% of screen width)
         const boundedPos = Math.max(10, Math.min(90, newPos));
@@ -97,6 +109,7 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
         
         // Update walking state and direction
         setIsWalking(true);
+        setIsFacingRight(direction > 0);
         
         // Alternate walking steps
         setWalkingStep(prev => (prev + 1) % 2);
