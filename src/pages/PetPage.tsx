@@ -283,11 +283,6 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
     // Add any additional logic for when food is eaten
   };
 
-  const handleUseFood = (foodItem: { src: string; position: number }) => {
-    setPendingFoodItem(foodItem);
-    setShowConfirmDialog(true);
-  };
-
   const confirmUseFood = () => {
     if (pendingFoodItem) {
       setFoodItem(pendingFoodItem);
