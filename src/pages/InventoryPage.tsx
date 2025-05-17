@@ -1,7 +1,7 @@
 // src/pages/InventoryPage.tsx
 import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useInventory, imageCache } from "../contexts/InventoryContext";
+import { useInventory, imageCache, zoomStylesCache } from "../contexts/InventoryContext";
 import type {
   InventoryItem,
   DecorationInventoryItem,
@@ -17,6 +17,7 @@ import type {
 } from "../types";
 import { calculateVisibleBounds } from "../utils/imageUtils";
 import "./InventoryPage.css";
+import ItemDetailsModal from "../components/ItemDetailsModal";
 
 const mainCategories = ["Decorations", "Food", "Grooming", "Toys"] as const;
 type MainCategory = (typeof mainCategories)[number];
@@ -57,77 +58,124 @@ const capitalizeFirstLetter = (string: string) => {
   return string.charAt(0).toUpperCase() + string.slice(1).replace(/([A-Z])/g, ' $1').trim();
 };
 
-function ZoomedImage({ src, alt }: { src: string; alt: string }) {
+function ZoomedImage({ src, alt, isDecoration = false }: { src: string; alt: string; isDecoration?: boolean }) {
   const containerSize = 64;
-  const [imageStyle, setImageStyle] = useState<React.CSSProperties>({
-    visibility: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center',
-    width: `${containerSize}px`, height: `${containerSize}px`, fontSize: '12px', color: '#aaa',
-  });
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
+  const [imageStyle, setImageStyle] = useState<React.CSSProperties>({
+    visibility: 'hidden'
+  });
 
   useEffect(() => {
     let isMounted = true;
     setLoaded(false);
     setError(false);
     setImageStyle(prev => ({ ...prev, visibility: 'hidden' }));
+    
+    // Function to handle simple loading (for non-decoration items)
+    const handleSimpleLoading = () => {
+      if (!isMounted) return;
+      const simpleStyle: React.CSSProperties = {
+        display: 'block',
+        maxWidth: '100%',
+        maxHeight: '100%',
+        width: 'auto',
+        height: 'auto',
+        objectFit: 'contain' as 'contain',
+        visibility: 'visible' as 'visible'
+      };
+      setImageStyle(simpleStyle);
+      setLoaded(true);
+    };
+    
+    // Function to handle complex loading with zoom (for decoration items)
+    const handleComplexLoading = async () => {
+      if (!isMounted) return;
+      
+      // Check if we already have cached styles for this image
+      if (zoomStylesCache.has(src)) {
+        // Use cached styles
+        setImageStyle(zoomStylesCache.get(src)!);
+        setLoaded(true);
+        return;
+      }
+      
+      try {
+        const bounds = await calculateVisibleBounds(src);
+        
+        if (!isMounted) return;
+        
+        // Ensure we have valid dimensions
+        if (bounds.width <= 0 || bounds.height <= 0 || bounds.naturalWidth <= 0 || bounds.naturalHeight <= 0) {
+          console.warn("Invalid bounds for image:", src, bounds);
+          // Fall back to simple loading
+          handleSimpleLoading();
+          return;
+        }
+        
+        // Calculate the scale to fit the visible part of the image
+        const scale = Math.min(
+          containerSize / bounds.width,
+          containerSize / bounds.height
+        );
+        
+        // Calculate the dimensions after scaling
+        const scaledNaturalWidth = bounds.naturalWidth * scale;
+        const scaledNaturalHeight = bounds.naturalHeight * scale;
+        
+        // Calculate offsets to center the visible part
+        const offsetX = (containerSize - (bounds.width * scale)) / 2 - (bounds.x * scale);
+        const offsetY = (containerSize - (bounds.height * scale)) / 2 - (bounds.y * scale);
+        
+        // Create the style object
+        const zoomedStyle: React.CSSProperties = {
+          position: 'absolute' as 'absolute',
+          left: `${offsetX}px`,
+          top: `${offsetY}px`,
+          width: `${scaledNaturalWidth}px`,
+          height: `${scaledNaturalHeight}px`,
+          visibility: 'visible' as 'visible'
+        };
+        
+        // Cache the calculated style for future use
+        zoomStylesCache.set(src, zoomedStyle);
+        
+        setImageStyle(zoomedStyle);
+        setLoaded(true);
+      } catch (err) {
+        console.error("Error calculating visible bounds:", err);
+        // Fall back to simple loading on error
+        if (isMounted) {
+          handleSimpleLoading();
+        }
+      }
+    };
 
     // Check if image is already in cache
     if (imageCache.has(src)) {
       const cachedImg = imageCache.get(src)!;
+      
       if (cachedImg.complete) {
-        if (!isMounted) return;
-        calculateVisibleBounds(src).then(bounds => {
-          if (!isMounted) return;
-          if (bounds.width <= 0 || bounds.height <= 0 || bounds.naturalWidth <= 0 || bounds.naturalHeight <= 0) {
-            setError(true);
-            setLoaded(true);
-            setImageStyle({
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: `${containerSize}px`,
-              height: `${containerSize}px`,
-              fontSize: '20px',
-              color: 'red',
-              border: '1px solid #ddd',
-              boxSizing: 'border-box',
-              visibility: 'visible'
-            });
-            return;
+        if (isDecoration) {
+          handleComplexLoading();
+        } else {
+          handleSimpleLoading();
+        }
+      } else {
+        cachedImg.onload = () => {
+          if (isDecoration) {
+            handleComplexLoading();
+          } else {
+            handleSimpleLoading();
           }
-          const scale = Math.min(containerSize / bounds.width, containerSize / bounds.height);
-          const scaledNaturalWidth = bounds.naturalWidth * scale;
-          const scaledNaturalHeight = bounds.naturalHeight * scale;
-          const offsetX = (containerSize - (bounds.width * scale)) / 2 - (bounds.x * scale);
-          const offsetY = (containerSize - (bounds.height * scale)) / 2 - (bounds.y * scale);
-          setImageStyle({
-            position: "absolute",
-            left: `${offsetX}px`,
-            top: `${offsetY}px`,
-            width: `${scaledNaturalWidth}px`,
-            height: `${scaledNaturalHeight}px`,
-            visibility: 'visible'
-          });
-          setLoaded(true);
-        }).catch((err) => {
+        };
+        
+        cachedImg.onerror = () => {
           if (!isMounted) return;
-          console.error("Error in calculateVisibleBounds for src:", src, err);
+          console.error("Cached image error:", src);
           setError(true);
           setLoaded(true);
-          setImageStyle({
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: `${containerSize}px`,
-            height: `${containerSize}px`,
-            fontSize: '20px',
-            color: 'red',
-            border: '1px solid #ddd',
-            boxSizing: 'border-box',
-            visibility: 'visible'
-          });
-        });
+        };
       }
     } else {
       const img = new Image();
@@ -136,87 +184,28 @@ function ZoomedImage({ src, alt }: { src: string; alt: string }) {
       imageCache.set(src, img);
 
       img.onload = () => {
-        if (!isMounted) return;
-        calculateVisibleBounds(src).then(bounds => {
-          if (!isMounted) return;
-          if (bounds.width <= 0 || bounds.height <= 0 || bounds.naturalWidth <= 0 || bounds.naturalHeight <= 0) {
-            setError(true);
-            setLoaded(true);
-            setImageStyle({
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: `${containerSize}px`,
-              height: `${containerSize}px`,
-              fontSize: '20px',
-              color: 'red',
-              border: '1px solid #ddd',
-              boxSizing: 'border-box',
-              visibility: 'visible'
-            });
-            return;
-          }
-          const scale = Math.min(containerSize / bounds.width, containerSize / bounds.height);
-          const scaledNaturalWidth = bounds.naturalWidth * scale;
-          const scaledNaturalHeight = bounds.naturalHeight * scale;
-          const offsetX = (containerSize - (bounds.width * scale)) / 2 - (bounds.x * scale);
-          const offsetY = (containerSize - (bounds.height * scale)) / 2 - (bounds.y * scale);
-          setImageStyle({
-            position: "absolute",
-            left: `${offsetX}px`,
-            top: `${offsetY}px`,
-            width: `${scaledNaturalWidth}px`,
-            height: `${scaledNaturalHeight}px`,
-            visibility: 'visible'
-          });
-          setLoaded(true);
-        }).catch((err) => {
-          if (!isMounted) return;
-          console.error("Error in calculateVisibleBounds for src:", src, err);
-          setError(true);
-          setLoaded(true);
-          setImageStyle({
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: `${containerSize}px`,
-            height: `${containerSize}px`,
-            fontSize: '20px',
-            color: 'red',
-            border: '1px solid #ddd',
-            boxSizing: 'border-box',
-            visibility: 'visible'
-          });
-        });
+        if (isDecoration) {
+          handleComplexLoading();
+        } else {
+          handleSimpleLoading();
+        }
       };
 
       img.onerror = () => {
         if (!isMounted) return;
-        console.error("Failed to load image for ZoomedImage:", src);
+        console.error("Failed to load image:", src);
         setError(true);
         setLoaded(true);
-        setImageStyle({
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          width: `${containerSize}px`,
-          height: `${containerSize}px`,
-          fontSize: '20px',
-          color: 'red',
-          border: '1px solid #ddd',
-          boxSizing: 'border-box',
-          visibility: 'visible'
-        });
       };
     }
 
     return () => { isMounted = false; };
-  }, [src]);
+  }, [src, isDecoration, containerSize]);
 
   return (
     <div className="sq-inventory-item-image-wrapper">
       {!loaded && <div className="sq-inventory-item-placeholder-text">...</div>}
-      {loaded && error && <div className="sq-inventory-item-placeholder-text error" style={imageStyle} title={`Error: ${alt}`}>X</div>}
+      {loaded && error && <div className="sq-inventory-item-placeholder-text error">X</div>}
       {loaded && !error && (
         <img src={src} alt={alt} className="sq-inventory-item-image-content" style={imageStyle} />
       )}
@@ -229,6 +218,8 @@ export default function InventoryPage({ pet, onFeedPet, onGroomPet, onPlayWithTo
   const location = useLocation();
   const navigate = useNavigate();
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
+  const [showItemDetails, setShowItemDetails] = useState(false);
 
   const initialTabs = useMemo(() => {
     const state = location.state as InventoryLocationState | null;
@@ -253,6 +244,111 @@ export default function InventoryPage({ pet, onFeedPet, onGroomPet, onPlayWithTo
       navigate(location.pathname, { replace: true, state: {} });
     }
   }, [location.state, location.pathname, navigate]);
+
+  // Preload essential items on component mount
+  useEffect(() => {
+    // Preload images for the initially visible category
+    const essentialItems = getFilteredItems(initialTabs.main, initialTabs.sub);
+    const preloadPromises = essentialItems.slice(0, 12).map(item => {
+      return new Promise<void>((resolve) => {
+        if (imageCache.has(item.src)) {
+          resolve();
+          return;
+        }
+        const img = new Image();
+        img.src = item.src;
+        imageCache.set(item.src, img);
+        img.onload = () => resolve();
+        img.onerror = () => resolve(); // Resolve anyway to not block other images
+      });
+    });
+    
+    Promise.all(preloadPromises).catch(err => 
+      console.error("Error preloading inventory images:", err)
+    );
+  }, [initialTabs.main, initialTabs.sub, getFilteredItems]);
+
+  // Precalculate and cache zoom styles for decoration items
+  useEffect(() => {
+    // Only run this once for decoration items
+    if (initialTabs.main === "Decorations") {
+      const decorationItems = getFilteredItems("Decorations", initialTabs.sub)
+        .filter(item => item.itemCategory === "decoration");
+      
+      // Process items in batches to avoid blocking the UI
+      const batchSize = 5;
+      const totalItems = decorationItems.length;
+      
+      const processBatch = async (startIndex: number) => {
+        const endIndex = Math.min(startIndex + batchSize, totalItems);
+        const containerSize = 64; // Match the size used in ZoomedImage
+        
+        for (let i = startIndex; i < endIndex; i++) {
+          const item = decorationItems[i];
+          // Skip if already cached
+          if (zoomStylesCache.has(item.src)) continue;
+          
+          try {
+            // Load the image if not already loaded
+            if (!imageCache.has(item.src)) {
+              await new Promise<void>((resolve, reject) => {
+                const img = new Image();
+                img.src = item.src;
+                img.crossOrigin = "anonymous";
+                imageCache.set(item.src, img);
+                img.onload = () => resolve();
+                img.onerror = () => reject(new Error(`Failed to load image: ${item.src}`));
+              });
+            }
+            
+            // Calculate bounds and create zoom style
+            const bounds = await calculateVisibleBounds(item.src);
+            
+            // Skip invalid bounds
+            if (bounds.width <= 0 || bounds.height <= 0 || 
+                bounds.naturalWidth <= 0 || bounds.naturalHeight <= 0) {
+              continue;
+            }
+            
+            // Calculate the zoom style
+            const scale = Math.min(
+              containerSize / bounds.width,
+              containerSize / bounds.height
+            );
+            
+            const scaledNaturalWidth = bounds.naturalWidth * scale;
+            const scaledNaturalHeight = bounds.naturalHeight * scale;
+            
+            const offsetX = (containerSize - (bounds.width * scale)) / 2 - (bounds.x * scale);
+            const offsetY = (containerSize - (bounds.height * scale)) / 2 - (bounds.y * scale);
+            
+            // Cache the calculated style
+            const zoomedStyle: React.CSSProperties = {
+              position: 'absolute' as 'absolute',
+              left: `${offsetX}px`,
+              top: `${offsetY}px`,
+              width: `${scaledNaturalWidth}px`,
+              height: `${scaledNaturalHeight}px`,
+              visibility: 'visible' as 'visible'
+            };
+            
+            zoomStylesCache.set(item.src, zoomedStyle);
+          } catch (err) {
+            console.error(`Error precaching zoom style for ${item.src}:`, err);
+          }
+        }
+        
+        // Process next batch if there are more items
+        if (endIndex < totalItems) {
+          // Use setTimeout to avoid blocking the UI thread
+          setTimeout(() => processBatch(endIndex), 10);
+        }
+      };
+      
+      // Start processing the first batch
+      processBatch(0);
+    }
+  }, [initialTabs.main, initialTabs.sub, getFilteredItems]);
 
   const handleMainCategoryChange = useCallback((category: MainCategory) => {
     setIsTransitioning(true);
@@ -308,7 +404,10 @@ export default function InventoryPage({ pet, onFeedPet, onGroomPet, onPlayWithTo
       addDecorItem("decor", decorItem);
     }
     setActiveColorOptions(null);
-  }, [setRoomLayer, addDecorItem]);
+    
+    // Navigate to pet page after applying decoration to show the changes
+    navigate('/');
+  }, [setRoomLayer, addDecorItem, navigate]);
 
   const handleItemClick = useCallback((item: InventoryItem) => {
     if (item.itemCategory === "decoration") {
@@ -318,17 +417,40 @@ export default function InventoryPage({ pet, onFeedPet, onGroomPet, onPlayWithTo
       } else {
         applyDecorationItem(decorationItem);
       }
-    } else if (item.itemCategory === "food") {
-      if (pet) { onFeedPet(item as FoodInventoryItem); consumeItem(item.id); }
+    } else {
+      // For consumable items (food, grooming, toys), show the details modal
+      setSelectedItem(item);
+      setShowItemDetails(true);
+    }
+  }, [applyDecorationItem]);
+
+  const handleUseItem = useCallback((item: InventoryItem) => {
+    if (item.itemCategory === "food") {
+      if (pet) { 
+        onFeedPet(item as FoodInventoryItem); 
+        consumeItem(item.id); 
+      }
       else console.warn("Pet data not loaded! Cannot feed.");
     } else if (item.itemCategory === "grooming") {
-      if (pet) { onGroomPet(item as GroomingInventoryItem); consumeItem(item.id); }
+      if (pet) { 
+        onGroomPet(item as GroomingInventoryItem); 
+        consumeItem(item.id); 
+      }
       else console.warn("Pet data not loaded! Cannot groom.");
     } else if (item.itemCategory === "toy") {
-      if (pet) { onPlayWithToy(item as ToyInventoryItem); consumeItem(item.id); }
+      if (pet) { 
+        onPlayWithToy(item as ToyInventoryItem); 
+        consumeItem(item.id); 
+      }
       else console.warn("Pet data not loaded! Cannot play.");
     }
-  }, [pet, onFeedPet, onGroomPet, onPlayWithToy, consumeItem, applyDecorationItem, activeColorOptions]);
+    setShowItemDetails(false);
+  }, [pet, onFeedPet, onGroomPet, onPlayWithToy, consumeItem]);
+
+  const handleDiscardItem = useCallback((item: InventoryItem) => {
+    consumeItem(item.id);
+    setShowItemDetails(false);
+  }, [consumeItem]);
 
   const filteredItems = useMemo(() => 
     getFilteredItems(selectedMainCategory, selectedSubCategory),
@@ -359,7 +481,7 @@ export default function InventoryPage({ pet, onFeedPet, onGroomPet, onPlayWithTo
                 tabIndex={0}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleItemClick(item);}}}
               >
-                <ZoomedImage src={item.src} alt={item.name} />
+                <ZoomedImage src={item.src} alt={item.name} isDecoration={item.itemCategory === "decoration"} />
                 <div className="sq-inventory-item-info">
                   <span className="sq-inventory-item-name-text">{item.name}</span>
                   {item.itemCategory === "food" && <span className="sq-inventory-item-effect-text">Hunger +{(item as FoodInventoryItem).hungerRestored}</span>}
@@ -414,6 +536,15 @@ export default function InventoryPage({ pet, onFeedPet, onGroomPet, onPlayWithTo
           ))}
         </div>
       </div>
+      
+      {/* Item Details Modal */}
+      <ItemDetailsModal
+        isOpen={showItemDetails}
+        item={selectedItem}
+        onUse={handleUseItem}
+        onDiscard={handleDiscardItem}
+        onClose={() => setShowItemDetails(false)}
+      />
     </div>
   );
 }

@@ -1,7 +1,8 @@
 // src/components/PetRoom.tsx
 import "./PetRoom.css";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import type { ToyInventoryItem } from "../types";
+import FoodItem from "./FoodItem";
 
 interface PetRoomProps {
   floor: string;
@@ -15,8 +16,11 @@ interface PetRoomProps {
   moodPhrase?: string;
   activeToy?: ToyInventoryItem | string | null;
   isPlaying?: boolean;
-  foodItem?: { src: string; position: number } | null;
+  isWalking?: boolean;
+  isFacingRight?: boolean;
+  foodItem?: { src: string; position: number; hungerRestored?: number } | null;
   onFoodEaten?: () => void;
+  onFoodBite?: (biteNumber: number, hungerAmount: number) => void;
 }
 
 export default function PetRoom({ 
@@ -31,19 +35,22 @@ export default function PetRoom({
   moodPhrase, 
   activeToy, 
   isPlaying, 
+  isWalking,
+  isFacingRight = false,
   foodItem, 
-  onFoodEaten 
+  onFoodEaten,
+  onFoodBite
 }: PetRoomProps) {
-  // Handle food eaten after it's displayed for a while
+  const [isEating, setIsEating] = useState(false);
+
+  // Handle eating animation state
   useEffect(() => {
-    if (foodItem && onFoodEaten) {
-      const timer = setTimeout(() => {
-        onFoodEaten();
-      }, 3000);
-      
-      return () => clearTimeout(timer);
+    if (foodItem) {
+      setIsEating(true);
+    } else {
+      setIsEating(false);
     }
-  }, [foodItem, onFoodEaten]);
+  }, [foodItem]);
 
   return (
     <div className="pet-room">
@@ -71,28 +78,35 @@ export default function PetRoom({
       {/* Active toy display */}
       {activeToy && isPlaying && (
         <img 
-          className="toy"
+          className="toy playing"
           src={typeof activeToy === 'string' 
                ? activeToy 
                : activeToy.src || '/assets/toys/ball.png'} 
           alt="Toy"
-          style={{ left: `${petPosition - 5}%` }}
+          style={{ 
+            left: `${petPosition + (isFacingRight ? -12 : 12)}%`, 
+            bottom: `22%` /* Slightly higher than pet's 20% bottom */
+          }}
         />
       )}
 
-      {/* Food item display */}
+      {/* Food item display - using the FoodItem component */}
       {foodItem && (
-        <img 
-          className="food-item"
+        <FoodItem 
+          key={`food-${foodItem.src}`}
           src={foodItem.src}
-          style={{ left: `${foodItem.position}%` }}
-          alt="Food"
+          position={foodItem.position}
+          hungerRestored={foodItem.hungerRestored || 15}
+          onEaten={() => {
+            if (onFoodEaten) onFoodEaten();
+          }}
+          onBite={onFoodBite}
         />
       )}
 
       {/* Pet Layer */}
       <img 
-        className={`pet-layer ${isPlaying ? 'playing' : ''}`}
+        className={`pet-layer ${isPlaying ? 'playing' : ''} ${isWalking ? 'waddling' : ''} ${isFacingRight ? 'flip' : ''} ${isEating ? 'pet-eating' : ''}`}
         src={petImage}
         style={{ left: `${petPosition}%` }}
         alt="Pet"

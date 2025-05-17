@@ -1,6 +1,7 @@
 // src/components/Header.tsx
 import { useNavigate } from "react-router-dom";
 import type { NeedInfo } from "../types";
+import { getNeedBarColor } from "../utils/colorUtils";
 import "./Header.css";
 
 interface HeaderProps {
@@ -20,7 +21,7 @@ export default function Header({
   return (
     <header className="app-header">
       <div className="pet-icon-wrapper" onClick={() => navigate("/")} style={{ cursor: 'pointer' }}>
-        <img src={petImage} alt="Pet" className="pet-icon" />
+        <img src="/pet/neutral.png" alt="Pet" className="pet-icon" />
       </div>
 
       <div className="needs-wrapper">
@@ -35,6 +36,7 @@ export default function Header({
                 className="circle"
                 strokeDasharray={`${n.value}, 100`}
                 d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                style={{ stroke: getNeedBarColor(n.value) }}
                 transform="rotate(-90 18 18)"
               />
               {/* MODIFIED: Use SVG image element for icons */}

@@ -1,5 +1,5 @@
 // src/pages/PetPage.tsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useInventory } from "../contexts/InventoryContext";
 import { useToyAnimation } from "../contexts/ToyAnimationContext";
@@ -24,12 +24,117 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
   const { activeToy, isPlaying } = useToyAnimation();
   const navigate = useNavigate();
   const { position, isWalking, walkingStep, isFacingRight } = usePetMovement(pet);
-  const [foodItem, setFoodItem] = useState<{ src: string; position: number } | null>(null);
+  const [foodItem, setFoodItem] = useState<{ src: string; position: number; hungerRestored?: number } | null>(null);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  const [pendingFoodItem, setPendingFoodItem] = useState<{ src: string; position: number } | null>(null);
+  const [pendingFoodItem, setPendingFoodItem] = useState<{ src: string; position: number; hungerRestored?: number } | null>(null);
+  const [currentMoodPhrase, setCurrentMoodPhrase] = useState<string | undefined>(undefined);
+  const [showSpeechBubble, setShowSpeechBubble] = useState(false);
+  const [localHungerValue, setLocalHungerValue] = useState<number | null>(null);
+  
+  // Initialize local hunger value when pet changes
+  useEffect(() => {
+    if (pet && typeof pet.hunger === 'number') {
+      setLocalHungerValue(pet.hunger);
+    }
+  }, [pet?.hunger]);
+  
+  // Get the current hunger value to display (either local animated value or from pet data)
+  const currentHungerValue = localHungerValue !== null ? localHungerValue : (pet?.hunger || 0);
+  
+  // Create a modified needInfo array with our local hunger value
+  const modifiedNeedInfo = needInfo.map(need => {
+    if (need.need === "hunger" && localHungerValue !== null) {
+      return { ...need, value: currentHungerValue };
+    }
+    return need;
+  });
 
-  const moodPhrase = isPlaying && activeToy ? getRandomToyPhrase(activeToy) : getRandomMoodPhrase(pet);
-  const petImage = getPetImage(pet, isPlaying, isWalking, walkingStep, isFacingRight);
+  // Handle each bite of food
+  const handleFoodBite = (biteNumber: number, hungerAmount: number) => {
+    console.log(`Food bite ${biteNumber}, hunger amount: ${hungerAmount}`);
+    
+    // Get the base hunger value to increment from
+    const baseHunger = pet?.hunger || 0;
+    
+    // Calculate the progressive hunger value
+    const progressiveHunger = Math.min(
+      120, // MAX_NEED_VALUE from App.tsx
+      baseHunger + (hungerAmount * biteNumber)
+    );
+    
+    // Update local hunger display value
+    setLocalHungerValue(progressiveHunger);
+    
+    // Add speech bubble for first bite but don't interfere with animation
+    if (biteNumber === 1) {
+      setCurrentMoodPhrase("Mmm, tasty!");
+      setShowSpeechBubble(true);
+      setTimeout(() => setShowSpeechBubble(false), 2000);
+    }
+    // Add different speech bubble for last bite
+    else if (biteNumber === 3) {
+      setCurrentMoodPhrase("That was delicious!");
+      setShowSpeechBubble(true);
+      setTimeout(() => setShowSpeechBubble(false), 2000);
+    }
+  };
+
+  // Check for pending food item in localStorage when component mounts
+  useEffect(() => {
+    const storedFoodItem = localStorage.getItem('pendingFoodItem');
+    if (storedFoodItem) {
+      try {
+        const parsedItem = JSON.parse(storedFoodItem);
+        // Place the food in front of the pet
+        setFoodItem({
+          ...parsedItem,
+          position: position + (isFacingRight ? -5 : 5)
+        });
+        // Clear the localStorage item
+        localStorage.removeItem('pendingFoodItem');
+      } catch (error) {
+        console.error('Error parsing pending food item:', error);
+        localStorage.removeItem('pendingFoodItem');
+      }
+    }
+  }, [position, isFacingRight]);
+
+  // Update mood phrase less frequently
+  useEffect(() => {
+    // Update mood phrase every 10-15 seconds
+    const updateMoodPhrase = () => {
+      const newPhrase = isPlaying && activeToy 
+        ? getRandomToyPhrase(activeToy) 
+        : getRandomMoodPhrase(pet);
+      
+      if (newPhrase) {
+        setCurrentMoodPhrase(newPhrase);
+        setShowSpeechBubble(true);
+        
+        // Hide speech bubble after 5-8 seconds
+        const hideTimeout = setTimeout(() => {
+          setShowSpeechBubble(false);
+        }, 5000 + Math.random() * 3000);
+        
+        return () => clearTimeout(hideTimeout);
+      }
+    };
+    
+    // Initial update
+    updateMoodPhrase();
+    
+    // Set interval for updates
+    const interval = setInterval(() => {
+      // Only 30% chance to show a new phrase
+      if (Math.random() < 0.3) {
+        updateMoodPhrase();
+      }
+    }, 10000 + Math.random() * 5000);
+    
+    return () => clearInterval(interval);
+  }, [pet, isPlaying, activeToy]);
+
+  const petImage = getPetImage(pet, isPlaying, isWalking, walkingStep, isFacingRight, showSpeechBubble);
 
   const currentCeiling = roomLayers?.ceiling || "/assets/ceilings/classic-ceiling.png";
   const currentWall = roomLayers?.wall || "/assets/walls/classic-wall.png";
@@ -76,12 +181,18 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
   };
 
   const handleFoodEaten = () => {
+    // Reset local hunger value
+    setLocalHungerValue(null);
+    // Clear the food item
     setFoodItem(null);
   };
 
   const confirmUseFood = () => {
     if (pendingFoodItem) {
-      setFoodItem(pendingFoodItem);
+      setFoodItem({
+        ...pendingFoodItem,
+        position: position + (isFacingRight ? -5 : 5)
+      });
       setShowConfirmDialog(false);
       setPendingFoodItem(null);
     }
@@ -105,11 +216,14 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
         overlay={overlaySrc}
         petImage={petImage}
         petPosition={position}
-        moodPhrase={moodPhrase}
+        moodPhrase={showSpeechBubble ? currentMoodPhrase : undefined}
         activeToy={activeToy}
         isPlaying={isPlaying}
         foodItem={foodItem}
         onFoodEaten={handleFoodEaten}
+        onFoodBite={handleFoodBite}
+        isWalking={isWalking}
+        isFacingRight={isFacingRight}
       />
 
       <ConfirmationDialog
@@ -120,7 +234,7 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
         onCancel={cancelUseFood}
       />
 
-      <PetNeedsDisplay needInfo={needInfo} onNeedClick={handleNeedClick} />
+      <PetNeedsDisplay needInfo={modifiedNeedInfo} onNeedClick={handleNeedClick} />
 
       <div className="paintbrush-icon" onClick={() => navigate("/inventory")}>
         <img src="/assets/icons/paintbrush.png" alt="Customize Room" />

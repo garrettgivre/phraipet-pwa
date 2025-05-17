@@ -127,14 +127,40 @@ function AppContent() {
 
   const handleFeedPet = async (foodItem: FoodInventoryItem) => {
     if (!pet || typeof pet.hunger !== 'number') return;
+    
+    // Create a toast or indication that feeding is occurring
+    console.log(`Feeding pet ${foodItem.name}, hunger restored: ${foodItem.hungerRestored}`);
+    
+    // Calculate new hunger value - the higher the better for hunger
     let newHunger = Math.min(MAX_NEED_VALUE, pet.hunger + foodItem.hungerRestored);
     newHunger = Math.max(MIN_NEED_VALUE, newHunger);
-    const updates: Partial<Pet> = {
+    
+    console.log(`Pet hunger before: ${pet.hunger}, after: ${newHunger}`);
+    
+    // Update local state immediately for responsiveness
+    const updatedPet = {
+      ...pet,
       hunger: newHunger,
+      lastNeedsUpdateTime: Date.now(), // Update timestamp to prevent immediate decay
       spirit: Math.max(MIN_NEED_VALUE, Math.min(MAX_NEED_VALUE, Math.round((newHunger + pet.happiness + pet.cleanliness + pet.affection) / 4)))
     };
+    
+    // Update local state immediately
+    setPet(updatedPet);
+    
+    // Store the selected food item in localStorage
+    localStorage.setItem('pendingFoodItem', JSON.stringify({
+      src: foodItem.src,
+      position: 50, // Center position, will be adjusted in PetPage
+      hungerRestored: foodItem.hungerRestored
+    }));
+    
+    // Navigate back to pet page to show the feeding animation
+    navigate('/');
+    
+    // Update Firebase
     await withErrorHandling(
-      () => petService.updatePetNeeds(updates),
+      () => petService.updatePetNeeds(updatedPet),
       "Failed to update pet hunger"
     );
   };

@@ -12,6 +12,7 @@ import type {
   // GroomingCategory, // Not directly imported, but used via GroomingInventoryItem
   // ToyCategory,      // Not directly imported, but used via ToyInventoryItem
 } from "../types";
+import { enhanceFoodItemsWithDescriptions } from "../utils/foodUtils";
 
 export type DecorItem = RoomDecorItem;
 
@@ -74,18 +75,18 @@ const defaultDecorationItems: DecorationInventoryItem[] = [
 const defaultFoodItems: FoodInventoryItem[] = [
     { id: "food-kefir-lightmeal", name: "Kefir", itemCategory: "food", type: "LightMeal", hungerRestored: 30, src: "/assets/food/food-dairy-lightmeal-kefir.png", description: "A fermented milk drink." },
     { id: "food-milk-lightmeal", name: "Milk", itemCategory: "food", type: "LightMeal", hungerRestored: 30, src: "/assets/food/food-dairy-lightmeal-milk.png", description: "A refreshing glass of milk." },
-    { id: "food-cheese-snack", name: "Cheese Slice", itemCategory: "food", type: "Snack", hungerRestored: 15, src: "/assets/food/food-dairy-snack-cheese.png", description: "A tasty slice of cheese." },
+    { id: "food-cheese-snack", name: "Cheese", itemCategory: "food", type: "Snack", hungerRestored: 15, src: "/assets/food/food-dairy-snack-cheese.png", description: "A tasty slice of cheese." },
     { id: "food-cottagecheese-snack", name: "Cottage Cheese", itemCategory: "food", type: "Snack", hungerRestored: 15, src: "/assets/food/food-dairy-snack-cottagecheese.png", description: "Creamy cottage cheese." },
-    { id: "food-whey-snack", name: "Whey Drink", itemCategory: "food", type: "Snack", hungerRestored: 15, src: "/assets/food/food-dairy-snack-whey.png", description: "A protein-rich whey drink." },
-    { id: "food-yogurt-snack", name: "Yogurt Cup", itemCategory: "food", type: "Snack", hungerRestored: 15, src: "/assets/food/food-dairy-snack-yogurt.png", description: "A cup of creamy yogurt." },
-    { id: "food-juice-lightmeal", name: "Orange Juice", itemCategory: "food", type: "LightMeal", hungerRestored: 30, src: "/assets/food/food-drink-lightmeal-juice.png", description: "Fresh orange juice." },
-    { id: "food-soda-lightmeal", name: "Soda Pop", itemCategory: "food", type: "LightMeal", hungerRestored: 30, src: "/assets/food/food-drink-lightmeal-soda.png", description: "A fizzy soda pop." },
-    { id: "food-tea-treat", name: "Cup of Tea", itemCategory: "food", type: "Treat", hungerRestored: 10, src: "/assets/food/food-drink-treat-tea.png", description: "A warm cup of tea." },
+    { id: "food-whey-snack", name: "Whey", itemCategory: "food", type: "Snack", hungerRestored: 15, src: "/assets/food/food-dairy-snack-whey.png", description: "A protein-rich whey drink." },
+    { id: "food-yogurt-snack", name: "Yogurt", itemCategory: "food", type: "Snack", hungerRestored: 15, src: "/assets/food/food-dairy-snack-yogurt.png", description: "A cup of creamy yogurt." },
+    { id: "food-juice-lightmeal", name: "Juice", itemCategory: "food", type: "LightMeal", hungerRestored: 30, src: "/assets/food/food-drink-lightmeal-juice.png", description: "Fresh orange juice." },
+    { id: "food-soda-lightmeal", name: "Soda", itemCategory: "food", type: "LightMeal", hungerRestored: 30, src: "/assets/food/food-drink-lightmeal-soda.png", description: "A fizzy soda pop." },
+    { id: "food-tea-treat", name: "Tea", itemCategory: "food", type: "Treat", hungerRestored: 10, src: "/assets/food/food-drink-treat-tea.png", description: "A warm cup of tea." },
     { id: "food-watermelonsalad-feast", name: "Watermelon Salad", itemCategory: "food", type: "Feast", hungerRestored: 60, src: "/assets/food/food-fruit-feast-watermelonsalad.png", description: "A refreshing watermelon salad." },
-    { id: "food-applespb-lightmeal", name: "Apple Slices & PB", itemCategory: "food", type: "LightMeal", hungerRestored: 30, src: "/assets/food/food-fruit-lightmeal-applesliceswithpeanutbutter.png", description: "Apple slices with peanut butter." },
+    { id: "food-applespb-lightmeal", name: "Apple Slices with Peanut Butter", itemCategory: "food", type: "LightMeal", hungerRestored: 30, src: "/assets/food/food-fruit-lightmeal-applesliceswithpeanutbutter.png", description: "Apple slices with peanut butter." },
     { id: "food-peachcobbler-lightmeal", name: "Peach Cobbler", itemCategory: "food", type: "LightMeal", hungerRestored: 30, src: "/assets/food/food-fruit-lightmeal-peachcobbler.png", description: "Warm peach cobbler." },
     { id: "food-granolabar-lightmeal", name: "Granola Bar", itemCategory: "food", type: "LightMeal", hungerRestored: 30, src: "/assets/food/food-snacks-lightmeal-granolabar.png", description: "A chewy granola bar." },
-    { id: "food-chips-snack", name: "Potato Chips", itemCategory: "food", type: "Snack", hungerRestored: 15, src: "/assets/food/food-snacks-snack-chips.png", description: "Crispy potato chips." },
+    { id: "food-chips-snack", name: "Chips", itemCategory: "food", type: "Snack", hungerRestored: 15, src: "/assets/food/food-snacks-snack-chips.png", description: "Crispy potato chips." },
     { id: "food-pretzels-snack", name: "Pretzels", itemCategory: "food", type: "Snack", hungerRestored: 15, src: "/assets/food/food-snacks-snack-pretzels.png", description: "Salty pretzels." },
     { id: "food-exotic-heartymeal-wobblefruitstew", name: "Wobblefruit Stew", itemCategory: "food", type: "HeartyMeal", hungerRestored: 45, src: "/assets/food/food-exotic-heartymeal-wobblefruitstew.png", description: "A hearty exotic stew." },
     { id: "food-exotic-lightmeal-glorpberrysoup", name: "Glorpberry Soup", itemCategory: "food", type: "LightMeal", hungerRestored: 30, src: "/assets/food/food-exotic-lightmeal-glorpberrysoup.png", description: "A light soup of glorpberries." },
@@ -93,16 +94,27 @@ const defaultFoodItems: FoodInventoryItem[] = [
     { id: "food-exotic-treat-fizzmelon", name: "Fizzmelon", itemCategory: "food", type: "Treat", hungerRestored: 10, src: "/assets/food/food-exotic-treat-fizzmelon.png", description: "A fizzy, refreshing melon." },
     { id: "food-exotic-treat-jibbleroot", name: "Jibbleroot", itemCategory: "food", type: "Treat", hungerRestored: 10, src: "/assets/food/food-exotic-treat-jibbleroot.png", description: "A crunchy exotic root." },
     { id: "food-exotic-treat-snorpfruit", name: "Snorpfruit", itemCategory: "food", type: "Treat", hungerRestored: 10, src: "/assets/food/food-exotic-treat-snorpfruit.png", description: "A peculiar but tasty fruit." },
-    { id: "food-fruit-treat-blueberries", name: "Blueberries", itemCategory: "food", type: "Treat", hungerRestored: 10, src: "/assets/food/food-fruit-treat-blueberries.png", description: "A handful of fresh blueberries." },
+    { id: "food-fruit-treat-blueberries", name: "Blueberry", itemCategory: "food", type: "Treat", hungerRestored: 10, src: "/assets/food/food-fruit-treat-blueberries.png", description: "A handful of fresh blueberries." },
     { id: "food-fruit-treat-strawberry", name: "Strawberry", itemCategory: "food", type: "Treat", hungerRestored: 10, src: "/assets/food/food-fruit-treat-strawberry.png", description: "A juicy red strawberry." },
     { id: "food-snacks-snack-popcorn", name: "Popcorn", itemCategory: "food", type: "Snack", hungerRestored: 15, src: "/assets/food/food-snacks-snack-popcorn.png", description: "A bowl of buttery popcorn." },
     { id: "food-snacks-snack-ricecake", name: "Rice Cake", itemCategory: "food", type: "Snack", hungerRestored: 15, src: "/assets/food/food-snacks-snack-ricecake.png", description: "A light and crispy rice cake." },
     { id: "food-snacks-treat-trailmix", name: "Trail Mix", itemCategory: "food", type: "Treat", hungerRestored: 10, src: "/assets/food/food-snacks-treat-trailmix.png", description: "A mix of nuts and dried fruit." },
     { id: "food-sweets-treat-candy", name: "Candy", itemCategory: "food", type: "Treat", hungerRestored: 10, src: "/assets/food/food-sweets-treat-candy.png", description: "A sweet piece of candy." },
+    { id: "food-sweets-treat-cookie", name: "Cookie", itemCategory: "food", type: "Treat", hungerRestored: 10, src: "/assets/food/food-sweets-treat-cookie.png", description: "Crispy edges, soft center, and exactly six chocolatey life decisions waiting to happen." },
     { id: "food-vegetables-heartymeal-broccolicasserole", name: "Broccoli Casserole", itemCategory: "food", type: "HeartyMeal", hungerRestored: 45, src: "/assets/food/food-vegetables-heartymeal-broccolicasserole.png", description: "A warm and cheesy casserole." },
-    { id: "food-vegetables-lightmeal-cucumbersandwich", name: "Cucumber Sandwich", itemCategory: "food", type: "LightMeal", hungerRestored: 30, src: "/assets/food/food-vegetables-lightmeal-cucumbersandwich.png", description: "A light and refreshing sandwich." },
+    { id: "food-vegetables-lightmeal-cucumbersandwich", name: "Cucumber Sandwiches", itemCategory: "food", type: "LightMeal", hungerRestored: 30, src: "/assets/food/food-vegetables-lightmeal-cucumbersandwich.png", description: "A light and refreshing sandwich." },
+    { id: "food-vegetables-lightmeal-spinachandfetasalad", name: "Spinach and Feta Salad", itemCategory: "food", type: "LightMeal", hungerRestored: 30, src: "/assets/food/food-vegetables-lightmeal-spinachandfetasalad.png", description: "A bowl full of leafy whispers, juicy secrets, and a few boldly confident cheese cubes." },
+    { id: "food-vegetables-lightmeal-carrotandpeastirfry", name: "Carrot and Pea Stir-Fry", itemCategory: "food", type: "LightMeal", hungerRestored: 30, src: "/assets/food/food-vegetables-lightmeal-carrotandpeastirfry.png", description: "Snappy peas, sweet carrot coins, and just enough sizzle to make dinner feel exciting again." },
+    { id: "food-vegetables-feast-stuffedbakedpotato", name: "Stuffed Baked Potato", itemCategory: "food", type: "Feast", hungerRestored: 60, src: "/assets/food/food-vegetables-feast-stuffedbakedpotato.png", description: "Crispy on the outside, molten comfort within, and absolutely smothered in golden glory." },
     { id: "food-vegetables-treat-peas", name: "Peas", itemCategory: "food", type: "Treat", hungerRestored: 10, src: "/assets/food/food-vegetables-treat-peas.png", description: "A small pod of peas." },
+    { id: "food-vegetables-snack-tomato", name: "Tomato", itemCategory: "food", type: "Snack", hungerRestored: 15, src: "/assets/food/food-vegetables-snack-tomato.png", description: "Plump, dramatic, and ready to argue about whether it's a fruit or a vegetable." },
+    { id: "food-vegetables-snack-corn", name: "Corn", itemCategory: "food", type: "Snack", hungerRestored: 15, src: "/assets/food/food-vegetables-snack-corn.png", description: "Each kernel packed with sunshine and a tiny promise to get stuck in your teeth later." },
+    { id: "food-vegetables-lightmeal-lettucewrap", name: "Lettuce Wrap", itemCategory: "food", type: "LightMeal", hungerRestored: 30, src: "/assets/food/food-vegetables-lightmeal-lettucewrap.png", description: "A crunchy green hug wrapped tightly around whatever surprises you've hidden inside." },
+    { id: "food-vegetables-lightmeal-stuffedbellpepper", name: "Stuffed Bell Pepper", itemCategory: "food", type: "LightMeal", hungerRestored: 30, src: "/assets/food/food-vegetables-lightmeal-stuffedbellpepper.png", description: "One bite in and you'll discover a whole pantry hiding inside this bold little bell." },
 ];
+
+// Apply enhanced descriptions to food items
+const enhancedFoodItems = enhanceFoodItemsWithDescriptions(defaultFoodItems);
 
 const defaultGroomingItems: GroomingInventoryItem[] = [
   // Existing items, re-categorized if necessary, and new items added
@@ -359,7 +371,7 @@ const defaultToyItems: ToyInventoryItem[] = [
 
 const defaultAllItems: InventoryItem[] = [
     ...defaultDecorationItems,
-    ...defaultFoodItems,
+    ...enhancedFoodItems,  // Use the enhanced food items with detailed descriptions
     ...defaultGroomingItems,
     ...defaultToyItems
 ];
@@ -396,6 +408,7 @@ const InventoryContext = createContext<InventoryContextType>({
 export const useInventory = () => useContext(InventoryContext);
 
 export const imageCache = new Map<string, HTMLImageElement>();
+export const zoomStylesCache = new Map<string, React.CSSProperties>();
 
 const preloadImages = async (items: InventoryItem[]) => {
   const imagePromises = items.map(item => {

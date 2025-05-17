@@ -1,24 +1,23 @@
 .pet-needs-display {
   position: fixed;
-  bottom: calc(var(--nav-height) + 20px);
+  bottom: calc(var(--nav-height) + 70px);
   left: 0;
   right: 0;
   display: flex;
   flex-direction: row;
   justify-content: center;
-  gap: 10px;
-  z-index: 100;
+  gap: 20px;
+  z-index: 15;
 }
 
 .need-circle {
-  width: 40px;
-  height: 40px;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
-  background-color: white;
+  background-color: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
   cursor: pointer;
   position: relative;
   transition: all 0.3s ease;
@@ -30,18 +29,37 @@
 
 .need-circle.active {
   transform: scale(1.2);
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
 }
 
-.need-circle img {
-  width: 24px;
-  height: 24px;
+.circular-chart {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.circle-bg {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.4);
+  stroke-width: 4;
+}
+
+.circle {
+  fill: none;
+  stroke-width: 4;
+  stroke-linecap: round;
+  transition: stroke-dasharray 0.3s;
+}
+
+.need-icon-image {
+  /* Ensure icon displays properly */
+  transform-origin: center;
 }
 
 .need-info-bubble {
   position: absolute;
   left: 50%;
-  bottom: 50px;
+  bottom: 60px;
   transform: translateX(-50%);
   width: 150px;
   background-color: white;
@@ -68,25 +86,4 @@
   font-size: 14px;
   font-weight: bold;
   color: #333;
-}
-
-/* Color coding for different needs */
-.need-circle.hunger {
-  border: 2px solid #ff8c42;
-}
-
-.need-circle.happiness {
-  border: 2px solid #ffe66d;
-}
-
-.need-circle.cleanliness {
-  border: 2px solid #00a8e8;
-}
-
-.need-circle.affection {
-  border: 2px solid #ff477e;
-}
-
-.need-circle.spirit {
-  border: 2px solid #7768ae;
 } 
