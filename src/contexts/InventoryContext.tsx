@@ -29,6 +29,7 @@ const defaultDecorationItems: DecorationInventoryItem[] = [
   { id: "deco-classic-floor", name: "Classic Floor", itemCategory: "decoration", type: "floor", src: "/assets/floors/classic-floor.png" },
   { id: "deco-classic-wall", name: "Classic Wall", itemCategory: "decoration", type: "wall", src: "/assets/walls/classic-wall.png" },
   { id: "deco-classic-ceiling", name: "Classic Ceiling", itemCategory: "decoration", type: "ceiling", src: "/assets/ceilings/classic-ceiling.png" },
+  { id: "deco-classic-trim", name: "Classic Trim", itemCategory: "decoration", type: "trim", src: "/assets/trim/classic-trim.png" },
 
   // Science Lab Theme
   { id: "deco-science-floor", name: "Science Floor", itemCategory: "decoration", type: "floor", src: "/assets/floors/science-floor.png" },
