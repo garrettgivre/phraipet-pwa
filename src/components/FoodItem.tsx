@@ -20,9 +20,6 @@ export default function FoodItem({ src, position, onEaten, hungerRestored = 15, 
     propsRef.current = { onEaten, onBite, hungerRestored };
   }, [onEaten, onBite, hungerRestored]);
   
-  // Calculate hunger per bite
-  const hungerPerBite = Math.ceil(hungerRestored / 3);
-  
   // Add a class to the pet when a bite happens - memoized to avoid recreation
   const triggerPetChomp = useCallback((biteNumber: number) => {
     // Find the pet element

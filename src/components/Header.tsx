@@ -6,13 +6,11 @@ import "./Header.css";
 
 interface HeaderProps {
   coins?: number;
-  petImage?: string;
   needs?: NeedInfo[];
 }
 
 export default function Header({
   coins = 100,
-  petImage = "/pet/neutral.png",
   needs = []
 }: HeaderProps) {
   const navigate = useNavigate();

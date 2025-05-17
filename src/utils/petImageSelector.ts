@@ -41,7 +41,6 @@ export function getPetImage(
   isPlaying: boolean,
   isWalking: boolean,
   walkingStep: number,
-  isFacingRight: boolean,
   isSpeaking: boolean = false // New parameter to check if the pet is speaking
 ): string {
   if (!pet) return "/pet/neutral.png";

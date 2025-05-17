@@ -12,18 +12,6 @@ interface ItemDetailsModalProps {
   onClose: () => void;
 }
 
-// Get the appropriate stat boost label based on item type
-const getStatBoostText = (item: InventoryItem) => {
-  if (item.itemCategory === 'food') {
-    return `Hunger +${(item as FoodInventoryItem).hungerRestored}`;
-  } else if (item.itemCategory === 'grooming') {
-    return `Cleanliness +${(item as GroomingInventoryItem).cleanlinessBoost}`;
-  } else if (item.itemCategory === 'toy') {
-    return `Happiness +${(item as ToyInventoryItem).happinessBoost}`;
-  }
-  return '';
-};
-
 // Get meal size for food items (more descriptive)
 const getMealSize = (item: FoodInventoryItem) => {
   const categorySizes: Record<string, string> = {
