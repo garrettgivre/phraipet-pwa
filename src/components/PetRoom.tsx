@@ -9,33 +9,34 @@ type DecorItem = {
   height?: number;
 };
 
-type RoomLayers = {
+interface PetRoomProps {
   floor: string;
   wall: string;
   ceiling: string;
-  backDecor: DecorItem[];
-  frontDecor: DecorItem[];
+  trim: string;
+  decor: DecorItem[];
   overlay: string;
-};
+}
 
-export default function PetRoom({ roomLayers }: { roomLayers: RoomLayers }) {
+export default function PetRoom({ floor, wall, ceiling, trim, decor, overlay }: PetRoomProps) {
   return (
     <div className="pet-room">
       {/* Behind Pet */}
-      <img className="floor-layer" src={roomLayers.floor} alt="Floor" />
-      <img className="wall-layer" src={roomLayers.wall} alt="Wall" />
-      <img className="ceiling-layer" src={roomLayers.ceiling} alt="Ceiling" />
+      <img className="floor-layer" src={floor} alt="Floor" />
+      <img className="wall-layer" src={wall} alt="Wall" />
+      <img className="ceiling-layer" src={ceiling} alt="Ceiling" />
+      {trim && <img className="trim-layer" src={trim} alt="Trim" />}
 
-      {roomLayers.backDecor.map((item, idx) => (
+      {decor.map((item, idx) => (
         <img
-          key={idx}
-          className="decor back-decor"
+          key={`decor-${idx}`}
+          className="decor"
           src={item.src}
           style={{
-            left: `${item.x}px`,
-            top: `${item.y}px`,
-            width: item.width ? `${item.width}px` : "auto",
-            height: item.height ? `${item.height}px` : "auto",
+            left: `${item.x}%`,
+            top: `${item.y}%`,
+            width: item.width ? `${item.width}%` : "auto",
+            height: item.height ? `${item.height}%` : "auto",
           }}
           alt=""
         />
@@ -44,24 +45,8 @@ export default function PetRoom({ roomLayers }: { roomLayers: RoomLayers }) {
       {/* Pet Layer */}
       <img className="pet-layer" src="/assets/pets/default_pet.png" alt="Pet" />
 
-      {/* In Front of Pet */}
-      {roomLayers.frontDecor.map((item, idx) => (
-        <img
-          key={idx}
-          className="decor front-decor"
-          src={item.src}
-          style={{
-            left: `${item.x}px`,
-            top: `${item.y}px`,
-            width: item.width ? `${item.width}px` : "auto",
-            height: item.height ? `${item.height}px` : "auto",
-          }}
-          alt=""
-        />
-      ))}
-
-      {roomLayers.overlay && (
-        <img className="overlay-layer" src={roomLayers.overlay} alt="Overlay" />
+      {overlay && (
+        <img className="overlay-layer" src={overlay} alt="Overlay" />
       )}
     </div>
   );

@@ -22,7 +22,7 @@ const mainCategories = ["Decorations", "Food", "Grooming", "Toys"] as const;
 type MainCategory = (typeof mainCategories)[number];
 
 const decorationSubCategories: DecorationItemType[] = [
-  "wall", "floor", "ceiling", "backDecor", "frontDecor", "overlay",
+  "wall", "floor", "ceiling", "trim", "decor", "overlay",
 ];
 const foodSubCategories: FoodCategory[] = [
   "Treat", "Snack", "LightMeal", "HeartyMeal", "Feast",

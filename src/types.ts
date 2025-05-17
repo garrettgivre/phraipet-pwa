@@ -34,7 +34,7 @@ export type RoomDecorItem = {
 };
 
 // Defines the types of decoration items available in the inventory.
-export type DecorationItemType = "floor" | "wall" | "ceiling" | "backDecor" | "frontDecor" | "overlay";
+export type DecorationItemType = "floor" | "wall" | "ceiling" | "trim" | "decor" | "overlay";
 
 // Defines the categories for food items.
 export type FoodCategory = "Treat" | "Snack" | "LightMeal" | "HeartyMeal" | "Feast";
@@ -156,7 +156,7 @@ export interface RoomLayers {
   floor: string;
   wall: string;
   ceiling: string;
-  backDecor: RoomDecorItem[];
-  frontDecor: RoomDecorItem[];
+  trim: string;
+  decor: RoomDecorItem[];
   overlay: string;
 }

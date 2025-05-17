@@ -19,8 +19,8 @@ type RoomLayers = {
   floor: string;
   wall: string;
   ceiling: string;
-  backDecor: RoomDecorItem[];
-  frontDecor: RoomDecorItem[];
+  trim: string;
+  decor: RoomDecorItem[];
   overlay: string;
 };
 
@@ -49,6 +49,23 @@ const defaultDecorationItems: DecorationInventoryItem[] = [
   { id: "deco-krazy-floor", name: "Krazy Floor", itemCategory: "decoration", type: "floor", src: "/assets/floors/krazy-floor.png" },
   { id: "deco-krazy-wall", name: "Krazy Wall", itemCategory: "decoration", type: "wall", src: "/assets/walls/krazy-wall.png" },
   { id: "deco-krazy-ceiling", name: "Krazy Ceiling", itemCategory: "decoration", type: "ceiling", src: "/assets/ceilings/krazy-ceiling.png" },
+
+  // Basic Theme
+  { id: "deco-basic-floor", name: "Basic Floor", itemCategory: "decoration", type: "floor", src: "/assets/floors/basic-floor.png" },
+  { id: "deco-basic-wall", name: "Basic Wall", itemCategory: "decoration", type: "wall", src: "/assets/walls/basic-wall.png" },
+  { id: "deco-basic-ceiling", name: "Basic Ceiling", itemCategory: "decoration", type: "ceiling", src: "/assets/ceilings/basic-ceilling.png" },
+  { id: "deco-basic-trim", name: "Basic Trim", itemCategory: "decoration", type: "trim", src: "/assets/trim/basic-trim.png" },
+
+  // Wacky Theme
+  { id: "deco-wacky-floor", name: "Wacky Floor", itemCategory: "decoration", type: "floor", src: "/assets/floors/wacky-floor.png" },
+  { id: "deco-wacky-wall", name: "Wacky Wall", itemCategory: "decoration", type: "wall", src: "/assets/walls/wacky-wall.png" },
+  { id: "deco-wacky-ceiling", name: "Wacky Ceiling", itemCategory: "decoration", type: "ceiling", src: "/assets/ceilings/wacky-ceiling.png" },
+
+  // Art Deco Theme
+  { id: "deco-artdeco-floor", name: "Art Deco Floor", itemCategory: "decoration", type: "floor", src: "/assets/floors/artdeco-floor.png" },
+  { id: "deco-artdeco-wall", name: "Art Deco Wall", itemCategory: "decoration", type: "wall", src: "/assets/walls/artdeco-wall.png" },
+  { id: "deco-artdeco-ceiling", name: "Art Deco Ceiling", itemCategory: "decoration", type: "ceiling", src: "/assets/ceilings/artdeco-ceiling.png" },
+  { id: "deco-artdeco-trim", name: "Art Deco Trim", itemCategory: "decoration", type: "trim", src: "/assets/trim/artdeco-trim.png" },
 
   // Removed Example Decor Items (Potted Plant, Floor Lamp, Rainy Window)
 ];
@@ -350,8 +367,8 @@ const defaultRoomLayersData: RoomLayers = {
   floor: "/assets/floors/classic-floor.png",
   wall: "/assets/walls/classic-wall.png",
   ceiling: "/assets/ceilings/classic-ceiling.png",
-  backDecor: [],
-  frontDecor: [],
+  trim: "",
+  decor: [],
   overlay: "",
 };
 
@@ -360,7 +377,7 @@ interface InventoryContextType {
   roomLayers: RoomLayers;
   roomLayersLoading: boolean;
   setRoomLayer: (type: "floor" | "wall" | "ceiling" | "overlay", src: string) => void;
-  addDecorItem: (type: "backDecor" | "frontDecor", decor: RoomDecorItem) => void;
+  addDecorItem: (type: "decor", decor: RoomDecorItem) => void;
   consumeItem: (itemId: string) => void;
   getFilteredItems: (mainCategory: string, subCategory: string) => InventoryItem[];
 }
@@ -454,8 +471,8 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
           floor: firebaseData.floor || defaultRoomLayersData.floor,
           wall: firebaseData.wall || defaultRoomLayersData.wall,
           ceiling: firebaseData.ceiling || defaultRoomLayersData.ceiling,
-          backDecor: Array.isArray(firebaseData.backDecor) ? firebaseData.backDecor : [],
-          frontDecor: Array.isArray(firebaseData.frontDecor) ? firebaseData.frontDecor : [],
+          trim: firebaseData.trim || defaultRoomLayersData.trim,
+          decor: Array.isArray(firebaseData.decor) ? firebaseData.decor : [],
           overlay: firebaseData.overlay || defaultRoomLayersData.overlay,
         });
       } else {
@@ -481,7 +498,7 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
     saveRoomToFirebase(updatedLayers);
   };
 
-  const addDecorItem = (type: "backDecor" | "frontDecor", decor: RoomDecorItem) => {
+  const addDecorItem = (type: "decor", decor: RoomDecorItem) => {
     const updatedLayers = {
       ...roomLayers,
       [type]: [...(roomLayers[type] || []), decor],
