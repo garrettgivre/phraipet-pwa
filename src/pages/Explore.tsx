@@ -2,7 +2,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import MapCanvas from '../components/MapCanvas';
-import type { AppHotspot, TiledMapData, TiledObject, TiledProperty } from '../types';
+import type { AppHotspot, TiledMapData, TiledObject } from '../types';
 import './Explore.css';
 
 // Helper function to get properties from Tiled objects
