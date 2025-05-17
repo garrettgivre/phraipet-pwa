@@ -7,20 +7,20 @@ export function getPetImage(
   walkingStep: number,
   isFacingRight: boolean
 ): string {
-  if (!pet) return "/assets/pets/default_pet.png";
+  if (!pet) return "/pet/neutral.png";
 
   if (isPlaying) {
-    return "/assets/pets/play.png";
+    return "/pet/Happy.png";
   }
 
   if (isWalking) {
     // For side-facing sprites, use the correct version based on direction
     if (isFacingRight) {
-      return walkingStep === 0 ? "/assets/pets/walk-sideways-b.png" : "/assets/pets/walk-sideways-a.png";
+      return walkingStep === 0 ? "/pet/Walk-Sideways-B.png" : "/pet/Walk-Sideways-A.png";
     } else {
-      return walkingStep === 0 ? "/assets/pets/walk-sideways-a.png" : "/assets/pets/walk-sideways-b.png";
+      return walkingStep === 0 ? "/pet/Walk-Sideways-A.png" : "/pet/Walk-Sideways-B.png";
     }
   }
 
-  return pet.image || "/assets/pets/default_pet.png";
+  return pet.image || "/pet/neutral.png";
 } 

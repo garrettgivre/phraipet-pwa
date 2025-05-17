@@ -11,7 +11,7 @@ interface HeaderProps {
 
 export default function Header({
   coins = 100,
-  petImage = "/pet/Neutral.png",
+  petImage = "/pet/neutral.png",
   needs = []
 }: HeaderProps) {
   const navigate = useNavigate();

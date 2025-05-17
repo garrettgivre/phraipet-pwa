@@ -1,0 +1,89 @@
+.pet-needs-display {
+  position: fixed;
+  bottom: calc(var(--nav-height) + 20px);
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 100;
+}
+
+.need-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.need-circle:hover {
+  transform: scale(1.1);
+}
+
+.need-circle.active {
+  transform: scale(1.2);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+}
+
+.need-circle img {
+  width: 24px;
+  height: 24px;
+}
+
+.need-info-bubble {
+  position: absolute;
+  right: 50px;
+  top: 0;
+  width: 150px;
+  background-color: white;
+  border-radius: 8px;
+  padding: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  z-index: 101;
+}
+
+.need-info-bubble h3 {
+  margin: 0 0 5px 0;
+  font-size: 14px;
+  color: #333;
+}
+
+.need-desc {
+  margin: 0 0 5px 0;
+  font-size: 12px;
+  color: #666;
+}
+
+.need-value {
+  margin: 0;
+  font-size: 14px;
+  font-weight: bold;
+  color: #333;
+}
+
+/* Color coding for different needs */
+.need-circle.hunger {
+  border: 2px solid #ff8c42;
+}
+
+.need-circle.happiness {
+  border: 2px solid #ffe66d;
+}
+
+.need-circle.cleanliness {
+  border: 2px solid #00a8e8;
+}
+
+.need-circle.affection {
+  border: 2px solid #ff477e;
+}
+
+.need-circle.spirit {
+  border: 2px solid #7768ae;
+} 

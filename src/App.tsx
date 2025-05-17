@@ -67,7 +67,7 @@ function AppShell({ pet, handleFeedPet, handleGroomPet, handlePlayWithToy, handl
   return (
     <>
       <ScrollToTop />
-      {!isPetPage && ( <Header coins={100} petImage={pet?.image || "/pet/Neutral.png"} needs={needInfo} /> )}
+      {!isPetPage && ( <Header coins={100} petImage={pet?.image || "/pet/neutral.png"} needs={needInfo} /> )}
       <main style={{
         paddingTop: isPetPage ? "0px" : "var(--header-height)",
         paddingBottom: "var(--nav-height)",
@@ -105,7 +105,7 @@ function AppShell({ pet, handleFeedPet, handleGroomPet, handlePlayWithToy, handl
 
 const defaultPetData: Pet = {
   hunger: 100, happiness: 100, cleanliness: 100, affection: 50, spirit: 0,
-  image: "/pet/Neutral.png", lastNeedsUpdateTime: Date.now(),
+  image: "/pet/neutral.png", lastNeedsUpdateTime: Date.now(),
   affectionGainedToday: 0, lastAffectionGainDate: getTodayDateString(),
 };
 defaultPetData.spirit = Math.max(MIN_NEED_VALUE, Math.min(MAX_NEED_VALUE, Math.round((defaultPetData.hunger + defaultPetData.happiness + defaultPetData.cleanliness + defaultPetData.affection) / 4)));
