@@ -1,9 +1,11 @@
 .pet-needs-display {
   position: fixed;
   bottom: calc(var(--nav-height) + 20px);
-  right: 20px;
+  left: 0;
+  right: 0;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  justify-content: center;
   gap: 10px;
   z-index: 100;
 }
@@ -38,8 +40,9 @@
 
 .need-info-bubble {
   position: absolute;
-  right: 50px;
-  top: 0;
+  left: 50%;
+  bottom: 50px;
+  transform: translateX(-50%);
   width: 150px;
   background-color: white;
   border-radius: 8px;
