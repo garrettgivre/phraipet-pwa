@@ -134,7 +134,7 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
     return () => clearInterval(interval);
   }, [pet, isPlaying, activeToy]);
 
-  const petImage = getPetImage(pet, isPlaying, isWalking, walkingStep, isFacingRight, showSpeechBubble);
+  const petImage = getPetImage(pet, isPlaying, isWalking, walkingStep, showSpeechBubble);
 
   const currentCeiling = roomLayers?.ceiling || "/assets/ceilings/classic-ceiling.png";
   const currentWall = roomLayers?.wall || "/assets/walls/classic-wall.png";
