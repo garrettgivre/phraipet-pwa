@@ -15,7 +15,7 @@ interface PetPageProps {
   onIncreaseAffection: (amount: number) => void;
 }
 
-const getPetImage = (pet: PetType | null, isPlaying: boolean, isWalking: boolean, walkingStep: number, isWalkingBack: boolean): string => {
+const getPetImage = (pet: PetType | null, isPlaying: boolean, isWalking: boolean, walkingStep: number, depthPosition: number): string => {
   if (!pet) return "/pet/Neutral.png";
   
   // Always use Happy image when playing with toy
@@ -23,9 +23,42 @@ const getPetImage = (pet: PetType | null, isPlaying: boolean, isWalking: boolean
 
   // Use walking animation when moving
   if (isWalking) {
-    if (isWalkingBack) {
+    // When moving backward (away from camera), use Walk-Back
+    if (depthPosition < 0) {
       return "/pet/Walk-Back.png";
     }
+    // When moving forward (toward camera), use current mood
+    if (depthPosition > 0) {
+      // Get the lowest need value to determine overall mood
+      const needs = [
+        { value: pet.hunger, type: "hunger" },
+        { value: pet.happiness, type: "happiness" },
+        { value: pet.cleanliness, type: "cleanliness" },
+        { value: pet.affection, type: "affection" },
+        { value: pet.spirit, type: "spirit" }
+      ];
+
+      const lowestNeed = needs.reduce((min, current) => 
+        current.value < min.value ? current : min
+      );
+
+      if (lowestNeed.value <= 15) {
+        switch (lowestNeed.type) {
+          case "hunger": return "/pet/Sad.png";
+          case "happiness": return "/pet/Sad.png";
+          case "cleanliness": return "/pet/Confused.png";
+          case "affection": return "/pet/Sad.png";
+          case "spirit": return "/pet/Neutral.png";
+          default: return "/pet/Neutral.png";
+        }
+      } else if (lowestNeed.value <= 35) {
+        return "/pet/Sad.png";
+      } else if (lowestNeed.value >= 50) {
+        return "/pet/Happy.png";
+      }
+      return "/pet/Neutral.png";
+    }
+    // When moving sideways, use sideways walking animation
     return walkingStep === 0 ? "/pet/Walk-Sideways-A.png" : "/pet/Walk-Sideways-B.png";
   }
 
@@ -165,7 +198,6 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
   const [foodItem, setFoodItem] = useState<{ src: string; position: number } | null>(null);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [pendingFoodItem, setPendingFoodItem] = useState<{ src: string; position: number } | null>(null);
-  const [isWalkingBack, setIsWalkingBack] = useState(false);
   const [depthPosition, setDepthPosition] = useState(0); // 0 is normal, negative is back, positive is forward
 
   // Add pet movement logic
@@ -202,7 +234,6 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
         // Update walking state and direction
         setIsWalking(true);
         setIsFacingRight(direction > 0);
-        setIsWalkingBack(depthPosition < 0);
 
         // Calculate number of steps based on distance
         const distance = Math.abs(boundedPos - prevPos);
@@ -230,7 +261,7 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
   }, [pet, depthPosition]);
 
   const moodPhrase = isPlaying && activeToy ? getRandomToyPhrase(activeToy) : getRandomMoodPhrase(pet);
-  const petImage = getPetImage(pet, isPlaying, isWalking, walkingStep, isWalkingBack);
+  const petImage = getPetImage(pet, isPlaying, isWalking, walkingStep, depthPosition);
 
   const currentCeiling = roomLayers?.ceiling || "/assets/ceilings/classic-ceiling.png";
   const currentWall = roomLayers?.wall || "/assets/walls/classic-wall.png";
