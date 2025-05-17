@@ -100,7 +100,7 @@ export default function PetRoom({
         alt="Pet"
         style={{ 
           left: `${petPosition}%`,
-          transform: `translateX(-50%) ${isFacingRight ? '' : 'scaleX(-1)'}`,
+          transform: `translateX(-50%) ${isFacingRight ? 'scaleX(-1)' : ''}`,
           zIndex: 8
         }}
       />
