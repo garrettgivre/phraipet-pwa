@@ -113,19 +113,23 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
         setIsWalking(true);
         setIsFacingRight(direction > 0);
         
-        // Start walking animation
-        let step = 0;
-        const walkInterval = setInterval(() => {
-          setWalkingStep(step);
-          step = (step + 1) % 2;
-        }, 200); // Alternate walking steps every 200ms
+        // Calculate number of steps based on distance
+        const distance = Math.abs(boundedPos - prevPos);
+        const stepsPerPixel = 0.5; // Adjust this value to control animation speed
+        const totalSteps = Math.floor(distance * stepsPerPixel);
         
-        // Stop walking after movement completes
-        setTimeout(() => {
-          clearInterval(walkInterval);
-          setIsWalking(false);
-          setWalkingStep(0);
-        }, 1000);
+        // Start walking animation
+        let currentStep = 0;
+        const walkInterval = setInterval(() => {
+          if (currentStep < totalSteps) {
+            setWalkingStep(currentStep % 2);
+            currentStep++;
+          } else {
+            clearInterval(walkInterval);
+            setIsWalking(false);
+            setWalkingStep(0);
+          }
+        }, 200); // Adjust timing between steps
         
         return boundedPos;
       });
