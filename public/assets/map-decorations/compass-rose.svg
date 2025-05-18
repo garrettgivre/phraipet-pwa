@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+  <g transform="translate(60,60)">
+    <!-- Background circle -->
+    <circle cx="0" cy="0" r="50" fill="rgba(245, 241, 230, 0.8)" stroke="#8b4513" stroke-width="2"/>
+    
+    <!-- Compass points -->
+    <g fill="#8b4513">
+      <!-- North point -->
+      <path d="M0,-45 L5,-35 L0,-20 L-5,-35 Z" />
+      <text x="0" y="-52" text-anchor="middle" font-family="Georgia" font-size="14" fill="#8b4513">N</text>
+      
+      <!-- East point -->
+      <path d="M45,0 L35,5 L20,0 L35,-5 Z" />
+      <text x="52" y="0" text-anchor="middle" dominant-baseline="middle" font-family="Georgia" font-size="14" fill="#8b4513">E</text>
+      
+      <!-- South point -->
+      <path d="M0,45 L-5,35 L0,20 L5,35 Z" />
+      <text x="0" y="52" text-anchor="middle" dominant-baseline="hanging" font-family="Georgia" font-size="14" fill="#8b4513">S</text>
+      
+      <!-- West point -->
+      <path d="M-45,0 L-35,-5 L-20,0 L-35,5 Z" />
+      <text x="-52" y="0" text-anchor="middle" dominant-baseline="middle" font-family="Georgia" font-size="14" fill="#8b4513">W</text>
+    </g>
+    
+    <!-- Directional lines -->
+    <g stroke="#8b4513" stroke-width="1" opacity="0.7">
+      <!-- Major axes -->
+      <line x1="0" y1="-45" x2="0" y2="-20" />
+      <line x1="45" y1="0" x2="20" y2="0" />
+      <line x1="0" y1="45" x2="0" y2="20" />
+      <line x1="-45" y1="0" x2="-20" y2="0" />
+      
+      <!-- Diagonals -->
+      <line x1="31" y1="-31" x2="14" y2="-14" stroke-dasharray="3,2" />
+      <line x1="31" y1="31" x2="14" y2="14" stroke-dasharray="3,2" />
+      <line x1="-31" y1="31" x2="-14" y2="14" stroke-dasharray="3,2" />
+      <line x1="-31" y1="-31" x2="-14" y2="-14" stroke-dasharray="3,2" />
+    </g>
+    
+    <!-- Inner circle -->
+    <circle cx="0" cy="0" r="20" fill="none" stroke="#8b4513" stroke-width="1" />
+    
+    <!-- Star pattern -->
+    <g stroke="#8b4513" stroke-width="0.5" opacity="0.8">
+      <path d="M0,0 L10,10 M0,0 L10,-10 M0,0 L-10,10 M0,0 L-10,-10" />
+      <path d="M0,0 L15,0 M0,0 L0,15 M0,0 L-15,0 M0,0 L0,-15" />
+    </g>
+    
+    <!-- Center dot -->
+    <circle cx="0" cy="0" r="3" fill="#8b4513" />
+  </g>
+</svg> 

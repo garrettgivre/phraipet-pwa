@@ -150,17 +150,17 @@
                         {
                          "name":"Name",
                          "type":"string",
-                         "value":"Sunnybrook Furniture"
+                         "value":"Sunnybrook Furniture Store"
                         }, 
                         {
                          "name":"id_string",
                          "type":"string",
-                         "value":"SBFurniture"
+                         "value":"SBFurnitureStore"
                         }, 
                         {
                          "name":"route",
                          "type":"string",
-                         "value":"\/sunnybrook\/SBFurniture"
+                         "value":"\/sunnybrook\/SBFurnitureStore"
                         }, 
                         {
                          "name":"type",
@@ -214,17 +214,17 @@
                         {
                          "name":"Name",
                          "type":"string",
-                         "value":"Sunnybrook Toy"
+                         "value":"Sunnybrook Toy Store"
                         }, 
                         {
                          "name":"id_string",
                          "type":"string",
-                         "value":"SBToy"
+                         "value":"SBToyStore"
                         }, 
                         {
                          "name":"route",
                          "type":"string",
-                         "value":"\/sunnybrook\/SBToy"
+                         "value":"\/sunnybrook\/SBToyStore"
                         }, 
                         {
                          "name":"type",

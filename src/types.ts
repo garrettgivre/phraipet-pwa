@@ -5,23 +5,35 @@ export type Need = "hunger" | "happiness" | "cleanliness" | "affection" | "spiri
 
 // Represents the information for displaying a single need in the UI.
 export interface NeedInfo {
-  need: Need;
-  desc: string;
-  iconSrc: string;
+  name: string;
   value: number;
+  maxValue: number;
+  color: string;
 }
 
 // Defines the structure for a pet object.
 export interface Pet {
+  id: string;
+  name: string;
+  type: string;
   hunger: number;
   happiness: number;
-  cleanliness: number; // This stat remains 'cleanliness' for the pet
+  cleanliness: number;
   affection: number;
   spirit: number;
+  lastNeedsUpdateTime: number;
   image: string;
-  lastNeedsUpdateTime?: number;
   affectionGainedToday?: number;
   lastAffectionGainDate?: string;
+}
+
+// Defines the structure for a user object
+export interface User {
+  id: string;
+  username: string;
+  currency: number;
+  joinDate: string;
+  lastLoginDate: string;
 }
 
 // Defines the structure for a decor item that can be placed in a room.
@@ -52,6 +64,7 @@ interface BaseInventoryItem {
   name: string;
   src: string;
   description?: string;
+  price: number; // Price in coins
 }
 
 // Interface for decoration items as they appear in the inventory.
@@ -65,7 +78,8 @@ export interface DecorationInventoryItem extends BaseInventoryItem {
 export interface FoodInventoryItem extends BaseInventoryItem {
   itemCategory: "food";
   type: FoodCategory;
-  hungerRestored: number;
+  hungerBoost: number;
+  phrases: string[];
 }
 
 // Interface for grooming items as they appear in the inventory.
@@ -73,6 +87,7 @@ export interface GroomingInventoryItem extends BaseInventoryItem {
   itemCategory: "grooming";
   type: GroomingCategory;    // Uses the restricted GroomingCategory
   cleanlinessBoost: number;
+  phrases: string[];
 }
 
 // ToyInventoryItem now uses the updated ToyCategory

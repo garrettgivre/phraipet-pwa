@@ -1,6 +1,6 @@
 // src/pages/Sunnybrook.tsx
 import { useEffect, useState } from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import MapCanvas from '../components/MapCanvas';
 import MapBackButton from '../components/MapBackButton';
 import type { AppHotspot, TiledMapData, TiledObject } from '../types'; 
@@ -22,11 +22,11 @@ const TILED_MAP_WIDTH = 1024;
 const TILED_MAP_HEIGHT = 1536;
 const MAP_ASPECT_RATIO = TILED_MAP_WIDTH / TILED_MAP_HEIGHT; // ~0.67
 const SUNNYBROOK_MAP_URL = "/maps/sunnybrook_map_background.png";
-const SUNNYBROOK_BEHIND_URL = "/maps/sunnybrook_map_behind.png";
 const SUNNYBROOK_DATA_URL = "/maps/sunnybrook_map_data.json";
 
 export default function Sunnybrook() {
   const location = useLocation();
+  const navigate = useNavigate();
   const isSunnybrookRoot = location.pathname === "/sunnybrook";
   
   const [mapDimensions, setMapDimensions] = useState({ width: window.innerWidth, height: window.innerWidth / MAP_ASPECT_RATIO });
@@ -39,8 +39,8 @@ export default function Sunnybrook() {
   // Calculate map dimensions based on viewport size - prioritize WIDTH
   useEffect(() => {
     const updateMapDimensions = () => {
-      // Use full viewport width
-      const viewportWidth = window.innerWidth;
+      // Use full viewport width minus small margin
+      const viewportWidth = window.innerWidth - 30; // Small margin for decorative elements
       
       // Calculate height based on aspect ratio
       let mapWidth = viewportWidth;
@@ -66,7 +66,7 @@ export default function Sunnybrook() {
   // Simple direct function to navigate to the clinic
   const goToClinic = () => {
     console.log("DIRECT CLINIC NAVIGATION TRIGGERED");
-    window.location.href = "/sunnybrook/SBClinic";
+    navigate("/sunnybrook/SBClinic");
   };
   
   // Toggle debug mode to visualize clickable areas
@@ -192,7 +192,7 @@ export default function Sunnybrook() {
   // For simplicity, just use this fallback navigation without React Router
   const handleHotspotClick = (hotspot: AppHotspot) => {
     console.log(`Clicked on hotspot: ${hotspot.name}, navigating to: ${hotspot.route}`);
-    window.location.href = hotspot.route || '/sunnybrook';
+    navigate(hotspot.route || '/sunnybrook');
   };
 
   if (!isSunnybrookRoot) {
@@ -251,48 +251,37 @@ export default function Sunnybrook() {
         {showClickableAreas ? 'Hide Debug' : 'Show Debug'}
       </button>
       
-      <div 
-        className="map-container"
-        style={{
-          width: '100%',
-          height: '100vh',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          overflow: 'hidden',
-          background: '#000',
-          position: 'relative'
-        }}
-      >
-        {/* Expanded background image to fill black space */}
-        <div 
-          className="map-background"
-          style={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            width: '100%',
-            height: '100%',
-            backgroundImage: `url(${SUNNYBROOK_BEHIND_URL})`,
-            backgroundSize: 'contain',
-            backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat',
-            zIndex: 1
-          }}
-        />
+      <div className="map-container">
+        {/* Background grid for map-like feel */}
+        <div className="map-grid"></div>
+        
+        {/* Cartographic map border and decorations */}
+        <div className="map-border">
+          {/* Decorative corner elements */}
+          <div className="map-corner top-left"></div>
+          <div className="map-corner top-right"></div>
+          <div className="map-corner bottom-left"></div>
+          <div className="map-corner bottom-right"></div>
+          
+          {/* Decorative border lines */}
+          <div className="map-border-line horizontal top"></div>
+          <div className="map-border-line horizontal bottom"></div>
+          <div className="map-border-line vertical left"></div>
+          <div className="map-border-line vertical right"></div>
+          
+          {/* Compass rose */}
+          <div className="compass-rose"></div>
+          
+          {/* Map title */}
+          <div className="map-title">Sunnybrook Village</div>
+        </div>
         
         <div
           className="map-content"
           style={{
             width: `${mapDimensions.width}px`,
             height: `${mapDimensions.height}px`,
-            position: 'relative',
-            backgroundImage: `url(${SUNNYBROOK_MAP_URL})`,
-            backgroundSize: '100% 100%',
-            backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat',
-            zIndex: 2
+            backgroundImage: `url(${SUNNYBROOK_MAP_URL})`
           }}
         >
           {/* Invisible clinic hotspot area */}

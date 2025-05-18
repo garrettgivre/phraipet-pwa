@@ -251,7 +251,8 @@ export default function Explore() {
           width: '100%',
           height: '100vh',
           overflow: 'auto',
-          position: 'relative'
+          position: 'relative',
+          backgroundColor: '#f2ead3' // Match the background color
         }}
         onDoubleClick={handleDoubleClick}
       >
@@ -260,7 +261,10 @@ export default function Explore() {
           style={{
             width: mapDimensions.width * GRID_SIZE,
             height: mapDimensions.height * GRID_SIZE,
-            position: 'relative'
+            position: 'relative',
+            transform: 'translateZ(0)', // Force GPU acceleration
+            backfaceVisibility: 'hidden',
+            willChange: 'transform'
           }}
         >
           {/* Render map tiles */}
@@ -273,13 +277,20 @@ export default function Explore() {
                 className="map-tile"
                 style={{
                   position: 'absolute',
-                  left: Math.round(col * mapDimensions.width),
-                  top: Math.round(row * mapDimensions.height),
-                  width: Math.round(mapDimensions.width),
-                  height: Math.round(mapDimensions.height),
+                  left: Math.floor(col * mapDimensions.width),
+                  top: Math.floor(row * mapDimensions.height),
+                  width: Math.ceil(mapDimensions.width),
+                  height: Math.ceil(mapDimensions.height),
                   backgroundImage: `url(${isSunnybrookRoot ? '/maps/sunnybrook_map_background.png' : MAP_BACKGROUND_IMAGE_URL})`,
                   backgroundSize: 'cover',
-                  backgroundPosition: 'center'
+                  backgroundPosition: 'center',
+                  transform: 'translateZ(0)',
+                  backfaceVisibility: 'hidden',
+                  imageRendering: 'pixelated',
+                  backgroundRepeat: 'no-repeat',
+                  backgroundOrigin: 'border-box',
+                  backgroundClip: 'border-box',
+                  boxSizing: 'border-box'
                 }}
               />
             );

@@ -1,4 +1,10 @@
-export default function Play() {
+import type { Pet } from "../types";
+
+interface PlayProps {
+  pet: Pet | null;
+}
+
+export default function Play({ pet }: PlayProps) {
   const handleRefresh = () => {
     window.location.reload();
   };

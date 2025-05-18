@@ -1,6 +1,5 @@
-// Updated types for PhraiPet PWA
+// Type re-export file for PhraiPet PWA
 // Last modified: 2024
 
-export interface Pet {
-// ... existing code ...
-} 
+// Re-export all types from the main types.ts file
+export * from "../types.ts"; 

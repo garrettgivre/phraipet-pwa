@@ -1,7 +1,7 @@
-/* src/pages/InventoryPage.css - Square Tabs Version */
+/* src/pages/DecorationPage.css - Square Tabs Version */
 
 /* Overall page container */
-.sq-inventory-page-wrapper {
+.sq-decor-page-wrapper {
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -12,8 +12,18 @@
   padding-top: var(--header-height); /* Add padding to account for fixed header */
 }
 
+/* Header area */
+.sq-inventory-header {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background-color: #ffffff;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  width: 100%;
+}
+
 /* Title bar */
-.sq-inventory-title-bar {
+.sq-decor-title-bar {
   flex-shrink: 0;
   padding: 10px 15px;
   margin-top: 10px; /* Add margin to push down from header */
@@ -29,7 +39,7 @@
 }
 
 /* Item display area: grows and pushes grid to bottom */
-.sq-inventory-item-display-area {
+.sq-decor-item-display-area {
   flex-grow: 1;
   display: flex;
   flex-direction: column;
@@ -42,7 +52,7 @@
 }
 
 /* Actual grid for items */
-.sq-inventory-item-grid {
+.sq-decor-item-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 16px;
@@ -50,12 +60,12 @@
   transition: opacity 0.15s ease-in-out;
 }
 
-.sq-inventory-item-grid.transitioning {
+.sq-decor-item-grid.transitioning {
   opacity: 0.5;
 }
 
 /* Message for empty categories */
-.sq-inventory-empty-message {
+.sq-decor-empty-message {
   grid-column: 1 / -1;
   text-align: center;
   padding: 20px 15px;
@@ -63,13 +73,13 @@
   font-style: italic;
 }
 
-/* Individual item slot/card - REMOVED BORDER AND SHADOW */
-.sq-inventory-item-slot {
-  background-color: transparent; /* Changed from #ffffff to transparent */
-  border: none; /* Removed border */
+/* Individual item slot/card - NO BORDER AND SHADOW */
+.sq-decor-item-slot {
+  background-color: transparent;
+  border: none;
   border-radius: 6px;
   padding: 8px 4px; /* Reduced horizontal padding */
-  box-shadow: none; /* Removed shadow */
+  box-shadow: none;
   text-align: center;
   aspect-ratio: 1 / 1.3; /* Slightly reduced height ratio */
   display: flex;
@@ -84,13 +94,12 @@
   box-sizing: border-box;
 }
 
-.sq-inventory-item-slot:hover {
+.sq-decor-item-slot:hover {
   transform: translateY(-2px);
-  /* Removed box-shadow on hover */
 }
 
 /* Image container - OPTIMIZED FOR PERFORMANCE */
-.sq-inventory-item-image-wrapper {
+.sq-decor-item-image-wrapper {
   width: 64px; 
   height: 64px;
   overflow: hidden;
@@ -105,12 +114,12 @@
 }
 
 /* For decoration items (positioned absolutely) */
-.sq-inventory-item-image-content[style*="position: absolute"] {
+.sq-decor-item-image-content[style*="position: absolute"] {
   /* No additional styles needed, the inline styles will position it */
 }
 
 /* For regular items (non-decorations) */
-.sq-inventory-item-image-content:not([style*="position: absolute"]) { 
+.sq-decor-item-image-content:not([style*="position: absolute"]) { 
   display: block;
   max-width: 100%;
   max-height: 100%;
@@ -121,16 +130,16 @@
 }
 
 /* Only apply hover scaling to non-decoration items */
-.sq-inventory-item-slot:hover .sq-inventory-item-image-content:not([style*="position: absolute"]) {
+.sq-decor-item-slot:hover .sq-decor-item-image-content:not([style*="position: absolute"]) {
   transform: scale(1.05);
 }
 
-.sq-inventory-item-placeholder-text { 
+.sq-decor-item-placeholder-text { 
   font-size: 0.65rem; 
   color: #bdc3c7; 
 }
 
-.sq-inventory-item-placeholder-text.error { 
+.sq-decor-item-placeholder-text.error { 
   color: #e74c3c; 
   font-size: 1.1rem; 
   width: 100%;
@@ -142,8 +151,8 @@
 }
 
 /* Item info - REDUCED PADDING */
-.sq-inventory-item-info { padding: 1px 0; }
-.sq-inventory-item-name-text {
+.sq-decor-item-info { padding: 1px 0; }
+.sq-decor-item-name-text {
   display: block; 
   font-size: 0.65rem; 
   color: #34495e; 
@@ -154,66 +163,74 @@
   text-overflow: ellipsis; 
   margin-bottom: 1px;
 }
-.sq-inventory-item-effect-text { display: block; font-size: 0.55rem; color: #2980b9;}
-.sq-inventory-item-price-text { 
+.sq-decor-item-price-text { 
   display: block; 
   font-size: 0.55rem; 
   color: #e67e22; 
   font-weight: 500;
 }
 
-.sq-inventory-item-color-picker {
-  display: flex; justify-content: center; align-items: center; gap: 4px;
-  position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%);
-  background: rgba(245, 245, 245, 0.96); padding: 3px; border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); z-index: 5;
+.sq-decor-item-color-picker {
+  display: flex; 
+  justify-content: center; 
+  align-items: center; 
+  gap: 4px;
+  position: absolute; 
+  bottom: 4px; 
+  left: 50%; 
+  transform: translateX(-50%);
+  background: rgba(245, 245, 245, 0.96); 
+  padding: 3px; 
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); 
+  z-index: 5;
 }
-.sq-inventory-color-option-button {
-  width: 16px; height: 16px; border-radius: 50%; background-size: cover;
-  border: 1px solid #bdc3c7; cursor: pointer; transition: transform 0.1s ease;
-  padding: 0; appearance: none; -webkit-appearance: none;
+
+.sq-decor-color-option-button {
+  width: 16px; 
+  height: 16px; 
+  border-radius: 50%; 
+  background-size: cover;
+  border: 1px solid #bdc3c7; 
+  cursor: pointer; 
+  transition: transform 0.1s ease;
+  padding: 0; 
+  appearance: none; 
+  -webkit-appearance: none;
 }
-.sq-inventory-color-option-button:hover { transform: scale(1.1); }
+
+.sq-decor-color-option-button:hover { 
+  transform: scale(1.1); 
+}
 
 /* Container for both tab bars */
-.sq-inventory-navigation-bars {
+.sq-decor-navigation-bars {
   flex-shrink: 0;
   background-color: #e4e7ea;
   border-top: 1px solid #c8ced3;
   box-shadow: 0 -1px 2px rgba(0,0,0,0.03);
   width: 100%;
   box-sizing: border-box;
-  margin-bottom: 70px; /* Increased from 45px to 70px to accommodate back button */
+  margin-bottom: 70px; /* Space for back button and navbar */
 }
 
 /* Styling for tab bars that will contain equally growing tabs */
-.sq-inventory-sub-category-bar,
-.sq-inventory-main-category-bar {
+.sq-decor-sub-category-bar {
   display: flex; /* Key for making buttons share width */
   width: 100%;   /* Ensure bar takes full width */
   box-sizing: border-box;
-}
-
-.sq-inventory-sub-category-bar {
   background-color: #eceff1;
   padding: 4px 0; /* Minimal vertical padding, no horizontal for buttons to touch edges */
 }
 
-.sq-inventory-main-category-bar {
-  background-color: #dde1e6;
-  border-top: 1px solid #cfd8dc;
-  padding: 4px 0; /* Minimal vertical padding, no horizontal */
-}
-
 /* Common styling for all square tab buttons */
-.sq-inventory-tab-button,
-.sq-inventory-main-tab-button {
+.sq-decor-tab-button {
   flex-grow: 1; /* Each button takes an equal share of the width */
   flex-basis: 0; /* Start with no intrinsic width before growing */
   padding: 8px 5px; /* Adjust padding as needed */
   margin: 0;
   border: none;
-  border-radius: 4px; /* Slightly rounded corners for "soft square" look, set to 0 for sharp */
+  border-radius: 4px; /* Slightly rounded corners for "soft square" look */
   background-color: transparent; /* Will inherit from parent tab bar */
   color: #455a64;
   text-align: center;
@@ -228,103 +245,25 @@
   box-sizing: border-box; /* Include border in width calculation */
 }
 
-/* Remove left border for the first button in each bar */
-.sq-inventory-sub-category-bar .sq-inventory-tab-button:first-child,
-.sq-inventory-main-category-bar .sq-inventory-main-tab-button:first-child {
+/* Remove left border for the first button */
+.sq-decor-sub-category-bar .sq-decor-tab-button:first-child {
   border-left: none;
 }
 
-.sq-inventory-main-tab-button {
-  font-size: 0.85rem; /* ~13.6px */
-  font-weight: 600;
-  padding: 10px 5px; /* Slightly more padding for main tabs */
-}
-
-.sq-inventory-tab-button.active,
-.sq-inventory-main-tab-button.active {
+.sq-decor-tab-button.active {
   background-color: #546e7a; /* Darker background for active tab */
   color: #ffffff;
   font-weight: 700;
 }
 
-.sq-inventory-tab-button:hover:not(.active) {
+.sq-decor-tab-button:hover:not(.active) {
   background-color: #cfd8dc;
   color: #263238;
 }
 
-.sq-inventory-main-tab-button:hover:not(.active) {
-  background-color: #bcccdc;
-  color: #263238;
-}
-
-.inventory-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 8px;
-  cursor: pointer;
-  transition: transform 0.2s;
-  border: none;
-  background: none;
-}
-
-.inventory-item:hover {
-  transform: scale(1.05);
-}
-
-.inventory-item img {
-  width: 64px;
-  height: 64px;
-  object-fit: contain;
-  margin-bottom: 4px;
-}
-
-.inventory-item-name {
-  font-size: 0.8rem;
-  text-align: center;
-  color: #333;
-  margin-top: 2px;
-}
-
-.inventory-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-  gap: 8px;
-  padding: 8px;
-  background: none;
-}
-
-.sq-inventory-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background-color: var(--primary-color);
-  border-bottom: 2px solid var(--border-color);
-}
-
-.sq-inventory-title-bar {
-  color: white;
-  padding: 0.5rem;
-  margin: 0;
-  text-align: center;
-  font-size: 1.2rem;
-  flex: 1;
-}
-
-.sq-inventory-decor-button {
-  background-color: var(--accent-color);
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  font-size: 0.9rem;
-  font-weight: bold;
-  cursor: pointer;
-  margin-right: 0.5rem;
-  border-radius: 4px;
-  transition: background-color 0.2s;
-}
-
-.sq-inventory-decor-button:hover {
-  background-color: var(--accent-hover-color, #218838);
-}
-
+@media (max-width: 480px) {
+  .sq-decor-item-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+} 

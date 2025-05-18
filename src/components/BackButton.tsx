@@ -1,8 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 
-interface MapBackButtonProps {
-  destination?: string; // Where to navigate to
+interface BackButtonProps {
   size?: number;        // Size in pixels
   position?: {          // Position from edges
     left?: number;
@@ -13,18 +12,16 @@ interface MapBackButtonProps {
 }
 
 /**
- * A reusable back button component that appears on map pages
+ * A reusable back button component that uses the browser history to go back
  */
-const MapBackButton: React.FC<MapBackButtonProps> = ({
-  destination = "/explore",
-  size = 50,
-  position = { left: 20, bottom: 20 }
+const BackButton: React.FC<BackButtonProps> = ({
+  size = 40,
+  position = { left: 15, bottom: 85 } // Position above navbar but below tabs
 }) => {
   const navigate = useNavigate();
 
   const handleClick = () => {
-    console.log(`Navigating to ${destination}`);
-    navigate(destination);
+    navigate(-1); // Go back one page in history
   };
 
   // Compute position style based on provided position props
@@ -36,7 +33,7 @@ const MapBackButton: React.FC<MapBackButtonProps> = ({
 
   return (
     <div
-      className="map-back-button"
+      className="back-button"
       onClick={handleClick}
       style={{
         position: 'fixed',
@@ -47,13 +44,13 @@ const MapBackButton: React.FC<MapBackButtonProps> = ({
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
         cursor: 'pointer',
-        zIndex: 9999,
+        zIndex: 100,
         filter: 'drop-shadow(0px 0px 3px rgba(0,0,0,0.7))',
         ...positionStyle
       }}
-      title="Back to Map"
+      title="Go Back"
     />
   );
 };
 
-export default MapBackButton; 
+export default BackButton; 

@@ -1,14 +1,16 @@
 // src/App.tsx
-import { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef, useCallback, type ReactNode } from "react";
 import { BrowserRouter, Routes, Route, useLocation, useNavigate } from "react-router-dom";
 import type { Pet, Need, NeedInfo, FoodInventoryItem, GroomingInventoryItem, ToyInventoryItem } from "./types";
-import { InventoryProvider } from "./contexts/InventoryContext";
+import { InventoryProvider, useInventory } from "./contexts/InventoryContext";
+import { DecorationProvider } from "./contexts/DecorationContext";
 import { ToyAnimationProvider, useToyAnimation } from "./contexts/ToyAnimationContext";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { petService, withErrorHandling } from "./services/firebase";
 import { createRoutes } from "./routes";
 import Header from "./components/Header";
 import NavBar from "./components/NavBar";
+import { CoinsProvider, useCoins } from './contexts/CoinsContext';
 
 import "./App.css";
 
@@ -63,6 +65,7 @@ interface AppShellProps {
 function AppShell({ pet, handleFeedPet, handleGroomPet, handlePlayWithToy, handleIncreaseAffection, needInfo }: AppShellProps) {
   const location = useLocation();
   const isPetPage = location.pathname === "/";
+  const { coins } = useCoins();
 
   console.log("Current location:", location.pathname);
 
@@ -81,7 +84,7 @@ function AppShell({ pet, handleFeedPet, handleGroomPet, handlePlayWithToy, handl
   return (
     <>
       <ScrollToTop />
-      {!isPetPage && ( <Header coins={100} needs={needInfo} /> )}
+      {!isPetPage && ( <Header coins={coins} needs={needInfo} /> )}
       <main style={{
         paddingTop: "0px",
         paddingBottom: "var(--nav-height)",
@@ -345,14 +348,36 @@ function AppContent() {
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <ErrorBoundary>
       <InventoryProvider>
-        <ToyAnimationProvider>
-          <ErrorBoundary>
-            <AppContent />
-          </ErrorBoundary>
-        </ToyAnimationProvider>
+        <CoinsProvider>
+          <ToyAnimationProvider>
+            <DecorationProvider>
+              <BrowserRouter>
+                <div style={{ position: 'fixed', bottom: '10px', right: '10px', zIndex: 9999 }}>
+                  <a 
+                    href="/debug" 
+                    style={{
+                      padding: '5px 10px',
+                      backgroundColor: '#4285f4',
+                      color: 'white',
+                      fontSize: '12px',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      textDecoration: 'none',
+                      display: 'inline-block'
+                    }}
+                  >
+                    Debug
+                  </a>
+                </div>
+                <AppContent />
+              </BrowserRouter>
+            </DecorationProvider>
+          </ToyAnimationProvider>
+        </CoinsProvider>
       </InventoryProvider>
-    </BrowserRouter>
+    </ErrorBoundary>
   );
 }

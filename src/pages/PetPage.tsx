@@ -1,9 +1,10 @@
 // src/pages/PetPage.tsx
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { useInventory } from "../contexts/InventoryContext";
+import type { Pet, Need, NeedInfo } from "../types.ts";
 import { useToyAnimation } from "../contexts/ToyAnimationContext";
-import type { NeedInfo, Pet as PetType, Need as NeedType } from "../types";
+import { useDecoration } from "../contexts/DecorationContext";
+import { useCoins } from "../contexts/CoinsContext";
 import "./PetPage.css";
 import CoinDisplay from "../components/CoinDisplay";
 import PetRoom from "../components/PetRoom";
@@ -14,14 +15,15 @@ import { usePetMovement } from "../hooks/usePetMovement";
 import { getPetImage } from "../utils/petImageSelector";
 
 interface PetPageProps {
-  pet: PetType | null;
+  pet: Pet | null;
   needInfo: NeedInfo[];
   onIncreaseAffection: (amount: number) => void;
 }
 
 export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageProps) {
-  const { roomLayers, roomLayersLoading } = useInventory();
+  const { roomLayers, roomLayersLoading } = useDecoration();
   const { activeToy, isPlaying } = useToyAnimation();
+  const { coins } = useCoins();
   const navigate = useNavigate();
   const { position, isWalking, walkingStep, isFacingRight } = usePetMovement(pet);
   const [foodItem, setFoodItem] = useState<{ src: string; position: number; hungerRestored?: number } | null>(null);
@@ -142,7 +144,7 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
   const currentTrim = roomLayers?.trim || "";
   const overlaySrc = roomLayers?.overlay || "";
 
-  const handleNeedClick = (needType: NeedType) => {
+  const handleNeedClick = (needType: Need) => {
     console.log(`Need circle clicked: ${needType}`);
     switch (needType) {
       case "affection":
@@ -205,7 +207,7 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
 
   return (
     <div className={`petPage ${!roomLayersLoading ? 'loaded' : ''}`} key={currentFloor + currentWall}>
-      <CoinDisplay coins={100} />
+      <CoinDisplay coins={coins} />
       
       <PetRoom
         floor={currentFloor}
@@ -236,8 +238,8 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
 
       <PetNeedsDisplay needInfo={modifiedNeedInfo} onNeedClick={handleNeedClick} />
 
-      <div className="paintbrush-icon" onClick={() => navigate("/inventory")}>
-        <img src="/assets/icons/paintbrush.png" alt="Customize Room" />
+      <div className="paintbrush-icon" onClick={() => navigate("/decorations")}>
+        <img src="/assets/icons/paintbrush.png" alt="Room Decorations" />
       </div>
     </div>
   );

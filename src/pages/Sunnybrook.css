@@ -6,21 +6,175 @@
   flex-direction: column;
   align-items: center; 
   justify-content: center; 
-  background-color: #d4f0c7; 
+  background-color: #f2ead3; /* Lighter parchment background */
   overflow: hidden; 
   box-sizing: border-box;
 }
 
-.sunnybrook-page .map-scrollable-content { 
-  position: relative; 
-  background-color: #c0e0b8; 
-  box-shadow: 0 0 10px rgba(0,0,0,0.1); 
-  max-width: 100%;
-  max-height: 100%;
-  /* Inline styles from Sunnybrook.tsx will set width, height, and background image properties */
+.sunnybrook-page .map-container {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  position: relative;
+  /* Subtle texture background */
+  background: #f2ead3;
+  padding: 8px; /* Reduced padding */
 }
 
+/* Create cartographic elements around the map */
+.sunnybrook-page .map-border {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 5;
+  pointer-events: none; /* Don't interfere with map clicks */
+  /* Add subtle parchment texture */
+  background-image: linear-gradient(45deg, #f2ead3 25%, #eee6cb 25%, #eee6cb 50%, #f2ead3 50%, #f2ead3 75%, #eee6cb 75%, #eee6cb 100%);
+  background-size: 40px 40px;
+  opacity: 0.3;
+}
 
+/* Map corners - smaller and less intrusive */
+.sunnybrook-page .map-corner {
+  position: absolute;
+  width: 60px; /* Reduced from 80px */
+  height: 60px; /* Reduced from 80px */
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  z-index: 6;
+}
+
+.sunnybrook-page .map-corner.top-left {
+  top: 5px;
+  left: 5px;
+  background-image: url('/assets/map-decorations/corner-tl.svg');
+}
+
+.sunnybrook-page .map-corner.top-right {
+  top: 5px;
+  right: 5px;
+  background-image: url('/assets/map-decorations/corner-tr.svg');
+}
+
+.sunnybrook-page .map-corner.bottom-left {
+  bottom: 5px;
+  left: 5px;
+  background-image: url('/assets/map-decorations/corner-bl.svg');
+}
+
+.sunnybrook-page .map-corner.bottom-right {
+  bottom: 5px;
+  right: 5px;
+  background-image: url('/assets/map-decorations/corner-br.svg');
+}
+
+/* Compass rose - moved to not overlap with content */
+.sunnybrook-page .compass-rose {
+  position: absolute;
+  width: 90px; /* Reduced from 120px */
+  height: 90px; /* Reduced from 120px */
+  bottom: 10px; 
+  right: 10px;
+  background-image: url('/assets/map-decorations/compass-rose.svg');
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  z-index: 6;
+  opacity: 0.85; /* Slightly transparent */
+}
+
+/* Map content - less border, more content space */
+.sunnybrook-page .map-content {
+  position: relative;
+  background-size: 100% 100%;
+  background-position: center;
+  background-repeat: no-repeat;
+  z-index: 10;
+  border: 4px solid #b09065; /* Thinner and more subtle border */
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+  /* Make it fill more horizontal space */
+  width: calc(100% - 30px) !important;
+  max-width: 1200px;
+}
+
+/* Map title */
+.sunnybrook-page .map-title {
+  position: absolute;
+  top: 8px; /* Moved closer to top edge */
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: 'Georgia', serif;
+  font-size: 18px; /* Smaller text */
+  font-weight: bold;
+  color: #8b4513;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.15);
+  z-index: 20;
+  background-color: rgba(245, 241, 230, 0.8);
+  padding: 2px 15px; /* Reduced padding */
+  border-radius: 12px;
+  border: 1px solid #d2b48c; /* Thinner border */
+  letter-spacing: 1px;
+}
+
+/* Decorative lines - thinner and more subtle */
+.sunnybrook-page .map-border-line {
+  position: absolute;
+  background-color: #b09065; /* Darker, more subtle tan */
+  z-index: 6;
+  opacity: 0.6; /* More transparent */
+}
+
+.sunnybrook-page .map-border-line.horizontal {
+  width: 90%;
+  height: 1px; /* Thinner line */
+  left: 5%;
+}
+
+.sunnybrook-page .map-border-line.vertical {
+  width: 1px; /* Thinner line */
+  height: 90%;
+  top: 5%;
+}
+
+.sunnybrook-page .map-border-line.top {
+  top: 15px; /* Closer to edge */
+}
+
+.sunnybrook-page .map-border-line.bottom {
+  bottom: 15px; /* Closer to edge */
+}
+
+.sunnybrook-page .map-border-line.left {
+  left: 15px; /* Closer to edge */
+}
+
+.sunnybrook-page .map-border-line.right {
+  right: 15px; /* Closer to edge */
+}
+
+/* Add subtle grid lines to give a map-like feel */
+.sunnybrook-page .map-grid {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  background-image: 
+    linear-gradient(rgba(139, 69, 19, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(139, 69, 19, 0.05) 1px, transparent 1px);
+  background-size: 40px 40px;
+  z-index: 7;
+}
+
+/* Status messages */
 .sunnybrook-status-message { 
   flex-grow: 1;
   display: flex;
@@ -36,7 +190,7 @@
   position: absolute; 
   top: 0;
   left: 0;
-  background-color: rgba(230, 255, 230, 0.9); 
+  background-color: rgba(242, 234, 211, 0.9); /* Match parchment color */
   z-index: 200;
 }
 

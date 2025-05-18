@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <g fill="#8b4513" opacity="0.85">
+    <!-- Ornate corner (bottom right) -->
+    <path d="M90,90 L70,90 C75,85 80,80 80,70 L90,70 Z" fill="#8b4513"/>
+    <path d="M95,95 L65,95 C70,85 75,75 75,65 L95,65 Z" fill="none" stroke="#8b4513" stroke-width="2"/>
+    <!-- Decorative flourish -->
+    <path d="M65,95 Q55,85 55,70 Q55,60 65,50" fill="none" stroke="#8b4513" stroke-width="2" stroke-linecap="round"/>
+    <path d="M55,70 Q50,65 45,70" fill="none" stroke="#8b4513" stroke-width="1.5" stroke-linecap="round"/>
+    <path d="M55,60 Q50,55 45,60" fill="none" stroke="#8b4513" stroke-width="1.5" stroke-linecap="round"/>
+    <!-- Small decorative dots -->
+    <circle cx="65" cy="85" r="2" fill="#8b4513"/>
+    <circle cx="60" cy="80" r="2" fill="#8b4513"/>
+    <circle cx="60" cy="60" r="2" fill="#8b4513"/>
+  </g>
+</svg> 

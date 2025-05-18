@@ -1,13 +1,14 @@
+import React from "react";
 import BuildingTemplate from "./BuildingTemplate";
 
 export default function SBToy() {
   return (
     <BuildingTemplate
-      title="Toy Shop"
+      title="Toys"
       imagePath="/locations/sbtoy-horizontal.png"
     >
       <p>
-        Toys and games for your pet
+        Toy shop with fun accessories for your pet
       </p>
     </BuildingTemplate>
   );

@@ -179,6 +179,11 @@
   color: #555;
 }
 
+.item-price {
+  color: #e67e22;
+  font-weight: bold;
+}
+
 .portrait-layout .item-action-buttons {
   margin-top: auto;
   width: 100%;

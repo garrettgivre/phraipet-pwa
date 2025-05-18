@@ -5,6 +5,8 @@ import PetPage from "./pages/PetPage";
 import Explore from "./pages/Explore";
 import Play from "./pages/Play";
 import InventoryPage from "./pages/InventoryPage";
+import DecorationPage from "./pages/DecorationPage";
+import DecorationDebug from "./pages/DecorationDebug";
 import Sunnybrook from "./pages/Sunnybrook";
 import SBAdoption from "./pages/Sunnybrook/SBAdoption"; 
 import SBClock from "./pages/Sunnybrook/SBClock";
@@ -14,6 +16,8 @@ import SBFurniture from "./pages/Sunnybrook/SBFurniture";
 import SBMart from "./pages/Sunnybrook/SBMart";
 import SBStall from "./pages/Sunnybrook/SBStall";
 import SBToy from "./pages/Sunnybrook/SBToy";
+import SBToyStore from "./pages/Sunnybrook/SBToyStore";
+import SBFurnitureStore from "./pages/Sunnybrook/SBFurnitureStore";
 
 interface RouteProps {
   pet: Pet | null;
@@ -24,74 +28,87 @@ interface RouteProps {
   handleIncreaseAffection: (amount: number) => void;
 }
 
-export function createRoutes(props: RouteProps): RouteObject[] {
+export function createRoutes({
+  pet,
+  needInfo,
+  handleFeedPet,
+  handleGroomPet,
+  handlePlayWithToy,
+  handleIncreaseAffection,
+}: RouteProps): RouteObject[] {
   return [
     {
       path: "/",
-      element: <PetPage pet={props.pet} needInfo={props.needInfo} onIncreaseAffection={props.handleIncreaseAffection} />
+      element: <PetPage pet={pet} needInfo={needInfo} onIncreaseAffection={handleIncreaseAffection} />,
     },
     {
       path: "/explore",
       element: <Explore />,
-      children: [
-        {
-          path: "sunnybrook",
-          element: <Sunnybrook />
-        }
-      ]
     },
     {
       path: "/play",
-      element: <Play />
+      element: <Play pet={pet} />,
     },
     {
       path: "/inventory",
-      element: <InventoryPage
-        pet={props.pet}
-        onFeedPet={props.handleFeedPet}
-        onGroomPet={props.handleGroomPet}
-        onPlayWithToy={props.handlePlayWithToy}
+      element: <InventoryPage 
+        pet={pet} 
+        onFeedPet={handleFeedPet} 
+        onGroomPet={handleGroomPet} 
+        onPlayWithToy={handlePlayWithToy}
       />
     },
     {
-      path: "/sunnybrook",
-      element: <Sunnybrook />
+      path: "/decorations",
+      element: <DecorationPage />
     },
     {
-      path: "/test-sunnybrook",
-      element: <Sunnybrook />
+      path: "/debug",
+      element: <DecorationDebug />
+    },
+    {
+      path: "/sunnybrook",
+      element: <Sunnybrook />,
     },
     {
       path: "/sunnybrook/SBAdoption",
-      element: <SBAdoption />
-    },
-    {
-      path: "/sunnybrook/SBClinic",
-      element: <SBClinic />
+      element: <SBAdoption />,
     },
     {
       path: "/sunnybrook/SBClock",
-      element: <SBClock />
+      element: <SBClock />,
+    },
+    {
+      path: "/sunnybrook/SBClinic",
+      element: <SBClinic />,
     },
     {
       path: "/sunnybrook/SBFountain",
-      element: <SBFountain />
+      element: <SBFountain />,
     },
     {
       path: "/sunnybrook/SBFurniture",
-      element: <SBFurniture />
+      element: <SBFurniture />,
     },
     {
       path: "/sunnybrook/SBMart",
-      element: <SBMart />
+      element: <SBMart />,
     },
     {
       path: "/sunnybrook/SBStall",
-      element: <SBStall />
+      element: <SBStall />,
     },
     {
       path: "/sunnybrook/SBToy",
-      element: <SBToy />
+      element: <SBToy />,
+    },
+    {
+      path: "/sunnybrook/SBToyStore",
+      element: <SBToyStore />,
+    },
+    {
+      path: "/sunnybrook/SBFurnitureStore",
+      element: <SBFurnitureStore />,
     }
   ];
 } 

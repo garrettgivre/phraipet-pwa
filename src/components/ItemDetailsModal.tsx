@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import './ItemDetailsModal.css';
 import type { FoodInventoryItem, GroomingInventoryItem, ToyInventoryItem, InventoryItem } from '../types';
 import { getFoodDescription, getFoodItemByName } from '../data/foodDescriptions';
@@ -23,6 +23,50 @@ const getMealSize = (item: FoodInventoryItem) => {
   };
   
   return categorySizes[item.type] || item.type;
+};
+
+// Helper to get the correct price display
+const getItemPrice = (item: InventoryItem): string => {
+  // Check for directly available price
+  if (item.price !== undefined && item.price !== null) {
+    // Handle both number and string cases
+    const price = typeof item.price === 'string' ? parseInt(item.price, 10) : item.price;
+    // Only display if it's a valid number greater than 0
+    if (!isNaN(price) && price > 0) {
+      return `${price} coins`;
+    }
+  }
+  
+  // Fallback to category-based price
+  if (item.itemCategory === 'food') {
+    const foodItem = item as FoodInventoryItem;
+    if (foodItem.type === 'Treat') return '10 coins';
+    if (foodItem.type === 'Snack') return '15 coins';
+    if (foodItem.type === 'LightMeal') return '25 coins';
+    if (foodItem.type === 'HeartyMeal') return '35 coins';
+    if (foodItem.type === 'Feast') return '45 coins';
+    return '20 coins';
+  }
+  
+  if (item.itemCategory === 'grooming') {
+    const groomingItem = item as GroomingInventoryItem;
+    if (groomingItem.type === 'QuickFix') return '15 coins';
+    if (groomingItem.type === 'BasicKit') return '20 coins';
+    if (groomingItem.type === 'StandardSet') return '30 coins';
+    if (groomingItem.type === 'PremiumCare') return '50 coins';
+    if (groomingItem.type === 'LuxurySpa') return '70 coins';
+    return '25 coins';
+  }
+  
+  if (item.itemCategory === 'toy') {
+    return '20 coins';
+  }
+  
+  if (item.itemCategory === 'decoration') {
+    return '100 coins';
+  }
+  
+  return '10 coins';
 };
 
 export default function ItemDetailsModal({ 
@@ -94,6 +138,17 @@ export default function ItemDetailsModal({
     foodInfo = getFoodInfo(item as FoodInventoryItem);
   }
 
+  // For testing purposes, add console.log to check the price value
+  useEffect(() => {
+    if (item) {
+      console.log('Item details:', {
+        name: item.name,
+        price: item.price,
+        priceType: typeof item.price
+      });
+    }
+  }, [item]);
+
   return (
     <div className="item-details-overlay" onClick={handleOverlayClick}>
       <div className="item-details-modal portrait-layout">
@@ -128,6 +183,12 @@ export default function ItemDetailsModal({
                     +{(item as FoodInventoryItem).hungerRestored}
                   </span>
                 </div>
+                <div className="item-stat">
+                  <strong>Price:</strong> 
+                  <span className="item-price">
+                    {getItemPrice(item)}
+                  </span>
+                </div>
               </div>
             )}
             
@@ -135,6 +196,12 @@ export default function ItemDetailsModal({
               <div className="item-stats">
                 <div className="item-stat"><strong>Category:</strong> {capitalizeFirstLetter((item as GroomingInventoryItem).type)}</div>
                 <div className="item-stat"><strong>Cleanliness Boost:</strong> +{(item as GroomingInventoryItem).cleanlinessBoost}</div>
+                <div className="item-stat">
+                  <strong>Price:</strong> 
+                  <span className="item-price">
+                    {getItemPrice(item)}
+                  </span>
+                </div>
               </div>
             )}
             
@@ -142,6 +209,24 @@ export default function ItemDetailsModal({
               <div className="item-stats">
                 <div className="item-stat"><strong>Category:</strong> {capitalizeFirstLetter((item as ToyInventoryItem).type)}</div>
                 <div className="item-stat"><strong>Happiness Boost:</strong> +{(item as ToyInventoryItem).happinessBoost}</div>
+                <div className="item-stat">
+                  <strong>Price:</strong> 
+                  <span className="item-price">
+                    {getItemPrice(item)}
+                  </span>
+                </div>
+              </div>
+            )}
+            
+            {item.itemCategory === 'decoration' && (
+              <div className="item-stats">
+                <div className="item-stat"><strong>Category:</strong> {capitalizeFirstLetter(item.type)}</div>
+                <div className="item-stat">
+                  <strong>Price:</strong> 
+                  <span className="item-price">
+                    {getItemPrice(item)}
+                  </span>
+                </div>
               </div>
             )}
           </div>

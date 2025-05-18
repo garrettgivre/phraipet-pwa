@@ -4,7 +4,6 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useInventory, imageCache, zoomStylesCache } from "../contexts/InventoryContext";
 import type {
   InventoryItem,
-  DecorationInventoryItem,
   FoodInventoryItem,
   GroomingInventoryItem,
   ToyInventoryItem,
@@ -12,17 +11,16 @@ import type {
   GroomingCategory, // This type is now restricted to the 5 main ones
   ToyCategory,
   Pet as PetType,
-  DecorationItemType,
-  RoomDecorItem,
 } from "../types";
 import { calculateVisibleBounds } from "../utils/imageUtils";
+import BackButton from "../components/BackButton";
 import "./InventoryPage.css";
 import ItemDetailsModal from "../components/ItemDetailsModal";
 
-const mainCategories = ["Decorations", "Food", "Grooming", "Toys"] as const;
+// Removed Decorations from main categories
+const mainCategories = ["Food", "Grooming", "Toys"] as const;
 type MainCategory = (typeof mainCategories)[number];
 
-const decorationSubCategories: DecorationItemType[] = ["wall", "floor", "ceiling", "trim", "decor", "overlay"];
 const foodSubCategories: FoodCategory[] = [
   "Treat", "Snack", "LightMeal", "HeartyMeal", "Feast",
 ];
@@ -49,16 +47,20 @@ interface InventoryPageProps {
 const capitalizeFirstLetter = (string: string) => {
   if (!string) return string;
   const specialCases: Record<string, string> = {
-    backDecor: "Back Decor", frontDecor: "Front Decor", QuickFix: "Quick Fix",
-    BasicKit: "Basic Kit", StandardSet: "Standard Set", PremiumCare: "Premium Care",
-    LuxurySpa: "Luxury Spa", LightMeal: "Light Meal", HeartyMeal: "Hearty Meal",
+    QuickFix: "Quick Fix",
+    BasicKit: "Basic Kit", 
+    StandardSet: "Standard Set", 
+    PremiumCare: "Premium Care",
+    LuxurySpa: "Luxury Spa", 
+    LightMeal: "Light Meal", 
+    HeartyMeal: "Hearty Meal",
   };
   if (specialCases[string]) return specialCases[string];
   // Generic capitalization for single words or rely on direct enum value if it's already capitalized
   return string.charAt(0).toUpperCase() + string.slice(1).replace(/([A-Z])/g, ' $1').trim();
 };
 
-function ZoomedImage({ src, alt, isDecoration = false }: { src: string; alt: string; isDecoration?: boolean }) {
+function ZoomedImage({ src, alt }: { src: string; alt: string }) {
   const containerSize = 64;
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
@@ -72,7 +74,7 @@ function ZoomedImage({ src, alt, isDecoration = false }: { src: string; alt: str
     setError(false);
     setImageStyle(prev => ({ ...prev, visibility: 'hidden' }));
 
-    // Function to handle simple loading (for non-decoration items)
+    // Function to handle simple loading
     const handleSimpleLoading = () => {
       if (!isMounted) return;
       const simpleStyle: React.CSSProperties = {
@@ -88,7 +90,7 @@ function ZoomedImage({ src, alt, isDecoration = false }: { src: string; alt: str
       setLoaded(true);
     };
     
-    // Function to handle complex loading with zoom (for decoration items)
+    // Function to handle complex loading with zoom
     const handleComplexLoading = async () => {
       if (!isMounted) return;
       
@@ -156,18 +158,10 @@ function ZoomedImage({ src, alt, isDecoration = false }: { src: string; alt: str
       const cachedImg = imageCache.get(src)!;
       
       if (cachedImg.complete) {
-        if (isDecoration) {
-          handleComplexLoading();
-        } else {
-          handleSimpleLoading();
-        }
+        handleSimpleLoading();
       } else {
         cachedImg.onload = () => {
-          if (isDecoration) {
-            handleComplexLoading();
-          } else {
-            handleSimpleLoading();
-          }
+          handleSimpleLoading();
         };
         
         cachedImg.onerror = () => {
@@ -184,11 +178,7 @@ function ZoomedImage({ src, alt, isDecoration = false }: { src: string; alt: str
       imageCache.set(src, img);
 
       img.onload = () => {
-        if (isDecoration) {
-          handleComplexLoading();
-        } else {
-          handleSimpleLoading();
-        }
+        handleSimpleLoading();
       };
 
       img.onerror = () => {
@@ -200,7 +190,7 @@ function ZoomedImage({ src, alt, isDecoration = false }: { src: string; alt: str
     }
 
     return () => { isMounted = false; };
-  }, [src, isDecoration, containerSize]);
+  }, [src, containerSize]);
 
   return (
     <div className="sq-inventory-item-image-wrapper">
@@ -214,7 +204,7 @@ function ZoomedImage({ src, alt, isDecoration = false }: { src: string; alt: str
 }
 
 export default function InventoryPage({ pet, onFeedPet, onGroomPet, onPlayWithToy }: InventoryPageProps) {
-  const { setRoomLayer, addDecorItem, consumeItem, getFilteredItems } = useInventory();
+  const { consumeItem, getFilteredItems } = useInventory();
   const location = useLocation();
   const navigate = useNavigate();
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -223,12 +213,11 @@ export default function InventoryPage({ pet, onFeedPet, onGroomPet, onPlayWithTo
 
   const initialTabs = useMemo(() => {
     const state = location.state as InventoryLocationState | null;
-    let main: MainCategory = "Decorations";
-    let sub: string = decorationSubCategories[0]; // Default
+    let main: MainCategory = "Food";
+    let sub: string = foodSubCategories[0]; // Default
     if (state?.targetMainCategory) {
       main = state.targetMainCategory;
-      if (main === "Decorations") sub = (decorationSubCategories.includes(state.targetSubCategory as DecorationItemType) ? state.targetSubCategory : decorationSubCategories[0]) as string;
-      else if (main === "Food") sub = (foodSubCategories.includes(state.targetSubCategory as FoodCategory) ? state.targetSubCategory : foodSubCategories[0]) as string;
+      if (main === "Food") sub = (foodSubCategories.includes(state.targetSubCategory as FoodCategory) ? state.targetSubCategory : foodSubCategories[0]) as string;
       else if (main === "Grooming") sub = (groomingSubCategories.includes(state.targetSubCategory as GroomingCategory) ? state.targetSubCategory : groomingSubCategories[0]) as string;
       else if (main === "Toys") sub = (toySubCategories.includes(state.targetSubCategory as ToyCategory) ? state.targetSubCategory : toySubCategories[0]) as string;
     }
@@ -237,7 +226,6 @@ export default function InventoryPage({ pet, onFeedPet, onGroomPet, onPlayWithTo
 
   const [selectedMainCategory, setSelectedMainCategory] = useState<MainCategory>(initialTabs.main);
   const [selectedSubCategory, setSelectedSubCategory] = useState<string>(initialTabs.sub);
-  const [activeColorOptions, setActiveColorOptions] = useState<{ id: string; options: { label: string; src: string }[] } | null>(null);
 
   useEffect(() => {
     if (location.state && (location.state as InventoryLocationState).targetMainCategory) {
@@ -268,96 +256,12 @@ export default function InventoryPage({ pet, onFeedPet, onGroomPet, onPlayWithTo
     );
   }, [initialTabs.main, initialTabs.sub, getFilteredItems]);
 
-  // Precalculate and cache zoom styles for decoration items
-  useEffect(() => {
-    // Only run this once for decoration items
-    if (initialTabs.main === "Decorations") {
-      const decorationItems = getFilteredItems("Decorations", initialTabs.sub)
-        .filter(item => item.itemCategory === "decoration");
-      
-      // Process items in batches to avoid blocking the UI
-      const batchSize = 5;
-      const totalItems = decorationItems.length;
-      
-      const processBatch = async (startIndex: number) => {
-        const endIndex = Math.min(startIndex + batchSize, totalItems);
-        const containerSize = 64; // Match the size used in ZoomedImage
-        
-        for (let i = startIndex; i < endIndex; i++) {
-          const item = decorationItems[i];
-          // Skip if already cached
-          if (zoomStylesCache.has(item.src)) continue;
-          
-          try {
-            // Load the image if not already loaded
-            if (!imageCache.has(item.src)) {
-              await new Promise<void>((resolve, reject) => {
-                const img = new Image();
-                img.src = item.src;
-                img.crossOrigin = "anonymous";
-                imageCache.set(item.src, img);
-                img.onload = () => resolve();
-                img.onerror = () => reject(new Error(`Failed to load image: ${item.src}`));
-              });
-            }
-            
-            // Calculate bounds and create zoom style
-            const bounds = await calculateVisibleBounds(item.src);
-            
-            // Skip invalid bounds
-            if (bounds.width <= 0 || bounds.height <= 0 || 
-                bounds.naturalWidth <= 0 || bounds.naturalHeight <= 0) {
-              continue;
-            }
-            
-            // Calculate the zoom style
-            const scale = Math.min(
-              containerSize / bounds.width,
-              containerSize / bounds.height
-            );
-            
-            const scaledNaturalWidth = bounds.naturalWidth * scale;
-            const scaledNaturalHeight = bounds.naturalHeight * scale;
-            
-            const offsetX = (containerSize - (bounds.width * scale)) / 2 - (bounds.x * scale);
-            const offsetY = (containerSize - (bounds.height * scale)) / 2 - (bounds.y * scale);
-            
-            // Cache the calculated style
-            const zoomedStyle: React.CSSProperties = {
-              position: 'absolute' as 'absolute',
-              left: `${offsetX}px`,
-              top: `${offsetY}px`,
-              width: `${scaledNaturalWidth}px`,
-              height: `${scaledNaturalHeight}px`,
-              visibility: 'visible' as 'visible'
-            };
-            
-            zoomStylesCache.set(item.src, zoomedStyle);
-          } catch (err) {
-            console.error(`Error precaching zoom style for ${item.src}:`, err);
-          }
-        }
-        
-        // Process next batch if there are more items
-        if (endIndex < totalItems) {
-          // Use setTimeout to avoid blocking the UI thread
-          setTimeout(() => processBatch(endIndex), 10);
-        }
-      };
-      
-      // Start processing the first batch
-      processBatch(0);
-    }
-  }, [initialTabs.main, initialTabs.sub, getFilteredItems]);
-
   const handleMainCategoryChange = useCallback((category: MainCategory) => {
     setIsTransitioning(true);
     setSelectedMainCategory(category);
-    if (category === "Decorations") setSelectedSubCategory(decorationSubCategories[0]);
-    else if (category === "Food") setSelectedSubCategory(foodSubCategories[0]);
+    if (category === "Food") setSelectedSubCategory(foodSubCategories[0]);
     else if (category === "Grooming") setSelectedSubCategory(groomingSubCategories[0]);
     else if (category === "Toys") setSelectedSubCategory(toySubCategories[0]);
-    setActiveColorOptions(null);
     // Use requestAnimationFrame to ensure state updates are processed before removing transition
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
@@ -378,12 +282,8 @@ export default function InventoryPage({ pet, onFeedPet, onGroomPet, onPlayWithTo
   }, []);
 
   useEffect(() => {
-    setActiveColorOptions(null);
     let currentSubIsValid = false;
-    if (selectedMainCategory === "Decorations") {
-      currentSubIsValid = decorationSubCategories.includes(selectedSubCategory as DecorationItemType);
-      if (!currentSubIsValid) setSelectedSubCategory(decorationSubCategories[0]);
-    } else if (selectedMainCategory === "Food") {
+    if (selectedMainCategory === "Food") {
       currentSubIsValid = foodSubCategories.includes(selectedSubCategory as FoodCategory);
       if (!currentSubIsValid) setSelectedSubCategory(foodSubCategories[0]);
     } else if (selectedMainCategory === "Grooming") {
@@ -395,34 +295,11 @@ export default function InventoryPage({ pet, onFeedPet, onGroomPet, onPlayWithTo
     }
   }, [selectedMainCategory, selectedSubCategory]);
 
-  const applyDecorationItem = useCallback((item: DecorationInventoryItem, chosenSrc?: string) => {
-    const srcToApply = chosenSrc || item.src;
-    if (["floor", "wall", "ceiling", "overlay", "trim"].includes(item.type)) {
-      setRoomLayer(item.type as "floor" | "wall" | "ceiling" | "trim" | "overlay", srcToApply);
-    } else if (item.type === "decor") {
-      const decorItem: RoomDecorItem = { src: srcToApply, x: 100, y: 100 };
-      addDecorItem("decor", decorItem);
-    }
-    setActiveColorOptions(null);
-    
-    // Navigate to pet page after applying decoration to show the changes
-    navigate('/');
-  }, [setRoomLayer, addDecorItem, navigate]);
-
   const handleItemClick = useCallback((item: InventoryItem) => {
-    if (item.itemCategory === "decoration") {
-      const decorationItem = item as DecorationInventoryItem;
-      if (decorationItem.colorOptions && decorationItem.colorOptions.length > 0) {
-        setActiveColorOptions(prev => (prev?.id === item.id ? null : { id: item.id, options: decorationItem.colorOptions! }));
-      } else {
-        applyDecorationItem(decorationItem);
-      }
-    } else {
-      // For consumable items (food, grooming, toys), show the details modal
-      setSelectedItem(item);
-      setShowItemDetails(true);
-    }
-  }, [applyDecorationItem]);
+    // For consumable items (food, grooming, toys), show the details modal
+    setSelectedItem(item);
+    setShowItemDetails(true);
+  }, []);
 
   const handleUseItem = useCallback((item: InventoryItem) => {
     if (item.itemCategory === "food") {
@@ -458,7 +335,6 @@ export default function InventoryPage({ pet, onFeedPet, onGroomPet, onPlayWithTo
   );
 
   const currentSubcategories = useMemo(() => {
-    if (selectedMainCategory === "Decorations") return decorationSubCategories;
     if (selectedMainCategory === "Food") return foodSubCategories;
     if (selectedMainCategory === "Grooming") return groomingSubCategories;
     if (selectedMainCategory === "Toys") return toySubCategories;
@@ -467,7 +343,9 @@ export default function InventoryPage({ pet, onFeedPet, onGroomPet, onPlayWithTo
 
   return (
     <div className="sq-inventory-page-wrapper">
-      <h1 className="sq-inventory-title-bar">Inventory</h1>
+      <div className="sq-inventory-header">
+        <h1 className="sq-inventory-title-bar">Inventory</h1>
+      </div>
       <div className="sq-inventory-item-display-area">
         <div className={`sq-inventory-item-grid ${isTransitioning ? 'transitioning' : ''}`}>
           {filteredItems.length > 0 ? (
@@ -481,30 +359,13 @@ export default function InventoryPage({ pet, onFeedPet, onGroomPet, onPlayWithTo
                 tabIndex={0}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleItemClick(item);}}}
               >
-                <ZoomedImage src={item.src} alt={item.name} isDecoration={item.itemCategory === "decoration"} />
+                <ZoomedImage src={item.src} alt={item.name} />
                 <div className="sq-inventory-item-info">
                   <span className="sq-inventory-item-name-text">{item.name}</span>
                   {item.itemCategory === "food" && <span className="sq-inventory-item-effect-text">Hunger +{(item as FoodInventoryItem).hungerRestored}</span>}
                   {item.itemCategory === "grooming" && <span className="sq-inventory-item-effect-text">Clean +{(item as GroomingInventoryItem).cleanlinessBoost}</span>}
                   {item.itemCategory === "toy" && <span className="sq-inventory-item-effect-text">Happy +{(item as ToyInventoryItem).happinessBoost}</span>}
                 </div>
-                {activeColorOptions?.id === item.id && item.itemCategory === "decoration" && (item as DecorationInventoryItem).colorOptions && (
-                  <div className="sq-inventory-item-color-picker">
-                    {(item as DecorationInventoryItem).colorOptions!.map(option => (
-                      <button
-                        key={option.label}
-                        className="sq-inventory-color-option-button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          applyDecorationItem(item as DecorationInventoryItem, option.src);
-                        }}
-                        style={{ backgroundImage: `url(${option.src})` }}
-                        title={option.label}
-                        aria-label={`Select color: ${option.label}`}
-                      />
-                    ))}
-                  </div>
-                )}
               </div>
             ))
           ) : (
@@ -545,6 +406,8 @@ export default function InventoryPage({ pet, onFeedPet, onGroomPet, onPlayWithTo
         onDiscard={handleDiscardItem}
         onClose={() => setShowItemDetails(false)}
       />
+      
+      <BackButton />
     </div>
   );
 }
