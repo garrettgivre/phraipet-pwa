@@ -1,4 +1,3 @@
-import React from "react";
 import BuildingTemplate from "./BuildingTemplate";
 
 export default function SBClinic() {
