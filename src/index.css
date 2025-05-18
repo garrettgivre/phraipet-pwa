@@ -17,7 +17,7 @@
   /* Add viewport units for better mobile scaling */
   --vh: 1vh;
   --vw: 1vw;
-  --header-height: 80px;
+  --header-height: 52px;
   --nav-height: 56px;
   --content-padding: 16px;
   

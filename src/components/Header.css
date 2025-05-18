@@ -4,13 +4,13 @@
   top: 0;
   left: 0;
   right: 0;
-  height: 80px; /* Matches padding in App.tsx for main content */
-  background: #ffd966; /* Your theme color */
+  height: 52px; /* Match the nav-bar height */
+  background: transparent; /* Changed to transparent */
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: none; /* Removed shadow since we'll use the background image */
 
   /* MODIFICATION: Significantly increased z-index */
   z-index: 2147483647; /* Max possible signed 32-bit integer */
@@ -22,38 +22,73 @@
   box-sizing: border-box;
 }
 
+/* Add wavy background with flipped nav-bg image */
+.app-header::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 85px; /* Match the nav-bar::before height */
+  background: url("/assets/backgrounds/nav-bg.png") no-repeat center top;
+  background-size: 100% 100%;
+  z-index: -1;
+  pointer-events: none;
+  transform: scaleY(-1); /* Only flip vertically */
+}
+
+/* Add a background color layer to prevent black showing through transparent parts */
+.app-header::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+  background-color: rgba(255, 217, 102, 0.8); /* Semi-transparent yellow background (matches #ffd966) */
+  z-index: -2;
+  pointer-events: none;
+}
+
 .pet-icon-wrapper {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  overflow: hidden;
-  background: transparent; /* Changed from #fff to transparent to remove the white background */
+  width: 48px; /* Size for clickable area */
+  height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  cursor: pointer; /* Ensure it's clickable */
+  background: transparent;
+  border-radius: 0; /* Remove circular shape */
+  overflow: visible; /* Allow image to extend beyond wrapper */
+  box-shadow: none; /* Remove shadow */
+  cursor: pointer;
+  position: relative;
+  z-index: 1;
+  margin-top: 20px; /* Add margin to move pet down */
 }
 
 .pet-icon {
-  width: 85%; /* Reduced from 100% to make pet fit better within circle */
-  height: 85%; /* Reduced from 100% to make pet fit better within circle */
+  width: 110%; /* Make larger than the wrapper */
+  height: 110%;
   object-fit: contain;
+  max-width: unset; /* Allow it to be larger */
+  max-height: unset;
   aspect-ratio: 1 / 1;
 }
 
 .needs-wrapper {
   display: flex;
-  gap: 8px;
+  gap: 6px; /* Reduced gap */
   align-items: center;
-  margin-left: 16px;
+  margin-left: 12px; /* Reduced margin */
   flex-grow: 1;
   justify-content: flex-start;
+  position: relative; /* Ensure stacking context */
+  z-index: 1; /* Place above the ::before and ::after elements */
 }
 
 .app-header .need-circle {
-  width: 40px !important;
-  height: 40px !important;
+  width: 36px !important; /* Reduced size */
+  height: 36px !important; /* Reduced size */
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -93,11 +128,13 @@
   display: flex;
   align-items: center;
   background: #fff;
-  padding: 6px 12px;
+  padding: 4px 10px; /* Reduced padding */
   border-radius: 20px;
   cursor: pointer;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
   transition: background-color 0.2s;
+  position: relative; /* Ensure stacking context */
+  z-index: 1; /* Place above the ::before and ::after elements */
 }
 
 .coin-counter:hover {
@@ -105,14 +142,14 @@
 }
 
 .coin-icon {
-  height: 24px;
+  height: 20px; /* Reduced size */
   width: auto;
-  margin-right: 8px;
+  margin-right: 6px; /* Reduced margin */
   object-fit: contain;
 }
 
 .coin-counter span {
-  font-size: 16px;
+  font-size: 14px; /* Reduced font size */
   font-weight: bold;
   color: #333;
 }

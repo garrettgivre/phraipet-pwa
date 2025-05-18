@@ -3,6 +3,7 @@
   flex-direction: column;
   height: 100vh;
   overflow: hidden;
+  position: relative;
 }
 
 .building-header {
@@ -39,4 +40,10 @@
   flex: 1 1 auto;
   padding: 16px;
   overflow-y: auto;
+  padding-bottom: 90px;
+}
+
+.map-back-button {
+  z-index: 2147483647 !important;
+  position: fixed !important;
 }

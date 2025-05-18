@@ -4,13 +4,13 @@
   bottom: 0;
   left: 0;
   right: 0;
-  height: 56px; /* Standard height for bottom nav */
-  background: #ffd966 url("/assets/backgrounds/nav-bg.png") no-repeat center center;
-  background-size: cover;
+  height: 52px; /* Reverted to original height */
+  background: transparent; /* Fully transparent background */
   display: flex;
-  align-items: center;
+  align-items: flex-end; /* Align items to bottom of nav bar */
   justify-content: space-evenly; /* Distributes nav items evenly */
-  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow on top */
+  padding-bottom: 3px; /* Smaller padding */
+  box-shadow: none; /* No shadow */
 
   /* MODIFICATION: Significantly increased z-index */
   z-index: 2147483647; /* Max possible signed 32-bit integer, common "highest" value */
@@ -22,15 +22,30 @@
   box-sizing: border-box; /* Ensure padding/border don't add to height */
 }
 
+/* New element for the wavy background */
+.nav-bar::before {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 85px; /* Reverted to original height */
+  background: url("/assets/backgrounds/nav-bg.png") no-repeat center bottom;
+  background-size: 100% 100%; /* Make background image fill the entire ::before element */
+  z-index: -1; /* Place behind content */
+  pointer-events: none; /* Don't block clicks */
+  transform: translateY(0); /* Position relative to navbar */
+}
+
 .nav-item {
   position: relative; /* For positioning of bubble elements if needed */
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-end; /* Align to bottom */
   text-decoration: none;
   color: #666;
-  padding: 8px;
+  padding: 5px; /* Reduced padding */
   border-radius: 8px;
   transition: background-color 0.2s ease;
   -webkit-tap-highlight-color: transparent; /* Remove blue highlight on mobile */
@@ -39,7 +54,7 @@
   transition: transform 0.3s ease; /* For hover/active effects */
   flex: 1; /* Allow nav items to take up equal space if needed, or adjust as per design */
   text-align: center; /* Center text within the nav item */
-  height: 100%; /* Make nav items fill the height of the bar */
+  z-index: 1; /* Ensure icons are above the background */
 }
 
 .nav-item:focus {
@@ -59,12 +74,13 @@
 }
 
 .bubble-icon {
-  width: 80px; /* Adjust as per your icon's design */
-  height: 80px; /* Adjust as per your icon's design */
-  /* margin-top: 0px; /* Original value, adjust if bubbles should overlap differently */
+  width: 75px; /* Middle size between 50px and 100px */
+  height: 75px; /* Middle size between 50px and 100px */
   object-fit: contain;
   z-index: 2; /* Icon above bubble background if any, but below nav-item click area */
   transition: transform 0.3s ease, filter 0.3s ease;
+  margin-bottom: -8px; /* Larger negative margin to allow icon to extend above navbar */
+  margin-top: -15px; /* Pull icon up to extend above navbar */
 }
 
 .bubble-container span {
@@ -73,7 +89,7 @@
   left: 50%;
   transform: translate(-50%, -50%);
   color: #ffffff; /* Text color */
-  font-size: 14px; /* Text size */
+  font-size: 14px; /* Increased text size */
   font-weight: bold;
   z-index: 1; /* Text below icon if they overlap, or adjust */
   pointer-events: none; /* Text itself shouldn't block clicks on nav-item */
@@ -82,17 +98,17 @@
 
 /* Selected Effect for Each Tab */
 .nav-item.active:nth-child(1) .bubble-icon {
-  transform: scale(1.2);
+  transform: scale(1.15); /* Smaller scale increase */
   filter: drop-shadow(0 0 8px rgba(0, 170, 255, 0.8)); /* Blue Glow for Pet */
 }
 
 .nav-item.active:nth-child(2) .bubble-icon {
-  transform: scale(1.2);
+  transform: scale(1.15); /* Smaller scale increase */
   filter: drop-shadow(0 0 8px rgba(255, 217, 0, 0.8)); /* Yellow Glow for Explore */
 }
 
 .nav-item.active:nth-child(3) .bubble-icon {
-  transform: scale(1.2);
+  transform: scale(1.15); /* Smaller scale increase */
   filter: drop-shadow(0 0 8px rgba(170, 0, 255, 0.8)); /* Purple Glow for Play */
 }
 

@@ -1,5 +1,5 @@
 .inventory-page {
-  padding: 80px 16px 72px; /* Account for fixed header and nav */
+  padding: 80px 16px 55px; /* Decreased bottom padding from 65px to 55px */
   text-align: center;
 }
 

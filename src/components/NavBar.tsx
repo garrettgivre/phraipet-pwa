@@ -15,7 +15,7 @@ export default function NavBar() {
       >
         <div className="bubble-container">
           <span>Pet</span>
-          <img src="/assets/icons/bubble-b.png" alt="Pet" className="bubble-icon" />
+          <img src="/assets/icons/nav-pet.png" alt="Pet" className="bubble-icon" />
         </div>
       </div>
       <div 
@@ -24,7 +24,7 @@ export default function NavBar() {
       >
         <div className="bubble-container">
           <span>Explore</span>
-          <img src="/assets/icons/bubble-y.png" alt="Explore" className="bubble-icon" />
+          <img src="/assets/icons/nav-explore.png" alt="Explore" className="bubble-icon" />
         </div>
       </div>
       <div 
@@ -33,7 +33,7 @@ export default function NavBar() {
       >
         <div className="bubble-container">
           <span>Play</span>
-          <img src="/assets/icons/bubble-p.png" alt="Play" className="bubble-icon" />
+          <img src="/assets/icons/nav-play.png" alt="Play" className="bubble-icon" />
         </div>
       </div>
     </nav>

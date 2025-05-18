@@ -7,7 +7,13 @@ import './Explore.css';
 
 // Helper function to get properties from Tiled objects
 const getTiledObjectProperty = (object: TiledObject, propertyName: string): string | undefined => {
-  const property = object.properties?.find(prop => prop.name === propertyName);
+  if (!object.properties) return undefined;
+  
+  // Case-insensitive property name search to be more forgiving
+  const property = object.properties.find(
+    prop => prop.name.toLowerCase() === propertyName.toLowerCase()
+  );
+  
   return property?.value?.toString();
 };
 
@@ -16,16 +22,18 @@ const MAP_BACKGROUND_IMAGE_URL = "/maps/world_map_background.png";
 const TILED_MAP_DATA_URL = '/maps/world_map_data.json';
 const MAP_ASPECT_RATIO = 1.5; // Width to height ratio of the map
 const GRID_SIZE = 3; // We only need 3x3 for infinite scrolling
-const TILED_MAP_WIDTH = 1600; // Original Tiled map width
-const TILED_MAP_HEIGHT = 1200; // Original Tiled map height
+const TILED_MAP_WIDTH = 1536; // Original Tiled map width - updated to match your actual map
+const TILED_MAP_HEIGHT = 1024; // Original Tiled map height - updated to match your actual map
 
 export default function Explore() {
   const location = useLocation();
   const isExploreRoot = location.pathname === "/explore";
+  const isSunnybrookRoot = location.pathname === "/sunnybrook";
   const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement>(null);
   const [mapDimensions, setMapDimensions] = useState({ width: 0, height: 0 });
   const [hotspots, setHotspots] = useState<AppHotspot[]>([]);
+  const [showBuildingAreas, setShowBuildingAreas] = useState(false);
 
   // Calculate map dimensions based on viewport height
   useEffect(() => {
@@ -122,23 +130,42 @@ export default function Explore() {
   // Effect to fetch and process Tiled map data for hotspots
   useEffect(() => {
     let isMounted = true;
+    
+    // Determine which map data to load based on current route
+    let mapDataUrl = TILED_MAP_DATA_URL;
+    if (isSunnybrookRoot) {
+      mapDataUrl = '/maps/sunnybrook_map_data.json';
+    }
+    
     const fetchMapData = async () => {
       if (!isMounted) return;
 
       try {
-        const response = await fetch(TILED_MAP_DATA_URL);
+        const response = await fetch(mapDataUrl);
         if (!response.ok) {
-          throw new Error(`Failed to fetch map data from ${TILED_MAP_DATA_URL}: ${response.statusText} (status: ${response.status})`);
+          throw new Error(`Failed to fetch map data from ${mapDataUrl}: ${response.statusText} (status: ${response.status})`);
         }
         const tiledMapData: TiledMapData = await response.json();
         const hotspotLayer = tiledMapData.layers.find(layer => layer.name === "Hotspots" && layer.type === "objectgroup");
 
         if (hotspotLayer && hotspotLayer.objects) {
           const processedHotspots: AppHotspot[] = hotspotLayer.objects.map((obj: TiledObject) => {
+            // Get the center point of the object
             const centerX = obj.x + (obj.width / 2);
             const centerY = obj.y + (obj.height / 2);
-            const tiledRadius = getTiledObjectProperty(obj, 'radius');
-            const clickRadius = typeof tiledRadius === 'number' ? tiledRadius : Math.max(obj.width, obj.height) / 1.5 || 20;
+            
+            // Get properties with case-insensitive lookups
+            const nameProperty = getTiledObjectProperty(obj, 'Name') || getTiledObjectProperty(obj, 'name');
+            const idString = getTiledObjectProperty(obj, 'id_string');
+            const route = getTiledObjectProperty(obj, 'route');
+            const iconSrc = getTiledObjectProperty(obj, 'iconSrc');
+            const iconSizeStr = getTiledObjectProperty(obj, 'iconSize');
+            const radiusStr = getTiledObjectProperty(obj, 'radius');
+            const type = getTiledObjectProperty(obj, 'type') || 'location'; // Default to location
+            
+            // Parse numeric values
+            const iconSize = iconSizeStr ? parseInt(iconSizeStr, 10) : undefined;
+            const clickRadius = radiusStr ? parseInt(radiusStr, 10) : Math.max(obj.width, obj.height) / 1.5;
 
             // Scale coordinates based on current map dimensions
             const scaleX = mapDimensions.width / TILED_MAP_WIDTH;
@@ -148,19 +175,21 @@ export default function Explore() {
             const scaledRadius = clickRadius * Math.min(scaleX, scaleY);
 
             return {
-              id: getTiledObjectProperty(obj, 'id_string') || `tiled-obj-${obj.id}`,
-              name: getTiledObjectProperty(obj, 'name') || obj.name || 'Unnamed Hotspot',
+              id: idString || `tiled-obj-${obj.id}`,
+              name: nameProperty || obj.name || 'Unnamed Hotspot',
               x: scaledX,
               y: scaledY,
               radius: scaledRadius,
-              route: getTiledObjectProperty(obj, 'route') || '/',
-              iconSrc: getTiledObjectProperty(obj, 'iconSrc') || undefined,
-              iconSize: Number(getTiledObjectProperty(obj, 'iconSize')) || undefined,
+              route: route || '/',
+              iconSrc: iconSrc,
+              iconSize: iconSize ? Math.round(iconSize * Math.min(scaleX, scaleY)) : undefined,
+              type: type as 'location' | 'building'
             };
           });
+          
           if (isMounted) setHotspots(processedHotspots);
         } else {
-          console.warn(`Explore: Could not find 'Hotspots' object layer in Tiled map data at ${TILED_MAP_DATA_URL}.`);
+          console.warn(`Explore: Could not find 'Hotspots' object layer in Tiled map data at ${mapDataUrl}.`);
           if (isMounted) setHotspots([]);
         }
       } catch (err) {
@@ -173,11 +202,45 @@ export default function Explore() {
 
     fetchMapData();
     return () => { isMounted = false; };
-  }, [mapDimensions]);
+  }, [mapDimensions, isSunnybrookRoot]);
 
-  if (!isExploreRoot) {
+  if (!isExploreRoot && !isSunnybrookRoot) {
     return <Outlet />;
   }
+
+  const handleHotspotClick = (hotspot: AppHotspot) => {
+    // Simple direct navigation with fallbacks
+    try {
+      // For Sunnybrook specifically
+      if (hotspot.name === "Sunnybrook" || 
+          (hotspot.route && hotspot.route.includes('sunnybrook'))) {
+        console.log("Navigating to Sunnybrook...");
+        // Try React Router first
+        navigate('/sunnybrook');
+        
+        // Fallback to direct navigation after a short delay if needed
+        setTimeout(() => {
+          if (window.location.pathname !== '/sunnybrook') {
+            console.log("Fallback to direct navigation to Sunnybrook");
+            window.location.href = '/sunnybrook';
+          }
+        }, 100);
+        return;
+      }
+      
+      // For other locations
+      navigate(hotspot.route);
+    } catch (err) {
+      console.error("Navigation error:", err);
+      // Ultimate fallback - direct navigation
+      window.location.href = hotspot.route;
+    }
+  };
+
+  // Toggle debug mode (double click/tap on map)
+  const handleDoubleClick = () => {
+    setShowBuildingAreas(!showBuildingAreas);
+  };
 
   return (
     <div className="explore-page">
@@ -190,6 +253,7 @@ export default function Explore() {
           overflow: 'auto',
           position: 'relative'
         }}
+        onDoubleClick={handleDoubleClick}
       >
         <div 
           className="map-grid"
@@ -213,7 +277,7 @@ export default function Explore() {
                   top: Math.round(row * mapDimensions.height),
                   width: Math.round(mapDimensions.width),
                   height: Math.round(mapDimensions.height),
-                  backgroundImage: `url(${MAP_BACKGROUND_IMAGE_URL})`,
+                  backgroundImage: `url(${isSunnybrookRoot ? '/maps/sunnybrook_map_background.png' : MAP_BACKGROUND_IMAGE_URL})`,
                   backgroundSize: 'cover',
                   backgroundPosition: 'center'
                 }}
@@ -226,10 +290,11 @@ export default function Explore() {
             hotspots={hotspots}
             canvasWidth={mapDimensions.width * GRID_SIZE}
             canvasHeight={mapDimensions.height * GRID_SIZE}
-            onHotspotClick={(hotspot) => navigate(hotspot.route)}
+            onHotspotClick={handleHotspotClick}
             mapWidth={mapDimensions.width}
             mapHeight={mapDimensions.height}
             gridSize={GRID_SIZE}
+            showBuildingAreas={showBuildingAreas}
           />
         </div>
       </div>

@@ -150,6 +150,11 @@ export interface AppHotspot {
   iconSrc?: string;
   iconSize?: number;
   radius?: number;
+  type?: 'location' | 'building';
+  width?: number;    // Original width from Tiled
+  height?: number;   // Original height from Tiled
+  origX?: number;    // Original X position from Tiled
+  origY?: number;    // Original Y position from Tiled
 }
 
 export interface RoomLayers {

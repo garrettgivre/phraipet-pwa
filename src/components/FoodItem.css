@@ -58,7 +58,7 @@
 @keyframes takeBite {
   0% {
     transform: rotate(0deg);
-  }
+}
   25% {
     transform: rotate(-5deg) scale(1.05);
   }
@@ -73,13 +73,13 @@
 @keyframes petEatingMotion {
   0% {
     transform: translateY(0) translateX(-50%) scale(1, 1);
-  }
+}
   25% {
     transform: translateY(-3px) translateX(-52%) scale(1.1, 0.9);
-  }
+}
   50% {
     transform: translateY(-2px) translateX(-50%) scale(1.05, 0.95);
-  }
+}
   75% {
     transform: translateY(-1px) translateX(-48%) scale(1.08, 0.92);
   }

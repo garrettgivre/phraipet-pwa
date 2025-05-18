@@ -1,27 +1,14 @@
-import { useNavigate } from "react-router-dom";
-import "./BuildingPage.css";
+import BuildingTemplate from "./BuildingTemplate";
 
 export default function SBFountain() {
-  const navigate = useNavigate();
-
   return (
-    <div className="building-page">
-      <header className="building-header">
-        <button className="back" onClick={() => navigate(-1)}>← Back</button>
-        <h1>Fountain</h1>
-      </header>
-      <div className="building-image-wrapper">
-        <img
-          src="/locations/sbclock-horizontal.png"
-          alt="Village Fountain"
-          className="building-image"
-        />
-      </div>
-      <div className="building-content">
-        <p>
-          Penny
-        </p>
-      </div>
-    </div>
+    <BuildingTemplate
+      title="Town Fountain"
+      imagePath="/locations/sbfountain-horizontal.png"
+    >
+      <p>
+        The central fountain of Sunnybrook village
+      </p>
+    </BuildingTemplate>
   );
 }

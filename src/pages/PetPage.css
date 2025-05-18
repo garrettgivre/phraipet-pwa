@@ -106,7 +106,7 @@
 
 .pet-page-needs-container {
   position: absolute; 
-  bottom: clamp(60px, 10vh, 80px);
+  bottom: clamp(85px, 13vh, 105px);
   left: 0; 
   right: 0;
   display: flex;
@@ -176,7 +176,7 @@
 
 .paintbrush-icon {
   position: fixed; 
-  bottom: clamp(55px, 8vh, 65px);
+  bottom: clamp(90px, 13vh, 100px);
   left: clamp(8px, 2vw, 12px);
   cursor: pointer;
   z-index: 20;

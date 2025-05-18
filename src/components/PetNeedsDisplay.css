@@ -1,6 +1,6 @@
 .pet-needs-display {
   position: fixed;
-  bottom: calc(var(--nav-height) + 70px);
+  bottom: calc(var(--nav-height) + 95px);
   left: 0;
   right: 0;
   display: flex;

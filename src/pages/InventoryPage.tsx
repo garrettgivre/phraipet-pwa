@@ -71,7 +71,7 @@ function ZoomedImage({ src, alt, isDecoration = false }: { src: string; alt: str
     setLoaded(false);
     setError(false);
     setImageStyle(prev => ({ ...prev, visibility: 'hidden' }));
-    
+
     // Function to handle simple loading (for non-decoration items)
     const handleSimpleLoading = () => {
       if (!isMounted) return;
@@ -106,12 +106,12 @@ function ZoomedImage({ src, alt, isDecoration = false }: { src: string; alt: str
         if (!isMounted) return;
         
         // Ensure we have valid dimensions
-        if (bounds.width <= 0 || bounds.height <= 0 || bounds.naturalWidth <= 0 || bounds.naturalHeight <= 0) {
+          if (bounds.width <= 0 || bounds.height <= 0 || bounds.naturalWidth <= 0 || bounds.naturalHeight <= 0) {
           console.warn("Invalid bounds for image:", src, bounds);
           // Fall back to simple loading
           handleSimpleLoading();
-          return;
-        }
+            return;
+          }
         
         // Calculate the scale to fit the visible part of the image
         const scale = Math.min(
@@ -120,20 +120,20 @@ function ZoomedImage({ src, alt, isDecoration = false }: { src: string; alt: str
         );
         
         // Calculate the dimensions after scaling
-        const scaledNaturalWidth = bounds.naturalWidth * scale;
-        const scaledNaturalHeight = bounds.naturalHeight * scale;
+          const scaledNaturalWidth = bounds.naturalWidth * scale;
+          const scaledNaturalHeight = bounds.naturalHeight * scale;
         
         // Calculate offsets to center the visible part
-        const offsetX = (containerSize - (bounds.width * scale)) / 2 - (bounds.x * scale);
-        const offsetY = (containerSize - (bounds.height * scale)) / 2 - (bounds.y * scale);
+          const offsetX = (containerSize - (bounds.width * scale)) / 2 - (bounds.x * scale);
+          const offsetY = (containerSize - (bounds.height * scale)) / 2 - (bounds.y * scale);
         
         // Create the style object
         const zoomedStyle: React.CSSProperties = {
           position: 'absolute' as 'absolute',
-          left: `${offsetX}px`,
-          top: `${offsetY}px`,
-          width: `${scaledNaturalWidth}px`,
-          height: `${scaledNaturalHeight}px`,
+            left: `${offsetX}px`,
+            top: `${offsetY}px`,
+            width: `${scaledNaturalWidth}px`,
+            height: `${scaledNaturalHeight}px`,
           visibility: 'visible' as 'visible'
         };
         
@@ -141,7 +141,7 @@ function ZoomedImage({ src, alt, isDecoration = false }: { src: string; alt: str
         zoomStylesCache.set(src, zoomedStyle);
         
         setImageStyle(zoomedStyle);
-        setLoaded(true);
+          setLoaded(true);
       } catch (err) {
         console.error("Error calculating visible bounds:", err);
         // Fall back to simple loading on error

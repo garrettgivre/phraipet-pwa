@@ -64,12 +64,26 @@ function AppShell({ pet, handleFeedPet, handleGroomPet, handlePlayWithToy, handl
   const location = useLocation();
   const isPetPage = location.pathname === "/";
 
+  console.log("Current location:", location.pathname);
+
+  // Get routes and log them for debugging
+  const routes = createRoutes({
+    pet,
+    handleFeedPet,
+    handleGroomPet,
+    handlePlayWithToy,
+    handleIncreaseAffection,
+    needInfo
+  });
+
+  console.log("Available routes:", routes.map(r => r.path));
+
   return (
     <>
       <ScrollToTop />
       {!isPetPage && ( <Header coins={100} needs={needInfo} /> )}
       <main style={{
-        paddingTop: isPetPage ? "0px" : "var(--header-height)",
+        paddingTop: "0px",
         paddingBottom: "var(--nav-height)",
         height: "100%",
         width: "100%",
@@ -85,15 +99,21 @@ function AppShell({ pet, handleFeedPet, handleGroomPet, handlePlayWithToy, handl
       }}>
         <ErrorBoundary>
           <Routes>
-            {createRoutes({
-              pet,
-              handleFeedPet,
-              handleGroomPet,
-              handlePlayWithToy,
-              handleIncreaseAffection,
-              needInfo
-            }).map((route, index) => (
+            {routes.map((route, index) => (
+              // Special handling for nested routes
+              route.children ? (
+                <Route key={index} path={route.path} element={route.element}>
+                  {route.children.map((childRoute, childIndex) => (
+                    <Route 
+                      key={`${index}-${childIndex}`} 
+                      path={childRoute.path} 
+                      element={childRoute.element} 
+                    />
+                  ))}
+                </Route>
+              ) : (
               <Route key={index} path={route.path} element={route.element} />
+              )
             ))}
           </Routes>
         </ErrorBoundary>
