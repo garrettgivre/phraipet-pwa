@@ -22,6 +22,7 @@ const TILED_MAP_WIDTH = 1024;
 const TILED_MAP_HEIGHT = 1536;
 const MAP_ASPECT_RATIO = TILED_MAP_WIDTH / TILED_MAP_HEIGHT; // ~0.67
 const SUNNYBROOK_MAP_URL = "/maps/sunnybrook_map_background.png";
+const SUNNYBROOK_BEHIND_URL = "/maps/sunnybrook_map_behind.png";
 const SUNNYBROOK_DATA_URL = "/maps/sunnybrook_map_data.json";
 
 export default function Sunnybrook() {
@@ -259,9 +260,25 @@ export default function Sunnybrook() {
           justifyContent: 'center',
           alignItems: 'center',
           overflow: 'hidden',
-          background: '#000'
+          background: '#000',
+          position: 'relative'
         }}
       >
+        {/* Expanded background image to fill black space */}
+        <div 
+          className="map-background"
+          style={{
+            position: 'absolute',
+            width: '100%',
+            height: '100%',
+            backgroundImage: `url(${SUNNYBROOK_BEHIND_URL})`,
+            backgroundSize: `${mapDimensions.width}px auto`,
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+            zIndex: 1
+          }}
+        />
+        
         <div
           className="map-content"
           style={{
@@ -271,7 +288,8 @@ export default function Sunnybrook() {
             backgroundImage: `url(${SUNNYBROOK_MAP_URL})`,
             backgroundSize: '100% 100%',
             backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat'
+            backgroundRepeat: 'no-repeat',
+            zIndex: 2
           }}
         >
           {/* Invisible clinic hotspot area */}
