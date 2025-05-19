@@ -188,9 +188,9 @@ export default function SBStall() {
       // Update local state first for immediate UI feedback
       const updatedItems = storeItems
         .map(storeItem => 
-          storeItem.id === item.id 
-            ? { ...storeItem, stock: storeItem.stock - 1 } 
-            : storeItem
+        storeItem.id === item.id 
+          ? { ...storeItem, stock: storeItem.stock - 1 } 
+          : storeItem
         )
         .filter(item => item.stock > 0); // Remove items with 0 stock
       

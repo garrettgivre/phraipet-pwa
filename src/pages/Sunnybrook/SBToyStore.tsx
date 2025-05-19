@@ -105,8 +105,8 @@ export default function SBToyStore() {
     
     // Force reset toy store data
     const initialStock = generateToyStock([]);
-    const initialRestockTime = getNextRestockTime();
-    
+      const initialRestockTime = getNextRestockTime();
+      
     set(storeRef, {
       stock: initialStock,
       nextRestockTime: initialRestockTime.toISOString()
@@ -157,7 +157,7 @@ export default function SBToyStore() {
             : storeItem
         )
         .filter(item => item.stock > 0);
-
+      
       await Promise.all([
         set(storeRef, {
           stock: updatedItems,
@@ -178,14 +178,14 @@ export default function SBToyStore() {
 
   return (
     <div style={{ position: 'relative', minHeight: '100vh' }}>
-      <StoreTemplate
+    <StoreTemplate
         title="Sunnybrook Toy Store"
         imagePath="/locations/sbtoy-horizontal.png"
-        storeItems={storeItems}
-        onPurchase={handlePurchase}
-        nextRestockTime={nextRestockTime}
-        isLoading={isLoading}
-      />
+      storeItems={storeItems}
+      onPurchase={handlePurchase}
+      nextRestockTime={nextRestockTime}
+      isLoading={isLoading}
+    />
       <div style={{ height: '200px' }} /> {/* Empty space at bottom */}
       {purchaseMessage && (
         <div style={{
