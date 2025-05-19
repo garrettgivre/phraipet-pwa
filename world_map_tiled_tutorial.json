@@ -1,0 +1,109 @@
+{
+    "version": "1.10.2",
+    "tiledversion": "1.10.2",
+    "orientation": "orthogonal",
+    "renderorder": "right-down",
+    "width": 50,
+    "height": 37,
+    "tilewidth": 32,
+    "tileheight": 32,
+    "infinite": false,
+    "nextlayerid": 3,
+    "nextobjectid": 3,
+    "layers": [
+        {
+            "id": 1,
+            "name": "Background",
+            "type": "imagelayer",
+            "visible": true,
+            "opacity": 1,
+            "offsetx": 0,
+            "offsety": 0,
+            "image": "..\/your_world_map.png",
+            "x": 0,
+            "y": 0
+        },
+        {
+            "id": 2,
+            "name": "Hotspots",
+            "type": "objectgroup",
+            "visible": true,
+            "opacity": 1,
+            "x": 0,
+            "y": 0,
+            "objects": [
+                {
+                    "id": 1,
+                    "name": "Sunnybrook",
+                    "type": "location",
+                    "x": 800,
+                    "y": 600,
+                    "width": 100,
+                    "height": 100,
+                    "rotation": 0,
+                    "visible": true,
+                    "properties": [
+                        {
+                            "name": "id_string",
+                            "type": "string",
+                            "value": "sunnybrook-village"
+                        },
+                        {
+                            "name": "route",
+                            "type": "string",
+                            "value": "/explore/sunnybrook"
+                        },
+                        {
+                            "name": "iconSrc",
+                            "type": "string",
+                            "value": "/maps/icons/sunnybrook_icon.png"
+                        },
+                        {
+                            "name": "iconSize",
+                            "type": "int",
+                            "value": 64
+                        },
+                        {
+                            "name": "radius",
+                            "type": "int",
+                            "value": 40
+                        }
+                    ]
+                },
+                {
+                    "id": 2,
+                    "name": "Another Location",
+                    "type": "location",
+                    "x": 400,
+                    "y": 300,
+                    "width": 100,
+                    "height": 100,
+                    "rotation": 0,
+                    "visible": true,
+                    "properties": [
+                        {
+                            "name": "id_string",
+                            "type": "string",
+                            "value": "another-location"
+                        },
+                        {
+                            "name": "route",
+                            "type": "string",
+                            "value": "/explore/another-location"
+                        },
+                        {
+                            "name": "iconSrc",
+                            "type": "string",
+                            "value": "/maps/icons/location_icon.png"
+                        },
+                        {
+                            "name": "iconSize",
+                            "type": "int",
+                            "value": 48
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+} 

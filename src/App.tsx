@@ -351,31 +351,31 @@ export default function App() {
     <ErrorBoundary>
       <InventoryProvider>
         <CoinsProvider>
-          <ToyAnimationProvider>
-            <DecorationProvider>
-              <BrowserRouter>
-                <div style={{ position: 'fixed', bottom: '10px', right: '10px', zIndex: 9999 }}>
-                  <a 
-                    href="/debug" 
-                    style={{
-                      padding: '5px 10px',
-                      backgroundColor: '#4285f4',
-                      color: 'white',
-                      fontSize: '12px',
-                      border: 'none',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      textDecoration: 'none',
-                      display: 'inline-block'
-                    }}
-                  >
-                    Debug
-                  </a>
-                </div>
-                <AppContent />
-              </BrowserRouter>
-            </DecorationProvider>
-          </ToyAnimationProvider>
+      <ToyAnimationProvider>
+        <DecorationProvider>
+            <BrowserRouter>
+              <div style={{ position: 'fixed', bottom: '10px', right: '10px', zIndex: 9999 }}>
+                <a 
+                  href="/debug" 
+                  style={{
+                    padding: '5px 10px',
+                    backgroundColor: '#4285f4',
+                    color: 'white',
+                    fontSize: '12px',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    textDecoration: 'none',
+                    display: 'inline-block'
+                  }}
+                >
+                  Debug
+                </a>
+              </div>
+              <AppContent />
+            </BrowserRouter>
+        </DecorationProvider>
+      </ToyAnimationProvider>
         </CoinsProvider>
       </InventoryProvider>
     </ErrorBoundary>
