@@ -15,7 +15,10 @@ type RoomLayers = {
   wall: string;
   ceiling: string;
   trim: string;
-  decor: RoomDecorItem[];
+  // Split decor into front and back for positioning relative to pet
+  frontDecor: RoomDecorItem[];
+  backDecor: RoomDecorItem[];
+  decor: RoomDecorItem[]; // Keep for backward compatibility
   overlay: string;
 };
 
@@ -62,6 +65,14 @@ const defaultDecorationItems: DecorationInventoryItem[] = [
   { id: "deco-artdeco-wall", name: "Art Deco Wall", itemCategory: "decoration", type: "wall", src: "/assets/walls/artdeco-wall.png", price: 300 },
   { id: "deco-artdeco-ceiling", name: "Art Deco Ceiling", itemCategory: "decoration", type: "ceiling", src: "/assets/ceilings/artdeco-ceiling.png", price: 300 },
   { id: "deco-artdeco-trim", name: "Art Deco Trim", itemCategory: "decoration", type: "trim", src: "/assets/trim/artdeco-trim.png", price: 175 },
+  
+  // Furniture Items
+  { id: "deco-furniture-basic-armchair", name: "Basic Armchair", itemCategory: "decoration", type: "furniture", src: "/assets/furniture/furniture-basic-armchair.png", price: 120, description: "A comfortable armchair for your pet to lounge in." },
+  { id: "deco-furniture-basic-endtable", name: "Basic End Table", itemCategory: "decoration", type: "furniture", src: "/assets/furniture/furniture-basic-endtable.png", price: 85, description: "A stylish end table for your pet's room." },
+  { id: "deco-furniture-basic-plant", name: "Basic Plant", itemCategory: "decoration", type: "furniture", src: "/assets/furniture/furniture-basic-plant.png", price: 65, description: "A decorative plant that adds a touch of nature." },
+  { id: "deco-furniture-basic-wallart", name: "Wall Art", itemCategory: "decoration", type: "furniture", src: "/assets/furniture/furniture-basic-wallart.png", price: 90, description: "Beautiful wall art to brighten up the room." },
+  { id: "deco-furniture-woodland-floorlamp", name: "Woodland Floor Lamp", itemCategory: "decoration", type: "furniture", src: "/assets/furniture/furniture-woodland-floorlamp.png", price: 110, description: "A cozy floor lamp that adds warm lighting." },
+  { id: "deco-furniture-woodland-shelf", name: "Woodland Shelf", itemCategory: "decoration", type: "furniture", src: "/assets/furniture/furniture-woodland-shelf.png", price: 95, description: "A rustic shelf for displaying your pet's treasures." },
 ];
 
 const defaultRoomLayersData: RoomLayers = {
@@ -69,7 +80,9 @@ const defaultRoomLayersData: RoomLayers = {
   wall: "/assets/walls/classic-wall.png",
   ceiling: "/assets/ceilings/classic-ceiling.png",
   trim: "",
-  decor: [],
+  frontDecor: [], // New array for furniture in front of pet
+  backDecor: [],  // New array for furniture behind pet
+  decor: [],      // Keep for backward compatibility
   overlay: "",
 };
 
@@ -82,7 +95,8 @@ interface DecorationContextType {
   roomLayers: RoomLayers;
   roomLayersLoading: boolean;
   setRoomLayer: (type: "floor" | "wall" | "ceiling" | "trim" | "overlay", src: string) => void;
-  addDecorItem: (type: "decor", decor: RoomDecorItem) => void;
+  addDecorItem: (item: RoomDecorItem, position?: "front" | "back") => void; // Updated signature
+  removeDecorItem: (position: "front" | "back", index: number) => void; // New method
   getFilteredDecorations: (subCategory: DecorationItemType) => DecorationInventoryItem[];
 }
 
@@ -129,6 +143,9 @@ export function DecorationProvider({ children }: { children: ReactNode }) {
         // Preload decoration images
         await preloadImages(defaultDecorationItems.slice(0, 10)); // Start with first 10 for quick loading
         
+        // Log the default furniture items for debugging
+        console.log("Default furniture items:", defaultDecorationItems.filter(item => item.type === "furniture"));
+        
         // Load decorations from Firebase
         const decorationsRef = ref(db, "decorations");
         
@@ -139,6 +156,11 @@ export function DecorationProvider({ children }: { children: ReactNode }) {
             'No data');
             
           if (decorationsData) {
+            // Check for furniture items in Firebase data
+            const furnitureItems = decorationsData.filter(item => item.type === "furniture");
+            console.log(`Found ${furnitureItems.length} furniture items in Firebase:`, 
+              furnitureItems.length > 0 ? furnitureItems.map(i => i.name) : 'None');
+            
             // Make sure price property is correctly converted to number
             const fixedData = decorationsData.map(item => {
               if (item.price === undefined || item.price === null) {
@@ -155,6 +177,7 @@ export function DecorationProvider({ children }: { children: ReactNode }) {
             console.log('Fixed decorations data with price preservation:', fixedData[0]);
           } else {
             // If no data in Firebase, set default and save to Firebase
+            console.log("No decorations found in Firebase, saving defaults including furniture items");
             set(decorationsRef, defaultDecorationItems)
               .then(() => console.log("Default decorations saved to Firebase"))
               .catch(error => console.error("Error saving default decorations:", error));
@@ -170,6 +193,22 @@ export function DecorationProvider({ children }: { children: ReactNode }) {
         onValue(roomRef, (snapshot) => {
           const roomData = snapshot.val() as RoomLayers | null;
           if (roomData) {
+            // Handle legacy data structure - move items from decor to frontDecor if needed
+            if (roomData.decor && roomData.decor.length > 0 && 
+                (!roomData.frontDecor || roomData.frontDecor.length === 0)) {
+              roomData.frontDecor = roomData.decor.map(item => ({
+                ...item,
+                position: "front" as "front"
+              }));
+            }
+            
+            // Ensure all arrays exist
+            if (!roomData.frontDecor) roomData.frontDecor = [];
+            if (!roomData.backDecor) roomData.backDecor = [];
+            
+            // Keep decor array updated with both front and back items for backward compatibility
+            roomData.decor = [...(roomData.backDecor || []), ...(roomData.frontDecor || [])];
+            
             setRoomLayers(roomData);
           } else {
             // If no data in Firebase, set default and save to Firebase
@@ -210,20 +249,60 @@ export function DecorationProvider({ children }: { children: ReactNode }) {
     saveRoomToFirebase(updatedLayers);
   };
 
-  const addDecorItem = (type: "decor", decor: RoomDecorItem) => {
-    const updatedLayers = {
-      ...roomLayers,
-      decor: [...roomLayers.decor, decor]
+  const addDecorItem = useCallback((item: RoomDecorItem, position: "front" | "back" = "front") => {
+    // Set the position property on the item
+    const itemWithPosition = {
+      ...item,
+      position
     };
+    
+    // Update the appropriate array based on position
+    const updatedLayers = { ...roomLayers };
+    
+    if (position === "front") {
+      updatedLayers.frontDecor = [...updatedLayers.frontDecor, itemWithPosition];
+    } else {
+      updatedLayers.backDecor = [...updatedLayers.backDecor, itemWithPosition];
+    }
+    
+    // Keep the decor array updated for backward compatibility
+    updatedLayers.decor = [...updatedLayers.backDecor, ...updatedLayers.frontDecor];
+    
     setRoomLayers(updatedLayers);
     saveRoomToFirebase(updatedLayers);
-  };
+  }, [roomLayers]);
+
+  const removeDecorItem = useCallback((position: "front" | "back", index: number) => {
+    const updatedLayers = { ...roomLayers };
+    
+    if (position === "front") {
+      const newFrontDecor = [...updatedLayers.frontDecor];
+      newFrontDecor.splice(index, 1);
+      updatedLayers.frontDecor = newFrontDecor;
+    } else {
+      const newBackDecor = [...updatedLayers.backDecor];
+      newBackDecor.splice(index, 1);
+      updatedLayers.backDecor = newBackDecor;
+    }
+    
+    // Update the combined decor array
+    updatedLayers.decor = [...updatedLayers.backDecor, ...updatedLayers.frontDecor];
+    
+    setRoomLayers(updatedLayers);
+    saveRoomToFirebase(updatedLayers);
+  }, [roomLayers]);
 
   const getFilteredDecorations = useCallback(
     (subCategory: DecorationItemType) => {
-      return decorations.filter(item => 
-        item.type === subCategory
-      );
+      console.log(`Getting filtered decorations for ${subCategory}`);
+      console.log(`Total decorations: ${decorations.length}`);
+      console.log(`Available categories:`, decorations.map(d => d.type));
+      
+      const filtered = decorations.filter(item => item.type === subCategory);
+      console.log(`Found ${filtered.length} items for ${subCategory}:`, 
+        filtered.length > 0 ? filtered.map(i => i.name) : 'None');
+      
+      return filtered;
     },
     [decorations]
   );
@@ -236,6 +315,7 @@ export function DecorationProvider({ children }: { children: ReactNode }) {
         roomLayersLoading,
         setRoomLayer,
         addDecorItem,
+        removeDecorItem,
         getFilteredDecorations,
       }}
     >

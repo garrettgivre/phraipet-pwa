@@ -143,6 +143,10 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
   const currentFloor = roomLayers?.floor || "/assets/floors/classic-floor.png";
   const currentTrim = roomLayers?.trim || "";
   const overlaySrc = roomLayers?.overlay || "";
+  
+  // Get the front and back furniture items
+  const frontDecor = roomLayers?.frontDecor || [];
+  const backDecor = roomLayers?.backDecor || [];
 
   const handleNeedClick = (needType: Need) => {
     console.log(`Need circle clicked: ${needType}`);
@@ -204,43 +208,71 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
     setShowConfirmDialog(false);
     setPendingFoodItem(null);
   };
-
+  
+  // Function to navigate to decorations page
+  const navigateToDecorations = () => {
+    navigate('/decorations');
+  };
+  
   return (
-    <div className={`petPage ${!roomLayersLoading ? 'loaded' : ''}`} key={currentFloor + currentWall}>
+    <div className="pet-page">
       <CoinDisplay coins={coins} />
       
-      <PetRoom
-        floor={currentFloor}
-        wall={currentWall}
-        ceiling={currentCeiling}
-        trim={currentTrim}
-        decor={roomLayers?.decor || []}
-        overlay={overlaySrc}
-        petImage={petImage}
-        petPosition={position}
-        moodPhrase={showSpeechBubble ? currentMoodPhrase : undefined}
-        activeToy={activeToy}
-        isPlaying={isPlaying}
-        foodItem={foodItem}
-        onFoodEaten={handleFoodEaten}
-        onFoodBite={handleFoodBite}
-        isWalking={isWalking}
-        isFacingRight={isFacingRight}
-      />
-
-      <ConfirmationDialog
-        isOpen={showConfirmDialog}
-        title="Use Food Item"
-        message="Would you like to give this food to your pet?"
-        onConfirm={confirmUseFood}
-        onCancel={cancelUseFood}
-      />
-
-      <PetNeedsDisplay needInfo={modifiedNeedInfo} onNeedClick={handleNeedClick} />
-
-      <div className="paintbrush-icon" onClick={() => navigate("/decorations")}>
-        <img src="/assets/icons/paintbrush.png" alt="Room Decorations" />
+      <div className="pet-container">
+        {/* Render pet if loaded */}
+        {pet && !roomLayersLoading && (
+          <PetRoom
+            floor={currentFloor}
+            wall={currentWall}
+            ceiling={currentCeiling}
+            trim={currentTrim}
+            frontDecor={frontDecor}
+            backDecor={backDecor}
+            overlay={overlaySrc}
+            petImage={petImage}
+            petPosition={position}
+            moodPhrase={showSpeechBubble ? currentMoodPhrase : undefined}
+            activeToy={activeToy}
+            isPlaying={isPlaying}
+            isWalking={isWalking}
+            isFacingRight={isFacingRight}
+            foodItem={foodItem}
+            onFoodEaten={handleFoodEaten}
+            onFoodBite={handleFoodBite}
+          />
+        )}
+        
+        {/* Loading spinner if still loading */}
+        {roomLayersLoading && (
+          <div className="loading-spinner">
+            Loading...
+          </div>
+        )}
       </div>
+      
+      {/* Need indicator circles */}
+      <div className="need-indicators">
+        <PetNeedsDisplay 
+          needInfo={modifiedNeedInfo} 
+          onNeedClick={handleNeedClick} 
+        />
+      </div>
+      
+      {/* Paintbrush decoration button */}
+      <button className="decoration-button" onClick={navigateToDecorations}>
+        <img src="/assets/icons/paintbrush.png" alt="Decorate Room" />
+      </button>
+      
+      {/* Confirmation dialog for food */}
+      {showConfirmDialog && (
+        <ConfirmationDialog
+          isOpen={showConfirmDialog}
+          title="Feed Pet?"
+          message="Would you like to feed this to your pet?"
+          onConfirm={confirmUseFood}
+          onCancel={cancelUseFood}
+        />
+      )}
     </div>
   );
 }

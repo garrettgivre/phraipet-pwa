@@ -12,58 +12,58 @@ const COINS_DB_KEY = "playerStats/coins";
 // Default decoration items to ensure the store has stock
 const DEFAULT_DECORATION_ITEMS: DecorationInventoryItem[] = [
   {
-    id: "deco-decor-comfy-armchair",
+    id: "deco-furniture-comfy-armchair",
     name: "Comfy Armchair",
     itemCategory: "decoration",
-    type: "decor",
-    src: "/assets/decorations/furniture-comfy-armchair.png",
+    type: "furniture",
+    src: "/assets/furniture/furniture-basic-armchair.png",
     price: 120,
     description: "A plush armchair that adds comfort and style to any room."
   },
   {
-    id: "deco-decor-modern-bookshelf",
+    id: "deco-furniture-modern-bookshelf",
     name: "Modern Bookshelf",
     itemCategory: "decoration",
-    type: "decor", 
-    src: "/assets/decorations/furniture-modern-bookshelf.png",
+    type: "furniture", 
+    src: "/assets/furniture/furniture-woodland-shelf.png",
     price: 150,
     description: "A sleek bookshelf to display your pet's favorite items and books."
   },
   {
-    id: "deco-decor-cozy-bed",
-    name: "Cozy Pet Bed",
+    id: "deco-furniture-end-table",
+    name: "End Table",
     itemCategory: "decoration",
-    type: "decor",
-    src: "/assets/decorations/furniture-cozy-bed.png",
+    type: "furniture",
+    src: "/assets/furniture/furniture-basic-endtable.png",
     price: 180,
-    description: "A luxurious bed where your pet can rest in complete comfort."
+    description: "A stylish end table that adds functionality to your pet's home."
   },
   {
-    id: "deco-decor-playful-rug",
-    name: "Playful Rug",
+    id: "deco-furniture-floor-lamp",
+    name: "Floor Lamp",
     itemCategory: "decoration",
-    type: "decor",
-    src: "/assets/decorations/furniture-playful-rug.png",
+    type: "furniture",
+    src: "/assets/furniture/furniture-woodland-floorlamp.png",
     price: 95,
-    description: "A colorful rug that brightens up the room and feels nice under paws."
+    description: "A beautiful lamp that adds warm lighting to the room."
   },
   {
-    id: "deco-decor-wall-picture",
-    name: "Framed Picture",
+    id: "deco-furniture-wall-art",
+    name: "Wall Art",
     itemCategory: "decoration",
-    type: "decor",
-    src: "/assets/decorations/accessory-wall-picture.png",
+    type: "furniture",
+    src: "/assets/furniture/furniture-basic-wallart.png",
     price: 85,
-    description: "A beautiful framed picture to hang on your pet's wall."
+    description: "A beautiful piece of art to hang on your pet's wall."
   },
   {
-    id: "deco-decor-plant-fern",
-    name: "Decorative Fern",
+    id: "deco-furniture-plant",
+    name: "Decorative Plant",
     itemCategory: "decoration",
-    type: "decor",
-    src: "/assets/decorations/accessory-plant-fern.png",
+    type: "furniture",
+    src: "/assets/furniture/furniture-basic-plant.png",
     price: 65,
-    description: "A lovely fern that adds a touch of nature to your pet's home."
+    description: "A lovely plant that adds a touch of nature to your pet's home."
   }
 ];
 
@@ -103,15 +103,11 @@ export default function SBFurnitureStore() {
     return restockTime;
   }, []);
 
-  // Filter for decoration items 
+  // Filter for furniture items 
   const getEligibleItems = useCallback(() => {
     return decorations.filter(item => {
-      // Focus on decor items (furniture and accessories)
-      return item.type === "decor" && (
-        item.id.includes("furniture") || 
-        item.id.includes("accessory") || 
-        item.id.includes("decor")
-      );
+      // Focus on furniture items
+      return item.type === "furniture";
     });
   }, [decorations]);
 

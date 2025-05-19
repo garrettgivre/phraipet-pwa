@@ -1,7 +1,7 @@
 // src/components/PetRoom.tsx
 import "./PetRoom.css";
 import { useEffect, useState } from "react";
-import type { ToyInventoryItem } from "../types";
+import type { ToyInventoryItem, RoomDecorItem } from "../types";
 import FoodItem from "./FoodItem";
 
 interface PetRoomProps {
@@ -9,7 +9,9 @@ interface PetRoomProps {
   wall: string;
   ceiling: string;
   trim?: string;
-  decor: Array<{ src: string; x: number; y: number; width?: number; height?: number }>;
+  decor?: RoomDecorItem[]; // Legacy support
+  frontDecor?: RoomDecorItem[]; // Furniture to render in front of pet
+  backDecor?: RoomDecorItem[]; // Furniture to render behind pet
   overlay?: string;
   petImage: string;
   petPosition: number;
@@ -28,7 +30,9 @@ export default function PetRoom({
   wall, 
   ceiling, 
   trim, 
-  decor, 
+  decor = [], 
+  frontDecor = [],
+  backDecor = [],
   overlay, 
   petImage, 
   petPosition, 
@@ -52,6 +56,22 @@ export default function PetRoom({
     }
   }, [foodItem]);
 
+  // Determine which furniture to render behind and in front of pet
+  const itemsBehindPet = [...backDecor];
+  const itemsInFrontOfPet = [...frontDecor];
+
+  // Handle legacy decor items (apply "position" property if it exists)
+  if (decor && decor.length > 0) {
+    decor.forEach(item => {
+      if (item.position === "back") {
+        itemsBehindPet.push(item);
+      } else {
+        // Default is "front" if not specified
+        itemsInFrontOfPet.push(item);
+      }
+    });
+  }
+
   return (
     <div className="pet-room">
       {/* Behind Pet */}
@@ -60,16 +80,18 @@ export default function PetRoom({
       <img className="ceiling" src={ceiling} alt="Ceiling" />
       {trim && <img className="trim-layer" src={trim} alt="Trim" />}
 
-      {decor.map((item, idx) => (
+      {/* Items behind pet */}
+      {itemsBehindPet.map((item, idx) => (
         <img
-          key={`decor-${idx}`}
+          key={`back-decor-${idx}`}
           className="decor"
           src={item.src}
           style={{
             left: `${item.x}%`,
             top: `${item.y}%`,
-            width: item.width ? `${item.width}%` : "auto",
-            height: item.height ? `${item.height}%` : "auto",
+            width: item.width ? `${item.width}px` : "auto",
+            height: item.height ? `${item.height}px` : "auto",
+            zIndex: 10 + idx // Ensure proper layering behind pet
           }}
           alt=""
         />
@@ -85,7 +107,8 @@ export default function PetRoom({
           alt="Toy"
           style={{ 
             left: `${petPosition + (isFacingRight ? -12 : 12)}%`, 
-            bottom: `22%` /* Slightly higher than pet's 20% bottom */
+            bottom: `22%`, /* Slightly higher than pet's 20% bottom */
+            zIndex: 20
           }}
         />
       )}
@@ -108,15 +131,32 @@ export default function PetRoom({
       <img 
         className={`pet-layer ${isPlaying ? 'playing' : ''} ${isWalking ? 'waddling' : ''} ${isFacingRight ? 'flip' : ''} ${isEating ? 'pet-eating' : ''}`}
         src={petImage}
-        style={{ left: `${petPosition}%` }}
+        style={{ left: `${petPosition}%`, zIndex: 30 }}
         alt="Pet"
       />
+
+      {/* Items in front of pet */}
+      {itemsInFrontOfPet.map((item, idx) => (
+        <img
+          key={`front-decor-${idx}`}
+          className="decor"
+          src={item.src}
+          style={{
+            left: `${item.x}%`,
+            top: `${item.y}%`,
+            width: item.width ? `${item.width}px` : "auto",
+            height: item.height ? `${item.height}px` : "auto",
+            zIndex: 40 + idx // Ensure proper layering in front of pet
+          }}
+          alt=""
+        />
+      ))}
 
       {/* Mood phrase bubble */}
       {moodPhrase && (
         <div 
           className="pet-mood-bubble"
-          style={{ left: `${petPosition}%` }}
+          style={{ left: `${petPosition}%`, zIndex: 50 }}
         >
           <p>{moodPhrase}</p>
         </div>

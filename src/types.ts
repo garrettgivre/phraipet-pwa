@@ -40,16 +40,17 @@ export interface User {
 }
 
 // Defines the structure for a decor item that can be placed in a room.
-export type RoomDecorItem = {
+export interface RoomDecorItem {
   src: string;
   x: number;
   y: number;
   width?: number;
   height?: number;
-};
+  position?: "front" | "back"; // Position relative to pet
+}
 
 // Defines the types of decoration items available in the inventory.
-export type DecorationItemType = "floor" | "wall" | "ceiling" | "trim" | "decor" | "overlay";
+export type DecorationItemType = "floor" | "wall" | "ceiling" | "trim" | "furniture" | "overlay";
 
 // Defines the categories for food items.
 export type FoodCategory = "Treat" | "Snack" | "LightMeal" | "HeartyMeal" | "Feast";
