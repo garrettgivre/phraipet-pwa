@@ -127,9 +127,18 @@ function AppShell({ pet, handleFeedPet, handleGroomPet, handlePlayWithToy, handl
 }
 
 const defaultPetData: Pet = {
-  hunger: 100, happiness: 100, cleanliness: 100, affection: 50, spirit: 0,
-  image: "/pet/neutral.png", lastNeedsUpdateTime: Date.now(),
-  affectionGainedToday: 0, lastAffectionGainDate: getTodayDateString(),
+  id: "default-pet",
+  name: "Buddy",
+  type: "default",
+  hunger: 100, 
+  happiness: 100, 
+  cleanliness: 100, 
+  affection: 50, 
+  spirit: 0,
+  image: "/pet/neutral.png", 
+  lastNeedsUpdateTime: Date.now(),
+  affectionGainedToday: 0, 
+  lastAffectionGainDate: getTodayDateString(),
 };
 defaultPetData.spirit = Math.max(MIN_NEED_VALUE, Math.min(MAX_NEED_VALUE, Math.round((defaultPetData.hunger + defaultPetData.happiness + defaultPetData.cleanliness + defaultPetData.affection) / 4)));
 
@@ -140,11 +149,11 @@ function AppContent() {
 
   const needInfo: NeedInfo[] = pet && typeof pet.hunger === 'number' && typeof pet.cleanliness === 'number' && typeof pet.happiness === 'number' && typeof pet.affection === 'number' && typeof pet.spirit === 'number'
     ? [
-        { need: "hunger", iconSrc: "/assets/icons/needs/hunger.png", value: pet.hunger, desc: descriptor("hunger", pet.hunger) },
-        { need: "cleanliness", iconSrc: "/assets/icons/needs/cleanliness.png", value: pet.cleanliness, desc: descriptor("cleanliness", pet.cleanliness) },
-        { need: "happiness", iconSrc: "/assets/icons/needs/happiness.png", value: pet.happiness, desc: descriptor("happiness", pet.happiness) },
-        { need: "affection", iconSrc: "/assets/icons/needs/affection.png", value: pet.affection, desc: descriptor("affection", pet.affection) },
-        { need: "spirit", iconSrc: "/assets/icons/needs/spirit.png", value: pet.spirit, desc: descriptor("happiness", pet.spirit) },
+        { need: "hunger", name: "Hunger", maxValue: MAX_NEED_VALUE, color: "", iconSrc: "/assets/icons/needs/hunger.png", value: pet.hunger, desc: descriptor("hunger", pet.hunger) },
+        { need: "cleanliness", name: "Cleanliness", maxValue: MAX_NEED_VALUE, color: "", iconSrc: "/assets/icons/needs/cleanliness.png", value: pet.cleanliness, desc: descriptor("cleanliness", pet.cleanliness) },
+        { need: "happiness", name: "Happiness", maxValue: MAX_NEED_VALUE, color: "", iconSrc: "/assets/icons/needs/happiness.png", value: pet.happiness, desc: descriptor("happiness", pet.happiness) },
+        { need: "affection", name: "Affection", maxValue: MAX_NEED_VALUE, color: "", iconSrc: "/assets/icons/needs/affection.png", value: pet.affection, desc: descriptor("affection", pet.affection) },
+        { need: "spirit", name: "Spirit", maxValue: MAX_NEED_VALUE, color: "", iconSrc: "/assets/icons/needs/spirit.png", value: pet.spirit, desc: descriptor("happiness", pet.spirit) },
       ]
     : [];
 
@@ -152,10 +161,10 @@ function AppContent() {
     if (!pet || typeof pet.hunger !== 'number') return;
     
     // Create a toast or indication that feeding is occurring
-    console.log(`Feeding pet ${foodItem.name}, hunger restored: ${foodItem.hungerRestored}`);
+    console.log(`Feeding pet ${foodItem.name}, hunger restored: ${foodItem.hungerBoost}`);
     
     // Calculate new hunger value - the higher the better for hunger
-    let newHunger = Math.min(MAX_NEED_VALUE, pet.hunger + foodItem.hungerRestored);
+    let newHunger = Math.min(MAX_NEED_VALUE, pet.hunger + (foodItem.hungerRestored || foodItem.hungerBoost));
     newHunger = Math.max(MIN_NEED_VALUE, newHunger);
     
     console.log(`Pet hunger before: ${pet.hunger}, after: ${newHunger}`);
@@ -175,7 +184,7 @@ function AppContent() {
     localStorage.setItem('pendingFoodItem', JSON.stringify({
       src: foodItem.src,
       position: 50, // Center position, will be adjusted in PetPage
-      hungerRestored: foodItem.hungerRestored
+      hungerRestored: foodItem.hungerBoost
     }));
     
     // Navigate back to pet page to show the feeding animation

@@ -177,10 +177,10 @@ export default function ItemDetailsModal({
                 <div className="item-stat">
                   <strong>Hunger Boost:</strong> 
                   <span style={{ 
-                    color: getHungerDisplayColor((item as FoodInventoryItem).hungerRestored),
+                    color: getHungerDisplayColor((item as FoodInventoryItem).hungerBoost),
                     fontWeight: 'bold'
                   }}>
-                    +{(item as FoodInventoryItem).hungerRestored}
+                    +{(item as FoodInventoryItem).hungerBoost}
                   </span>
                 </div>
                 <div className="item-stat">

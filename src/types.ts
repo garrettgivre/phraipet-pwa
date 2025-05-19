@@ -9,6 +9,9 @@ export interface NeedInfo {
   value: number;
   maxValue: number;
   color: string;
+  need: Need;
+  iconSrc: string;
+  desc: string;
 }
 
 // Defines the structure for a pet object.
@@ -79,6 +82,7 @@ export interface FoodInventoryItem extends BaseInventoryItem {
   itemCategory: "food";
   type: FoodCategory;
   hungerBoost: number;
+  hungerRestored?: number; // Alias for hungerBoost for backward compatibility
   phrases: string[];
 }
 

@@ -41,7 +41,10 @@ export function getFoodCategoryFromHungerValue(hungerValue: number): string {
  * @param hungerValue The hunger value to get color for
  * @returns The hex color code
  */
-export function getHungerDisplayColor(hungerValue: number): string {
+export function getHungerDisplayColor(hungerValue: number | undefined): string {
+  // Default to a neutral color for undefined values
+  if (hungerValue === undefined) return '#888888';
+  
   if (hungerValue <= 10) return '#ff5252'; // red for treats
   if (hungerValue <= 15) return '#ff9800'; // orange for snacks
   if (hungerValue <= 30) return '#2196f3'; // blue for light meals

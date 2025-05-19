@@ -28,6 +28,7 @@ export interface StoreTemplateProps {
   title: string;
   imagePath: string;
   storeItems: StoreItemWithStock[];
+  coins?: number;
   onPurchase: (item: StoreItemWithStock) => void;
   nextRestockTime: Date | null;
   isLoading?: boolean;

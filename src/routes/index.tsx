@@ -35,7 +35,7 @@ export function createRoutes(props: RouteProps): RouteObject[] {
     },
     {
       path: "/play",
-      element: <Play />
+      element: <Play pet={props.pet} />
     },
     {
       path: "/inventory",

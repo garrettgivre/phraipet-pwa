@@ -126,7 +126,7 @@ export default function SBStall() {
           setNextRestockTime(newRestockTime);
         } else {
           // Use existing stock, filtering out zero-stock items
-          setStoreItems((stallData.items || []).filter(item => item.stock > 0));
+          setStoreItems((stallData.items || []).filter((item: StoreItemWithStock) => item.stock > 0));
         }
       } else {
         // No data exists, create initial stock
