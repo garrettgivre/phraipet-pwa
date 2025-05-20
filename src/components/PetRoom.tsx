@@ -294,6 +294,7 @@ export default function PetRoom({
         />
       )}
 
+      {/* Pet Layer and Speech Bubble - back to the original approach with improvements */}
       {/* Pet Layer */}
       <img 
         className={`pet-layer ${isPlaying ? 'playing' : ''} ${isWalking ? 'waddling' : ''} ${isFacingRight ? 'flip' : ''} ${isEating ? 'pet-eating' : ''}`}
@@ -302,10 +303,46 @@ export default function PetRoom({
           position: 'absolute',
           left: `${petPosition}%`, 
           bottom: '30%', 
-          zIndex: 30 
+          zIndex: 30, 
+          transform: 'translateX(-50%)'
         }}
         alt="Pet"
       />
+      
+      {/* Speech bubble positioned right above pet */}
+      {moodPhrase && (
+        <div 
+          className="pet-mood-bubble"
+          style={{ 
+            position: 'absolute',
+            left: `${petPosition}%`,
+            bottom: `calc(30% + 45px)`, /* Position above pet, with enough space */
+            transform: 'translateX(-50%)',
+            zIndex: 50,
+            background: 'white',
+            padding: '6px 10px',
+            borderRadius: '12px',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+            maxWidth: '150px',
+            width: 'auto'
+          }}
+        >
+          <div 
+            style={{ 
+              position: 'absolute', 
+              bottom: '-6px',
+              left: '50%', 
+              transform: 'translateX(-50%)', 
+              width: '0', 
+              height: '0', 
+              borderLeft: '6px solid transparent', 
+              borderRight: '6px solid transparent', 
+              borderTop: '6px solid white' 
+            }} 
+          />
+          <p style={{ margin: 0, textAlign: 'center', fontSize: '0.85rem' }}>{moodPhrase}</p>
+        </div>
+      )}
 
       {/* Items in front of pet */}
       {itemsInFrontOfPet.map((item, idx) => {
@@ -329,41 +366,6 @@ export default function PetRoom({
           />
         );
       })}
-
-      {/* Mood phrase bubble - positioned right above pet's head */}
-      {moodPhrase && (
-        <div 
-          className="pet-mood-bubble"
-          style={{ 
-            position: 'absolute',
-            left: `${petPosition}%`,
-            bottom: 'calc(30% + 20px)', // Reduced offset to be closer to pet's head
-            transform: 'translateX(-50%)', // Center horizontally
-            zIndex: 50,
-            background: 'white',
-            padding: '6px 10px',
-            borderRadius: '12px',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-            maxWidth: '80%',
-            marginBottom: '5px' // Small gap between bubble and pet
-          }}
-        >
-          <div 
-            style={{ 
-              position: 'absolute', 
-              bottom: '-8px', 
-              left: '50%', 
-              transform: 'translateX(-50%)', 
-              width: '0', 
-              height: '0', 
-              borderLeft: '8px solid transparent', 
-              borderRight: '8px solid transparent', 
-              borderTop: '8px solid white' 
-            }} 
-          />
-          <p style={{ margin: 0, textAlign: 'center' }}>{moodPhrase}</p>
-        </div>
-      )}
 
       {/* Overlay Layer */}
       {overlay && (

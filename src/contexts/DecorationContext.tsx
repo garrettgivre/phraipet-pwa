@@ -80,6 +80,18 @@ export const defaultDecorationItems: DecorationInventoryItem[] = [
   { id: "deco-artdeco-wall", name: "Art Deco Wall", itemCategory: "decoration", type: "wall", src: "/assets/walls/artdeco-wall.png", price: 300 },
   { id: "deco-artdeco-ceiling", name: "Art Deco Ceiling", itemCategory: "decoration", type: "ceiling", src: "/assets/ceilings/artdeco-ceiling.png", price: 300 },
   { id: "deco-artdeco-trim", name: "Art Deco Trim", itemCategory: "decoration", type: "trim", src: "/assets/trim/artdeco-trim.png", price: 175 },
+
+  // Tugi Theme
+  { id: "deco-tugi-floor", name: "Tugi Floor", itemCategory: "decoration", type: "floor", src: "/assets/floors/tugi-floor.png", price: 275 },
+  { id: "deco-tugi-wall", name: "Tugi Wall", itemCategory: "decoration", type: "wall", src: "/assets/walls/tugi-wall.png", price: 275 },
+  { id: "deco-tugi-ceiling", name: "Tugi Ceiling", itemCategory: "decoration", type: "ceiling", src: "/assets/ceilings/tugi-ceiling.png", price: 275 },
+  { id: "deco-tugi-trim", name: "Tugi Trim", itemCategory: "decoration", type: "trim", src: "/assets/trim/tugi-trim.png", price: 150 },
+
+  // Zany Theme
+  { id: "deco-zany-floor", name: "Zany Floor", itemCategory: "decoration", type: "floor", src: "/assets/floors/zany-floor.png", price: 290 },
+  { id: "deco-zany-wall", name: "Zany Wall", itemCategory: "decoration", type: "wall", src: "/assets/walls/zany-wall.png", price: 290 },
+  { id: "deco-zany-ceiling", name: "Zany Ceiling", itemCategory: "decoration", type: "ceiling", src: "/assets/ceilings/zany-ceiling.png", price: 290 },
+  { id: "deco-zany-trim", name: "Zany Trim", itemCategory: "decoration", type: "trim", src: "/assets/trim/zany-trim.png", price: 165 },
   
   // Furniture Items - Basic
   { id: "deco-furniture-basic-armchair", name: "Basic Armchair", itemCategory: "decoration", type: "furniture", src: "/assets/furniture/furniture-basic-armchair.png", price: 120, description: "A comfortable armchair for your pet to lounge in." },
