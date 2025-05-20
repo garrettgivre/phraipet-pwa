@@ -132,19 +132,36 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.7);
-  z-index: 100;
+  background-color: rgba(0, 0, 0, 0.3);
+  z-index: 1000;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   padding: 20px;
+  pointer-events: all;
+}
+
+/* Room preview container */
+.room-preview-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 100;
+  pointer-events: none;
 }
 
 .furniture-placement-controls {
-  background-color: #ffffff;
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  background-color: rgba(255, 255, 255, 0.95);
   border-radius: 10px;
   padding: 15px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  z-index: 1001;
 }
 
 .furniture-placement-controls h3 {
@@ -153,6 +170,7 @@
   margin-bottom: 15px;
   color: #2c3e50;
   font-size: 1.2rem;
+  font-weight: bold;
 }
 
 .placement-options {
@@ -200,6 +218,18 @@
   margin-top: 10px;
 }
 
+.zone-indicator {
+  margin-top: 5px;
+  font-weight: bold;
+  font-style: normal;
+  padding: 4px 8px;
+  background-color: rgba(52, 152, 219, 0.1);
+  border-radius: 4px;
+  display: inline-block;
+  font-size: 0.8rem;
+  color: #3498db;
+}
+
 .placement-actions {
   display: flex;
   justify-content: space-between;
@@ -228,11 +258,42 @@
   color: #ffffff;
 }
 
+/* Furniture preview and pinch-to-zoom */
 .furniture-preview {
   position: absolute;
   transform: translate(-50%, -50%);
-  z-index: 101;
+  z-index: 1002; /* Higher than the controls */
   filter: drop-shadow(0 0 8px rgba(0, 0, 0, 0.3));
+  pointer-events: all;
+  border: 2px dashed rgba(255, 255, 255, 0.5);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+}
+
+.furniture-preview img {
+  max-width: 240px;
+  max-height: 240px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  transition: none;
+}
+
+.furniture-preview.dragging {
+  cursor: grabbing;
+}
+
+.furniture-preview.resizing {
+  border-color: rgba(52, 152, 219, 0.8);
+  border-width: 3px;
+}
+
+/* Hide resize handles as we're using pinch-to-zoom instead */
+.resize-handle {
+  display: none;
 }
 
 /* Placed furniture management */
@@ -275,14 +336,19 @@
   object-fit: contain;
 }
 
-.remove-furniture-button {
+.placed-furniture-actions {
   position: absolute;
   top: -8px;
   right: -8px;
+  display: flex;
+  gap: 5px;
+}
+
+.replace-furniture-button,
+.remove-furniture-button {
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background-color: #e74c3c;
   color: #ffffff;
   border: 2px solid #ffffff;
   font-size: 14px;
@@ -294,6 +360,14 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   padding: 0;
   line-height: 1;
+}
+
+.replace-furniture-button {
+  background-color: #3498db;
+}
+
+.remove-furniture-button {
+  background-color: #e74c3c;
 }
 
 .placed-furniture-empty {
@@ -544,4 +618,121 @@
     flex-direction: column;
     gap: 5px;
   }
+}
+
+/* Item quantity badge */
+.sq-decor-item-quantity-badge {
+  display: inline-block;
+  background-color: #e67e22;
+  color: white;
+  font-size: 0.6rem;
+  font-weight: bold;
+  padding: 2px 5px;
+  border-radius: 10px;
+  margin-top: 3px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+/* Resize control in furniture placement */
+.resize-control {
+  margin: 15px 0;
+}
+
+.resize-control label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #34495e;
+}
+
+.resize-slider {
+  position: relative;
+  height: 6px;
+  background-color: #e0e0e0;
+  border-radius: 3px;
+  margin: 15px 0;
+  cursor: pointer;
+}
+
+.resize-track {
+  position: absolute;
+  height: 100%;
+  background-color: #3498db;
+  border-radius: 3px;
+  left: 0;
+  width: 66.7%; /* Default at 1.0 scale (0.5-2.0 range) */
+}
+
+.resize-handle {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  background-color: #3498db;
+  border-radius: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  cursor: grab;
+}
+
+.resize-handle:active {
+  cursor: grabbing;
+}
+
+/* Size slider at bottom of screen */
+.size-slider-container {
+  position: absolute;
+  bottom: 120px; /* Increased from 70px to 120px to move it higher */
+  left: 0;
+  right: 0;
+  background-color: rgba(255, 255, 255, 0.9);
+  padding: 12px 20px;
+  box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  z-index: 1010;
+}
+
+.size-slider-container label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 8px;
+  color: #34495e;
+}
+
+.size-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  background: #e0e0e0;
+  border-radius: 3px;
+  outline: none;
+}
+
+.size-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #3498db;
+  cursor: pointer;
+  border: 2px solid white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.size-slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #3498db;
+  cursor: pointer;
+  border: 2px solid white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* Hide resize handles since we're using the slider instead */
+.resize-handle {
+  display: none;
 } 

@@ -22,11 +22,18 @@ type RoomLayers = {
   overlay: string;
 };
 
-const defaultDecorationItems: DecorationInventoryItem[] = [
+// Add export to defaultDecorationItems
+export const defaultDecorationItems: DecorationInventoryItem[] = [
   // Classic Theme
   { id: "deco-classic-floor", name: "Classic Floor", itemCategory: "decoration", type: "floor", src: "/assets/floors/classic-floor.png", price: 100 },
   { id: "deco-classic-wall", name: "Classic Wall", itemCategory: "decoration", type: "wall", src: "/assets/walls/classic-wall.png", price: 100 },
   { id: "deco-classic-ceiling", name: "Classic Ceiling", itemCategory: "decoration", type: "ceiling", src: "/assets/ceilings/classic-ceiling.png", price: 100 },
+
+  // Neo Steel Theme
+  { id: "deco-neosteel-floor", name: "Neo Steel Floor", itemCategory: "decoration", type: "floor", src: "/assets/floors/neosteel-floor.png", price: 280 },
+  { id: "deco-neosteel-wall", name: "Neo Steel Wall", itemCategory: "decoration", type: "wall", src: "/assets/walls/neosteel-wall.png", price: 280 },
+  { id: "deco-neosteel-ceiling", name: "Neo Steel Ceiling", itemCategory: "decoration", type: "ceiling", src: "/assets/ceilings/neosteel-ceiling.png", price: 280 },
+  { id: "deco-neosteel-trim", name: "Neo Steel Trim", itemCategory: "decoration", type: "trim", src: "/assets/trim/neosteel-trim.png", price: 160 },
 
   // Science Lab Theme
   { id: "deco-science-floor", name: "Science Floor", itemCategory: "decoration", type: "floor", src: "/assets/floors/science-floor.png", price: 150 },
@@ -37,6 +44,13 @@ const defaultDecorationItems: DecorationInventoryItem[] = [
   { id: "deco-aero-floor", name: "Aero Floor", itemCategory: "decoration", type: "floor", src: "/assets/floors/aero-floor.png", price: 200 },
   { id: "deco-aero-wall", name: "Aero Wall", itemCategory: "decoration", type: "wall", src: "/assets/walls/aero-wall.png", price: 200 },
   { id: "deco-aero-ceiling", name: "Aero Ceiling", itemCategory: "decoration", type: "ceiling", src: "/assets/ceilings/aero-ceiling.png", price: 200 },
+  { id: "deco-aero-trim", name: "Aero Trim", itemCategory: "decoration", type: "trim", src: "/assets/trim/aero-trim.png", price: 100 },
+
+  // Igloo Theme
+  { id: "deco-igloo-floor", name: "Igloo Floor", itemCategory: "decoration", type: "floor", src: "/assets/floors/igloo-floor.png", price: 220 },
+  { id: "deco-igloo-wall", name: "Igloo Wall", itemCategory: "decoration", type: "wall", src: "/assets/walls/igloo-wall.png", price: 220 },
+  { id: "deco-igloo-ceiling", name: "Igloo Ceiling", itemCategory: "decoration", type: "ceiling", src: "/assets/ceilings/igloo-ceiling.png", price: 220 },
+  { id: "deco-igloo-trim", name: "Igloo Trim", itemCategory: "decoration", type: "trim", src: "/assets/trim/igloo-trim.png", price: 120 },
 
   // Candy Theme
   { id: "deco-candy-floor", name: "Candy Floor", itemCategory: "decoration", type: "floor", src: "/assets/floors/candy-floor.png", price: 180 },
@@ -47,6 +61,7 @@ const defaultDecorationItems: DecorationInventoryItem[] = [
   { id: "deco-krazy-floor", name: "Krazy Floor", itemCategory: "decoration", type: "floor", src: "/assets/floors/krazy-floor.png", price: 250 },
   { id: "deco-krazy-wall", name: "Krazy Wall", itemCategory: "decoration", type: "wall", src: "/assets/walls/krazy-wall.png", price: 250 },
   { id: "deco-krazy-ceiling", name: "Krazy Ceiling", itemCategory: "decoration", type: "ceiling", src: "/assets/ceilings/krazy-ceiling.png", price: 250 },
+  { id: "deco-krazy-trim", name: "Krazy Trim", itemCategory: "decoration", type: "trim", src: "/assets/trim/krazy-trim.png", price: 150 },
 
   // Basic Theme
   { id: "deco-basic-floor", name: "Basic Floor", itemCategory: "decoration", type: "floor", src: "/assets/floors/basic-floor.png", price: 50 },
@@ -66,13 +81,23 @@ const defaultDecorationItems: DecorationInventoryItem[] = [
   { id: "deco-artdeco-ceiling", name: "Art Deco Ceiling", itemCategory: "decoration", type: "ceiling", src: "/assets/ceilings/artdeco-ceiling.png", price: 300 },
   { id: "deco-artdeco-trim", name: "Art Deco Trim", itemCategory: "decoration", type: "trim", src: "/assets/trim/artdeco-trim.png", price: 175 },
   
-  // Furniture Items
+  // Furniture Items - Basic
   { id: "deco-furniture-basic-armchair", name: "Basic Armchair", itemCategory: "decoration", type: "furniture", src: "/assets/furniture/furniture-basic-armchair.png", price: 120, description: "A comfortable armchair for your pet to lounge in." },
   { id: "deco-furniture-basic-endtable", name: "Basic End Table", itemCategory: "decoration", type: "furniture", src: "/assets/furniture/furniture-basic-endtable.png", price: 85, description: "A stylish end table for your pet's room." },
   { id: "deco-furniture-basic-plant", name: "Basic Plant", itemCategory: "decoration", type: "furniture", src: "/assets/furniture/furniture-basic-plant.png", price: 65, description: "A decorative plant that adds a touch of nature." },
   { id: "deco-furniture-basic-wallart", name: "Wall Art", itemCategory: "decoration", type: "furniture", src: "/assets/furniture/furniture-basic-wallart.png", price: 90, description: "Beautiful wall art to brighten up the room." },
+  
+  // Furniture Items - Woodland
   { id: "deco-furniture-woodland-floorlamp", name: "Woodland Floor Lamp", itemCategory: "decoration", type: "furniture", src: "/assets/furniture/furniture-woodland-floorlamp.png", price: 110, description: "A cozy floor lamp that adds warm lighting." },
   { id: "deco-furniture-woodland-shelf", name: "Woodland Shelf", itemCategory: "decoration", type: "furniture", src: "/assets/furniture/furniture-woodland-shelf.png", price: 95, description: "A rustic shelf for displaying your pet's treasures." },
+  
+  // Furniture Items - Odd Collection
+  { id: "deco-furniture-odd-plant", name: "Odd Plant", itemCategory: "decoration", type: "furniture", src: "/assets/furniture/furniture-odd-plant.png", price: 75, description: "An unusual plant with a quirky appearance." },
+  { id: "deco-furniture-odd-diningchair", name: "Odd Dining Chair", itemCategory: "decoration", type: "furniture", src: "/assets/furniture/furniture-odd-diningchair.png", price: 95, description: "A uniquely designed chair for dining." },
+  { id: "deco-furniture-odd-diningtable", name: "Odd Dining Table", itemCategory: "decoration", type: "furniture", src: "/assets/furniture/furniture-odd-diningtable.png", price: 130, description: "A modern dining table with an unusual design." },
+  { id: "deco-furniture-odd-sculpture", name: "Odd Sculpture", itemCategory: "decoration", type: "furniture", src: "/assets/furniture/furniture-odd-sculpture.png", price: 150, description: "An abstract sculptural piece for art lovers." },
+  { id: "deco-furniture-odd-tablelamp", name: "Odd Table Lamp", itemCategory: "decoration", type: "furniture", src: "/assets/furniture/furniture-odd-tablelamp.png", price: 85, description: "A decorative table lamp with a peculiar design." },
+  { id: "deco-furniture-odd-endtable", name: "Odd End Table", itemCategory: "decoration", type: "furniture", src: "/assets/furniture/furniture-odd-endtable.png", price: 90, description: "A contemporary end table with unusual proportions." },
 ];
 
 const defaultRoomLayersData: RoomLayers = {
@@ -193,23 +218,60 @@ export function DecorationProvider({ children }: { children: ReactNode }) {
         onValue(roomRef, (snapshot) => {
           const roomData = snapshot.val() as RoomLayers | null;
           if (roomData) {
+            // Create a clean copy of the room data to avoid duplications
+            const cleanedRoomData = { ...roomData };
+            
             // Handle legacy data structure - move items from decor to frontDecor if needed
+            // Only do this if frontDecor or backDecor are missing or empty
             if (roomData.decor && roomData.decor.length > 0 && 
-                (!roomData.frontDecor || roomData.frontDecor.length === 0)) {
-              roomData.frontDecor = roomData.decor.map(item => ({
-                ...item,
-                position: "front" as "front"
-              }));
+                (!roomData.frontDecor || roomData.frontDecor.length === 0) &&
+                (!roomData.backDecor || roomData.backDecor.length === 0)) {
+              console.log("Converting legacy decor array to frontDecor/backDecor");
+              
+              // Separate items into front and back based on their position property
+              const frontItems: RoomDecorItem[] = [];
+              const backItems: RoomDecorItem[] = [];
+              
+              roomData.decor.forEach(item => {
+                if (item.position === "back") {
+                  backItems.push({...item});
+                } else {
+                  frontItems.push({...item});
+                }
+              });
+              
+              cleanedRoomData.frontDecor = frontItems;
+              cleanedRoomData.backDecor = backItems;
             }
             
-            // Ensure all arrays exist
-            if (!roomData.frontDecor) roomData.frontDecor = [];
-            if (!roomData.backDecor) roomData.backDecor = [];
+            // Ensure all arrays exist and are distinct arrays (not references)
+            cleanedRoomData.frontDecor = Array.isArray(cleanedRoomData.frontDecor) 
+              ? [...cleanedRoomData.frontDecor] 
+              : [];
+              
+            cleanedRoomData.backDecor = Array.isArray(cleanedRoomData.backDecor) 
+              ? [...cleanedRoomData.backDecor] 
+              : [];
             
-            // Keep decor array updated with both front and back items for backward compatibility
-            roomData.decor = [...(roomData.backDecor || []), ...(roomData.frontDecor || [])];
+            // Regenerate the combined decor array from scratch to avoid duplicates
+            cleanedRoomData.decor = [
+              ...cleanedRoomData.backDecor, 
+              ...cleanedRoomData.frontDecor
+            ];
             
-            setRoomLayers(roomData);
+            console.log("Loaded room configuration:", {
+              frontDecor: cleanedRoomData.frontDecor.length,
+              backDecor: cleanedRoomData.backDecor.length,
+              combined: cleanedRoomData.decor.length
+            });
+            
+            setRoomLayers(cleanedRoomData);
+            
+            // If we fixed any issues, save the cleaned data back to Firebase
+            if (JSON.stringify(roomData) !== JSON.stringify(cleanedRoomData)) {
+              console.log("Fixed room data inconsistencies, saving back to Firebase");
+              saveRoomToFirebase(cleanedRoomData);
+            }
           } else {
             // If no data in Firebase, set default and save to Firebase
             set(roomRef, defaultRoomLayersData)
@@ -250,22 +312,27 @@ export function DecorationProvider({ children }: { children: ReactNode }) {
   };
 
   const addDecorItem = useCallback((item: RoomDecorItem, position: "front" | "back" = "front") => {
-    // Set the position property on the item
+    // Ensure the position property is correctly set on the item
     const itemWithPosition = {
       ...item,
       position
     };
+    
+    console.log("Adding decor item:", itemWithPosition, "to position:", position);
     
     // Update the appropriate array based on position
     const updatedLayers = { ...roomLayers };
     
     if (position === "front") {
       updatedLayers.frontDecor = [...updatedLayers.frontDecor, itemWithPosition];
+      console.log("Updated frontDecor:", updatedLayers.frontDecor);
     } else {
       updatedLayers.backDecor = [...updatedLayers.backDecor, itemWithPosition];
+      console.log("Updated backDecor:", updatedLayers.backDecor);
     }
     
-    // Keep the decor array updated for backward compatibility
+    // Update the legacy decor array for backward compatibility
+    // NOTE: We're explicitly NOT adding to both arrays, so we have to maintain this combined array
     updatedLayers.decor = [...updatedLayers.backDecor, ...updatedLayers.frontDecor];
     
     setRoomLayers(updatedLayers);

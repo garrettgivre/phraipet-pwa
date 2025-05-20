@@ -1,5 +1,13 @@
 /* src/components/PetRoom.css */
 
+.pet-room-wrapper {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .pet-room {
   position: relative;
   width: 100%;
@@ -8,6 +16,7 @@
   animation: roomAmbience 30s ease-in-out infinite;
   perspective: 1000px;
   transform-style: preserve-3d;
+  max-height: 100vh;
 }
 
 @keyframes roomAmbience {
@@ -78,44 +87,50 @@
   z-index: 3;
   position: absolute;
   pointer-events: none;
+  display: block;
+  object-fit: contain;
 }
 
-/* Add subtle animation to decor items */
-.decor:nth-child(odd) {
+/* Add subtle animation to decor items - DISABLED since it conflicts with transform */
+/*.decor:nth-child(odd) {
   animation: decorWiggle1 10s ease-in-out infinite;
 }
 
 .decor:nth-child(even) {
   animation: decorWiggle2 14s ease-in-out infinite;
-}
+}*/
 
 @keyframes decorWiggle1 {
   0%, 100% {
-    transform: rotate(0deg) translateY(0);
+    transform: translate(-50%, -50%) rotate(0deg);
   }
   25% {
-    transform: rotate(0.8deg) translateY(-2px);
+    transform: translate(-50%, -50%) rotate(0.8deg) translateY(-2px);
   }
   75% {
-    transform: rotate(-0.8deg) translateY(2px);
+    transform: translate(-50%, -50%) rotate(-0.8deg) translateY(2px);
   }
 }
 
 @keyframes decorWiggle2 {
   0%, 100% {
-    transform: rotate(0deg) translateY(0);
+    transform: translate(-50%, -50%) rotate(0deg);
   }
   30% {
-    transform: rotate(-0.5deg) translateY(2px);
+    transform: translate(-50%, -50%) rotate(-0.5deg) translateY(2px);
   }
   70% {
-    transform: rotate(0.5deg) translateY(-2px);
+    transform: translate(-50%, -50%) rotate(0.5deg) translateY(-2px);
   }
 }
 
 .overlay {
-  z-index: 4;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  z-index: 60;
   pointer-events: none;
+  object-fit: cover;
 }
 
 .pet-layer {
@@ -123,7 +138,7 @@
   bottom: 20%;
   transform: translateX(-50%);
   transition: left 0.3s ease-in-out;
-  z-index: 8;
+  z-index: 30;
   pointer-events: none;
   height: 25%;
   width: auto;
@@ -134,7 +149,7 @@
 .toy {
   position: absolute;
   bottom: 20%;
-  z-index: 10;
+  z-index: 20;
   pointer-events: none;
   transition: left 0.5s ease-in-out;
   height: 15%;
@@ -147,10 +162,10 @@
   padding: 8px 12px;
   border-radius: 12px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  z-index: 9;
+  z-index: 50;
   pointer-events: none;
   transition: left 0.5s ease-in-out;
-  bottom: calc(20% + 25%);
+  bottom: 60%;
   transform: translateX(-50%);
   max-width: 80%;
 }

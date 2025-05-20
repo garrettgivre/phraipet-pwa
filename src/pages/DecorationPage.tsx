@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { useDecoration, decorImageCache, decorZoomStylesCache } from "../contexts/DecorationContext";
+import { useDecoration, decorImageCache, decorZoomStylesCache, defaultDecorationItems } from "../contexts/DecorationContext";
 import type {
   DecorationInventoryItem,
   DecorationItemType,
@@ -8,6 +8,7 @@ import type {
 } from "../types";
 import { calculateVisibleBounds } from "../utils/imageUtils";
 import BackButton from "../components/BackButton";
+import PetRoom from "../components/PetRoom";
 import "./DecorationPage.css";
 import { db } from "../firebase";
 import { ref, set } from "firebase/database";
@@ -19,17 +20,20 @@ const forceUpdateFurnitureItems = async (decorations: DecorationInventoryItem[])
     const defaultFurnitureFromContext = getHardcodedFurnitureItems();
     console.log("Default furniture items:", defaultFurnitureFromContext);
     
-    // Make sure we keep any non-furniture items that might exist
-    const nonFurnitureItems = decorations.filter(item => item.type !== "furniture");
+    // Make sure we include all default decoration items as well
+    // Filter out any item types that are both in the existing decorations and in the defaults
+    // This ensures we keep user-purchased decorations but get the latest defaults too
+    const existingItemTypes = new Set(decorations.map(item => item.id));
+    const newDefaultItems = defaultDecorationItems.filter((item: DecorationInventoryItem) => !existingItemTypes.has(item.id));
     
-    // Combine non-furniture items with default furniture items
-    const updatedDecorations = [...nonFurnitureItems, ...defaultFurnitureFromContext];
+    // Combine existing decorations with new default items and furniture items
+    const updatedDecorations = [...decorations, ...newDefaultItems, ...defaultFurnitureFromContext];
     console.log("Updated decorations to save:", updatedDecorations);
     
     // Save to Firebase
     const decorationsRef = ref(db, "decorations");
     await set(decorationsRef, updatedDecorations);
-    console.log("Force updated decorations in Firebase with furniture items added");
+    console.log("Force updated decorations in Firebase with furniture items and latest defaults");
     return true;
   } catch (error) {
     console.error("Error force updating decorations:", error);
@@ -62,20 +66,158 @@ const capitalizeFirstLetter = (string: string) => {
   return string.charAt(0).toUpperCase() + string.slice(1);
 };
 
+// Import the ROOM_ZONES constant from PetRoom
+const ROOM_ZONES = {
+  FLOOR: { startY: 60, endY: 100 },     // Bottom 40% is floor
+  WALL: { startY: 15, endY: 60 },       // Middle area is wall
+  CEILING: { startY: 0, endY: 15 }      // Top 15% is ceiling
+};
+
 function FurniturePlacementOverlay({
   selectedItem,
   onClose,
-  onPlaceFurniture
+  onPlaceFurniture,
+  roomLayers,
+  initialPosition
 }: {
   selectedItem: DecorationInventoryItem | null;
   onClose: () => void;
   onPlaceFurniture: (item: RoomDecorItem, position: "front" | "back") => void;
+  roomLayers: any;
+  initialPosition?: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    position: "front" | "back";
+  } | null;
 }) {
-  const [position, setPosition] = useState<"front" | "back">("front");
-  const [coords, setCoords] = useState({ x: 50, y: 50 }); // Default to center
+  const [position, setPosition] = useState<"front" | "back">(initialPosition?.position || "front");
+  const [coords, setCoords] = useState({ 
+    x: initialPosition?.x || 50, 
+    y: initialPosition?.y || 50 
+  });
   const [isDragging, setIsDragging] = useState(false);
   const [startDragPos, setStartDragPos] = useState({ x: 0, y: 0 });
+  const [imageNaturalSize, setImageNaturalSize] = useState({ 
+    width: initialPosition?.width || 0, 
+    height: initialPosition?.height || 0 
+  });
+  const [currentZone, setCurrentZone] = useState("WALL");
+  
+  // Size state
+  const [size, setSize] = useState({ 
+    width: initialPosition?.width || 120, 
+    height: initialPosition?.height || 120 
+  });
+  const [sizePercentage, setSizePercentage] = useState(initialPosition ? 
+    (initialPosition.width / 120) * 100 : 100);
+  
   const overlayRef = useRef<HTMLDivElement>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
+  
+  // Add useEffect to disable page zoom
+  useEffect(() => {
+    // Disable zoom on the page
+    const disableZoom = (e: TouchEvent) => {
+      if (e.touches.length > 1) {
+        e.preventDefault();
+      }
+    };
+    
+    // Add event listener with passive: false to allow preventDefault
+    document.addEventListener('touchmove', disableZoom, { passive: false });
+    document.addEventListener('touchstart', disableZoom, { passive: false });
+    
+    return () => {
+      document.removeEventListener('touchmove', disableZoom);
+      document.removeEventListener('touchstart', disableZoom);
+    };
+  }, []);
+  
+  // When image loads, record its natural dimensions
+  useEffect(() => {
+    if (selectedItem) {
+      const img = new Image();
+      img.src = selectedItem.src;
+      img.onload = () => {
+        const initialSize = initialPosition ? 
+          { width: initialPosition.width, height: initialPosition.height } : 
+          calculateProportionalSize(img.naturalWidth, img.naturalHeight, 120);
+        
+        setImageNaturalSize({
+          width: img.naturalWidth,
+          height: img.naturalHeight
+        });
+        
+        setSize(initialSize);
+        
+        // Set size percentage
+        setSizePercentage((initialSize.width / 120) * 100);
+      };
+    }
+  }, [selectedItem, initialPosition]);
+
+  // Helper function to calculate proportional size
+  const calculateProportionalSize = (naturalWidth: number, naturalHeight: number, maxDimension: number) => {
+    if (naturalWidth <= 0 || naturalHeight <= 0) {
+      return { width: maxDimension, height: maxDimension };
+    }
+    
+    if (naturalWidth >= naturalHeight) {
+      // Width is the larger dimension
+      return {
+        width: maxDimension,
+        height: (naturalHeight / naturalWidth) * maxDimension
+      };
+    } else {
+      // Height is the larger dimension
+      return {
+        width: (naturalWidth / naturalHeight) * maxDimension,
+        height: maxDimension
+      };
+    }
+  };
+
+  // Update the zone based on current y-coordinate
+  useEffect(() => {
+    let zone = "WALL";
+    if (coords.y >= ROOM_ZONES.FLOOR.startY) {
+      zone = "FLOOR";
+    } else if (coords.y <= ROOM_ZONES.CEILING.endY) {
+      zone = "CEILING";
+    }
+    setCurrentZone(zone);
+  }, [coords.y]);
+
+  // Handle size change from slider
+  const handleSizeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newPercentage = parseFloat(e.target.value);
+    setSizePercentage(newPercentage);
+    
+    // Calculate new dimensions based on percentage (50% = 60px, 100% = 120px, 150% = 180px)
+    const baseSize = 120; // Base size at 100%
+    const newBaseSize = (newPercentage / 100) * baseSize;
+    
+    // Maintain aspect ratio
+    const aspectRatio = imageNaturalSize.width / imageNaturalSize.height;
+    
+    let newWidth, newHeight;
+    if (imageNaturalSize.width >= imageNaturalSize.height) {
+      // Width is the larger dimension
+      newWidth = newBaseSize;
+      newHeight = newWidth / aspectRatio;
+    } else {
+      // Height is the larger dimension
+      newHeight = newBaseSize;
+      newWidth = newHeight * aspectRatio;
+    }
+    
+    setSize({
+      width: Math.round(newWidth),
+      height: Math.round(newHeight)
+    });
+  };
 
   const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
     setIsDragging(true);
@@ -144,22 +286,71 @@ function FurniturePlacementOverlay({
   const handleConfirmPlacement = () => {
     if (!selectedItem) return;
     
-    // Create room decor item from the selected furniture
+    // Create room decor item from the selected furniture with coordinates
+    // that will maintain relative positioning across devices
     const furnitureItem: RoomDecorItem = {
       src: selectedItem.src,
       x: coords.x,
       y: coords.y,
-      width: 150, // Default width, can be adjusted
-      height: 150, // Default height, can be adjusted
-      position
+      width: size.width,
+      height: size.height,
+      position,
+      zone: currentZone as "FLOOR" | "WALL" | "CEILING",
+      // Add relativeTo properties if this item is placed near another
+      relativeTo: findRelativePosition(coords.x, coords.y)
     };
     
+    console.log("Placing furniture:", furnitureItem, "in position:", position, "zone:", currentZone);
     onPlaceFurniture(furnitureItem, position);
     onClose();
+  };
+  
+  // Helper function to find if the new item is near an existing item
+  // and should be positioned relative to it
+  const findRelativePosition = (x: number, y: number) => {
+    // Get items in the current position (front or back)
+    const existingItems = position === "front" ? 
+      roomLayers.frontDecor : roomLayers.backDecor;
+    
+    if (!existingItems || existingItems.length === 0) return null;
+    
+    // Check if the new item is close to any existing items
+    const PROXIMITY_THRESHOLD = 15; // % distance to consider "close"
+    
+    for (const item of existingItems) {
+      const distance = Math.sqrt(
+        Math.pow(x - item.x, 2) + 
+        Math.pow(y - item.y, 2)
+      );
+      
+      if (distance < PROXIMITY_THRESHOLD) {
+        return {
+          itemSrc: item.src,
+          offsetX: x - item.x,
+          offsetY: y - item.y
+        };
+      }
+    }
+    
+    return null;
   };
 
   return (
     <div className="furniture-placement-overlay" ref={overlayRef}>
+      <div className="room-preview-container">
+        <PetRoom
+          floor={roomLayers.floor || "/assets/floors/classic-floor.png"}
+          wall={roomLayers.wall || "/assets/walls/classic-wall.png"}
+          ceiling={roomLayers.ceiling || "/assets/ceilings/classic-ceiling.png"}
+          trim={roomLayers.trim || ""}
+          frontDecor={roomLayers.frontDecor}
+          backDecor={roomLayers.backDecor}
+          overlay={roomLayers.overlay || ""}
+          petImage="/pet/neutral.png"
+          petPosition={50}
+        />
+      </div>
+
       <div className="furniture-placement-controls">
         <h3>Place Your Furniture</h3>
         
@@ -183,7 +374,8 @@ function FurniturePlacementOverlay({
           </div>
           
           <div className="placement-help-text">
-            Drag the item to position it, then tap "Place" to confirm
+            Drag to position, use size slider to resize, then tap "Place"
+            <div className="zone-indicator">Current zone: {currentZone.toLowerCase()}</div>
           </div>
         </div>
         
@@ -194,24 +386,37 @@ function FurniturePlacementOverlay({
       </div>
       
       <div 
-        className="furniture-preview"
+        className={`furniture-preview ${isDragging ? 'dragging' : ''}`}
         style={{ 
           left: `${coords.x}%`, 
-          top: `${coords.y}%`,
-          cursor: isDragging ? 'grabbing' : 'grab'
+          top: `${coords.y}%`
         }}
         onMouseDown={handleDragStart}
         onTouchStart={handleDragStart}
       >
         <img 
+          ref={imgRef}
           src={selectedItem.src} 
           alt={selectedItem.name} 
-          style={{ 
-            maxWidth: '150px', 
-            maxHeight: '150px',
-            transform: 'translate(-50%, -50%)'
-          }}
           draggable="false"
+          style={{
+            width: `${size.width}px`,
+            height: `${size.height}px`
+          }}
+        />
+      </div>
+      
+      {/* Size slider at bottom of screen */}
+      <div className="size-slider-container">
+        <label>Size: {Math.round(sizePercentage)}%</label>
+        <input 
+          type="range" 
+          min="50" 
+          max="200" 
+          step="1" 
+          value={sizePercentage}
+          onChange={handleSizeChange}
+          className="size-slider"
         />
       </div>
     </div>
@@ -220,10 +425,12 @@ function FurniturePlacementOverlay({
 
 function PlacedFurnitureList({
   furnitureItems,
-  onRemove
+  onRemove,
+  onReplace
 }: {
   furnitureItems: RoomDecorItem[];
   onRemove: (index: number) => void;
+  onReplace: (index: number) => void;
 }) {
   if (furnitureItems.length === 0) {
     return (
@@ -240,13 +447,24 @@ function PlacedFurnitureList({
         {furnitureItems.map((item, index) => (
           <div key={index} className="placed-furniture-item">
             <img src={item.src} alt={`Furniture ${index + 1}`} />
-            <button 
-              className="remove-furniture-button" 
-              onClick={() => onRemove(index)}
-              aria-label="Remove furniture"
-            >
-              ×
-            </button>
+            <div className="placed-furniture-actions">
+              <button 
+                className="replace-furniture-button" 
+                onClick={() => onReplace(index)}
+                aria-label="Replace furniture"
+                title="Replace furniture"
+              >
+                ↻
+              </button>
+              <button 
+                className="remove-furniture-button" 
+                onClick={() => onRemove(index)}
+                aria-label="Remove furniture"
+                title="Remove furniture"
+              >
+                ×
+              </button>
+            </div>
           </div>
         ))}
       </div>
@@ -397,6 +615,23 @@ function ZoomedImage({ src, alt }: { src: string; alt: string }) {
   );
 }
 
+// Just after imports, add an interface for items with quantity
+interface DecorationInventoryItemWithQuantity extends DecorationInventoryItem {
+  quantity: number;
+}
+
+// Update the countItemQuantities function
+const countItemQuantities = (items: DecorationInventoryItem[]): Map<string, number> => {
+  const itemCounts = new Map<string, number>();
+  
+  items.forEach(item => {
+    const currentCount = itemCounts.get(item.id) || 0;
+    itemCounts.set(item.id, currentCount + 1);
+  });
+  
+  return itemCounts;
+};
+
 export default function DecorationPage() {
   const { decorations, roomLayers, setRoomLayer, addDecorItem, removeDecorItem, getFilteredDecorations } = useDecoration();
   const navigate = useNavigate();
@@ -409,6 +644,26 @@ export default function DecorationPage() {
   const [selectedFurniture, setSelectedFurniture] = useState<DecorationInventoryItem | null>(null);
   const [showPlacementOverlay, setShowPlacementOverlay] = useState(false);
   const [showPlacedFurniture, setShowPlacedFurniture] = useState(false);
+  const [replaceCoords, setReplaceCoords] = useState<{
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    position: "front" | "back";
+  } | null>(null);
+
+  // Auto-refresh missing themes
+  useEffect(() => {
+    // Check if we need to refresh by looking for the new items
+    const hasIglooTheme = decorations.some(item => item.id === "deco-igloo-floor");
+    const hasKrazyTrim = decorations.some(item => item.id === "deco-krazy-trim");
+    const hasAeroTrim = decorations.some(item => item.id === "deco-aero-trim");
+    
+    if (!hasIglooTheme || !hasKrazyTrim || !hasAeroTrim) {
+      console.log("Missing new theme items, triggering auto-refresh");
+      handleRefreshFurniture();
+    }
+  }, [decorations]);
 
   const handleSelectFurniture = (item: DecorationInventoryItem) => {
     // Only handle placement for furniture type
@@ -422,14 +677,38 @@ export default function DecorationPage() {
   };
 
   const handlePlaceFurniture = (item: RoomDecorItem, position: "front" | "back") => {
-    // Use the updated addDecorItem method that accepts position
+    console.log("Handling furniture placement:", item, "position:", position);
+    
+    // Only add to the selected position (front or back)
+    // Do not add to both layers - this was causing the issue
     addDecorItem(item, position);
+    
+    // Update local state to show the placed furniture panel
+    setShowPlacedFurniture(true);
   };
 
-  // Generate filtered items for the current category
+  // Generate filtered items for the current category with counts for duplicates
   const filteredItems = useMemo(() => {
     const items = getFilteredDecorations(selectedSubCategory);
     console.log(`Filtered ${selectedSubCategory} items:`, items);
+    
+    // For furniture, we want to handle duplicates by showing counts
+    if (selectedSubCategory === "furniture") {
+      // Count occurrences of each item ID
+      const itemCounts = countItemQuantities(items);
+      
+      // Create a deduplicated array with the first occurrence of each item
+      const uniqueItems = Array.from(
+        new Map(items.map(item => [item.id, item])).values()
+      );
+      
+      // Add quantity property to each item
+      return uniqueItems.map(item => ({
+        ...item,
+        quantity: itemCounts.get(item.id) || 1
+      })) as DecorationInventoryItemWithQuantity[];
+    }
+    
     return items;
   }, [getFilteredDecorations, selectedSubCategory]);
 
@@ -480,6 +759,46 @@ export default function DecorationPage() {
     return hasFurniture;
   }, [decorations]);
 
+  // Add a new function to replace furniture
+  const handleReplaceFurniture = (position: "front" | "back", index: number) => {
+    // Get the item to be replaced
+    const itemsArray = position === "front" ? roomLayers.frontDecor : roomLayers.backDecor;
+    if (index < 0 || index >= itemsArray.length) return;
+    
+    const itemToReplace = itemsArray[index];
+    
+    // Remove the item first
+    removeDecorItem(position, index);
+    
+    // Show the placement overlay with the item's original position
+    setSelectedFurniture({
+      // Find a matching item in decorations array
+      ...decorations.find(item => item.src === itemToReplace.src) || {
+        id: `temp-${Date.now()}`,
+        name: "Furniture Item",
+        itemCategory: "decoration",
+        type: "furniture",
+        src: itemToReplace.src,
+        price: 0
+      },
+      // Add any missing properties
+      id: `temp-${Date.now()}`,
+      itemCategory: "decoration",
+      type: "furniture",
+    });
+    
+    // Set initial coords to the item's current position
+    setReplaceCoords({
+      x: itemToReplace.x,
+      y: itemToReplace.y,
+      width: itemToReplace.width || 0,
+      height: itemToReplace.height || 0, 
+      position: position
+    });
+    
+    setShowPlacementOverlay(true);
+  };
+
   return (
     <div className="sq-decor-page-wrapper">
       <div className="sq-decor-title-bar">
@@ -520,13 +839,15 @@ export default function DecorationPage() {
             <h3>Front Items (Displayed in front of pet)</h3>
             <PlacedFurnitureList 
               furnitureItems={roomLayers.frontDecor} 
-              onRemove={(index) => removeDecorItem("front", index)} 
+              onRemove={(index) => removeDecorItem("front", index)}
+              onReplace={(index) => handleReplaceFurniture("front", index)}
             />
             
             <h3>Back Items (Displayed behind pet)</h3>
             <PlacedFurnitureList 
               furnitureItems={roomLayers.backDecor} 
-              onRemove={(index) => removeDecorItem("back", index)} 
+              onRemove={(index) => removeDecorItem("back", index)}
+              onReplace={(index) => handleReplaceFurniture("back", index)}
             />
           </div>
         ) : (
@@ -546,6 +867,14 @@ export default function DecorationPage() {
                   <div className="sq-decor-item-info">
                     <span className="sq-decor-item-name-text">{item.name}</span>
                     <span className="sq-decor-item-price-text">{item.price} coins</span>
+                    {/* Show quantity badge for furniture if more than 1 */}
+                    {selectedSubCategory === "furniture" && 
+                     'quantity' in item && 
+                     (item as DecorationInventoryItemWithQuantity).quantity > 1 && (
+                      <span className="sq-decor-item-quantity-badge">
+                        x{(item as DecorationInventoryItemWithQuantity).quantity}
+                      </span>
+                    )}
                   </div>
                 </button>
               ))
@@ -576,8 +905,11 @@ export default function DecorationPage() {
           onClose={() => {
             setShowPlacementOverlay(false);
             setSelectedFurniture(null);
+            setReplaceCoords(null); // Reset replace coords
           }}
           onPlaceFurniture={handlePlaceFurniture}
+          roomLayers={roomLayers}
+          initialPosition={replaceCoords}
         />
       )}
     </div>

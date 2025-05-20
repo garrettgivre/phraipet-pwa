@@ -47,6 +47,12 @@ export interface RoomDecorItem {
   width?: number;
   height?: number;
   position?: "front" | "back"; // Position relative to pet
+  zone?: "FLOOR" | "WALL" | "CEILING"; // Zone in the room for better positioning
+  relativeTo?: { // For maintaining position relative to another item
+    itemSrc: string;
+    offsetX: number;
+    offsetY: number;
+  } | null;
 }
 
 // Defines the types of decoration items available in the inventory.
