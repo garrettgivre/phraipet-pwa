@@ -6,7 +6,6 @@ import Explore from "./pages/Explore";
 import Play from "./pages/Play";
 import InventoryPage from "./pages/InventoryPage";
 import DecorationPage from "./pages/DecorationPage";
-import DecorationDebug from "./pages/DecorationDebug";
 import Sunnybrook from "./pages/Sunnybrook";
 import SBAdoption from "./pages/Sunnybrook/SBAdoption"; 
 import SBClock from "./pages/Sunnybrook/SBClock";
@@ -61,10 +60,6 @@ export function createRoutes({
     {
       path: "/decorations",
       element: <DecorationPage />
-    },
-    {
-      path: "/debug",
-      element: <DecorationDebug />
     },
     {
       path: "/sunnybrook",

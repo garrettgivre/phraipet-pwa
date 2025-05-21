@@ -1,615 +1,632 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useDecoration } from '../contexts/DecorationContext';
 import type { DecorationInventoryItem, RoomDecorItem, DecorationItemType } from '../types';
 import './FurnitureEditOverlay.css';
 
-// Room zones for furniture placement
+// Room zones for placement guidance
 const ROOM_ZONES = {
-  FLOOR: { startY: 70, endY: 100 },
-  WALL: { startY: 15, endY: 70 },
-  CEILING: { startY: 0, endY: 15 }
+  FLOOR: { startY: 70, endY: 100 },  // Bottom 30% is floor
+  WALL: { startY: 15, endY: 70 },    // Middle is wall
+  CEILING: { startY: 0, endY: 15 }   // Top 15% is ceiling
 };
 
+// Convert these to CSS variables to use for styling the grid
+const ROOT_VARIABLES = {
+  '--floor-start': `${ROOM_ZONES.FLOOR.startY}%`,
+  '--wall-start': `${ROOM_ZONES.WALL.startY}%`,
+  '--ceiling-start': `${ROOM_ZONES.CEILING.startY}%`
+};
+
+// Fixed base size used for calculating proportional scaling
+const BASE_ITEM_SIZE = 100; // 100% = standard item size
+
+// Main interface
 interface FurnitureEditOverlayProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
 export default function FurnitureEditOverlay({ isOpen, onClose }: FurnitureEditOverlayProps) {
+  // --- CONTEXT & REFS ---
   const { decorations, roomLayers, addDecorItem, removeDecorItem, getFilteredDecorations, setRoomLayer } = useDecoration();
-  
-  // Selected furniture item from inventory
-  const [selectedInventoryItem, setSelectedInventoryItem] = useState<DecorationInventoryItem | null>(null);
-  
-  // Selected placed furniture item for editing
-  const [selectedPlacedItem, setSelectedPlacedItem] = useState<{
-    item: RoomDecorItem;
-    position: 'front' | 'back';
-    index: number;
-  } | null>(null);
-  
-  // Active category in the furniture inventory
-  const [activeCategory, setActiveCategory] = useState<DecorationItemType>('furniture');
-  
-  // Editing states
-  const [isPlacing, setIsPlacing] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
-  const [isRotating, setIsRotating] = useState(false);
-  const [rotation, setRotation] = useState(0);
-  const [size, setSize] = useState(100); // Size percentage
-  const [position, setPosition] = useState<{x: number, y: number}>({ x: 50, y: 50 });
-  const [placementLayer, setPlacementLayer] = useState<'front' | 'back'>('back'); // Default to back
-  
-  // Debug state
-  const [debugInfo, setDebugInfo] = useState<string>("");
-  
-  // References
-  const overlayRef = useRef<HTMLDivElement>(null);
   const roomContainerRef = useRef<HTMLDivElement>(null);
   
-  // Helper function to add debug information
-  const addDebugInfo = (info: string) => {
-    setDebugInfo(prev => `${info}\n${prev.split('\n').slice(0, 5).join('\n')}`);
-  };
+  // --- STATE MANAGEMENT ---
+  // Active decoration category
+  const [activeCategory, setActiveCategory] = useState<DecorationItemType>('furniture');
   
-  // Get furniture items based on active category
-  const categoryItems = useMemo(() => {
-    if (!decorations || decorations.length === 0) {
-      addDebugInfo(`No decorations found in context`);
-      return [];
-    }
-    
-    addDebugInfo(`Fetching items for category: ${activeCategory}`);
-    
-    let items: DecorationInventoryItem[] = [];
-    
-    // We use getFilteredDecorations for all categories now for consistency
-    items = getFilteredDecorations(activeCategory);
-    
-    addDebugInfo(`Found ${items.length} items for ${activeCategory}`);
-    return items;
-  }, [decorations, getFilteredDecorations, activeCategory]);
+  // Items for the active category
+  const [availableItems, setAvailableItems] = useState<DecorationInventoryItem[]>([]);
   
-  // Reset state when opening the overlay
+  // Edit modes
+  const [mode, setMode] = useState<'browse' | 'place' | 'edit'>('browse');
+  
+  // Selected item state
+  const [selectedItem, setSelectedItem] = useState<{
+    id: string;            // Unique identifier
+    src: string;           // Image source
+    x: number;             // X position (%)
+    y: number;             // Y position (%)
+    size: number;          // Size (% of base size)
+    rotation: number;      // Rotation (degrees)
+    layer: 'front' | 'back'; // Which layer
+    existingIndex?: number;  // Index in existing items (if editing)
+  } | null>(null);
+  
+  // Interaction states
+  const [isDragging, setIsDragging] = useState(false);
+  const [isRotating, setIsRotating] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [initialRotation, setInitialRotation] = useState(0);
+  const [initialPointerPosition, setInitialPointerPosition] = useState({ x: 0, y: 0 });
+  
+  // Responsive design state
+  const [roomDimensions, setRoomDimensions] = useState({ width: 0, height: 0 });
+  
+  // UI control states
+  const [isPanelCollapsed, setIsPanelCollapsed] = useState(false);
+  
+  // --- LIFECYCLE EFFECTS ---
+  
+  // Update available items when category changes and reset state if not in furniture tab
   useEffect(() => {
-    if (isOpen) {
-      addDebugInfo("Furniture edit overlay opened");
-      setSelectedInventoryItem(null);
-      setSelectedPlacedItem(null);
-      setIsPlacing(false);
+    const items = getFilteredDecorations(activeCategory);
+    setAvailableItems(items);
+    
+    // Reset selection and mode when switching away from furniture tab
+    if (activeCategory !== 'furniture') {
+      setSelectedItem(null);
+      setMode('browse');
+    }
+  }, [activeCategory, getFilteredDecorations, decorations]);
+  
+  // Monitor room dimensions for responsive scaling
+  useEffect(() => {
+    if (!isOpen || !roomContainerRef.current) return;
+    
+    const updateDimensions = () => {
+      if (!roomContainerRef.current) return;
+      
+      const { width, height } = roomContainerRef.current.getBoundingClientRect();
+      setRoomDimensions({ width, height });
+    };
+    
+    // Initial update
+    updateDimensions();
+    
+    // Update on resize
+    window.addEventListener('resize', updateDimensions);
+    
+    return () => {
+      window.removeEventListener('resize', updateDimensions);
+    };
+  }, [isOpen]);
+  
+  // Reset state when closing the overlay
+  useEffect(() => {
+    if (!isOpen) {
+      setSelectedItem(null);
+      setMode('browse');
     }
   }, [isOpen]);
   
-  // Combined front and back decor items for display/editing
-  const frontDecorItems = roomLayers?.frontDecor || [];
-  const backDecorItems = roomLayers?.backDecor || [];
+  // --- UTILITY FUNCTIONS ---
   
-  // Handle click on an inventory item
-  const handleInventoryItemClick = (item: DecorationInventoryItem) => {
-    addDebugInfo(`Clicked inventory item: ${item.name}, type: ${item.type}`);
+  // Calculate actual pixel size based on percentage and container dimensions
+  const getScaledSize = useCallback((sizePercent: number) => {
+    // Base size is relative to the smaller dimension of the container
+    const baseMeasure = Math.min(roomDimensions.width, roomDimensions.height);
+    // Using BASE_ITEM_SIZE as a percentage of the container
+    const baseSize = (BASE_ITEM_SIZE / 100) * baseMeasure; 
+    return (sizePercent / 100) * baseSize;
+  }, [roomDimensions]);
+  
+  // Convert screen coordinates to container percentages
+  const screenToContainerPercent = useCallback((screenX: number, screenY: number) => {
+    if (!roomContainerRef.current) return { x: 50, y: 50 };
     
-    // For non-furniture items, apply directly to the room
+    const rect = roomContainerRef.current.getBoundingClientRect();
+    const x = ((screenX - rect.left) / rect.width) * 100;
+    const y = ((screenY - rect.top) / rect.height) * 100;
+    
+    return { x, y };
+  }, []);
+  
+  // Determine room zone based on Y-coordinate
+  const getRoomZone = (y: number): "FLOOR" | "WALL" | "CEILING" => {
+    if (y >= ROOM_ZONES.FLOOR.startY) return "FLOOR";
+    if (y <= ROOM_ZONES.CEILING.endY) return "CEILING";
+    return "WALL";
+  };
+  
+  // Create a unique id for new items
+  const createUniqueId = () => `item-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+  
+  // --- EVENT HANDLERS ---
+  
+  // Select a category
+  const handleCategorySelect = (category: DecorationItemType) => {
+    setActiveCategory(category);
+    setSelectedItem(null);
+    setMode('browse');
+  };
+  
+  // Handle click on inventory item
+  const handleInventoryItemClick = (item: DecorationInventoryItem) => {
+    // For non-furniture items (walls, floors, etc.) apply directly
     if (item.type !== 'furniture') {
-      addDebugInfo(`Setting room layer: ${item.type} to ${item.src}`);
       setRoomLayer(item.type as any, item.src);
       return;
     }
     
-    // For furniture items, enter placement mode
-    setSelectedInventoryItem(item);
-    setSelectedPlacedItem(null);
-    setIsPlacing(true);
-    setRotation(0);
-    setSize(100);
-    setPosition({ x: 50, y: 50 });
-    addDebugInfo(`Entering placement mode for: ${item.name}`);
+    // For furniture, create a new item in the center
+    setSelectedItem({
+      id: createUniqueId(),
+      src: item.src,
+      x: 50,
+      y: 50,
+      size: 100, // Default size = 100%
+      rotation: 0,
+      layer: 'back' // Default place behind pet
+    });
+    
+    setMode('place');
   };
   
-  // Handle click on a placed furniture item
-  const handlePlacedItemClick = (item: RoomDecorItem, position: 'front' | 'back', index: number) => {
-    if (isPlacing || isDragging) return; // Ignore if in placement mode or already dragging
+  // Handle click on an existing placed item
+  const handlePlacedItemClick = (item: RoomDecorItem, layer: 'front' | 'back', index: number) => {
+    if (isDragging || isRotating) return;
     
-    addDebugInfo(`Selected placed item: layer ${position}, index ${index}`);
-    setSelectedPlacedItem({ item, position, index });
-    setSelectedInventoryItem(null);
-    setRotation(item.rotation || 0);
-    setSize(item.width ? (item.width / 120) * 100 : 100);
-    setPosition({ x: item.x, y: item.y });
-    setPlacementLayer(position);
+    setSelectedItem({
+      id: createUniqueId(),
+      src: item.src,
+      x: item.x,
+      y: item.y,
+      size: item.width ? (item.width / getScaledSize(100)) * 100 : 100,
+      rotation: item.rotation || 0,
+      layer,
+      existingIndex: index
+    });
+    
+    setMode('edit');
   };
   
-  // Handle drag start with direct event coordinates
-  const handleDragStart = (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
-    if (!roomContainerRef.current) {
-      addDebugInfo("ERROR: roomContainerRef is null during drag start");
-      return;
-    }
-    
+  // Start dragging an item
+  const handlePointerDown = (e: React.PointerEvent) => {
     e.preventDefault();
+    
+    if (!selectedItem || !roomContainerRef.current) return;
+
+    const { clientX, clientY } = e;
+    const rect = roomContainerRef.current.getBoundingClientRect();
+    
+    // Calculate the offset from item center to pointer
+    const itemCenterX = (selectedItem.x / 100) * rect.width + rect.left;
+    const itemCenterY = (selectedItem.y / 100) * rect.height + rect.top;
+    
+    setDragOffset({
+      x: (clientX - itemCenterX) / rect.width * 100,
+      y: (clientY - itemCenterY) / rect.height * 100
+    });
+    
     setIsDragging(true);
     
-    // Track where in the element the user clicked for more accurate dragging
-    const containerRect = roomContainerRef.current.getBoundingClientRect();
+    // Capture pointer to get events outside the element
+    (e.target as Element).setPointerCapture(e.pointerId);
+  };
+  
+  // Start rotation
+  const handleRotateStart = (e: React.PointerEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     
-    // Get clientX/Y either from mouse or touch event
-    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    if (!selectedItem || !roomContainerRef.current) return;
     
-    // Calculate offset from the item's center
-    // We convert everything to container percentages for consistent drag behavior
-    const itemCenterXPx = containerRect.width * (position.x / 100);
-    const itemCenterYPx = containerRect.height * (position.y / 100);
+    setIsRotating(true);
+    setInitialRotation(selectedItem.rotation);
     
-    // Calculate the offset in pixels
-    const offsetXPx = clientX - (containerRect.left + itemCenterXPx);
-    const offsetYPx = clientY - (containerRect.top + itemCenterYPx);
+    const rect = roomContainerRef.current.getBoundingClientRect();
     
-    // Convert offsets to percentage of container
-    const offsetXPercent = (offsetXPx / containerRect.width) * 100;
-    const offsetYPercent = (offsetYPx / containerRect.height) * 100;
+    // Get item center in page coordinates
+    const itemCenterX = (selectedItem.x / 100) * rect.width + rect.left;
+    const itemCenterY = (selectedItem.y / 100) * rect.height + rect.top;
     
-    addDebugInfo(`Drag start - offset: ${offsetXPercent.toFixed(2)}%, ${offsetYPercent.toFixed(2)}%`);
+    // Get initial angle
+    const initialAngle = Math.atan2(
+      e.clientY - itemCenterY,
+      e.clientX - itemCenterX
+    ) * (180 / Math.PI);
     
-    // Define move handler that keeps the offset consistent
-    function handleMove(moveEvent: MouseEvent | TouchEvent) {
-      if (!roomContainerRef.current || !isDragging) return;
-      
-      // Prevent scrolling/default behavior
-      moveEvent.preventDefault();
-      
-      const containerRect = roomContainerRef.current.getBoundingClientRect();
-      const moveClientX = 'touches' in moveEvent ? moveEvent.touches[0].clientX : moveEvent.clientX;
-      const moveClientY = 'touches' in moveEvent ? moveEvent.touches[0].clientY : moveEvent.clientY;
-      
-      // Calculate new position keeping the offsets consistent
-      const newXPercent = ((moveClientX - containerRect.left) / containerRect.width) * 100 - offsetXPercent;
-      const newYPercent = ((moveClientY - containerRect.top) / containerRect.height) * 100 - offsetYPercent;
+    setInitialPointerPosition({ x: e.clientX, y: e.clientY });
+    setInitialRotation(selectedItem.rotation - initialAngle);
+    
+    // Capture pointer
+    (e.target as Element).setPointerCapture(e.pointerId);
+  };
+  
+  // Handle pointer move (dragging or rotating)
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!isDragging && !isRotating) return;
+    if (!selectedItem || !roomContainerRef.current) return;
+    
+    const { clientX, clientY } = e;
+    const rect = roomContainerRef.current.getBoundingClientRect();
+    
+    if (isDragging) {
+      // Calculate new position accounting for the offset
+      const newX = ((clientX - rect.left) / rect.width * 100) - dragOffset.x;
+      const newY = ((clientY - rect.top) / rect.height * 100) - dragOffset.y;
       
       // Constrain to room boundaries
-      const constrainedX = Math.max(5, Math.min(95, newXPercent));
-      const constrainedY = Math.max(5, Math.min(95, newYPercent));
+      const finalX = Math.max(5, Math.min(95, newX));
+      const finalY = Math.max(5, Math.min(95, newY));
       
-      // Update position
-      setPosition({ x: constrainedX, y: constrainedY });
-    }
-    
-    // Define end handler
-    function handleEnd() {
-      setIsDragging(false);
-      window.removeEventListener('mousemove', handleMove);
-      window.removeEventListener('touchmove', handleMove);
-      window.removeEventListener('mouseup', handleEnd);
-      window.removeEventListener('touchend', handleEnd);
-      addDebugInfo(`Drag ended - new pos: ${position.x.toFixed(2)}%, ${position.y.toFixed(2)}%`);
-    }
-    
-    // Add event listeners
-    window.addEventListener('mousemove', handleMove, { passive: false });
-    window.addEventListener('touchmove', handleMove, { passive: false });
-    window.addEventListener('mouseup', handleEnd);
-    window.addEventListener('touchend', handleEnd);
-  };
-  
-  // Handle rotation via the rotation handle
-  const handleRotationStart = (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
-    if (!roomContainerRef.current) return;
-    
-    e.preventDefault();
-    e.stopPropagation(); // Prevent triggering parent drag
-    setIsRotating(true);
-    
-    // Get the phantom item element
-    const phantomElement = document.querySelector('.phantom-item') as HTMLElement;
-    if (!phantomElement) {
-      addDebugInfo("ERROR: phantom element not found during rotation");
-      return;
-    }
-    
-    // Get center point of the phantom item as rotation origin
-    const rect = phantomElement.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
-    
-    // Initial angle calculation
-    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
-    const initialAngle = Math.atan2(clientY - centerY, clientX - centerX) * (180 / Math.PI);
-    
-    // Store the current rotation as starting point
-    const startRotation = rotation;
-    
-    function handleRotateMove(moveEvent: MouseEvent | TouchEvent) {
-      if (!isRotating) return;
+      setSelectedItem({
+        ...selectedItem,
+        x: finalX,
+        y: finalY
+      });
+    } else if (isRotating) {
+      // Calculate item center
+      const itemCenterX = (selectedItem.x / 100) * rect.width + rect.left;
+      const itemCenterY = (selectedItem.y / 100) * rect.height + rect.top;
       
-      moveEvent.preventDefault();
+      // Calculate current angle
+      const currentAngle = Math.atan2(
+        clientY - itemCenterY,
+        clientX - itemCenterX
+      ) * (180 / Math.PI);
       
-      const moveClientX = 'touches' in moveEvent ? moveEvent.touches[0].clientX : moveEvent.clientX;
-      const moveClientY = 'touches' in moveEvent ? moveEvent.touches[0].clientY : moveEvent.clientY;
-      
-      // Calculate new angle
-      const newAngle = Math.atan2(moveClientY - centerY, moveClientX - centerX) * (180 / Math.PI);
-      
-      // Calculate the change in angle
-      let angleDelta = newAngle - initialAngle;
-      
-      // Apply the delta to the starting rotation
-      let newRotation = (startRotation + angleDelta) % 360;
+      // Apply the rotation, adding the initial rotation offset
+      let newRotation = (initialRotation + currentAngle) % 360;
       if (newRotation < 0) newRotation += 360;
       
-      setRotation(newRotation);
+      setSelectedItem({
+        ...selectedItem,
+        rotation: newRotation
+      });
     }
+  };
+  
+  // End dragging or rotating
+  const handlePointerUp = (e: React.PointerEvent) => {
+    setIsDragging(false);
+    setIsRotating(false);
     
-    function handleRotateEnd() {
-      setIsRotating(false);
-      window.removeEventListener('mousemove', handleRotateMove);
-      window.removeEventListener('touchmove', handleRotateMove);
-      window.removeEventListener('mouseup', handleRotateEnd);
-      window.removeEventListener('touchend', handleRotateEnd);
-      addDebugInfo(`Rotation ended at ${rotation.toFixed(1)}°`);
+    try {
+      // Release pointer capture
+      (e.target as Element).releasePointerCapture(e.pointerId);
+    } catch (err) {
+      // Ignore errors if pointer capture wasn't set
     }
-    
-    window.addEventListener('mousemove', handleRotateMove, { passive: false });
-    window.addEventListener('touchmove', handleRotateMove, { passive: false });
-    window.addEventListener('mouseup', handleRotateEnd);
-    window.addEventListener('touchend', handleRotateEnd);
   };
   
-  // Handle rotation via slider
-  const handleRotationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setRotation(parseInt(e.target.value, 10));
-  };
-  
-  // Handle size change
-  const handleSizeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSize(parseInt(e.target.value, 10));
-  };
-  
-  // Toggle placement layer (front/back)
+  // Handle layer toggle (front/back)
   const handleLayerToggle = () => {
-    setPlacementLayer(prev => {
-      const newLayer = prev === 'front' ? 'back' : 'front';
-      addDebugInfo(`Changed layer to: ${newLayer}`);
-      return newLayer;
+    if (!selectedItem) return;
+    
+    setSelectedItem({
+      ...selectedItem,
+      layer: selectedItem.layer === 'front' ? 'back' : 'front'
     });
   };
   
-  // Handle category change
-  const handleCategoryChange = (category: DecorationItemType) => {
-    addDebugInfo(`Category changed to: ${category}`);
-    setActiveCategory(category);
-    setSelectedInventoryItem(null);
-    setSelectedPlacedItem(null);
-    setIsPlacing(false);
+  // Handle size change via slider
+  const handleSizeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!selectedItem) return;
+    
+    const newSize = parseInt(e.target.value, 10);
+    setSelectedItem({
+      ...selectedItem,
+      size: newSize
+    });
   };
   
-  // Handle confirm placement of new furniture
-  const handlePlaceItem = () => {
-    if (!selectedInventoryItem) {
-      addDebugInfo("ERROR: No inventory item selected for placement");
-      return;
+  // Place or update item in the room
+  const handleSaveItem = () => {
+    if (!selectedItem) return;
+    
+    // If editing an existing item, remove it first
+    if (selectedItem.existingIndex !== undefined) {
+      removeDecorItem(selectedItem.layer, selectedItem.existingIndex);
     }
     
-    // Calculate final dimensions based on size percentage
-    const baseSize = 120; // Base size at 100%
-    const finalSize = (size / 100) * baseSize;
+    // Determine zone based on Y position
+    const zone = getRoomZone(selectedItem.y);
     
-    // Determine which zone the item is in based on Y position
-    let itemZone: "FLOOR" | "WALL" | "CEILING" = "WALL";
-    if (position.y >= ROOM_ZONES.FLOOR.startY) {
-      itemZone = "FLOOR";
-    } else if (position.y <= ROOM_ZONES.CEILING.endY) {
-      itemZone = "CEILING";
-    }
+    // Convert from percentage size to actual pixel size
+    const actualSize = getScaledSize(selectedItem.size);
     
-    // Create the new decor item
+    // Create item for the context
     const newItem: RoomDecorItem = {
-      src: selectedInventoryItem.src,
-      x: position.x,
-      y: position.y,
-      width: finalSize,
-      height: finalSize,
-      rotation: rotation,
-      zone: itemZone,
+      src: selectedItem.src,
+      x: selectedItem.x,
+      y: selectedItem.y,
+      width: actualSize,
+      height: actualSize,
+      rotation: selectedItem.rotation,
+      zone
     };
     
-    // Add to the appropriate layer
-    addDebugInfo(`Placing item in ${placementLayer} layer at position (${position.x.toFixed(1)}, ${position.y.toFixed(1)})`);
-    addDecorItem(newItem, placementLayer);
+    // Add to the room
+    addDecorItem(newItem, selectedItem.layer);
     
     // Reset state
-    setIsPlacing(false);
-    setSelectedInventoryItem(null);
-  };
-  
-  // Handle confirm edit of existing furniture
-  const handleUpdateItem = () => {
-    if (!selectedPlacedItem) {
-      addDebugInfo("ERROR: No placed item selected for update");
-      return;
-    }
-    
-    // Remove the old item
-    removeDecorItem(selectedPlacedItem.position, selectedPlacedItem.index);
-    
-    // Calculate final dimensions based on size percentage
-    const baseSize = 120; // Base size at 100%
-    const finalSize = (size / 100) * baseSize;
-    
-    // Determine which zone the item is in based on Y position
-    let itemZone: "FLOOR" | "WALL" | "CEILING" = "WALL";
-    if (position.y >= ROOM_ZONES.FLOOR.startY) {
-      itemZone = "FLOOR";
-    } else if (position.y <= ROOM_ZONES.CEILING.endY) {
-      itemZone = "CEILING";
-    }
-    
-    // Create the updated item
-    const updatedItem: RoomDecorItem = {
-      ...selectedPlacedItem.item,
-      x: position.x,
-      y: position.y,
-      width: finalSize,
-      height: finalSize,
-      rotation: rotation,
-      zone: itemZone,
-    };
-    
-    // Add to the appropriate layer (may be different from original)
-    addDebugInfo(`Updating item in ${placementLayer} layer (was in ${selectedPlacedItem.position})`);
-    addDecorItem(updatedItem, placementLayer);
-    
-    // Reset state
-    setSelectedPlacedItem(null);
+    setSelectedItem(null);
+    setMode('browse');
   };
   
   // Handle delete item
   const handleDeleteItem = () => {
-    if (!selectedPlacedItem) return;
+    if (!selectedItem || selectedItem.existingIndex === undefined) return;
     
-    addDebugInfo(`Deleting item at index ${selectedPlacedItem.index} from ${selectedPlacedItem.position} layer`);
-    removeDecorItem(selectedPlacedItem.position, selectedPlacedItem.index);
-    setSelectedPlacedItem(null);
+    removeDecorItem(selectedItem.layer, selectedItem.existingIndex);
+    setSelectedItem(null);
+    setMode('browse');
   };
   
-  // Handle cancel placement/editing
+  // Handle cancel action
   const handleCancel = () => {
-    addDebugInfo("Cancelling placement/edit operation");
-    setSelectedInventoryItem(null);
-    setSelectedPlacedItem(null);
-    setIsPlacing(false);
+    setSelectedItem(null);
+    setMode('browse');
   };
   
-  // Close the overlay
-  const handleOverlayClose = () => {
-    handleCancel();
-    onClose();
+  // Toggle panel collapse state
+  const togglePanel = () => {
+    setIsPanelCollapsed(!isPanelCollapsed);
   };
   
+  // --- RENDERING LOGIC ---
   // If not open, don't render anything
   if (!isOpen) return null;
   
-  return (
-    <div className="furniture-edit-overlay" ref={overlayRef}>
-      <div className="furniture-edit-header">
-        <button className="close-button" onClick={handleOverlayClose}>×</button>
-        <h2>Edit Room</h2>
-        <div className="header-spacer"></div>
-      </div>
-      
-      <div className="edit-workspace">
-        {/* Room preview area - shows the current room with edit controls */}
-        <div className="room-preview-area" ref={roomContainerRef}>
-          {/* Show placed items in the back layer only when not being edited */}
-          {backDecorItems.map((item, index) => {
-            const isCurrentlySelected = selectedPlacedItem?.position === 'back' && selectedPlacedItem?.index === index;
-            if (isCurrentlySelected) return null; // Don't show the original when it's being edited
-            
-            return (
-              <div 
-                key={`back-${index}`}
-                className={`placed-item`}
-                style={{
-                  left: `${item.x}%`,
-                  top: `${item.y}%`,
-                  width: item.width ? `${item.width}px` : '120px',
-                  height: item.height ? `${item.height}px` : '120px',
-                  transform: item.rotation ? 
-                    `translate(-50%, -50%) rotate(${item.rotation}deg)` : 
-                    'translate(-50%, -50%)',
-                  zIndex: 10 + index
-                }}
-                onClick={() => handlePlacedItemClick(item, 'back', index)}
-              >
-                <img src={item.src} alt="" />
-              </div>
-            );
-          })}
+  // Get existing items from the room layers
+  const frontItems = roomLayers?.frontDecor || [];
+  const backItems = roomLayers?.backDecor || [];
+  
+  // Render function for existing furniture items - only show if in furniture category
+  const renderFurnitureItems = () => {
+    if (activeCategory !== 'furniture') return null;
+    
+    return (
+      <>
+        {/* Back layer items */}
+        {backItems.map((item, index) => {
+          const isSelected = selectedItem?.existingIndex === index && 
+                            selectedItem?.layer === 'back' && 
+                            mode === 'edit';
           
-          {/* Phantom item being placed or edited - only show when actively editing */}
-          {(selectedInventoryItem || selectedPlacedItem) && (
+          // Skip rendering if this is the item being edited
+          if (isSelected) return null;
+          
+          return (
             <div 
-              className="phantom-item"
+              key={`back-${index}`}
+              className="placed-item"
               style={{
-                left: `${position.x}%`,
-                top: `${position.y}%`,
-                transform: `translate(-50%, -50%) rotate(${rotation}deg)`,
-                width: `${(size / 100) * 120}px`,
-                height: `${(size / 100) * 120}px`,
-                cursor: isDragging ? 'grabbing' : 'grab',
-                zIndex: 1000
+                left: `${item.x}%`,
+                top: `${item.y}%`,
+                width: `${item.width}px`,
+                height: `${item.height}px`,
+                transform: `translate(-50%, -50%) rotate(${item.rotation || 0}deg)`,
+                zIndex: 10 + index
               }}
-              onMouseDown={handleDragStart}
-              onTouchStart={handleDragStart}
+              onClick={() => handlePlacedItemClick(item, 'back', index)}
             >
-              <img 
-                src={selectedInventoryItem?.src || selectedPlacedItem?.item.src} 
-                alt="" 
-                draggable="false"
-              />
-              
-              {/* Rotation handle */}
-              <div 
-                className="rotation-handle"
-                onMouseDown={handleRotationStart}
-                onTouchStart={handleRotationStart}
-              ></div>
+              <img src={item.src} alt="" draggable="false" />
             </div>
-          )}
-          
-          {/* Show placed items in the front layer only when not being edited */}
-          {frontDecorItems.map((item, index) => {
-            const isCurrentlySelected = selectedPlacedItem?.position === 'front' && selectedPlacedItem?.index === index;
-            if (isCurrentlySelected) return null; // Don't show the original when it's being edited
-            
-            return (
-              <div 
-                key={`front-${index}`}
-                className={`placed-item`}
-                style={{
-                  left: `${item.x}%`,
-                  top: `${item.y}%`,
-                  width: item.width ? `${item.width}px` : '120px',
-                  height: item.height ? `${item.height}px` : '120px',
-                  transform: item.rotation ? 
-                    `translate(-50%, -50%) rotate(${item.rotation}deg)` : 
-                    'translate(-50%, -50%)',
-                  zIndex: 40 + index
-                }}
-                onClick={() => handlePlacedItemClick(item, 'front', index)}
-              >
-                <img src={item.src} alt="" />
-              </div>
-            );
-          })}
-          
-          {/* Visual grid lines for better positioning */}
-          <div className="placement-grid">
-            <div className="grid-line horizontal" style={{ top: '25%' }}></div>
-            <div className="grid-line horizontal" style={{ top: '50%' }}></div>
-            <div className="grid-line horizontal" style={{ top: '75%' }}></div>
-            <div className="grid-line vertical" style={{ left: '25%' }}></div>
-            <div className="grid-line vertical" style={{ left: '50%' }}></div>
-            <div className="grid-line vertical" style={{ left: '75%' }}></div>
-          </div>
-        </div>
+          );
+        })}
         
-        {/* Controls panel - shown when placing or editing item */}
-        {(selectedInventoryItem || selectedPlacedItem) && (
-          <div className="item-controls-panel">
-            <div className="control-group">
-              <label>Size <span className="value-display">{size}%</span></label>
-              <input 
-                type="range" 
-                min="50" 
-                max="150" 
-                value={size} 
-                onChange={handleSizeChange}
-              />
-            </div>
+        {/* Currently selected/edited item */}
+        {selectedItem && (
+          <div 
+            className={`active-item ${isDragging ? 'dragging' : ''} ${isRotating ? 'rotating' : ''}`}
+            style={{
+              left: `${selectedItem.x}%`,
+              top: `${selectedItem.y}%`,
+              width: `${getScaledSize(selectedItem.size)}px`, 
+              height: `${getScaledSize(selectedItem.size)}px`,
+              transform: `translate(-50%, -50%) rotate(${selectedItem.rotation}deg)`,
+              zIndex: 1000
+            }}
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+            onPointerCancel={handlePointerUp}
+          >
+            <img src={selectedItem.src} alt="" draggable="false" />
             
-            <div className="control-group">
-              <label>Rotation <span className="value-display">{Math.round(rotation)}°</span></label>
-              <input 
-                type="range" 
-                min="0" 
-                max="359" 
-                value={Math.round(rotation)} 
-                onChange={handleRotationChange}
-              />
-            </div>
-            
-            <div className="control-group">
-              <label>Layer</label>
-              <button 
-                className={`layer-toggle ${placementLayer === 'back' ? 'active' : ''}`}
-                onClick={handleLayerToggle}
-              >
-                {placementLayer === 'back' ? 'Behind Pet' : 'In Front of Pet'}
-              </button>
-            </div>
-            
-            <div className="control-actions">
-              <button className="cancel-btn" onClick={handleCancel}>Cancel</button>
-              
-              {selectedPlacedItem && (
-                <button className="delete-btn" onClick={handleDeleteItem}>Delete</button>
-              )}
-              
-              <button 
-                className="confirm-btn"
-                onClick={selectedInventoryItem ? handlePlaceItem : handleUpdateItem}
-              >
-                {selectedInventoryItem ? 'Place' : 'Update'}
-              </button>
+            {/* Rotation handle */}
+            <div 
+              className="rotation-handle"
+              onPointerDown={handleRotateStart}
+              onPointerMove={handlePointerMove}
+              onPointerUp={handlePointerUp}
+              onPointerCancel={handlePointerUp}
+            >
+              <div className="handle-icon">⟳</div>
             </div>
           </div>
         )}
         
-        {/* Furniture inventory panel - shown when not editing an item */}
-        {!selectedInventoryItem && !selectedPlacedItem && (
-          <div className="furniture-inventory-panel">
+        {/* Front layer items */}
+        {frontItems.map((item, index) => {
+          const isSelected = selectedItem?.existingIndex === index && 
+                            selectedItem?.layer === 'front' && 
+                            mode === 'edit';
+          
+          // Skip rendering if this is the item being edited
+          if (isSelected) return null;
+          
+          return (
+            <div 
+              key={`front-${index}`}
+              className="placed-item"
+              style={{
+                left: `${item.x}%`,
+                top: `${item.y}%`,
+                width: `${item.width}px`,
+                height: `${item.height}px`,
+                transform: `translate(-50%, -50%) rotate(${item.rotation || 0}deg)`,
+                zIndex: 40 + index
+              }}
+              onClick={() => handlePlacedItemClick(item, 'front', index)}
+            >
+              <img src={item.src} alt="" draggable="false" />
+            </div>
+          );
+        })}
+      </>
+    );
+  };
+  
+  return (
+    <div className="furniture-edit-overlay" style={ROOT_VARIABLES as React.CSSProperties}>
+      <div className="furniture-edit-header">
+        <button className="close-button" onClick={onClose}>×</button>
+        <h2>{mode === 'browse' ? 'Select Item' : (mode === 'place' ? 'Place Item' : 'Edit Item')}</h2>
+        <div className="header-spacer"></div>
+      </div>
+      
+      <div className="edit-workspace">
+        {/* Room preview with furniture */}
+        <div 
+          className="room-preview-area"
+          ref={roomContainerRef}
+        >
+          {/* Grid zones for visual guidance */}
+          <div className="room-zones">
+            <div className="zone ceiling"></div>
+            <div className="zone wall"></div>
+            <div className="zone floor"></div>
+          </div>
+          
+          {/* Render furniture items only when in furniture category */}
+          {renderFurnitureItems()}
+          
+          {/* Visual guides */}
+          <div className="placement-guides">
+            <div className="center-point"></div>
+            <div className="grid-line horizontal"></div>
+            <div className="grid-line vertical"></div>
+          </div>
+        </div>
+        
+        {/* Controls Panel */}
+        {mode === 'browse' ? (
+          /* Item Selection Panel */
+          <div className="item-selection-panel">
             <div className="category-tabs">
               <button 
                 className={activeCategory === 'furniture' ? 'active' : ''}
-                onClick={() => handleCategoryChange('furniture')}
+                onClick={() => handleCategorySelect('furniture')}
               >
                 Furniture
               </button>
               <button 
                 className={activeCategory === 'wall' ? 'active' : ''}
-                onClick={() => handleCategoryChange('wall')}
+                onClick={() => handleCategorySelect('wall')}
               >
                 Walls
               </button>
               <button 
                 className={activeCategory === 'floor' ? 'active' : ''}
-                onClick={() => handleCategoryChange('floor')}
+                onClick={() => handleCategorySelect('floor')}
               >
                 Floors
               </button>
               <button 
                 className={activeCategory === 'ceiling' ? 'active' : ''}
-                onClick={() => handleCategoryChange('ceiling')}
+                onClick={() => handleCategorySelect('ceiling')}
               >
                 Ceilings
               </button>
               <button 
                 className={activeCategory === 'trim' ? 'active' : ''}
-                onClick={() => handleCategoryChange('trim')}
+                onClick={() => handleCategorySelect('trim')}
               >
                 Trim
               </button>
             </div>
             
-            <div className="inventory-items-grid">
-              {categoryItems && categoryItems.length > 0 ? (
-                categoryItems.map((item) => (
+            <div className="items-grid">
+              {availableItems.length > 0 ? (
+                availableItems.map((item) => (
                   <div 
                     key={item.id} 
-                    className="inventory-item"
+                    className="item-card"
                     onClick={() => handleInventoryItemClick(item)}
                   >
-                    <img src={item.src} alt={item.name} />
-                    <span className="item-name">{item.name}</span>
+                    <div className="item-image">
+                      <img src={item.src} alt={item.name} />
+                    </div>
+                    <div className="item-name">{item.name}</div>
                   </div>
                 ))
               ) : (
-                <div className="empty-category-message">
+                <div className="empty-message">
                   No items available in this category
                 </div>
               )}
             </div>
-            
-            {/* Debug info panel */}
-            {debugInfo && (
-              <div className="debug-panel">
-                <div className="debug-header">
-                  <h4>Debug Info</h4>
-                  <button onClick={() => setDebugInfo("")}>Clear</button>
-                </div>
-                <pre>{debugInfo}</pre>
+          </div>
+        ) : (
+          /* Item Edit Controls */
+          <div className={`item-edit-controls ${isPanelCollapsed ? 'collapsed' : ''}`}>
+            <div className="panel-handle" onClick={togglePanel}>
+              {isPanelCollapsed ? '▲' : '▼'}
+            </div>
+            <div className="control-section">
+              <div className="control-group">
+                <label>Size <span className="value">{selectedItem?.size}%</span></label>
+                <input 
+                  type="range" 
+                  min="50" 
+                  max="150" 
+                  value={selectedItem?.size || 100} 
+                  onChange={handleSizeChange}
+                />
               </div>
-            )}
+              
+              <div className="control-group">
+                <label>Position</label>
+                <div className="position-display">
+                  <div>X: {selectedItem?.x.toFixed(1)}%</div>
+                  <div>Y: {selectedItem?.y.toFixed(1)}%</div>
+                </div>
+                <div className="position-hint">
+                  Drag the item to reposition it
+                </div>
+              </div>
+              
+              <div className="control-group">
+                <label>Rotation <span className="value">{Math.round(selectedItem?.rotation || 0)}°</span></label>
+                <div className="rotation-hint">
+                  Use the rotation handle to adjust the angle
+                </div>
+              </div>
+              
+              <div className="control-group">
+                <label>Layer</label>
+                <button 
+                  className="layer-toggle"
+                  onClick={handleLayerToggle}
+                >
+                  {selectedItem?.layer === 'back' ? 'Behind Pet' : 'In Front of Pet'}
+                </button>
+              </div>
+            </div>
+            
+            <div className="action-buttons">
+              <button className="cancel-btn" onClick={handleCancel}>Cancel</button>
+              {mode === 'edit' && (
+                <button className="delete-btn" onClick={handleDeleteItem}>Delete</button>
+              )}
+              <button className="save-btn" onClick={handleSaveItem}>
+                {mode === 'place' ? 'Place Item' : 'Save Changes'}
+              </button>
+            </div>
           </div>
         )}
       </div>
