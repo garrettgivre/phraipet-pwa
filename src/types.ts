@@ -46,6 +46,7 @@ export interface RoomDecorItem {
   y: number;
   width?: number;
   height?: number;
+  rotation?: number;  // Added rotation property for furniture items
   position?: "front" | "back"; // Position relative to pet
   zone?: "FLOOR" | "WALL" | "CEILING"; // Zone in the room for better positioning
   relativeTo?: { // For maintaining position relative to another item

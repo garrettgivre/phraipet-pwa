@@ -1,5 +1,173 @@
 /* src/components/PetRoom.css */
 
+.pet-room-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 6px; /* Matches the inner content with the border */
+  background-color: #ffffff;
+  box-sizing: border-box;
+  /* Reference size is 1080x1920 */
+}
+
+/* Room background layers container - fixed positioning */
+.room-background-layers {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Background images - fixed positioning with no scaling */
+.room-background-layers img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+/* Decor item style - adjusted for portrait mode */
+.decor {
+  position: absolute;
+  object-fit: contain;
+  transform-origin: center center;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.05));
+  transition: transform 0.3s ease-out;
+  /* No more dynamically scaling size based on container */
+}
+
+/* Pet layer animations */
+.pet-layer {
+  position: absolute;
+  transition: left 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: left, transform;
+  bottom: 25%; /* Adjusted for portrait mode */
+  height: auto;
+  max-height: 30%; /* Smaller in portrait mode */
+  transform: translateX(-50%);
+  z-index: 30;
+}
+
+.pet-layer.waddling {
+  animation: petWaddle 2s infinite;
+}
+
+.pet-layer.playing {
+  animation: petPlay 2s infinite;
+}
+
+.pet-layer.flip {
+  transform: translateX(-50%) scaleX(-1);
+}
+
+.pet-layer.pet-eating {
+  animation: petEat 1s infinite;
+}
+
+.pet-layer.flip.waddling {
+  animation: petWaddleFlip 2s infinite;
+}
+
+.pet-layer.flip.pet-eating {
+  animation: petEatFlip 1s infinite;
+}
+
+/* Food position - adjusted for portrait mode */
+.food-item {
+  position: absolute;
+  bottom: 20%; /* Adjusted position */
+  z-index: 35;
+  transform: translateX(-50%);
+  max-height: 15%; /* Smaller in portrait mode */
+}
+
+/* Toy position - adjusted for portrait mode */
+.toy.playing {
+  position: absolute;
+  bottom: 18%; /* Adjusted position */
+  z-index: 20;
+  max-height: 15%; /* Smaller in portrait mode */
+  animation: toyPlay 2s infinite;
+}
+
+/* Mood bubble - adjusted for portrait mode */
+.pet-mood-bubble {
+  position: absolute;
+  bottom: calc(25% + 35px); /* Position above pet, adjusted for portrait */
+  transform: translateX(-50%);
+  z-index: 50;
+  background: white;
+  padding: 6px 10px;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  max-width: 80%; /* Wider for portrait mode */
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.pet-mood-bubble p {
+  margin: 0;
+  text-align: center;
+  font-size: 0.85rem;
+}
+
+/* Animations for pet */
+@keyframes petWaddle {
+  0% { transform: rotate(0deg); }
+  25% { transform: rotate(-2deg); }
+  50% { transform: rotate(0deg); }
+  75% { transform: rotate(2deg); }
+  100% { transform: rotate(0deg); }
+}
+
+@keyframes petWaddleFlip {
+  0% { transform: scaleX(-1) rotate(0deg); }
+  25% { transform: scaleX(-1) rotate(-2deg); }
+  50% { transform: scaleX(-1) rotate(0deg); }
+  75% { transform: scaleX(-1) rotate(2deg); }
+  100% { transform: scaleX(-1) rotate(0deg); }
+}
+
+@keyframes petPlay {
+  0% { transform: scaleY(1); }
+  25% { transform: scaleY(0.95) translateY(2%); }
+  50% { transform: scaleY(1); }
+  75% { transform: scaleY(0.95) translateY(2%); }
+  100% { transform: scaleY(1); }
+}
+
+@keyframes petEat {
+  0% { transform: scaleY(1); }
+  50% { transform: scaleY(0.95) translateY(1%); }
+  100% { transform: scaleY(1); }
+}
+
+@keyframes petEatFlip {
+  0% { transform: scaleX(-1) scaleY(1); }
+  50% { transform: scaleX(-1) scaleY(0.95) translateY(1%); }
+  100% { transform: scaleX(-1) scaleY(1); }
+}
+
+/* Toy animation */
+@keyframes toyPlay {
+  0% { transform: rotate(0deg) translateY(0); }
+  25% { transform: rotate(-5deg) translateY(-5%); }
+  50% { transform: rotate(0deg) translateY(0); }
+  75% { transform: rotate(5deg) translateY(-5%); }
+  100% { transform: rotate(0deg) translateY(0); }
+}
+
+/* Mood bubble fade-in */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px) translateX(-50%); }
+  to { opacity: 1; transform: translateY(0) translateX(-50%); }
+}
+
 .pet-room-wrapper {
   width: 100%;
   height: 100%;
@@ -83,14 +251,6 @@
   transform: translateZ(30px);
 }
 
-.decor {
-  z-index: 3;
-  position: absolute;
-  pointer-events: none;
-  display: block;
-  object-fit: contain;
-}
-
 /* Add subtle animation to decor items - DISABLED since it conflicts with transform */
 /*.decor:nth-child(odd) {
   animation: decorWiggle1 10s ease-in-out infinite;
@@ -154,27 +314,6 @@
   transition: left 0.5s ease-in-out;
   height: 15%;
   width: auto;
-}
-
-.pet-mood-bubble {
-  position: absolute;
-  background: white;
-  padding: 8px 12px;
-  border-radius: 12px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  z-index: 50;
-  pointer-events: none;
-  transition: left 0.5s ease-in-out;
-  bottom: 60%;
-  transform: translateX(-50%);
-  max-width: 80%;
-}
-
-.pet-mood-bubble p {
-  margin: 0;
-  font-size: 14px;
-  color: #333;
-  text-align: center;
 }
 
 .playing {

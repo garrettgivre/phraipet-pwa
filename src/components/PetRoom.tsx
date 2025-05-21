@@ -23,13 +23,20 @@ interface PetRoomProps {
   foodItem?: { src: string; position: number; hungerRestored?: number } | null;
   onFoodEaten?: () => void;
   onFoodBite?: (biteNumber: number, hungerAmount: number) => void;
+  constrainToRoom?: boolean; // New prop to constrain pet and items to room bounds
 }
 
-// Define room zones for better positioning
+// Define room zones for better positioning in portrait mode (9:16)
 const ROOM_ZONES = {
-  FLOOR: { startY: 60, endY: 100 },     // Bottom 40% is floor
-  WALL: { startY: 15, endY: 60 },       // Middle area is wall
-  CEILING: { startY: 0, endY: 15 }      // Top 15% is ceiling
+  FLOOR: { startY: 70, endY: 100 },    // Bottom 30% is floor
+  WALL: { startY: 15, endY: 70 },      // Middle area is wall (larger in portrait)
+  CEILING: { startY: 0, endY: 15 }     // Top 15% is ceiling
+};
+
+// Pet movement boundaries (percent of room width)
+const ROOM_BOUNDARIES = {
+  LEFT: 15,   // Minimum left position (%) - adjusted for portrait
+  RIGHT: 85   // Maximum right position (%) - adjusted for portrait
 };
 
 export default function PetRoom({ 
@@ -50,11 +57,17 @@ export default function PetRoom({
   isFacingRight = false,
   foodItem, 
   onFoodEaten,
-  onFoodBite
+  onFoodBite,
+  constrainToRoom = false
 }: PetRoomProps) {
   const [isEating, setIsEating] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerAspectRatio, setContainerAspectRatio] = useState(16/9);
+
+  // Apply room constraints if enabled
+  const constrainedPetPosition = constrainToRoom 
+    ? Math.max(ROOM_BOUNDARIES.LEFT, Math.min(ROOM_BOUNDARIES.RIGHT, petPosition))
+    : petPosition;
 
   // Handle eating animation state
   useEffect(() => {
@@ -110,6 +123,9 @@ export default function PetRoom({
 
   // Function to calculate position in a way that maintains relative position across aspect ratios
   const calculatePosition = (x: number, y: number, width: number, height: number, zone?: "FLOOR" | "WALL" | "CEILING", relativeTo?: { itemSrc: string; offsetX: number; offsetY: number } | null) => {
+    // If constrainToRoom is enabled, restrict x within boundaries
+    const constrainedX = constrainToRoom ? Math.max(ROOM_BOUNDARIES.LEFT, Math.min(ROOM_BOUNDARIES.RIGHT, x)) : x;
+
     // Determine which room zone this item belongs to based on y-position or use provided zone
     let itemZone = zone || "WALL";
     if (!zone) {
@@ -128,29 +144,47 @@ export default function PetRoom({
       
       if (referenceItem) {
         // Calculate position based on the reference item's position
+        const refX = constrainToRoom 
+          ? Math.max(ROOM_BOUNDARIES.LEFT, Math.min(ROOM_BOUNDARIES.RIGHT, referenceItem.x + relativeTo.offsetX))
+          : referenceItem.x + relativeTo.offsetX;
+            
         return {
-          left: `${referenceItem.x + relativeTo.offsetX}%`,
+          left: `${refX}%`,
           top: `${referenceItem.y + relativeTo.offsetY}%`,
-          width: width ? `${width}px` : "auto",
-          height: height ? `${height}px` : "auto",
+          width: width ? `${width * (containerRef.current?.clientWidth || 300) / 1080}px` : "auto",
+          height: height ? `${height * (containerRef.current?.clientHeight || 530) / 1920}px` : "auto",
           transform: "translate(-50%, -50%)"
         };
       }
     }
     
-    // Scale size based on container dimensions for consistent proportions
-    const containerWidth = containerRef.current?.clientWidth || 300;
-    const containerHeight = containerRef.current?.clientHeight || 200;
-    const scaleFactor = Math.min(containerWidth / 400, containerHeight / 300);
+    // Scale dimensions relative to container size instead of fixed pixels
+    let finalWidth, finalHeight;
     
-    const scaledWidth = width ? width * scaleFactor : 0;
-    const scaledHeight = height ? height * scaleFactor : 0;
+    if (width && height) {
+      const containerWidth = containerRef.current?.clientWidth || 300;
+      const containerHeight = containerRef.current?.clientHeight || 530;
+      
+      // Reference design size (9:16 aspect ratio)
+      const refWidth = 1080;
+      const refHeight = 1920;
+      
+      // Scale based on container dimensions to maintain proportions
+      const widthRatio = containerWidth / refWidth;
+      const heightRatio = containerHeight / refHeight;
+      
+      // Use the smaller ratio to ensure items fit in the container
+      const scaleFactor = Math.min(widthRatio, heightRatio);
+      
+      finalWidth = width * scaleFactor;
+      finalHeight = height * scaleFactor;
+    }
     
     return {
-      left: `${x}%`,
+      left: `${constrainedX}%`,
       top: `${y}%`,
-      width: width ? `${scaledWidth}px` : "auto",
-      height: height ? `${scaledHeight}px` : "auto",
+      width: finalWidth ? `${finalWidth}px` : "auto",
+      height: finalHeight ? `${finalHeight}px` : "auto",
       transform: "translate(-50%, -50%)"
     };
   };
@@ -167,77 +201,18 @@ export default function PetRoom({
       }}
     >
       {/* Full-size background layers - This ensures they fill the space */}
-      <div 
-        className="room-background-layers"
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%'
-        }}
-      >
+      <div className="room-background-layers">
         {/* Floor - Always visible at bottom */}
-        <img 
-          src={floor} 
-          alt="Floor" 
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            zIndex: 1
-          }}
-        />
+        <img src={floor} alt="Floor" style={{ zIndex: 1 }} />
         
         {/* Wall - Middle layer */}
-        <img 
-          src={wall} 
-          alt="Wall" 
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            zIndex: 2
-          }}
-        />
+        <img src={wall} alt="Wall" style={{ zIndex: 2 }} />
         
         {/* Ceiling - Always visible at top */}
-        <img 
-          src={ceiling} 
-          alt="Ceiling" 
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            zIndex: 3
-          }}
-        />
+        <img src={ceiling} alt="Ceiling" style={{ zIndex: 3 }} />
         
         {/* Trim - Decorative layer */}
-        {trim && (
-          <img 
-            src={trim} 
-            alt="Trim" 
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-              zIndex: 4
-            }}
-          />
-        )}
+        {trim && <img src={trim} alt="Trim" style={{ zIndex: 4 }} />}
       </div>
       
       {/* Items behind pet */}
@@ -256,7 +231,9 @@ export default function PetRoom({
               height: position.height,
               zIndex: 10 + idx,
               objectFit: "contain",
-              transform: position.transform
+              transform: item.rotation 
+                ? `translate(-50%, -50%) rotate(${item.rotation}deg)` 
+                : position.transform
             }}
             alt=""
           />
@@ -272,10 +249,7 @@ export default function PetRoom({
               : activeToy.src || '/assets/toys/ball.png'} 
           alt="Toy"
           style={{ 
-            position: 'absolute',
-            left: `${petPosition + (isFacingRight ? -12 : 12)}%`, 
-            bottom: `22%`,
-            zIndex: 20
+            left: `${constrainedPetPosition + (isFacingRight ? -12 : 12)}%`,
           }}
         />
       )}
@@ -285,7 +259,9 @@ export default function PetRoom({
         <FoodItem 
           key={`food-${foodItem.src}`}
           src={foodItem.src}
-          position={foodItem.position}
+          position={constrainToRoom ? 
+            Math.max(ROOM_BOUNDARIES.LEFT, Math.min(ROOM_BOUNDARIES.RIGHT, foodItem.position)) : 
+            foodItem.position}
           hungerRestored={foodItem.hungerRestored || 15}
           onEaten={() => {
             if (onFoodEaten) onFoodEaten();
@@ -294,17 +270,12 @@ export default function PetRoom({
         />
       )}
 
-      {/* Pet Layer and Speech Bubble - back to the original approach with improvements */}
       {/* Pet Layer */}
       <img 
         className={`pet-layer ${isPlaying ? 'playing' : ''} ${isWalking ? 'waddling' : ''} ${isFacingRight ? 'flip' : ''} ${isEating ? 'pet-eating' : ''}`}
         src={petImage}
         style={{ 
-          position: 'absolute',
-          left: `${petPosition}%`, 
-          bottom: '30%', 
-          zIndex: 30, 
-          transform: 'translateX(-50%)'
+          left: `${constrainedPetPosition}%`, 
         }}
         alt="Pet"
       />
@@ -314,17 +285,7 @@ export default function PetRoom({
         <div 
           className="pet-mood-bubble"
           style={{ 
-            position: 'absolute',
-            left: `${petPosition}%`,
-            bottom: `calc(30% + 45px)`, /* Position above pet, with enough space */
-            transform: 'translateX(-50%)',
-            zIndex: 50,
-            background: 'white',
-            padding: '6px 10px',
-            borderRadius: '12px',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-            maxWidth: '150px',
-            width: 'auto'
+            left: `${constrainedPetPosition}%`,
           }}
         >
           <div 
@@ -360,7 +321,9 @@ export default function PetRoom({
               height: position.height,
               zIndex: 40 + idx,
               objectFit: "contain",
-              transform: position.transform
+              transform: item.rotation 
+                ? `translate(-50%, -50%) rotate(${item.rotation}deg)` 
+                : position.transform
             }}
             alt=""
           />

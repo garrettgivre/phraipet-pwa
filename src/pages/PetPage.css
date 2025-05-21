@@ -2,19 +2,57 @@
 .pet-page {
   position: relative; 
   width: 100%;
-  height: 100%;
+  height: 100vh;
   background-color: #f0f8ff; 
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 10px;
+  box-sizing: border-box;
 }
 
-.pet-container {
-  flex-grow: 1;
+/* Coin display */
+.coin-display {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 1000;
+}
+
+/* New bordered pet room container */
+.pet-room-bordered-container {
+  position: relative;
+  width: auto;
+  height: min(97vh, 820px);
+  margin: 0 auto;
+  border: 8px solid #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background-color: #ffffff;
+  aspect-ratio: 9/16;
+}
+
+/* Explicitly set the pet room container height to leave room for the UI bar */
+.pet-room-inner-container {
+  position: relative;
+  width: 100%;
+  height: calc(100% - 70px);
+  background-color: #fff;
+  border-bottom: 2px solid #eaeaea;
+  overflow: hidden;
+}
+
+/* Pet room container */
+.pet-container, .pet-room {
   position: relative;
   width: 100%;
   height: 100%;
-  min-height: 0;
+  overflow: hidden;
 }
 
 .loading-spinner {
@@ -26,27 +64,31 @@
   color: #555;
 }
 
-.need-indicators {
-  position: fixed;
-  bottom: clamp(85px, 13vh, 105px);
-  left: 0;
-  right: 0;
+/* Border UI area containing controls and need indicators */
+.pet-room-border-ui {
+  position: relative; 
+  width: 100%;
+  height: 70px;
+  background-color: #ffffff;
   display: flex;
-  justify-content: center;
-  z-index: 10;
+  align-items: center;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-/* Decoration button */
+/* Decoration button positioned like a Tamagotchi menu button */
 .decoration-button {
-  position: fixed;
-  left: 20px;
-  bottom: 105px; /* Adjusted from 120px to be a bit lower */
-  width: 60px;
-  height: 60px;
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
   border-radius: 50%;
-  background-color: transparent; /* Removed white background */
-  border: none;
-  z-index: 10;
+  background-color: #ffffff;
+  border: 2px solid #e8e8e8;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 20;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -56,35 +98,77 @@
 }
 
 .decoration-button:hover {
-  transform: scale(1.1);
+  transform: translateY(-50%) scale(1.1);
+  background-color: #f5f5f5;
 }
 
 .decoration-button img {
-  width: 45px; /* Increased from 30px */
-  height: 45px; /* Increased from 30px */
+  width: 28px;
+  height: 28px;
   object-fit: contain;
-  filter: drop-shadow(0 2px 3px rgba(0,0,0,0.2)); /* Added shadow to make it visible without background */
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.1));
 }
 
-.layer {
+/* Need indicators container - centered in the UI area */
+.need-indicators {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding-left: 70px; /* Space for decoration button */
+  padding-right: 15px;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+}
+
+/* Add a Tamagotchi-like title */
+.pet-room-title {
+  position: absolute;
+  top: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(255, 255, 255, 0.9);
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: #333;
+  padding: 3px 10px;
+  border-radius: 12px 12px 0 0;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Room background layers styling */
+.room-background-layers {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+.room-background-layers img {
   position: absolute;
   width: 100%;
   height: 100%;
-  object-fit: cover; 
-  top: 0;
-  left: 0;
-  z-index: 1; 
+  object-fit: cover;
 }
 
+/* Layer z-indexes */
 .ceiling { z-index: 1; }
 .wall { z-index: 2; }
 .floor { z-index: 3; }
-.decor { z-index: auto; position: absolute; }
+.decor { 
+  position: absolute; 
+  /* Don't set fixed width/height to allow parent container to control sizing */
+  object-fit: contain;
+}
 .overlay { z-index: 7; pointer-events: none; }
 
+/* Pet styling for proper scaling with container */
 .pet-layer {
   position: absolute;
-  width: clamp(200px, 50vw, 400px);
+  width: clamp(200px, 45%, 400px);
   height: auto;   
   object-fit: contain; 
   display: block;
@@ -151,13 +235,6 @@
   color: #333;
   line-height: 1.3;
   padding: 0;
-}
-
-.pet-room {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
 }
 
 .toy {
@@ -304,6 +381,27 @@
   100% {
     opacity: 1;
     transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* For smaller screens, scale elements down */
+@media (max-height: 600px) {
+  .pet-room-inner-container {
+    height: calc(100% - 60px);
+  }
+  
+  .pet-room-border-ui {
+    height: 60px;
+  }
+  
+  .decoration-button {
+    width: 35px;
+    height: 35px;
+    min-width: 35px;
+  }
+  
+  .pet-layer {
+    width: clamp(150px, 40%, 300px);
   }
 }
 

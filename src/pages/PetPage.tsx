@@ -10,6 +10,7 @@ import CoinDisplay from "../components/CoinDisplay";
 import PetRoom from "../components/PetRoom";
 import PetNeedsDisplay from "../components/PetNeedsDisplay";
 import ConfirmationDialog from "../components/ConfirmationDialog";
+import FurnitureEditOverlay from "../components/FurnitureEditOverlay";
 import { getRandomMoodPhrase, getRandomToyPhrase } from "../utils/petPhrases";
 import { usePetMovement } from "../hooks/usePetMovement";
 import { getPetImage } from "../utils/petImageSelector";
@@ -32,6 +33,9 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
   const [currentMoodPhrase, setCurrentMoodPhrase] = useState<string | undefined>(undefined);
   const [showSpeechBubble, setShowSpeechBubble] = useState(false);
   const [localHungerValue, setLocalHungerValue] = useState<number | null>(null);
+  
+  // New state for furniture edit mode
+  const [isEditMode, setIsEditMode] = useState(false);
   
   // Initialize local hunger value when pet changes
   useEffect(() => {
@@ -209,59 +213,69 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
     setPendingFoodItem(null);
   };
   
-  // Function to navigate to decorations page
-  const navigateToDecorations = () => {
-    navigate('/decorations');
+  // Toggle edit mode instead of navigating to decorations page
+  const toggleEditMode = () => {
+    setIsEditMode(!isEditMode);
   };
   
   return (
-    <div className="pet-page">
-      <CoinDisplay coins={coins} />
+    <div className={`pet-page ${isEditMode ? 'edit-mode' : ''}`}>
+      <CoinDisplay coins={coins} className={isEditMode ? "edit-mode-coin-display" : ""} />
       
-      <div className="pet-container">
-        {/* Render pet if loaded */}
-        {pet && !roomLayersLoading && (
-          <PetRoom
-            floor={currentFloor}
-            wall={currentWall}
-            ceiling={currentCeiling}
-            trim={currentTrim}
-            frontDecor={frontDecor}
-            backDecor={backDecor}
-            overlay={overlaySrc}
-            petImage={petImage}
-            petPosition={position}
-            moodPhrase={showSpeechBubble ? currentMoodPhrase : undefined}
-            activeToy={activeToy}
-            isPlaying={isPlaying}
-            isWalking={isWalking}
-            isFacingRight={isFacingRight}
-            foodItem={foodItem}
-            onFoodEaten={handleFoodEaten}
-            onFoodBite={handleFoodBite}
-          />
-        )}
+      <div className="pet-room-bordered-container">
+        {/* Optional Tamagotchi-style title */}
+        <div className="pet-room-title">PhRAI Pet</div>
         
-        {/* Loading spinner if still loading */}
-        {roomLayersLoading && (
-          <div className="loading-spinner">
-            Loading...
+        {/* Pet room area - fixed size portrait container */}
+        <div className="pet-room-inner-container">
+          {/* Render pet if loaded */}
+          {pet && !roomLayersLoading && (
+            <PetRoom
+              floor={currentFloor}
+              wall={currentWall}
+              ceiling={currentCeiling}
+              trim={currentTrim}
+              frontDecor={frontDecor}
+              backDecor={backDecor}
+              overlay={overlaySrc}
+              petImage={petImage}
+              petPosition={position}
+              moodPhrase={showSpeechBubble ? currentMoodPhrase : undefined}
+              activeToy={activeToy}
+              isPlaying={isPlaying}
+              isWalking={isWalking}
+              isFacingRight={isFacingRight}
+              foodItem={foodItem}
+              onFoodEaten={handleFoodEaten}
+              onFoodBite={handleFoodBite}
+              constrainToRoom={true}
+            />
+          )}
+          
+          {/* Loading spinner if still loading */}
+          {roomLayersLoading && (
+            <div className="loading-spinner">
+              Loading...
+            </div>
+          )}
+        </div>
+        
+        {/* UI Elements in border area - Tamagotchi style */}
+        <div className="pet-room-border-ui">
+          {/* Paintbrush decoration button */}
+          <button className="decoration-button" onClick={toggleEditMode}>
+            <img src="/assets/icons/paintbrush.png" alt="Decorate Room" />
+          </button>
+          
+          {/* Need indicator circles in Tamagotchi style */}
+          <div className="need-indicators">
+            <PetNeedsDisplay 
+              needInfo={modifiedNeedInfo} 
+              onNeedClick={handleNeedClick} 
+            />
           </div>
-        )}
+        </div>
       </div>
-      
-      {/* Need indicator circles */}
-      <div className="need-indicators">
-        <PetNeedsDisplay 
-          needInfo={modifiedNeedInfo} 
-          onNeedClick={handleNeedClick} 
-        />
-      </div>
-      
-      {/* Paintbrush decoration button */}
-      <button className="decoration-button" onClick={navigateToDecorations}>
-        <img src="/assets/icons/paintbrush.png" alt="Decorate Room" />
-      </button>
       
       {/* Confirmation dialog for food */}
       {showConfirmDialog && (
@@ -273,6 +287,12 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
           onCancel={cancelUseFood}
         />
       )}
+      
+      {/* Furniture Edit Overlay */}
+      <FurnitureEditOverlay 
+        isOpen={isEditMode}
+        onClose={() => setIsEditMode(false)} 
+      />
     </div>
   );
 }
