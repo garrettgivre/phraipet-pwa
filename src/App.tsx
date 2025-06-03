@@ -1,8 +1,9 @@
 // src/App.tsx
-import React, { useEffect, useState, useRef, useCallback, type ReactNode } from "react";
+import React, { useState, useEffect } from 'react';
+import './App.css';
 import { BrowserRouter, Routes, Route, useLocation, useNavigate } from "react-router-dom";
 import type { Pet, Need, NeedInfo, FoodInventoryItem, GroomingInventoryItem, ToyInventoryItem } from "./types";
-import { InventoryProvider, useInventory } from "./contexts/InventoryContext";
+import { InventoryProvider } from "./contexts/InventoryContext";
 import { DecorationProvider } from "./contexts/DecorationContext";
 import { ToyAnimationProvider, useToyAnimation } from "./contexts/ToyAnimationContext";
 import { ErrorBoundary } from "./components/ErrorBoundary";
@@ -11,8 +12,6 @@ import { createRoutes } from "./routes";
 import Header from "./components/Header";
 import NavBar from "./components/NavBar";
 import { CoinsProvider, useCoins } from './contexts/CoinsContext';
-
-import "./App.css";
 
 const MAX_NEED_VALUE = 120;
 const MIN_NEED_VALUE = 0;

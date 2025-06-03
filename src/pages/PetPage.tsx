@@ -1,5 +1,5 @@
 // src/pages/PetPage.tsx
-import { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import type { Pet, Need, NeedInfo } from "../types.ts";
 import { useToyAnimation } from "../contexts/ToyAnimationContext";
@@ -10,7 +10,7 @@ import CoinDisplay from "../components/CoinDisplay";
 import PetRoom from "../components/PetRoom";
 import PetNeedsDisplay from "../components/PetNeedsDisplay";
 import ConfirmationDialog from "../components/ConfirmationDialog";
-import FurnitureEditOverlay from "../components/FurnitureEditOverlay";
+import InlineRoomEditor from "../components/InlineRoomEditor";
 import { getRandomMoodPhrase, getRandomToyPhrase } from "../utils/petPhrases";
 import { usePetMovement } from "../hooks/usePetMovement";
 import { getPetImage } from "../utils/petImageSelector";
@@ -42,7 +42,7 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
     if (pet && typeof pet.hunger === 'number') {
       setLocalHungerValue(pet.hunger);
     }
-  }, [pet?.hunger]);
+  }, [pet]);
   
   // Get the current hunger value to display (either local animated value or from pet data)
   const currentHungerValue = localHungerValue !== null ? localHungerValue : (pet?.hunger || 0);
@@ -289,7 +289,7 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
       )}
       
       {/* Furniture Edit Overlay */}
-      <FurnitureEditOverlay 
+      <InlineRoomEditor 
         isOpen={isEditMode}
         onClose={() => setIsEditMode(false)} 
       />

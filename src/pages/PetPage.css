@@ -45,6 +45,38 @@
   background-color: #fff;
   border-bottom: 2px solid #eaeaea;
   overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+/* Edit mode styling */
+.pet-page.edit-mode .pet-room-inner-container {
+  /* Remove brightness filter to prevent blurry effect */
+}
+
+.pet-page.edit-mode .coin-display {
+  display: none !important;
+}
+
+/* Hide furniture in PetRoom when in edit mode to prevent double rendering */
+.pet-page.edit-mode .decor {
+  display: none !important;
+}
+
+/* Hide decoration button in edit mode since it's now in the panel */
+.pet-page.edit-mode .decoration-button {
+  display: none !important;
+}
+
+/* Lower pet z-index during edit mode so back layer items appear behind it */
+.pet-page.edit-mode .pet-layer {
+  z-index: 25 !important;
+  pointer-events: none !important;
+}
+
+/* More specific rule to ensure it overrides other pet z-index rules */
+.pet-page.edit-mode .pet-room-inner-container .pet-layer {
+  z-index: 25 !important;
+  pointer-events: none !important;
 }
 
 /* Pet room container */
@@ -209,7 +241,7 @@
   font-size: clamp(12px, 3vw, 14px);
   animation: fadeInOut 0.3s ease-in-out;
   pointer-events: none;
-  top: 20%;
+  bottom: calc(42% + 10px);
   transform: translateX(-50%);
   display: flex;
   align-items: center;

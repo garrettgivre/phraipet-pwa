@@ -1,10 +1,6 @@
-import type { Pet } from "../types";
+import React from 'react';
 
-interface PlayProps {
-  pet: Pet | null;
-}
-
-export default function Play({ pet }: PlayProps) {
+export default function Play() {
   const handleRefresh = () => {
     window.location.reload();
   };

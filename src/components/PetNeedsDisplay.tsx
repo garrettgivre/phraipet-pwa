@@ -38,10 +38,10 @@ export default function PetNeedsDisplay({ needInfo, onNeedClick }: PetNeedsDispl
             />
             <image
               href={info.iconSrc}
-              x="8"
-              y="8"
-              height="20"
-              width="20"
+              x="6"
+              y="6"
+              height="24"
+              width="24"
               className="need-icon-image"
             />
           </svg>

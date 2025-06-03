@@ -10,8 +10,8 @@
 }
 
 .need-circle {
-  width: 40px;
-  height: 40px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   background-color: transparent;
   display: flex;
@@ -41,12 +41,12 @@
 .circle-bg {
   fill: none;
   stroke: rgba(255, 255, 255, 0.4);
-  stroke-width: 3.5;
+  stroke-width: 4;
 }
 
 .circle {
   fill: none;
-  stroke-width: 3.5;
+  stroke-width: 4;
   stroke-linecap: round;
   transition: stroke-dasharray 0.3s;
 }
@@ -54,6 +54,9 @@
 .need-icon-image {
   /* Ensure icon displays properly */
   transform-origin: center;
+  width: 24px !important;
+  height: 24px !important;
+  transform: translate(0, 0);
 }
 
 .need-info-bubble {
@@ -91,11 +94,16 @@
 /* Add responsive sizing for smaller screens */
 @media (max-height: 600px) {
   .need-circle {
-    width: 35px;
-    height: 35px;
+    width: 42px;
+    height: 42px;
+  }
+  
+  .need-icon-image {
+    width: 22px !important;
+    height: 22px !important;
   }
   
   .circle-bg, .circle {
-    stroke-width: 3;
+    stroke-width: 3.5;
   }
 } 

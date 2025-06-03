@@ -76,8 +76,6 @@ export default function ItemDetailsModal({
   onDiscard, 
   onClose 
 }: ItemDetailsModalProps) {
-  if (!isOpen || !item) return null;
-
   // Handler for clicks on the overlay
   const handleOverlayClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     // Only close if the click was directly on the overlay (not on its children)
@@ -85,6 +83,19 @@ export default function ItemDetailsModal({
       onClose();
     }
   }, [onClose]);
+
+  // For testing purposes, add console.log to check the price value
+  useEffect(() => {
+    if (item) {
+      console.log('Item details:', {
+        name: item.name,
+        price: item.price,
+        priceType: typeof item.price
+      });
+    }
+  }, [item]);
+
+  if (!isOpen || !item) return null;
 
   // For food items, try to get the detailed description from our food database
   const getEnhancedDescription = (item: InventoryItem): string => {
@@ -137,17 +148,6 @@ export default function ItemDetailsModal({
   if (item.itemCategory === 'food') {
     foodInfo = getFoodInfo(item as FoodInventoryItem);
   }
-
-  // For testing purposes, add console.log to check the price value
-  useEffect(() => {
-    if (item) {
-      console.log('Item details:', {
-        name: item.name,
-        price: item.price,
-        priceType: typeof item.price
-      });
-    }
-  }, [item]);
 
   return (
     <div className="item-details-overlay" onClick={handleOverlayClick}>
