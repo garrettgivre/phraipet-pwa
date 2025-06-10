@@ -1,0 +1,193 @@
+.grooming-container {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.grooming-item {
+  position: absolute;
+  bottom: 35%;
+  transform: translateX(-50%);
+  width: 50px;
+  height: 50px;
+  z-index: 45; /* Higher than pet (30) but lower than food (40) */
+  transition: all 0.3s ease;
+}
+
+.grooming-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transition: all 0.3s ease;
+}
+
+/* Circular motion animations for different grooming stages */
+.grooming-item.grooming-stage-1 {
+  animation: groomCircle1 2s ease-in-out;
+}
+
+.grooming-item.grooming-stage-2 {
+  animation: groomCircle2 2s ease-in-out;
+}
+
+.grooming-item.grooming-stage-3 {
+  animation: groomCircle3 2s ease-in-out;
+}
+
+/* Different circular motion patterns - moving around the pet, not rotating the item */
+@keyframes groomCircle1 {
+  0% {
+    transform: translateX(-50%) translateY(0);
+  }
+  25% {
+    transform: translateX(-80%) translateY(-30px) rotate(5deg);
+  }
+  50% {
+    transform: translateX(-50%) translateY(-50px) rotate(-3deg);
+  }
+  75% {
+    transform: translateX(-20%) translateY(-30px) rotate(5deg);
+  }
+  100% {
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+@keyframes groomCircle2 {
+  0% {
+    transform: translateX(-50%) translateY(0);
+  }
+  25% {
+    transform: translateX(-20%) translateY(-35px) rotate(-4deg);
+  }
+  50% {
+    transform: translateX(-50%) translateY(-60px) rotate(2deg);
+  }
+  75% {
+    transform: translateX(-80%) translateY(-35px) rotate(-4deg);
+  }
+  100% {
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+@keyframes groomCircle3 {
+  0% {
+    transform: translateX(-50%) translateY(0) rotate(0deg);
+  }
+  20% {
+    transform: translateX(-75%) translateY(-20px) rotate(3deg);
+  }
+  40% {
+    transform: translateX(-25%) translateY(-45px) rotate(-5deg);
+  }
+  60% {
+    transform: translateX(-75%) translateY(-45px) rotate(3deg);
+  }
+  80% {
+    transform: translateX(-25%) translateY(-20px) rotate(-2deg);
+  }
+  100% {
+    transform: translateX(-50%) translateY(0) rotate(0deg);
+  }
+}
+
+/* Bubble effects */
+.grooming-bubble {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.9), rgba(173, 216, 230, 0.7));
+  border-radius: 50%;
+  border: 1px solid rgba(173, 216, 230, 0.5);
+  z-index: 46; /* Above grooming item */
+  animation: bubbleFloat 2s ease-out forwards;
+  opacity: 0;
+}
+
+@keyframes bubbleFloat {
+  0% {
+    opacity: 0;
+    transform: translateY(0) scale(0.5);
+  }
+  20% {
+    opacity: 1;
+    transform: translateY(-10px) scale(1);
+  }
+  80% {
+    opacity: 1;
+    transform: translateY(-40px) scale(1.2);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-60px) scale(0.8);
+  }
+}
+
+/* Pet grooming animation */
+.pet-being-groomed {
+  animation: petGroomingMotion 0.8s ease-in-out !important;
+}
+
+@keyframes petGroomingMotion {
+  0% {
+    transform: translateX(-50%) scale(1) rotate(0deg);
+  }
+  25% {
+    transform: translateX(-52%) scale(1.05) rotate(-2deg);
+  }
+  50% {
+    transform: translateX(-50%) scale(1.1) rotate(0deg);
+  }
+  75% {
+    transform: translateX(-48%) scale(1.05) rotate(2deg);
+  }
+  100% {
+    transform: translateX(-50%) scale(1) rotate(0deg);
+  }
+}
+
+/* Grooming motion for flipped pets */
+.pet-layer.flip.pet-being-groomed {
+  animation: petGroomingMotionFlip 0.8s ease-in-out !important;
+}
+
+@keyframes petGroomingMotionFlip {
+  0% {
+    transform: translateX(-50%) scaleX(-1) scale(1) rotate(0deg);
+  }
+  25% {
+    transform: translateX(-48%) scaleX(-1) scale(1.05) rotate(-2deg);
+  }
+  50% {
+    transform: translateX(-50%) scaleX(-1) scale(1.1) rotate(0deg);
+  }
+  75% {
+    transform: translateX(-52%) scaleX(-1) scale(1.05) rotate(2deg);
+  }
+  100% {
+    transform: translateX(-50%) scaleX(-1) scale(1) rotate(0deg);
+  }
+}
+
+/* Additional bubble variations for more visual interest */
+.grooming-bubble:nth-child(odd) {
+  animation-duration: 1.8s;
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.95), rgba(144, 238, 144, 0.6));
+}
+
+.grooming-bubble:nth-child(even) {
+  animation-duration: 2.2s;
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.9), rgba(255, 182, 193, 0.6));
+}
+
+.grooming-bubble:nth-child(3n) {
+  animation-duration: 2.5s;
+  width: 8px;
+  height: 8px;
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.9), rgba(230, 230, 250, 0.7));
+} 

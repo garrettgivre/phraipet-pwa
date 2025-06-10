@@ -198,14 +198,34 @@ function AppContent() {
 
   const handleGroomPet = async (groomingItem: GroomingInventoryItem) => {
     if (!pet || typeof pet.cleanliness !== 'number') return;
+    
+    // Calculate new cleanliness with the same pattern as food
     let newCleanliness = Math.min(MAX_NEED_VALUE, pet.cleanliness + groomingItem.cleanlinessBoost);
     newCleanliness = Math.max(MIN_NEED_VALUE, newCleanliness);
-    const updates: Partial<Pet> = {
+    
+    const updatedPet: Pet = {
+      ...pet,
       cleanliness: newCleanliness,
+      lastNeedsUpdateTime: Date.now(), // Update timestamp to prevent immediate decay
       spirit: Math.max(MIN_NEED_VALUE, Math.min(MAX_NEED_VALUE, Math.round((pet.hunger + pet.happiness + newCleanliness + pet.affection) / 4)))
     };
+    
+    // Update local state immediately
+    setPet(updatedPet);
+    
+    // Store the selected grooming item in localStorage
+    localStorage.setItem('pendingGroomingItem', JSON.stringify({
+      src: groomingItem.src,
+      position: 50, // Center position, will be adjusted in PetPage
+      cleanlinessBoost: groomingItem.cleanlinessBoost
+    }));
+    
+    // Navigate back to pet page to show the grooming animation
+    navigate('/');
+    
+    // Update Firebase
     await withErrorHandling(
-      () => petService.updatePetNeeds(updates),
+      () => petService.updatePetNeeds(updatedPet),
       "Failed to update pet cleanliness"
     );
   };

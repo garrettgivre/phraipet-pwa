@@ -1,0 +1,51 @@
+{
+  "rules": {
+    // Allow authenticated users (including anonymous) to access the app data
+    ".read": "auth != null",
+    ".write": "auth != null",
+    
+    // Pet data - shared across all authenticated users
+    "pets": {
+      "sharedPet": {
+        ".read": "auth != null",
+        ".write": "auth != null",
+        ".validate": "newData.hasChildren(['id', 'name', 'hunger', 'happiness', 'cleanliness', 'affection', 'spirit'])"
+      }
+    },
+    
+    // Room decoration data - shared across all authenticated users  
+    "roomLayers": {
+      "sharedRoom": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    },
+    
+    // Player stats (coins, etc.) - shared for this single-user app
+    "playerStats": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      "coins": {
+        ".validate": "newData.isNumber() && newData.val() >= 0"
+      }
+    },
+    
+    // Decorations available for purchase
+    "decorations": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    
+    // Player inventory
+    "inventory": {
+      ".read": "auth != null", 
+      ".write": "auth != null"
+    },
+    
+    // Store data
+    "stores": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    }
+  }
+} 

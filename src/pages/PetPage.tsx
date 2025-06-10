@@ -1,7 +1,7 @@
 // src/pages/PetPage.tsx
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import type { Pet, Need, NeedInfo } from "../types.ts";
+import type { Pet, Need, NeedInfo, FoodInventoryItem, GroomingInventoryItem, ToyInventoryItem } from "../types.ts";
 import { useToyAnimation } from "../contexts/ToyAnimationContext";
 import { useDecoration } from "../contexts/DecorationContext";
 import { useCoins } from "../contexts/CoinsContext";
@@ -11,6 +11,8 @@ import PetRoom from "../components/PetRoom";
 import PetNeedsDisplay from "../components/PetNeedsDisplay";
 import ConfirmationDialog from "../components/ConfirmationDialog";
 import InlineRoomEditor from "../components/InlineRoomEditor";
+import GroomingItem from "../components/GroomingItem";
+import InlineInventoryPanel from "../components/InlineInventoryPanel";
 import { getRandomMoodPhrase, getRandomToyPhrase } from "../utils/petPhrases";
 import { usePetMovement } from "../hooks/usePetMovement";
 import { getPetImage } from "../utils/petImageSelector";
@@ -19,23 +21,33 @@ interface PetPageProps {
   pet: Pet | null;
   needInfo: NeedInfo[];
   onIncreaseAffection: (amount: number) => void;
+  onFeedPet: (item: FoodInventoryItem) => void;
+  onGroomPet: (item: GroomingInventoryItem) => void;
+  onPlayWithToy: (item: ToyInventoryItem) => void;
 }
 
-export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageProps) {
+export default function PetPage({ pet, needInfo, onIncreaseAffection, onFeedPet, onGroomPet, onPlayWithToy }: PetPageProps) {
   const { roomLayers, roomLayersLoading } = useDecoration();
   const { activeToy, isPlaying } = useToyAnimation();
   const { coins } = useCoins();
   const navigate = useNavigate();
   const { position, isWalking, walkingStep, isFacingRight } = usePetMovement(pet);
   const [foodItem, setFoodItem] = useState<{ src: string; position: number; hungerRestored?: number } | null>(null);
+  const [groomingItem, setGroomingItem] = useState<{ src: string; position: number; cleanlinessBoost?: number } | null>(null);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [pendingFoodItem, setPendingFoodItem] = useState<{ src: string; position: number; hungerRestored?: number } | null>(null);
   const [currentMoodPhrase, setCurrentMoodPhrase] = useState<string | undefined>(undefined);
   const [showSpeechBubble, setShowSpeechBubble] = useState(false);
   const [localHungerValue, setLocalHungerValue] = useState<number | null>(null);
+  const [localCleanlinessValue, setLocalCleanlinessValue] = useState<number | null>(null);
   
   // New state for furniture edit mode
   const [isEditMode, setIsEditMode] = useState(false);
+  
+  // New state for inventory panel
+  const [isInventoryOpen, setIsInventoryOpen] = useState(false);
+  const [inventoryCategory, setInventoryCategory] = useState<"Food" | "Grooming" | "Toys">("Food");
+  const [inventorySubCategory, setInventorySubCategory] = useState<string | undefined>(undefined);
   
   // Initialize local hunger value when pet changes
   useEffect(() => {
@@ -44,13 +56,26 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
     }
   }, [pet]);
   
+  // Initialize local cleanliness value when pet changes
+  useEffect(() => {
+    if (pet && typeof pet.cleanliness === 'number') {
+      setLocalCleanlinessValue(pet.cleanliness);
+    }
+  }, [pet]);
+  
   // Get the current hunger value to display (either local animated value or from pet data)
   const currentHungerValue = localHungerValue !== null ? localHungerValue : (pet?.hunger || 0);
   
-  // Create a modified needInfo array with our local hunger value
+  // Get the current cleanliness value to display (either local animated value or from pet data)
+  const currentCleanlinessValue = localCleanlinessValue !== null ? localCleanlinessValue : (pet?.cleanliness || 0);
+  
+  // Create a modified needInfo array with our local values
   const modifiedNeedInfo = needInfo.map(need => {
     if (need.need === "hunger" && localHungerValue !== null) {
       return { ...need, value: currentHungerValue };
+    }
+    if (need.need === "cleanliness" && localCleanlinessValue !== null) {
+      return { ...need, value: currentCleanlinessValue };
     }
     return need;
   });
@@ -85,6 +110,30 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
     }
   };
 
+  // Handle each grooming step
+  const handleGroomingStep = (stepNumber: number, cleanlinessAmount: number) => {
+    console.log(`Grooming step ${stepNumber}, cleanliness amount: ${cleanlinessAmount}`);
+    
+    // Get the base cleanliness value to increment from
+    const baseCleanliness = pet?.cleanliness || 0;
+    
+    // Calculate the progressive cleanliness value
+    const progressiveCleanliness = Math.min(
+      120, // MAX_NEED_VALUE from App.tsx
+      baseCleanliness + (cleanlinessAmount * stepNumber)
+    );
+    
+    // Update local cleanliness display value
+    setLocalCleanlinessValue(progressiveCleanliness);
+    
+    // Show speech bubble only once (for the first step)
+    if (stepNumber === 1) {
+      setCurrentMoodPhrase("Ahh, this feels so good!");
+      setShowSpeechBubble(true);
+      setTimeout(() => setShowSpeechBubble(false), 3000);
+    }
+  };
+
   // Check for pending food item in localStorage when component mounts
   useEffect(() => {
     const storedFoodItem = localStorage.getItem('pendingFoodItem');
@@ -101,6 +150,26 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
       } catch (error) {
         console.error('Error parsing pending food item:', error);
         localStorage.removeItem('pendingFoodItem');
+      }
+    }
+  }, [position, isFacingRight]);
+
+  // Check for pending grooming item in localStorage when component mounts
+  useEffect(() => {
+    const storedGroomingItem = localStorage.getItem('pendingGroomingItem');
+    if (storedGroomingItem) {
+      try {
+        const parsedItem = JSON.parse(storedGroomingItem);
+        // Place the grooming item near the pet
+        setGroomingItem({
+          ...parsedItem,
+          position: position + (isFacingRight ? -3 : 3)
+        });
+        // Clear the localStorage item
+        localStorage.removeItem('pendingGroomingItem');
+      } catch (error) {
+        console.error('Error parsing pending grooming item:', error);
+        localStorage.removeItem('pendingGroomingItem');
       }
     }
   }, [position, isFacingRight]);
@@ -159,28 +228,19 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
         onIncreaseAffection(5);
         break;
       case "hunger":
-        navigate('/inventory', {
-          state: {
-            targetMainCategory: 'Food',
-            targetSubCategory: 'Snack'
-          }
-        });
+        setInventoryCategory("Food");
+        setInventorySubCategory("Snack");
+        setIsInventoryOpen(true);
         break;
       case "cleanliness":
-        navigate('/inventory', {
-          state: {
-            targetMainCategory: 'Grooming',
-            targetSubCategory: 'BasicKit'
-          }
-        });
+        setInventoryCategory("Grooming");
+        setInventorySubCategory("BasicKit");
+        setIsInventoryOpen(true);
         break;
       case "happiness":
-        navigate('/inventory', {
-          state: {
-            targetMainCategory: 'Toys',
-            targetSubCategory: 'Classic'
-          }
-        });
+        setInventoryCategory("Toys");
+        setInventorySubCategory("Classic");
+        setIsInventoryOpen(true);
         break;
       case "spirit":
         console.log("Spirit clicked - action TBD.");
@@ -195,6 +255,13 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
     setLocalHungerValue(null);
     // Clear the food item
     setFoodItem(null);
+  };
+
+  const handleGroomingComplete = () => {
+    // Reset local cleanliness value
+    setLocalCleanlinessValue(null);
+    // Clear the grooming item
+    setGroomingItem(null);
   };
 
   const confirmUseFood = () => {
@@ -252,6 +319,18 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
             />
           )}
           
+          {/* Grooming Item Overlay */}
+          {groomingItem && (
+            <GroomingItem 
+              key={`grooming-${groomingItem.src}`}
+              src={groomingItem.src}
+              position={groomingItem.position}
+              cleanlinessBoost={groomingItem.cleanlinessBoost || 15}
+              onGroomed={handleGroomingComplete}
+              onGroomingStep={handleGroomingStep}
+            />
+          )}
+          
           {/* Loading spinner if still loading */}
           {roomLayersLoading && (
             <div className="loading-spinner">
@@ -292,6 +371,22 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection }: PetPageP
       <InlineRoomEditor 
         isOpen={isEditMode}
         onClose={() => setIsEditMode(false)} 
+        petImage={petImage}
+        petPosition={position}
+        moodPhrase={showSpeechBubble ? currentMoodPhrase : undefined}
+        isFacingRight={isFacingRight}
+      />
+      
+      {/* Inventory Panel */}
+      <InlineInventoryPanel
+        isOpen={isInventoryOpen}
+        onClose={() => setIsInventoryOpen(false)}
+        pet={pet}
+        onFeedPet={onFeedPet}
+        onGroomPet={onGroomPet}
+        onPlayWithToy={onPlayWithToy}
+        initialCategory={inventoryCategory}
+        initialSubCategory={inventorySubCategory}
       />
     </div>
   );

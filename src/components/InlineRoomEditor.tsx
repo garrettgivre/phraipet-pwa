@@ -21,6 +21,10 @@ const ROOM_BOUNDARIES = {
 interface InlineRoomEditorProps {
   isOpen: boolean;
   onClose: () => void;
+  petImage?: string;
+  petPosition?: number;
+  moodPhrase?: string;
+  isFacingRight?: boolean;
 }
 
 interface EditableFurnitureItem {
@@ -34,9 +38,10 @@ interface EditableFurnitureItem {
   rotation: number;
   layer: 'front' | 'back';
   originalIndex?: number;
+  originalLayer: 'front' | 'back';
 }
 
-export default function InlineRoomEditor({ isOpen, onClose }: InlineRoomEditorProps) {
+export default function InlineRoomEditor({ isOpen, onClose, petImage, petPosition, moodPhrase, isFacingRight }: InlineRoomEditorProps) {
   const { 
     roomLayers, 
     addDecorItem, 
@@ -141,7 +146,8 @@ export default function InlineRoomEditor({ isOpen, onClose }: InlineRoomEditorPr
       height: 300, // Much larger default size (was 150)
       scale: 1,
       rotation: 0,
-      layer: 'back' // Changed from 'front' to 'back'
+      layer: 'back', // Changed from 'front' to 'back'
+      originalLayer: 'back' // Changed from 'front' to 'back'
     };
 
     setSelectedItem(newItem);
@@ -173,7 +179,8 @@ export default function InlineRoomEditor({ isOpen, onClose }: InlineRoomEditorPr
       scale: finalWidth / baseSize, // Calculate scale from final size vs base size
       rotation: item.rotation || 0,
       layer,
-      originalIndex: index
+      originalIndex: index,
+      originalLayer: layer
     };
 
     setSelectedItem(editableItem);
@@ -295,23 +302,40 @@ export default function InlineRoomEditor({ isOpen, onClose }: InlineRoomEditorPr
       zone
     };
 
-    // If editing existing item, do atomic update
+    // If editing existing item, handle layer switching properly
     if (selectedItem.originalIndex !== undefined) {
       // Get current arrays
       const currentFrontDecor = roomLayers?.frontDecor || [];
       const currentBackDecor = roomLayers?.backDecor || [];
       
-      const newFrontDecor = [...currentFrontDecor];
-      const newBackDecor = [...currentBackDecor];
+      let newFrontDecor = [...currentFrontDecor];
+      let newBackDecor = [...currentBackDecor];
       
-      // Update the specific item in the appropriate array
-      if (selectedItem.layer === 'front') {
-        if (selectedItem.originalIndex < newFrontDecor.length) {
-          newFrontDecor[selectedItem.originalIndex] = itemToSave;
+      // Check if layer was changed
+      if (selectedItem.layer !== selectedItem.originalLayer) {
+        // Remove from original layer
+        if (selectedItem.originalLayer === 'front') {
+          newFrontDecor.splice(selectedItem.originalIndex, 1);
+        } else {
+          newBackDecor.splice(selectedItem.originalIndex, 1);
+        }
+        
+        // Add to new layer
+        if (selectedItem.layer === 'front') {
+          newFrontDecor.push(itemToSave);
+        } else {
+          newBackDecor.push(itemToSave);
         }
       } else {
-        if (selectedItem.originalIndex < newBackDecor.length) {
-          newBackDecor[selectedItem.originalIndex] = itemToSave;
+        // Same layer, just update in place
+        if (selectedItem.layer === 'front') {
+          if (selectedItem.originalIndex < newFrontDecor.length) {
+            newFrontDecor[selectedItem.originalIndex] = itemToSave;
+          }
+        } else {
+          if (selectedItem.originalIndex < newBackDecor.length) {
+            newBackDecor[selectedItem.originalIndex] = itemToSave;
+          }
         }
       }
       
@@ -341,7 +365,7 @@ export default function InlineRoomEditor({ isOpen, onClose }: InlineRoomEditorPr
   const handleDelete = () => {
     if (!selectedItem || selectedItem.originalIndex === undefined) return;
     
-    removeDecorItem(selectedItem.layer, selectedItem.originalIndex);
+    removeDecorItem(selectedItem.originalLayer, selectedItem.originalIndex);
     setSelectedItem(null);
     setShowInventory(true);
   };
@@ -413,7 +437,7 @@ export default function InlineRoomEditor({ isOpen, onClose }: InlineRoomEditorPr
               
               // Hide this item if it's currently being edited
               const isBeingEdited = selectedItem && 
-                selectedItem.layer === 'back' && 
+                selectedItem.originalLayer === 'back' && 
                 selectedItem.originalIndex === idx;
               
               if (isBeingEdited) return null;
@@ -429,7 +453,7 @@ export default function InlineRoomEditor({ isOpen, onClose }: InlineRoomEditorPr
                     top: position.top,
                     width: position.width,
                     height: position.height,
-                    zIndex: 10 + idx,
+                    zIndex: 20,
                     objectFit: "contain",
                     transform: item.rotation 
                       ? `translate(-50%, -50%) rotate(${item.rotation}deg)` 
@@ -444,13 +468,76 @@ export default function InlineRoomEditor({ isOpen, onClose }: InlineRoomEditorPr
               );
             })}
 
+            {/* Pet Layer - positioned between back and front furniture */}
+            {petImage && petPosition !== undefined && (
+              <>
+                {/* Pet Sprite */}
+                <img 
+                  className={`editor-pet ${isFacingRight ? 'flip' : ''}`}
+                  src={petImage}
+                  style={{ 
+                    position: 'absolute',
+                    left: `${Math.max(ROOM_BOUNDARIES.LEFT, Math.min(ROOM_BOUNDARIES.RIGHT, petPosition))}%`,
+                    bottom: '20%',
+                    width: 'clamp(200px, 45%, 400px)',
+                    height: 'auto',
+                    objectFit: 'contain',
+                    transform: isFacingRight ? 'translateX(-50%) scaleX(-1)' : 'translateX(-50%)',
+                    transformOrigin: 'bottom center',
+                    zIndex: 30, // Between back (20) and front (40+) furniture
+                    pointerEvents: 'none'
+                  }}
+                  alt="Pet"
+                />
+                
+                {/* Speech bubble if present */}
+                {moodPhrase && (
+                  <div 
+                    className="pet-mood-bubble"
+                    style={{ 
+                      position: 'absolute',
+                      left: `${Math.max(ROOM_BOUNDARIES.LEFT, Math.min(ROOM_BOUNDARIES.RIGHT, petPosition))}%`,
+                      bottom: 'calc(42% + 10px)',
+                      transform: 'translateX(-50%)',
+                      backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                      padding: 'clamp(4px, 1vw, 6px) clamp(8px, 2vw, 12px)',
+                      borderRadius: '15px',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                      maxWidth: 'min(200px, 80vw)',
+                      textAlign: 'center',
+                      zIndex: 31,
+                      fontSize: 'clamp(12px, 3vw, 14px)',
+                      pointerEvents: 'none'
+                    }}
+                  >
+                    <div 
+                      style={{ 
+                        position: 'absolute', 
+                        bottom: '-7px',
+                        left: '50%', 
+                        transform: 'translateX(-50%)', 
+                        width: '0', 
+                        height: '0', 
+                        borderLeft: '7px solid transparent', 
+                        borderRight: '7px solid transparent', 
+                        borderTop: '9px solid rgba(255, 255, 255, 0.9)' 
+                      }} 
+                    />
+                    <p style={{ margin: 0, color: '#333', lineHeight: 1.3, padding: 0 }}>
+                      {moodPhrase}
+                    </p>
+                  </div>
+                )}
+              </>
+            )}
+
             {/* Front layer furniture */}
             {frontDecor.map((item, idx) => {
               const position = calculatePosition(item.x, item.y, item.width || 0, item.height || 0);
               
               // Hide this item if it's currently being edited
               const isBeingEdited = selectedItem && 
-                selectedItem.layer === 'front' && 
+                selectedItem.originalLayer === 'front' && 
                 selectedItem.originalIndex === idx;
               
               if (isBeingEdited) return null;

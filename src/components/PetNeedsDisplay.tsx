@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import type { NeedInfo, Need } from '../types';
 import { getNeedBarColor } from '../utils/colorUtils';
 import './PetNeedsDisplay.css';
@@ -9,10 +8,7 @@ interface PetNeedsDisplayProps {
 }
 
 export default function PetNeedsDisplay({ needInfo, onNeedClick }: PetNeedsDisplayProps) {
-  const [activeBubble, setActiveBubble] = useState<Need | null>(null);
-
-  const toggleBubble = (need: Need) => {
-    setActiveBubble(activeBubble === need ? null : need);
+  const handleNeedClick = (need: Need) => {
     onNeedClick(need);
   };
 
@@ -21,8 +17,8 @@ export default function PetNeedsDisplay({ needInfo, onNeedClick }: PetNeedsDispl
       {needInfo.map((info) => (
         <div 
           key={info.need} 
-          className={`need-circle ${info.need} ${activeBubble === info.need ? 'active' : ''}`}
-          onClick={() => toggleBubble(info.need)}
+          className={`need-circle ${info.need}`}
+          onClick={() => handleNeedClick(info.need)}
         >
           <svg viewBox="0 0 36 36" className="circular-chart" preserveAspectRatio="xMidYMid meet">
             <path
@@ -45,14 +41,6 @@ export default function PetNeedsDisplay({ needInfo, onNeedClick }: PetNeedsDispl
               className="need-icon-image"
             />
           </svg>
-          
-          {activeBubble === info.need && (
-            <div className="need-info-bubble">
-              <h3>{info.need.charAt(0).toUpperCase() + info.need.slice(1)}</h3>
-              <p className="need-desc">{info.desc}</p>
-              <p className="need-value">{info.value}</p>
-            </div>
-          )}
         </div>
       ))}
     </div>

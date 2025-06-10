@@ -82,7 +82,7 @@
 .food-item {
   position: absolute;
   bottom: 20%; /* Adjusted position */
-  z-index: 35;
+  z-index: 40; /* Increased from 35 to 40 to be in front of pet */
   transform: translateX(-50%);
   max-height: 15%; /* Smaller in portrait mode */
 }
@@ -91,7 +91,7 @@
 .toy.playing {
   position: absolute;
   bottom: 18%; /* Adjusted position */
-  z-index: 20;
+  z-index: 35; /* Increased from 20 to 35 to be in front of pet */
   max-height: 15%; /* Smaller in portrait mode */
   animation: toyPlay 2s infinite;
 }

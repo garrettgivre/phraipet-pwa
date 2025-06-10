@@ -27,7 +27,14 @@ export function createRoutes(props: RouteProps): RouteObject[] {
   return [
     {
       path: "/",
-      element: <PetPage pet={props.pet} needInfo={props.needInfo} onIncreaseAffection={props.handleIncreaseAffection} />
+      element: <PetPage 
+        pet={props.pet} 
+        needInfo={props.needInfo} 
+        onIncreaseAffection={props.handleIncreaseAffection}
+        onFeedPet={props.handleFeedPet}
+        onGroomPet={props.handleGroomPet}
+        onPlayWithToy={props.handlePlayWithToy}
+      />
     },
     {
       path: "/explore",

@@ -4,8 +4,8 @@
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 50;
   pointer-events: none;
+  z-index: 10; /* Low enough to not interfere with pet layering */
 }
 
 /* Main overlay that covers the room area */
@@ -106,7 +106,7 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
-.toggle-inventory-btn:hover {
+.toggle-editor-btn:hover {
   background-color: rgba(76, 175, 80, 1);
   transform: scale(1.05);
 }
@@ -131,7 +131,7 @@
   pointer-events: none;
 }
 
-/* Editor decor items (avoids being hidden by edit-mode CSS) */
+/* Editor decor items (no z-index overrides - let JavaScript handle it) */
 .editor-decor {
   position: absolute;
   object-fit: contain;
@@ -143,9 +143,19 @@
   opacity: 0.8;
 }
 
-/* Back layer items in editor should appear behind pet */
-.editor-decor.back-layer {
-  z-index: 10 !important;
+/* Editor pet styling - matches PetRoom pet-layer styles */
+.editor-pet {
+  position: absolute;
+  object-fit: contain;
+  display: block;
+  transition: left 3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s ease;
+  transform-origin: bottom center;
+  will-change: left, transform;
+  pointer-events: none;
+}
+
+.editor-pet.flip {
+  transform: scaleX(-1);
 }
 
 /* Selected furniture being edited */
@@ -612,4 +622,27 @@
 
 .instructions-content button:hover {
   background: #45a049;
+}
+
+/* Pet highlighting in edit mode */
+.room-editor-overlay ~ * .pet-container,
+.room-editor-overlay ~ * .pet-sprite {
+  filter: drop-shadow(0 0 15px rgba(255, 255, 0, 0.6)) drop-shadow(0 0 25px rgba(255, 255, 0, 0.3));
+  animation: petEditGlow 2s ease-in-out infinite alternate;
+}
+
+@keyframes petEditGlow {
+  0% { 
+    filter: drop-shadow(0 0 15px rgba(255, 255, 0, 0.6)) drop-shadow(0 0 25px rgba(255, 255, 0, 0.3));
+  }
+  100% { 
+    filter: drop-shadow(0 0 20px rgba(255, 255, 0, 0.8)) drop-shadow(0 0 35px rgba(255, 255, 0, 0.5));
+  }
+}
+
+/* Enhanced visual distinction for furniture layers */
+.room-editor-overlay .editor-decor:not(.back-layer):hover {
+  border-color: rgba(255, 150, 100, 0.8) !important;
+  box-shadow: 0 0 15px rgba(255, 150, 100, 0.5) !important;
+  transform: translate(-50%, -50%) scale(1.02) !important;
 } 

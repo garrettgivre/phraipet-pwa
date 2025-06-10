@@ -38,7 +38,14 @@ export function createRoutes({
   return [
     {
       path: "/",
-      element: <PetPage pet={pet} needInfo={needInfo} onIncreaseAffection={handleIncreaseAffection} />,
+      element: <PetPage 
+        pet={pet} 
+        needInfo={needInfo} 
+        onIncreaseAffection={handleIncreaseAffection}
+        onFeedPet={handleFeedPet}
+        onGroomPet={handleGroomPet}
+        onPlayWithToy={handlePlayWithToy}
+      />,
     },
     {
       path: "/explore",
@@ -46,7 +53,7 @@ export function createRoutes({
     },
     {
       path: "/play",
-      element: <Play pet={pet} />,
+      element: <Play />,
     },
     {
       path: "/inventory",
