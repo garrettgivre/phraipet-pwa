@@ -9,7 +9,6 @@
   background-color: #f0f2f5;
   overflow: hidden;
   box-sizing: border-box;
-  padding-top: var(--header-height); /* Add padding to account for fixed header */
 }
 
 /* Header area */
@@ -26,7 +25,6 @@
 .sq-decor-title-bar {
   flex-shrink: 0;
   padding: 10px 15px;
-  margin-top: 10px; /* Add margin to push down from header */
   font-size: 1.2rem;
   font-weight: 600;
   text-align: center;
@@ -546,8 +544,6 @@
 .sq-decor-navigation-bars {
   flex-shrink: 0;
   background-color: #e4e7ea;
-  border-top: 1px solid #c8ced3;
-  box-shadow: 0 -1px 2px rgba(0,0,0,0.03);
   width: 100%;
   box-sizing: border-box;
   margin-bottom: 70px; /* Space for back button and navbar */

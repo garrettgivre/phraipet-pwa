@@ -340,16 +340,14 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const initializeCache = async () => {
       try {
-        // Preload first 20 item images for quick initial display
-        await preloadImages(defaultAllItems.slice(0, 20));
+        // Preload only first 5 item images for much faster initial display
+        await preloadImages(defaultAllItems.slice(0, 5));
 
-        // Load inventory data from Firebase
-        const inventoryRef = ref(db, "inventory");
-        
-        // Force reset inventory to defaults to ensure correct items
-        await set(inventoryRef, defaultAllItems);
-        console.log("Reset inventory to defaults");
+        // Set default items immediately for faster loading
         setItems(defaultAllItems);
+
+        // Load inventory data from Firebase in background
+        const inventoryRef = ref(db, "inventory");
         
         onValue(inventoryRef, (snapshot) => {
           const inventoryData = snapshot.val() as InventoryItem[] | null;
@@ -406,12 +404,6 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
         }, {
           onlyOnce: false
         });
-        
-        // Continue preloading remaining items in the background
-        setTimeout(() => {
-          preloadImages(defaultAllItems.slice(20))
-            .catch(err => console.error("Error preloading images:", err));
-        }, 1000);
       } catch (error) {
         console.error("Failed to initialize inventory cache:", error);
         setItems(defaultAllItems);

@@ -47,7 +47,8 @@ export default function InlineRoomEditor({ isOpen, onClose, petImage, petPositio
     addDecorItem, 
     removeDecorItem, 
     getFilteredDecorations, 
-    setRoomLayer
+    setRoomLayer,
+    updateDecorItem
   } = useDecoration();
   
   // Refs
@@ -302,63 +303,19 @@ export default function InlineRoomEditor({ isOpen, onClose, petImage, petPositio
       zone
     };
 
-    // If editing existing item, handle layer switching properly
-    if (selectedItem.originalIndex !== undefined) {
-      // Get current arrays
-      const currentFrontDecor = roomLayers?.frontDecor || [];
-      const currentBackDecor = roomLayers?.backDecor || [];
-      
-      let newFrontDecor = [...currentFrontDecor];
-      let newBackDecor = [...currentBackDecor];
-      
-      // Check if layer was changed
-      if (selectedItem.layer !== selectedItem.originalLayer) {
-        // Remove from original layer
-        if (selectedItem.originalLayer === 'front') {
-          newFrontDecor.splice(selectedItem.originalIndex, 1);
-        } else {
-          newBackDecor.splice(selectedItem.originalIndex, 1);
-        }
-        
-        // Add to new layer
-        if (selectedItem.layer === 'front') {
-          newFrontDecor.push(itemToSave);
-        } else {
-          newBackDecor.push(itemToSave);
-        }
-      } else {
-        // Same layer, just update in place
-        if (selectedItem.layer === 'front') {
-          if (selectedItem.originalIndex < newFrontDecor.length) {
-            newFrontDecor[selectedItem.originalIndex] = itemToSave;
-          }
-        } else {
-          if (selectedItem.originalIndex < newBackDecor.length) {
-            newBackDecor[selectedItem.originalIndex] = itemToSave;
-          }
-        }
-      }
-      
-      // Update room layers atomically
-      const updatedLayers = {
-        ...roomLayers,
-        frontDecor: newFrontDecor,
-        backDecor: newBackDecor,
-        decor: [...newBackDecor, ...newFrontDecor] // Update combined array
-      };
-      
-      // Use direct Firebase update to avoid race conditions
-      const roomRef = ref(db, "roomLayers/sharedRoom");
-      set(roomRef, updatedLayers)
-        .catch(error => console.error('Update failed:', error));
-        
-    } else {
-      addDecorItem(itemToSave, selectedItem.layer);
-    }
-    
-    // Clear selection
+    // Clear selection immediately
+    const currentSelectedItem = selectedItem;
     setSelectedItem(null);
     setShowInventory(true);
+
+    // Handle save atomically based on whether it's new or existing
+    if (currentSelectedItem.originalIndex !== undefined) {
+      // Updating existing item - do it atomically in the context
+      updateDecorItem(currentSelectedItem.originalLayer, currentSelectedItem.originalIndex, itemToSave, currentSelectedItem.layer);
+    } else {
+      // Adding new item
+      addDecorItem(itemToSave, currentSelectedItem.layer);
+    }
   };
 
   // Delete furniture
@@ -471,21 +428,12 @@ export default function InlineRoomEditor({ isOpen, onClose, petImage, petPositio
             {/* Pet Layer - positioned between back and front furniture */}
             {petImage && petPosition !== undefined && (
               <>
-                {/* Pet Sprite */}
+                {/* Pet Sprite - Use same class and styling as original */}
                 <img 
-                  className={`editor-pet ${isFacingRight ? 'flip' : ''}`}
+                  className={`pet-layer ${isFacingRight ? 'flip' : ''}`}
                   src={petImage}
                   style={{ 
-                    position: 'absolute',
-                    left: `${Math.max(ROOM_BOUNDARIES.LEFT, Math.min(ROOM_BOUNDARIES.RIGHT, petPosition))}%`,
-                    bottom: '20%',
-                    width: 'clamp(200px, 45%, 400px)',
-                    height: 'auto',
-                    objectFit: 'contain',
-                    transform: isFacingRight ? 'translateX(-50%) scaleX(-1)' : 'translateX(-50%)',
-                    transformOrigin: 'bottom center',
-                    zIndex: 30, // Between back (20) and front (40+) furniture
-                    pointerEvents: 'none'
+                    left: `${petPosition}%`
                   }}
                   alt="Pet"
                 />
@@ -590,14 +538,14 @@ export default function InlineRoomEditor({ isOpen, onClose, petImage, petPositio
                   width: position.width,
                   height: position.height,
                   transform: `translate(-50%, -50%) rotate(${selectedItem.rotation}deg)`,
-                  zIndex: 1000
+                  zIndex: 1500
                 }}
                 onPointerDown={(e) => handleStartDrag(e, 'move')}
               >
                 <img src={selectedItem.src} alt="" draggable={false} />
                 
                 {/* Control handles - positioned outside item bounds */}
-                <div className="furniture-controls" style={{ zIndex: 1001 }}>
+                <div className="furniture-controls" style={{ zIndex: 1700 }}>
                   {/* Top left: Purple send forward/back handle */}
                   <div 
                     style={{
@@ -616,7 +564,7 @@ export default function InlineRoomEditor({ isOpen, onClose, petImage, petPositio
                       color: 'white',
                       fontWeight: 'bold',
                       cursor: 'pointer',
-                      zIndex: 1002,
+                      zIndex: 1700,
                       pointerEvents: 'auto',
                       boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)'
                     }}
@@ -656,7 +604,7 @@ export default function InlineRoomEditor({ isOpen, onClose, petImage, petPositio
                       color: 'white',
                       fontWeight: 'bold',
                       cursor: 'grab',
-                      zIndex: 1002,
+                      zIndex: 1700,
                       pointerEvents: 'auto',
                       boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)'
                     }}
@@ -684,7 +632,7 @@ export default function InlineRoomEditor({ isOpen, onClose, petImage, petPositio
                       color: 'black',
                       fontWeight: 'bold',
                       cursor: 'pointer',
-                      zIndex: 1002,
+                      zIndex: 1700,
                       pointerEvents: 'auto',
                       boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)'
                     }}
@@ -719,7 +667,7 @@ export default function InlineRoomEditor({ isOpen, onClose, petImage, petPositio
                       color: 'white',
                       fontWeight: 'bold',
                       cursor: 'nw-resize',
-                      zIndex: 1002,
+                      zIndex: 1700,
                       pointerEvents: 'auto',
                       boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)'
                     }}
@@ -751,7 +699,7 @@ export default function InlineRoomEditor({ isOpen, onClose, petImage, petPositio
                       color: 'white',
                       fontWeight: 'bold',
                       cursor: 'pointer',
-                      zIndex: 1002,
+                      zIndex: 1700,
                       pointerEvents: 'auto',
                       boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)'
                     }}
@@ -784,7 +732,7 @@ export default function InlineRoomEditor({ isOpen, onClose, petImage, petPositio
                       color: 'white',
                       fontWeight: 'bold',
                       cursor: 'pointer',
-                      zIndex: 1002,
+                      zIndex: 1700,
                       pointerEvents: 'auto',
                       boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)'
                     }}

@@ -90,6 +90,8 @@ function FurniturePlacementOverlay({
     width: number;
     height: number;
     position: "front" | "back";
+    originalLayer?: "front" | "back";
+    originalIndex?: number;
   } | null;
 }) {
   const [position, setPosition] = useState<"front" | "back">(initialPosition?.position || "front");
@@ -633,7 +635,7 @@ const countItemQuantities = (items: DecorationInventoryItem[]): Map<string, numb
 };
 
 export default function DecorationPage() {
-  const { decorations, roomLayers, setRoomLayer, addDecorItem, removeDecorItem, getFilteredDecorations } = useDecoration();
+  const { decorations, roomLayers, setRoomLayer, addDecorItem, removeDecorItem, getFilteredDecorations, updateDecorItem } = useDecoration();
   const navigate = useNavigate();
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [selectedSubCategory, setSelectedSubCategory] = useState<DecorationItemType>("wall");
@@ -650,6 +652,8 @@ export default function DecorationPage() {
     width: number;
     height: number;
     position: "front" | "back";
+    originalLayer: "front" | "back";
+    originalIndex: number;
   } | null>(null);
 
   // Auto-refresh missing themes
@@ -679,9 +683,19 @@ export default function DecorationPage() {
   const handlePlaceFurniture = (item: RoomDecorItem, position: "front" | "back") => {
     console.log("Handling furniture placement:", item, "position:", position);
     
-    // Only add to the selected position (front or back)
-    // Do not add to both layers - this was causing the issue
-    addDecorItem(item, position);
+    // Check if this is a replacement operation
+    if (replaceCoords && replaceCoords.originalIndex !== undefined && replaceCoords.originalLayer) {
+      // This is a replacement - use atomic update
+      console.log("Replacing furniture item atomically");
+      updateDecorItem(replaceCoords.originalLayer, replaceCoords.originalIndex, item, position);
+      
+      // Clear replace coords after atomic update
+      setReplaceCoords(null);
+    } else {
+      // This is a new item - use add
+      console.log("Adding new furniture item");
+      addDecorItem(item, position);
+    }
     
     // Update local state to show the placed furniture panel
     setShowPlacedFurniture(true);
@@ -767,8 +781,8 @@ export default function DecorationPage() {
     
     const itemToReplace = itemsArray[index];
     
-    // Remove the item first
-    removeDecorItem(position, index);
+    // DON'T remove the item yet - let the atomic update handle it
+    // This prevents race conditions and disappearing items
     
     // Show the placement overlay with the item's original position
     setSelectedFurniture({
@@ -788,12 +802,16 @@ export default function DecorationPage() {
     });
     
     // Set initial coords to the item's current position
+    // Also include the original item info for atomic replacement
     setReplaceCoords({
       x: itemToReplace.x,
       y: itemToReplace.y,
       width: itemToReplace.width || 0,
       height: itemToReplace.height || 0, 
-      position: position
+      position: position,
+      // Add these properties to identify the item being replaced
+      originalLayer: position,
+      originalIndex: index
     });
     
     setShowPlacementOverlay(true);

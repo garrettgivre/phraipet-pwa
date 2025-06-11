@@ -5,11 +5,18 @@ import type { Pet, RoomLayers } from "../types";
 // Pet related operations
 export const petService = {
   subscribeToPet: (callback: (pet: Pet) => void) => {
+    console.log("Pet service: Setting up pet subscription");
     const petRef = ref(db, `pets/sharedPet`);
     return onValue(petRef, (snapshot) => {
+      console.log("Pet service: Received snapshot", snapshot.exists());
       if (snapshot.exists()) {
+        console.log("Pet service: Pet data from Firebase", snapshot.val());
         callback(snapshot.val());
+      } else {
+        console.log("Pet service: No pet data found in Firebase");
       }
+    }, (error) => {
+      console.error("Pet service: Error reading pet data", error);
     });
   },
 

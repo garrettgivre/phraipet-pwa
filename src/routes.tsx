@@ -4,6 +4,8 @@ import type { Pet, NeedInfo, FoodInventoryItem, GroomingInventoryItem, ToyInvent
 import PetPage from "./pages/PetPage";
 import Explore from "./pages/Explore";
 import Play from "./pages/Play";
+import Phraijump from "./pages/Phraijump";
+import PhraiCrush from "./pages/PhraiCrush";
 import InventoryPage from "./pages/InventoryPage";
 import DecorationPage from "./pages/DecorationPage";
 import Sunnybrook from "./pages/Sunnybrook";
@@ -54,6 +56,14 @@ export function createRoutes({
     {
       path: "/play",
       element: <Play />,
+    },
+    {
+      path: "/phraijump",
+      element: <Phraijump />,
+    },
+    {
+      path: "/phraicrush",
+      element: <PhraiCrush />,
     },
     {
       path: "/inventory",

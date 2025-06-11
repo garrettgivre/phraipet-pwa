@@ -66,7 +66,10 @@ function AppShell({ pet, handleFeedPet, handleGroomPet, handlePlayWithToy, handl
   const isPetPage = location.pathname === "/";
   const { coins } = useCoins();
 
-  console.log("Current location:", location.pathname);
+  console.log("AppShell - Current location:", location.pathname);
+  console.log("AppShell - isPetPage:", isPetPage);
+  console.log("AppShell - needInfo:", needInfo);
+  console.log("AppShell - needInfo length:", needInfo.length);
 
   // Get routes and log them for debugging
   const routes = createRoutes({
@@ -142,7 +145,7 @@ const defaultPetData: Pet = {
 defaultPetData.spirit = Math.max(MIN_NEED_VALUE, Math.min(MAX_NEED_VALUE, Math.round((defaultPetData.hunger + defaultPetData.happiness + defaultPetData.cleanliness + defaultPetData.affection) / 4)));
 
 function AppContent() {
-  const [pet, setPet] = useState<Pet | null>(null);
+  const [pet, setPet] = useState<Pet | null>(defaultPetData);
   const { setActiveToy, setIsPlaying } = useToyAnimation();
   const navigate = useNavigate();
 
@@ -155,6 +158,11 @@ function AppContent() {
         { need: "spirit", name: "Spirit", maxValue: MAX_NEED_VALUE, color: "", iconSrc: "/assets/icons/needs/spirit.png", value: pet.spirit, desc: descriptor("happiness", pet.spirit) },
       ]
     : [];
+
+  // Debug logging
+  console.log("Pet data:", pet);
+  console.log("Need info:", needInfo);
+  console.log("Need info length:", needInfo.length);
 
   const handleFeedPet = async (foodItem: FoodInventoryItem) => {
     if (!pet || typeof pet.hunger !== 'number') return;
@@ -306,11 +314,24 @@ function AppContent() {
   };
 
   useEffect(() => {
+    console.log("Setting up pet subscription...");
+    
+    // Set a much shorter fallback timeout for faster loading
+    const fallbackTimeout = setTimeout(() => {
+      if (!pet || pet === defaultPetData) {
+        console.log("Pet loading timeout, using default pet data");
+        setPet(defaultPetData);
+      }
+    }, 1500); // Reduced from 3000ms to 1500ms
+    
     const unsubscribe = petService.subscribeToPet((petData) => {
+      console.log("Pet data received from Firebase:", petData);
+      clearTimeout(fallbackTimeout); // Clear timeout since we got data
       const currentTime = Date.now();
       let needsFirebaseUpdate = false;
 
       if (petData) {
+        console.log("Processing pet data...");
         const processedPetData: Pet = {
           ...defaultPetData,
           ...petData,
@@ -359,7 +380,10 @@ function AppContent() {
       }
     });
 
-    return () => unsubscribe();
+    return () => {
+      clearTimeout(fallbackTimeout);
+      unsubscribe();
+    };
   }, []);
 
   return (

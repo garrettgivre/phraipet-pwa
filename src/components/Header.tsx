@@ -16,6 +16,9 @@ export default function Header({
   const navigate = useNavigate();
   const iconSize = 20; // Desired display size for icons in the header circles
 
+  console.log("Header - Received needs:", needs);
+  console.log("Header - Needs length:", needs.length);
+
   return (
     <header className="app-header">
       <div className="pet-icon-wrapper" onClick={() => navigate("/")} style={{ cursor: 'pointer' }}>

@@ -1,5 +1,5 @@
-import { createContext, useState, useEffect, type ReactNode, useContext, useCallback } from "react";
-import { db } from "../firebase";
+import { createContext, useState, useEffect, useRef, type ReactNode, useContext, useCallback } from "react";
+import { db, waitForAuth } from "../firebase";
 import { ref, onValue, set } from "firebase/database";
 import type {
   DecorationInventoryItem,
@@ -134,6 +134,7 @@ interface DecorationContextType {
   setRoomLayer: (type: "floor" | "wall" | "ceiling" | "trim" | "overlay", src: string) => void;
   addDecorItem: (item: RoomDecorItem, position?: "front" | "back") => void; // Updated signature
   removeDecorItem: (position: "front" | "back", index: number) => void; // New method
+  updateDecorItem: (originalLayer: "front" | "back", originalIndex: number, newItem: RoomDecorItem, newLayer: "front" | "back") => void; // New method
   getFilteredDecorations: (subCategory: DecorationItemType) => DecorationInventoryItem[];
 }
 
@@ -172,32 +173,46 @@ export function DecorationProvider({ children }: { children: ReactNode }) {
   const [decorations, setDecorations] = useState<DecorationInventoryItem[]>(defaultDecorationItems);
   const [roomLayers, setRoomLayers] = useState<RoomLayers>(defaultRoomLayersData);
   const [roomLayersLoading, setRoomLayersLoading] = useState<boolean>(true);
+  
+  // Add flag to prevent Firebase override during local updates
+  const [isLocalUpdate, setIsLocalUpdate] = useState<boolean>(false);
+  
+  // Add ref to track pending save timeout
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Initialize the cache and load room data on first render
   useEffect(() => {
     const initializeCache = async () => {
       try {
-        // Preload decoration images
-        await preloadImages(defaultDecorationItems.slice(0, 10)); // Start with first 10 for quick loading
+        let timeoutTriggered = false;
         
-        // Log the default furniture items for debugging
-        console.log("Default furniture items:", defaultDecorationItems.filter(item => item.type === "furniture"));
+        // Set a much shorter fallback timeout 
+        const loadingTimeout = setTimeout(() => {
+          timeoutTriggered = true;
+          console.log("Room loading timeout - using cached/default data");
+          setRoomLayers(defaultRoomLayersData);
+          setRoomLayersLoading(false);
+        }, 2000); // Reduced from 3 seconds to 2 seconds
+        
+        // Don't wait for Firebase authentication - make it non-blocking
+        // Start auth in background while proceeding with data loading
+        waitForAuth()?.catch((authError: any) => {
+          console.warn("Authentication failed, continuing anyway:", authError);
+        });
+        
+        // Preload only essential decoration images (reduce from 10 to 3)
+        await preloadImages(defaultDecorationItems.slice(0, 3));
         
         // Load decorations from Firebase
         const decorationsRef = ref(db, "decorations");
         
+        // Set defaults immediately
+        setDecorations(defaultDecorationItems);
+        
         onValue(decorationsRef, (snapshot) => {
           const decorationsData = snapshot.val() as DecorationInventoryItem[] | null;
-          console.log('Firebase decorations data:', decorationsData ? 
-            `Found ${decorationsData.length} items. Sample price: ${decorationsData[0]?.price}, Price type: ${typeof decorationsData[0]?.price}` : 
-            'No data');
-            
-          if (decorationsData) {
-            // Check for furniture items in Firebase data
-            const furnitureItems = decorationsData.filter(item => item.type === "furniture");
-            console.log(`Found ${furnitureItems.length} furniture items in Firebase:`, 
-              furnitureItems.length > 0 ? furnitureItems.map(i => i.name) : 'None');
-            
+          
+          if (decorationsData && Array.isArray(decorationsData)) {
             // Make sure price property is correctly converted to number
             const fixedData = decorationsData.map(item => {
               if (item.price === undefined || item.price === null) {
@@ -211,26 +226,29 @@ export function DecorationProvider({ children }: { children: ReactNode }) {
               return item;
             });
             setDecorations(fixedData);
-            console.log('Fixed decorations data with price preservation:', fixedData[0]);
           } else {
-            // If no data in Firebase, set default and save to Firebase
-            console.log("No decorations found in Firebase, saving defaults including furniture items");
-            set(decorationsRef, defaultDecorationItems)
-              .then(() => console.log("Default decorations saved to Firebase"))
-              .catch(error => console.error("Error saving default decorations:", error));
+            // If no data in Firebase, use defaults immediately without saving
             setDecorations(defaultDecorationItems);
           }
         }, {
-          onlyOnce: false
+          onlyOnce: true // Only load once for faster initial load
         });
         
         // Load room configuration from Firebase - updated path to match firebase service
         const roomRef = ref(db, "roomLayers/sharedRoom");
         
         onValue(roomRef, (snapshot) => {
+          clearTimeout(loadingTimeout); // Clear timeout since we got data
           const roomData = snapshot.val() as RoomLayers | null;
+          
+          // Don't override local state if we're in the middle of a local update
+          if (isLocalUpdate) {
+            console.log("Skipping Firebase update - local update in progress");
+            return;
+          }
+          
           if (roomData) {
-            // Create a clean copy of the room data to avoid duplications
+            // We have Firebase data - use it
             const cleanedRoomData = { ...roomData };
             
             // Handle legacy data structure - move items from decor to frontDecor if needed
@@ -238,7 +256,6 @@ export function DecorationProvider({ children }: { children: ReactNode }) {
             if (roomData.decor && roomData.decor.length > 0 && 
                 (!roomData.frontDecor || roomData.frontDecor.length === 0) &&
                 (!roomData.backDecor || roomData.backDecor.length === 0)) {
-              console.log("Converting legacy decor array to frontDecor/backDecor");
               
               // Separate items into front and back based on their position property
               const frontItems: RoomDecorItem[] = [];
@@ -271,34 +288,28 @@ export function DecorationProvider({ children }: { children: ReactNode }) {
               ...cleanedRoomData.frontDecor
             ];
             
-            console.log("Loaded room configuration:", {
-              frontDecor: cleanedRoomData.frontDecor.length,
-              backDecor: cleanedRoomData.backDecor.length,
-              combined: cleanedRoomData.decor.length
-            });
-            
             setRoomLayers(cleanedRoomData);
             
             // If we fixed any issues, save the cleaned data back to Firebase
             if (JSON.stringify(roomData) !== JSON.stringify(cleanedRoomData)) {
-              console.log("Fixed room data inconsistencies, saving back to Firebase");
               saveRoomToFirebase(cleanedRoomData);
             }
-          } else {
-            // If no data in Firebase, set default and save to Firebase
-            set(roomRef, defaultRoomLayersData)
-              .then(() => console.log("Default room layers saved to Firebase"))
-              .catch(error => console.error("Error saving default room layers:", error));
+          } else if (!timeoutTriggered) {
+            // Only use defaults if Firebase genuinely has no data AND timeout didn't already trigger
             setRoomLayers(defaultRoomLayersData);
           }
           setRoomLayersLoading(false);
-        }, {
-          onlyOnce: false // Continue listening for changes
+        }, (error) => {
+          clearTimeout(loadingTimeout);
+          console.error("Firebase room data error:", error);
+          // Use defaults on error to prevent infinite loading
+          setRoomLayers(defaultRoomLayersData);
+          setRoomLayersLoading(false);
         });
         
         // Continue preloading remaining decorations in the background
         setTimeout(() => {
-          preloadImages(defaultDecorationItems.slice(10))
+          preloadImages(defaultDecorationItems.slice(3))
             .catch(err => console.error("Error preloading decoration images:", err));
         }, 1000);
       } catch (error) {
@@ -310,11 +321,36 @@ export function DecorationProvider({ children }: { children: ReactNode }) {
     initializeCache();
   }, []);
 
+  // Cleanup save timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, []);
+
   const saveRoomToFirebase = (updatedLayers: RoomLayers) => {
-    // Updated path to match firebase service
-    const roomRef = ref(db, "roomLayers/sharedRoom");
-    set(roomRef, updatedLayers)
-      .catch(error => console.error("Error saving room configuration:", error));
+    // Clear any pending save
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+    
+    // Set a new debounced save
+    saveTimeoutRef.current = setTimeout(() => {
+      const roomRef = ref(db, "roomLayers/sharedRoom");
+      set(roomRef, updatedLayers)
+        .then(() => {
+          console.log("Room saved to Firebase successfully");
+          // Clear the local update flag after successful save
+          setIsLocalUpdate(false);
+        })
+        .catch(error => {
+          console.error("Error saving room configuration:", error);
+          // Clear the local update flag even on error
+          setIsLocalUpdate(false);
+        });
+    }, 300); // 300ms debounce to batch rapid changes
   };
 
   const setRoomLayer = (type: "floor" | "wall" | "ceiling" | "trim" | "overlay", src: string) => {
@@ -330,46 +366,123 @@ export function DecorationProvider({ children }: { children: ReactNode }) {
       position
     };
     
-    console.log("Adding decor item:", itemWithPosition, "to position:", position);
+    console.log("addDecorItem called:", { item: itemWithPosition, position });
     
-    // Update the appropriate array based on position
-    const updatedLayers = { ...roomLayers };
+    // Set local update flag to prevent Firebase interference
+    setIsLocalUpdate(true);
     
-    if (position === "front") {
-      updatedLayers.frontDecor = [...updatedLayers.frontDecor, itemWithPosition];
-      console.log("Updated frontDecor:", updatedLayers.frontDecor);
-    } else {
-      updatedLayers.backDecor = [...updatedLayers.backDecor, itemWithPosition];
-      console.log("Updated backDecor:", updatedLayers.backDecor);
-    }
-    
-    // Update the legacy decor array for backward compatibility
-    // NOTE: We're explicitly NOT adding to both arrays, so we have to maintain this combined array
-    updatedLayers.decor = [...updatedLayers.backDecor, ...updatedLayers.frontDecor];
-    
-    setRoomLayers(updatedLayers);
-    saveRoomToFirebase(updatedLayers);
-  }, [roomLayers]);
+    setRoomLayers(prevLayers => {
+      console.log("Before add - frontDecor count:", prevLayers.frontDecor.length, "backDecor count:", prevLayers.backDecor.length);
+      
+      // Update the appropriate array based on position
+      const updatedLayers = { ...prevLayers };
+      
+      if (position === "front") {
+        updatedLayers.frontDecor = [...updatedLayers.frontDecor, itemWithPosition];
+      } else {
+        updatedLayers.backDecor = [...updatedLayers.backDecor, itemWithPosition];
+      }
+      
+      // Update the legacy decor array for backward compatibility
+      updatedLayers.decor = [...updatedLayers.backDecor, ...updatedLayers.frontDecor];
+      
+      console.log("After add - frontDecor count:", updatedLayers.frontDecor.length, "backDecor count:", updatedLayers.backDecor.length);
+      
+      // Save to Firebase
+      saveRoomToFirebase(updatedLayers);
+      
+      return updatedLayers;
+    });
+  }, []);
 
   const removeDecorItem = useCallback((position: "front" | "back", index: number) => {
-    const updatedLayers = { ...roomLayers };
+    console.log("removeDecorItem called:", { position, index });
     
-    if (position === "front") {
-      const newFrontDecor = [...updatedLayers.frontDecor];
-      newFrontDecor.splice(index, 1);
-      updatedLayers.frontDecor = newFrontDecor;
-    } else {
-      const newBackDecor = [...updatedLayers.backDecor];
-      newBackDecor.splice(index, 1);
-      updatedLayers.backDecor = newBackDecor;
-    }
+    // Set local update flag to prevent Firebase interference
+    setIsLocalUpdate(true);
     
-    // Update the combined decor array
-    updatedLayers.decor = [...updatedLayers.backDecor, ...updatedLayers.frontDecor];
+    setRoomLayers(prevLayers => {
+      console.log("Before remove - frontDecor count:", prevLayers.frontDecor.length, "backDecor count:", prevLayers.backDecor.length);
+      
+      const updatedLayers = { ...prevLayers };
+      
+      if (position === "front") {
+        const newFrontDecor = [...updatedLayers.frontDecor];
+        if (index < newFrontDecor.length) {
+          console.log("Removing item from front layer at index:", index);
+          newFrontDecor.splice(index, 1);
+          updatedLayers.frontDecor = newFrontDecor;
+        }
+      } else {
+        const newBackDecor = [...updatedLayers.backDecor];
+        if (index < newBackDecor.length) {
+          console.log("Removing item from back layer at index:", index);
+          newBackDecor.splice(index, 1); 
+          updatedLayers.backDecor = newBackDecor;
+        }
+      }
+      
+      // Update the combined decor array
+      updatedLayers.decor = [...updatedLayers.backDecor, ...updatedLayers.frontDecor];
+      
+      console.log("After remove - frontDecor count:", updatedLayers.frontDecor.length, "backDecor count:", updatedLayers.backDecor.length);
+      
+      // Save to Firebase
+      saveRoomToFirebase(updatedLayers);
+      
+      return updatedLayers;
+    });
+  }, []);
+
+  const updateDecorItem = useCallback((originalLayer: "front" | "back", originalIndex: number, newItem: RoomDecorItem, newLayer: "front" | "back") => {
+    console.log("updateDecorItem called:", { originalLayer, originalIndex, newLayer, newItem });
     
-    setRoomLayers(updatedLayers);
-    saveRoomToFirebase(updatedLayers);
-  }, [roomLayers]);
+    // Set local update flag to prevent Firebase interference
+    setIsLocalUpdate(true);
+    
+    setRoomLayers(prevLayers => {
+      console.log("Before update - frontDecor count:", prevLayers.frontDecor.length, "backDecor count:", prevLayers.backDecor.length);
+      
+      const updatedLayers = { ...prevLayers };
+      
+      // Remove from original layer
+      if (originalLayer === "front") {
+        const newFrontDecor = [...updatedLayers.frontDecor];
+        if (originalIndex < newFrontDecor.length) {
+          console.log("Removing item from front layer at index:", originalIndex);
+          newFrontDecor.splice(originalIndex, 1);
+          updatedLayers.frontDecor = newFrontDecor;
+        }
+      } else {
+        const newBackDecor = [...updatedLayers.backDecor];
+        if (originalIndex < newBackDecor.length) {
+          console.log("Removing item from back layer at index:", originalIndex);
+          newBackDecor.splice(originalIndex, 1);
+          updatedLayers.backDecor = newBackDecor;
+        }
+      }
+      
+      // Add to new layer
+      const itemWithPosition = { ...newItem, position: newLayer };
+      if (newLayer === "front") {
+        console.log("Adding item to front layer");
+        updatedLayers.frontDecor = [...updatedLayers.frontDecor, itemWithPosition];
+      } else {
+        console.log("Adding item to back layer");
+        updatedLayers.backDecor = [...updatedLayers.backDecor, itemWithPosition];
+      }
+      
+      // Update the combined decor array
+      updatedLayers.decor = [...updatedLayers.backDecor, ...updatedLayers.frontDecor];
+      
+      console.log("After update - frontDecor count:", updatedLayers.frontDecor.length, "backDecor count:", updatedLayers.backDecor.length);
+      
+      // Save to Firebase
+      saveRoomToFirebase(updatedLayers);
+      
+      return updatedLayers;
+    });
+  }, []);
 
   const getFilteredDecorations = useCallback(
     (subCategory: DecorationItemType) => {
@@ -395,6 +508,7 @@ export function DecorationProvider({ children }: { children: ReactNode }) {
         setRoomLayer,
         addDecorItem,
         removeDecorItem,
+        updateDecorItem,
         getFilteredDecorations,
       }}
     >
