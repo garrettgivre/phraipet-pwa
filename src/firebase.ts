@@ -1,16 +1,16 @@
 // src/firebase.ts
-import { initializeApp } from "firebase/app";
+import { initializeApp, type FirebaseOptions } from "firebase/app";
 import { getDatabase }   from "firebase/database";
 import { getAuth, signInAnonymously, onAuthStateChanged } from "firebase/auth";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyCsDWPHyJt6VzAo5CIlqIOl9ekctSdcEgQ",
-  authDomain: "phraipet.firebaseapp.com",
-  databaseURL: "https://phraipet-default-rtdb.firebaseio.com",
-  projectId: "phraipet",
-  storageBucket: "phraipet.appspot.com",
-  messagingSenderId: "939633456385",
-  appId: "1:939633456385:web:7f58b7377b0a8f2c921700"
+const firebaseConfig: FirebaseOptions = {
+  apiKey: String(import.meta.env.VITE_FIREBASE_API_KEY ?? ""),
+  authDomain: String(import.meta.env.VITE_FIREBASE_AUTH_DOMAIN ?? ""),
+  databaseURL: String(import.meta.env.VITE_FIREBASE_DATABASE_URL ?? ""),
+  projectId: String(import.meta.env.VITE_FIREBASE_PROJECT_ID ?? ""),
+  storageBucket: String(import.meta.env.VITE_FIREBASE_STORAGE_BUCKET ?? ""),
+  messagingSenderId: String(import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID ?? ""),
+  appId: String(import.meta.env.VITE_FIREBASE_APP_ID ?? ""),
 };
 
 /* Init services */
@@ -26,18 +26,22 @@ let authPromise: Promise<void> | null = null;
 const authenticateAnonymously = async (): Promise<void> => {
   try {
     const result = await signInAnonymously(auth);
-    console.log("Firebase: Anonymous authentication successful", result.user.uid);
-    isAuthenticated = true;
-  } catch (error: any) {
-    console.error("Firebase: Anonymous authentication failed", error);
-    
-    // If Auth service isn't enabled, we need to handle this gracefully
-    if (error.code === 'auth/configuration-not-found') {
-      console.warn("Firebase Auth not configured - using permissive rules fallback");
-      // We'll need to update the security rules to allow unauthenticated access
+    if (import.meta.env.DEV) {
+      console.log("Firebase: Anonymous authentication successful", result.user.uid);
     }
-    
-    throw error;
+    isAuthenticated = true;
+  } catch (error: unknown) {
+    console.error("Firebase: Anonymous authentication failed", error);
+    if (
+      error &&
+      typeof error === 'object' &&
+      'code' in error &&
+      // @ts-expect-error safe guard for FirebaseError shape
+      (error.code === 'auth/configuration-not-found')
+    ) {
+      console.warn("Firebase Auth not configured - using permissive rules fallback");
+    }
+    throw error as Error;
   }
 };
 
@@ -46,12 +50,15 @@ authPromise = authenticateAnonymously();
 
 onAuthStateChanged(auth, (user) => {
   if (user) {
-    console.log("User authenticated:", user.uid);
+    if (import.meta.env.DEV) {
+      console.log("User authenticated:", user.uid);
+    }
     isAuthenticated = true;
   } else {
-    console.log("User not authenticated");
+    if (import.meta.env.DEV) {
+      console.log("User not authenticated");
+    }
     isAuthenticated = false;
-    // Retry authentication if not authenticated
     if (!authPromise) {
       authPromise = authenticateAnonymously().catch(() => {
         authPromise = null;

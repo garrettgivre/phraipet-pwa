@@ -9,14 +9,14 @@
   background-color: #f0f2f5;
   overflow: hidden;
   box-sizing: border-box;
-  padding-top: var(--header-height); /* Add padding to account for fixed header */
+  padding-top: 0; /* Header overlaps content, no padding needed */
 }
 
 /* Title bar */
 .sq-inventory-title-bar {
   flex-shrink: 0;
   padding: 10px 15px;
-  margin-top: 10px; /* Add margin to push down from header */
+  margin-top: 0; /* Header overlaps content, no margin needed */
   font-size: 1.2rem;
   font-weight: 600;
   text-align: center;

@@ -22,9 +22,9 @@ const MapBackButton: React.FC<MapBackButtonProps> = ({
 }) => {
   const navigate = useNavigate();
 
-  const handleClick = () => {
-    console.log(`Navigating to ${destination}`);
-    navigate(destination);
+  const handleClick = (): void => {
+    if (import.meta.env.DEV) console.log(`Navigating to ${destination}`);
+    void navigate(destination);
   };
 
   // Compute position style based on provided position props

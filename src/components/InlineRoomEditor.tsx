@@ -2,8 +2,6 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useDecoration } from '../contexts/DecorationContext';
 import type { DecorationInventoryItem, RoomDecorItem, DecorationItemType } from '../types';
 import './InlineRoomEditor.css';
-import { ref, set } from 'firebase/database';
-import { db } from '../firebase';
 
 // Room zones for furniture placement
 const ROOM_ZONES = {
@@ -68,7 +66,7 @@ export default function InlineRoomEditor({ isOpen, onClose, petImage, petPositio
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [initialState, setInitialState] = useState({ x: 0, y: 0, rotation: 0, scale: 1 });
   const [overlayBounds, setOverlayBounds] = useState({ top: 0, left: 0, width: 0, height: 0 });
-  
+
   // Update available items when category changes
   useEffect(() => {
     const items = getFilteredDecorations(activeCategory);
@@ -143,12 +141,12 @@ export default function InlineRoomEditor({ isOpen, onClose, petImage, petPositio
       src: item.src,
       x: 50,
       y: 50,
-      width: 300, // Much larger default size (was 150)
-      height: 300, // Much larger default size (was 150)
+      width: 300,
+      height: 300,
       scale: 1,
       rotation: 0,
-      layer: 'back', // Changed from 'front' to 'back'
-      originalLayer: 'back' // Changed from 'front' to 'back'
+      layer: 'back',
+      originalLayer: 'back'
     };
 
     setSelectedItem(newItem);
@@ -163,11 +161,7 @@ export default function InlineRoomEditor({ isOpen, onClose, petImage, petPositio
   ) => {
     if (isDragging || isRotating || isResizing) return;
 
-    // The stored width/height are final pixel sizes
-    // We need to treat them as the actual size, not derive a scale from them
-    const finalWidth = item.width || 300; // Final pixel size from storage
-    
-    // Use a consistent base size of 300 for all items
+    const finalWidth = item.width || 300;
     const baseSize = 300;
 
     const editableItem: EditableFurnitureItem = {
@@ -175,9 +169,9 @@ export default function InlineRoomEditor({ isOpen, onClose, petImage, petPositio
       src: item.src,
       x: item.x,
       y: item.y,
-      width: baseSize, // Always use consistent base size
-      height: baseSize, // Always use consistent base size
-      scale: finalWidth / baseSize, // Calculate scale from final size vs base size
+      width: baseSize,
+      height: baseSize,
+      scale: finalWidth / baseSize,
       rotation: item.rotation || 0,
       layer,
       originalIndex: index,
@@ -235,7 +229,6 @@ export default function InlineRoomEditor({ isOpen, onClose, petImage, petPositio
         const { x, y } = screenToRoomPercent(clientX, clientY);
         setSelectedItem(prev => prev ? { ...prev, x, y } : null);
       } else if (isRotating) {
-        // Use the actual pet room container for rotation calculations
         const petRoomContainer = document.querySelector('.pet-room-inner-container') as HTMLElement;
         
         if (petRoomContainer) {
@@ -244,8 +237,6 @@ export default function InlineRoomEditor({ isOpen, onClose, petImage, petPositio
           const centerY = rect.top + (rect.height * selectedItem.y / 100);
           const angle = Math.atan2(clientY - centerY, clientX - centerX);
           const angleDegrees = (angle * (180 / Math.PI) + 360) % 360;
-          
-          // Calculate relative rotation from the initial state to avoid snapping
           const deltaAngle = angleDegrees - (Math.atan2(dragStart.y - centerY, dragStart.x - centerX) * (180 / Math.PI));
           const newRotation = (initialState.rotation + deltaAngle + 360) % 360;
           
@@ -256,7 +247,7 @@ export default function InlineRoomEditor({ isOpen, onClose, petImage, petPositio
         const dy = clientY - dragStart.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
         const direction = dx + dy > 0 ? 1 : -1;
-        const newScale = Math.max(0.3, Math.min(3, initialState.scale + (direction * distance / 80))); // More sensitive
+        const newScale = Math.max(0.3, Math.min(3, initialState.scale + (direction * distance / 80)));
         setSelectedItem(prev => prev ? { ...prev, scale: newScale } : null);
       }
     };
@@ -289,7 +280,6 @@ export default function InlineRoomEditor({ isOpen, onClose, petImage, petPositio
     const zone = selectedItem.y >= ROOM_ZONES.FLOOR.startY ? 'FLOOR' :
                 selectedItem.y <= ROOM_ZONES.CEILING.endY ? 'CEILING' : 'WALL';
 
-    // Save the actual pixel size, not scaled size
     const finalWidth = selectedItem.width * selectedItem.scale;
     const finalHeight = selectedItem.height * selectedItem.scale;
 
@@ -303,31 +293,24 @@ export default function InlineRoomEditor({ isOpen, onClose, petImage, petPositio
       zone
     };
 
-    // Clear selection immediately
     const currentSelectedItem = selectedItem;
     setSelectedItem(null);
     setShowInventory(true);
 
-    // Handle save atomically based on whether it's new or existing
     if (currentSelectedItem.originalIndex !== undefined) {
-      // Updating existing item - do it atomically in the context
       updateDecorItem(currentSelectedItem.originalLayer, currentSelectedItem.originalIndex, itemToSave, currentSelectedItem.layer);
     } else {
-      // Adding new item
       addDecorItem(itemToSave, currentSelectedItem.layer);
     }
   };
 
-  // Delete furniture
   const handleDelete = () => {
     if (!selectedItem || selectedItem.originalIndex === undefined) return;
-    
     removeDecorItem(selectedItem.originalLayer, selectedItem.originalIndex);
     setSelectedItem(null);
     setShowInventory(true);
   };
 
-  // Cancel editing
   const handleCancel = () => {
     setSelectedItem(null);
     setShowInventory(true);
@@ -392,7 +375,6 @@ export default function InlineRoomEditor({ isOpen, onClose, petImage, petPositio
             {backDecor.map((item, idx) => {
               const position = calculatePosition(item.x, item.y, item.width || 0, item.height || 0);
               
-              // Hide this item if it's currently being edited
               const isBeingEdited = selectedItem && 
                 selectedItem.originalLayer === 'back' && 
                 selectedItem.originalIndex === idx;
@@ -483,7 +465,6 @@ export default function InlineRoomEditor({ isOpen, onClose, petImage, petPositio
             {frontDecor.map((item, idx) => {
               const position = calculatePosition(item.x, item.y, item.width || 0, item.height || 0);
               
-              // Hide this item if it's currently being edited
               const isBeingEdited = selectedItem && 
                 selectedItem.originalLayer === 'front' && 
                 selectedItem.originalIndex === idx;
@@ -521,13 +502,9 @@ export default function InlineRoomEditor({ isOpen, onClose, petImage, petPositio
         {/* Selected item being edited */}
         {selectedItem && (
           (() => {
-            // Calculate final dimensions for the selected item using scaled values
             const scaledWidth = selectedItem.width * selectedItem.scale;
             const scaledHeight = selectedItem.height * selectedItem.scale;
-            
-            // Use PetRoom's exact calculatePosition function
             const position = calculatePosition(selectedItem.x, selectedItem.y, scaledWidth, scaledHeight);
-            
             return (
               <div
                 className={`selected-furniture ${isDragging ? 'dragging' : ''} ${isRotating ? 'rotating' : ''} ${isResizing ? 'resizing' : ''}`}
@@ -543,134 +520,36 @@ export default function InlineRoomEditor({ isOpen, onClose, petImage, petPositio
                 onPointerDown={(e) => handleStartDrag(e, 'move')}
               >
                 <img src={selectedItem.src} alt="" draggable={false} />
-                
-                {/* Control handles - positioned outside item bounds */}
                 <div className="furniture-controls" style={{ zIndex: 1700 }}>
-                  {/* Top left: Purple send forward/back handle */}
                   <div 
-                    style={{
-                      position: 'absolute',
-                      top: '-50px',
-                      left: '-50px',
-                      width: '36px',
-                      height: '36px',
-                      backgroundColor: '#673AB7',
-                      border: '2px solid white',
-                      borderRadius: '50%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '25px',
-                      color: 'white',
-                      fontWeight: 'bold',
-                      cursor: 'pointer',
-                      zIndex: 1700,
-                      pointerEvents: 'auto',
-                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)'
-                    }}
+                    style={{ position: 'absolute', top: '-50px', left: '-50px', width: '36px', height: '36px', backgroundColor: '#673AB7', border: '2px solid white', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '25px', color: 'white', fontWeight: 'bold', cursor: 'pointer', zIndex: 1700, pointerEvents: 'auto', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)' }}
                     title="Send Forward/Back"
                     onClick={(e) => {
                       e.stopPropagation();
-                      // Toggle between front and back, or cycle through z-index within layer
-                      setSelectedItem(prev => {
-                        if (!prev) return null;
-                        // For now, just toggle layer
-                        return {
-                          ...prev,
-                          layer: prev.layer === 'front' ? 'back' : 'front'
-                        };
-                      });
+                      setSelectedItem(prev => prev ? { ...prev, layer: prev.layer === 'front' ? 'back' : 'front' } : null);
                     }}
                   >
                     ⬆️
                   </div>
-
-                  {/* Top center: Purple rotate handle */}
                   <div 
-                    style={{
-                      position: 'absolute',
-                      top: '-50px',
-                      left: '50%',
-                      transform: 'translateX(-50%)',
-                      width: '36px',
-                      height: '36px',
-                      backgroundColor: '#9C27B0',
-                      border: '2px solid white',
-                      borderRadius: '50%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '25px',
-                      color: 'white',
-                      fontWeight: 'bold',
-                      cursor: 'grab',
-                      zIndex: 1700,
-                      pointerEvents: 'auto',
-                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)'
-                    }}
+                    style={{ position: 'absolute', top: '-50px', left: '50%', transform: 'translateX(-50%)', width: '36px', height: '36px', backgroundColor: '#9C27B0', border: '2px solid white', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '25px', color: 'white', fontWeight: 'bold', cursor: 'grab', zIndex: 1700, pointerEvents: 'auto', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)' }}
                     title="Rotate"
                     onPointerDown={(e) => handleStartDrag(e, 'rotate')}
                   >
                     ↻
                   </div>
-
-                  {/* Bottom left: Yellow layer toggle */}
                   <div 
-                    style={{
-                      position: 'absolute',
-                      bottom: '-50px',
-                      left: '-50px',
-                      width: '36px',
-                      height: '36px',
-                      backgroundColor: '#FFC107',
-                      border: '2px solid white',
-                      borderRadius: '50%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '25px',
-                      color: 'black',
-                      fontWeight: 'bold',
-                      cursor: 'pointer',
-                      zIndex: 1700,
-                      pointerEvents: 'auto',
-                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)'
-                    }}
+                    style={{ position: 'absolute', bottom: '-50px', left: '-50px', width: '36px', height: '36px', backgroundColor: '#FFC107', border: '2px solid white', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '25px', color: 'black', fontWeight: 'bold', cursor: 'pointer', zIndex: 1700, pointerEvents: 'auto', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)' }}
                     title={`Layer: ${selectedItem.layer === 'front' ? 'Front' : 'Back'}`}
                     onClick={(e) => {
                       e.stopPropagation();
-                      setSelectedItem(prev => prev ? {
-                        ...prev,
-                        layer: prev.layer === 'front' ? 'back' : 'front'
-                      } : null);
+                      setSelectedItem(prev => prev ? { ...prev, layer: prev.layer === 'front' ? 'back' : 'front' } : null);
                     }}
                   >
                     {selectedItem.layer === 'front' ? 'F' : 'B'}
                   </div>
-
-                  {/* Bottom middle: Blue resize handle */}
                   <div 
-                    style={{
-                      position: 'absolute',
-                      bottom: '-50px',
-                      left: '50%',
-                      transform: 'translateX(-50%)',
-                      width: '36px',
-                      height: '36px',
-                      backgroundColor: '#2196F3',
-                      border: '2px solid white',
-                      borderRadius: '50%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '25px',
-                      color: 'white',
-                      fontWeight: 'bold',
-                      cursor: 'nw-resize',
-                      zIndex: 1700,
-                      pointerEvents: 'auto',
-                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)'
-                    }}
+                    style={{ position: 'absolute', bottom: '-50px', left: '50%', transform: 'translateX(-50%)', width: '36px', height: '36px', backgroundColor: '#2196F3', border: '2px solid white', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '25px', color: 'white', fontWeight: 'bold', cursor: 'nw-resize', zIndex: 1700, pointerEvents: 'auto', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)' }}
                     title="Resize"
                     onPointerDown={(e) => {
                       e.preventDefault();
@@ -680,29 +559,8 @@ export default function InlineRoomEditor({ isOpen, onClose, petImage, petPositio
                   >
                     ⤡
                   </div>
-
-                  {/* Top right: Red delete handle */}
                   <div 
-                    style={{
-                      position: 'absolute',
-                      top: '-50px',
-                      right: '-50px',
-                      width: '36px',
-                      height: '36px',
-                      backgroundColor: '#F44336',
-                      border: '2px solid white',
-                      borderRadius: '50%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '25px',
-                      color: 'white',
-                      fontWeight: 'bold',
-                      cursor: 'pointer',
-                      zIndex: 1700,
-                      pointerEvents: 'auto',
-                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)'
-                    }}
+                    style={{ position: 'absolute', top: '-50px', right: '-50px', width: '36px', height: '36px', backgroundColor: '#F44336', border: '2px solid white', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '25px', color: 'white', fontWeight: 'bold', cursor: 'pointer', zIndex: 1700, pointerEvents: 'auto', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)' }}
                     title="Delete"
                     onClick={(e) => {
                       e.stopPropagation();
@@ -713,29 +571,8 @@ export default function InlineRoomEditor({ isOpen, onClose, petImage, petPositio
                   >
                     ×
                   </div>
-
-                  {/* Bottom right: Green save/place handle */}
                   <div 
-                    style={{
-                      position: 'absolute',
-                      bottom: '-50px',
-                      right: '-50px',
-                      width: '36px',
-                      height: '36px',
-                      backgroundColor: '#4CAF50',
-                      border: '2px solid white',
-                      borderRadius: '50%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '25px',
-                      color: 'white',
-                      fontWeight: 'bold',
-                      cursor: 'pointer',
-                      zIndex: 1700,
-                      pointerEvents: 'auto',
-                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)'
-                    }}
+                    style={{ position: 'absolute', bottom: '-50px', right: '-50px', width: '36px', height: '36px', backgroundColor: '#4CAF50', border: '2px solid white', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '25px', color: 'white', fontWeight: 'bold', cursor: 'pointer', zIndex: 1700, pointerEvents: 'auto', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)' }}
                     title={selectedItem.originalIndex !== undefined ? 'Update' : 'Place'}
                     onClick={(e) => {
                       e.stopPropagation();

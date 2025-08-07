@@ -153,11 +153,23 @@ export default function PhraiCrush() {
     RAINBOW: { colors: ['#FF0000', '#00FF00', '#0000FF'], name: 'Rainbow Realm' }
   };
 
-  // Add body class for full-screen game
+  // Add body class and viewport settings for full-screen game
   useEffect(() => {
     document.body.classList.add('phraicrush-active');
+    
+    // Update viewport for game-specific touch optimization
+    const viewport = document.querySelector('meta[name="viewport"]');
+    const originalContent = viewport?.getAttribute('content') || 'width=device-width, initial-scale=1.0';
+    if (viewport) {
+      viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover');
+    }
+    
     return () => {
       document.body.classList.remove('phraicrush-active');
+      // Restore original viewport
+      if (viewport) {
+        viewport.setAttribute('content', originalContent);
+      }
     };
   }, []);
 

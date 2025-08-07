@@ -1,6 +1,5 @@
 // src/pages/PetPage.tsx
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import type { Pet, Need, NeedInfo, FoodInventoryItem, GroomingInventoryItem, ToyInventoryItem } from "../types.ts";
 import { useToyAnimation } from "../contexts/ToyAnimationContext";
 import { useDecoration } from "../contexts/DecorationContext";
@@ -20,17 +19,16 @@ import { getPetImage } from "../utils/petImageSelector";
 interface PetPageProps {
   pet: Pet | null;
   needInfo: NeedInfo[];
-  onIncreaseAffection: (amount: number) => void;
-  onFeedPet: (item: FoodInventoryItem) => void;
-  onGroomPet: (item: GroomingInventoryItem) => void;
-  onPlayWithToy: (item: ToyInventoryItem) => void;
+  onIncreaseAffection: (amount: number) => Promise<void> | void;
+  onFeedPet: (item: FoodInventoryItem) => Promise<void> | void;
+  onGroomPet: (item: GroomingInventoryItem) => Promise<void> | void;
+  onPlayWithToy: (item: ToyInventoryItem) => Promise<void> | void;
 }
 
 export default function PetPage({ pet, needInfo, onIncreaseAffection, onFeedPet, onGroomPet, onPlayWithToy }: PetPageProps) {
   const { roomLayers, roomLayersLoading } = useDecoration();
   const { activeToy, isPlaying } = useToyAnimation();
   const { coins } = useCoins();
-  const navigate = useNavigate();
   const { position, isWalking, walkingStep, isFacingRight } = usePetMovement(pet);
   const [foodItem, setFoodItem] = useState<{ src: string; position: number; hungerRestored?: number } | null>(null);
   const [groomingItem, setGroomingItem] = useState<{ src: string; position: number; cleanlinessBoost?: number } | null>(null);
@@ -80,72 +78,38 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection, onFeedPet,
     return need;
   });
 
-  // Handle each bite of food
   const handleFoodBite = (biteNumber: number, hungerAmount: number) => {
-    console.log(`Food bite ${biteNumber}, hunger amount: ${hungerAmount}`);
-    
-    // Get the base hunger value to increment from
     const baseHunger = pet?.hunger || 0;
-    
-    // Calculate the progressive hunger value
-    const progressiveHunger = Math.min(
-      120, // MAX_NEED_VALUE from App.tsx
-      baseHunger + (hungerAmount * biteNumber)
-    );
-    
-    // Update local hunger display value
+    const progressiveHunger = Math.min(120, baseHunger + (hungerAmount * biteNumber));
     setLocalHungerValue(progressiveHunger);
-    
-    // Add speech bubble for first bite but don't interfere with animation
     if (biteNumber === 1) {
       setCurrentMoodPhrase("Mmm, tasty!");
       setShowSpeechBubble(true);
-      setTimeout(() => setShowSpeechBubble(false), 2000);
-    }
-    // Add different speech bubble for last bite
-    else if (biteNumber === 3) {
+      window.setTimeout(() => setShowSpeechBubble(false), 2000);
+    } else if (biteNumber === 3) {
       setCurrentMoodPhrase("That was delicious!");
       setShowSpeechBubble(true);
-      setTimeout(() => setShowSpeechBubble(false), 2000);
+      window.setTimeout(() => setShowSpeechBubble(false), 2000);
     }
   };
 
-  // Handle each grooming step
   const handleGroomingStep = (stepNumber: number, cleanlinessAmount: number) => {
-    console.log(`Grooming step ${stepNumber}, cleanliness amount: ${cleanlinessAmount}`);
-    
-    // Get the base cleanliness value to increment from
     const baseCleanliness = pet?.cleanliness || 0;
-    
-    // Calculate the progressive cleanliness value
-    const progressiveCleanliness = Math.min(
-      120, // MAX_NEED_VALUE from App.tsx
-      baseCleanliness + (cleanlinessAmount * stepNumber)
-    );
-    
-    // Update local cleanliness display value
+    const progressiveCleanliness = Math.min(120, baseCleanliness + (cleanlinessAmount * stepNumber));
     setLocalCleanlinessValue(progressiveCleanliness);
-    
-    // Show speech bubble only once (for the first step)
     if (stepNumber === 1) {
       setCurrentMoodPhrase("Ahh, this feels so good!");
       setShowSpeechBubble(true);
-      setTimeout(() => setShowSpeechBubble(false), 3000);
+      window.setTimeout(() => setShowSpeechBubble(false), 3000);
     }
   };
 
-  // Check for pending food item in localStorage when component mounts
   useEffect(() => {
     const storedFoodItem = localStorage.getItem('pendingFoodItem');
     if (storedFoodItem) {
       try {
-        const parsedItem = JSON.parse(storedFoodItem);
-        // Place the food in front of the pet
-        setFoodItem({
-          ...parsedItem,
-          position: position + (isFacingRight ? -5 : 5)
-        });
-        // Clear the localStorage item
+        const parsedItem = JSON.parse(storedFoodItem) as { src: string; hungerRestored?: number };
+        setFoodItem({ ...parsedItem, position: position + (isFacingRight ? -5 : 5) });
         localStorage.removeItem('pendingFoodItem');
       } catch (error) {
         console.error('Error parsing pending food item:', error);
@@ -154,18 +118,12 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection, onFeedPet,
     }
   }, [position, isFacingRight]);
 
-  // Check for pending grooming item in localStorage when component mounts
   useEffect(() => {
     const storedGroomingItem = localStorage.getItem('pendingGroomingItem');
     if (storedGroomingItem) {
       try {
-        const parsedItem = JSON.parse(storedGroomingItem);
-        // Place the grooming item near the pet
-        setGroomingItem({
-          ...parsedItem,
-          position: position + (isFacingRight ? -3 : 3)
-        });
-        // Clear the localStorage item
+        const parsedItem = JSON.parse(storedGroomingItem) as { src: string; cleanlinessBoost?: number };
+        setGroomingItem({ ...parsedItem, position: position + (isFacingRight ? -3 : 3) });
         localStorage.removeItem('pendingGroomingItem');
       } catch (error) {
         console.error('Error parsing pending grooming item:', error);
@@ -174,39 +132,21 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection, onFeedPet,
     }
   }, [position, isFacingRight]);
 
-  // Update mood phrase less frequently
   useEffect(() => {
-    // Update mood phrase every 10-15 seconds
     const updateMoodPhrase = () => {
-      const newPhrase = isPlaying && activeToy 
-        ? getRandomToyPhrase(activeToy) 
-        : getRandomMoodPhrase(pet);
-      
+      const newPhrase = isPlaying && activeToy ? getRandomToyPhrase(activeToy) : getRandomMoodPhrase(pet);
       if (newPhrase) {
         setCurrentMoodPhrase(newPhrase);
         setShowSpeechBubble(true);
-        
-        // Hide speech bubble after 5-8 seconds
-        const hideTimeout = setTimeout(() => {
-          setShowSpeechBubble(false);
-        }, 5000 + Math.random() * 3000);
-        
-        return () => clearTimeout(hideTimeout);
+        const hideTimeout = window.setTimeout(() => { setShowSpeechBubble(false); }, 5000 + Math.random() * 3000);
+        return () => window.clearTimeout(hideTimeout);
       }
     };
-    
-    // Initial update
     updateMoodPhrase();
-    
-    // Set interval for updates
-    const interval = setInterval(() => {
-      // Only 30% chance to show a new phrase
-      if (Math.random() < 0.3) {
-        updateMoodPhrase();
-      }
+    const interval = window.setInterval(() => {
+      if (Math.random() < 0.3) updateMoodPhrase();
     }, 10000 + Math.random() * 5000);
-    
-    return () => clearInterval(interval);
+    return () => window.clearInterval(interval);
   }, [pet, isPlaying, activeToy]);
 
   const petImage = getPetImage(pet, isPlaying, isWalking, walkingStep, showSpeechBubble);
@@ -217,12 +157,10 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection, onFeedPet,
   const currentTrim = roomLayers?.trim || "";
   const overlaySrc = roomLayers?.overlay || "";
   
-  // Get the front and back furniture items
   const frontDecor = roomLayers?.frontDecor || [];
   const backDecor = roomLayers?.backDecor || [];
 
   const handleNeedClick = (needType: Need) => {
-    console.log(`Need circle clicked: ${needType}`);
     switch (needType) {
       case "affection":
         onIncreaseAffection(5);
@@ -243,59 +181,31 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection, onFeedPet,
         setIsInventoryOpen(true);
         break;
       case "spirit":
-        console.log("Spirit clicked - action TBD.");
         break;
       default:
-        console.log("Unknown need clicked:", needType);
+        break;
     }
   };
 
-  const handleFoodEaten = () => {
-    // Reset local hunger value
-    setLocalHungerValue(null);
-    // Clear the food item
-    setFoodItem(null);
-  };
-
-  const handleGroomingComplete = () => {
-    // Reset local cleanliness value
-    setLocalCleanlinessValue(null);
-    // Clear the grooming item
-    setGroomingItem(null);
-  };
+  const handleFoodEaten = () => { setLocalHungerValue(null); setFoodItem(null); };
+  const handleGroomingComplete = () => { setLocalCleanlinessValue(null); setGroomingItem(null); };
 
   const confirmUseFood = () => {
     if (pendingFoodItem) {
-      setFoodItem({
-        ...pendingFoodItem,
-        position: position + (isFacingRight ? -5 : 5)
-      });
+      setFoodItem({ ...pendingFoodItem, position: position + (isFacingRight ? -5 : 5) });
       setShowConfirmDialog(false);
       setPendingFoodItem(null);
     }
   };
-
-  const cancelUseFood = () => {
-    setShowConfirmDialog(false);
-    setPendingFoodItem(null);
-  };
-  
-  // Toggle edit mode instead of navigating to decorations page
-  const toggleEditMode = () => {
-    setIsEditMode(!isEditMode);
-  };
+  const cancelUseFood = () => { setShowConfirmDialog(false); setPendingFoodItem(null); };
+  const toggleEditMode = () => { setIsEditMode(!isEditMode); };
   
   return (
     <div className={`pet-page ${isEditMode ? 'edit-mode' : ''}`}>
       <CoinDisplay coins={coins} className={isEditMode ? "edit-mode-coin-display" : ""} />
-      
       <div className="pet-room-bordered-container">
-        {/* Optional Tamagotchi-style title */}
         <div className="pet-room-title">PhRAI Pet</div>
-        
-        {/* Pet room area - fixed size portrait container */}
         <div className="pet-room-inner-container">
-          {/* Render pet if loaded */}
           {pet && !roomLayersLoading && (
             <PetRoom
               floor={currentFloor}
@@ -318,8 +228,6 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection, onFeedPet,
               constrainToRoom={true}
             />
           )}
-          
-          {/* Grooming Item Overlay */}
           {groomingItem && (
             <GroomingItem 
               key={`grooming-${groomingItem.src}`}
@@ -330,64 +238,22 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection, onFeedPet,
               onGroomingStep={handleGroomingStep}
             />
           )}
-          
-          {/* Loading spinner if still loading */}
-          {roomLayersLoading && (
-            <div className="loading-spinner">
-              Loading...
-            </div>
-          )}
+          {roomLayersLoading && <div className="loading-spinner">Loading...</div>}
         </div>
-        
-        {/* UI Elements in border area - Tamagotchi style */}
         <div className="pet-room-border-ui">
-          {/* Paintbrush decoration button */}
           <button className="decoration-button" onClick={toggleEditMode}>
             <img src="/assets/icons/paintbrush.png" alt="Decorate Room" />
           </button>
-          
-          {/* Need indicator circles in Tamagotchi style */}
           <div className="need-indicators">
-            <PetNeedsDisplay 
-              needInfo={modifiedNeedInfo} 
-              onNeedClick={handleNeedClick} 
-            />
+            <PetNeedsDisplay needInfo={modifiedNeedInfo} onNeedClick={handleNeedClick} />
           </div>
         </div>
       </div>
-      
-      {/* Confirmation dialog for food */}
       {showConfirmDialog && (
-        <ConfirmationDialog
-          isOpen={showConfirmDialog}
-          title="Feed Pet?"
-          message="Would you like to feed this to your pet?"
-          onConfirm={confirmUseFood}
-          onCancel={cancelUseFood}
-        />
+        <ConfirmationDialog isOpen={showConfirmDialog} title="Feed Pet?" message="Would you like to feed this to your pet?" onConfirm={confirmUseFood} onCancel={cancelUseFood} />
       )}
-      
-      {/* Furniture Edit Overlay */}
-      <InlineRoomEditor 
-        isOpen={isEditMode}
-        onClose={() => setIsEditMode(false)} 
-        petImage={petImage}
-        petPosition={position}
-        moodPhrase={showSpeechBubble ? currentMoodPhrase : undefined}
-        isFacingRight={isFacingRight}
-      />
-      
-      {/* Inventory Panel */}
-      <InlineInventoryPanel
-        isOpen={isInventoryOpen}
-        onClose={() => setIsInventoryOpen(false)}
-        pet={pet}
-        onFeedPet={onFeedPet}
-        onGroomPet={onGroomPet}
-        onPlayWithToy={onPlayWithToy}
-        initialCategory={inventoryCategory}
-        initialSubCategory={inventorySubCategory}
-      />
+      <InlineRoomEditor isOpen={isEditMode} onClose={() => setIsEditMode(false)} petImage={petImage} petPosition={position} moodPhrase={showSpeechBubble ? currentMoodPhrase : undefined} isFacingRight={isFacingRight} />
+      <InlineInventoryPanel isOpen={isInventoryOpen} onClose={() => setIsInventoryOpen(false)} pet={pet} onFeedPet={onFeedPet} onGroomPet={onGroomPet} onPlayWithToy={onPlayWithToy} initialCategory={inventoryCategory} initialSubCategory={inventorySubCategory} />
     </div>
   );
 }

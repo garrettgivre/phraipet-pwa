@@ -63,6 +63,10 @@ export default function InfiniteMap({ hotspots = [] }: { hotspots?: Hotspot[] })
   const vh = window.innerHeight;
   const scale = vh / 1024;
 
+  const handleHotspotClick = (route: string): void => {
+    void navigate(route);
+  };
+
   return (
     <div className="panContainer" ref={refContainer}>
       {hotspots.map((hs) => {
@@ -74,7 +78,7 @@ export default function InfiniteMap({ hotspots = [] }: { hotspots?: Hotspot[] })
             src={hs.icon}
             className="hotspot"
             style={{ left, top }}
-            onClick={() => navigate(hs.route)}
+            onClick={() => handleHotspotClick(hs.route)}
             alt=""
           />
         );

@@ -1,30 +1,37 @@
-import { ref, onValue, set, serverTimestamp, update } from "firebase/database";
+import { ref, onValue, set, update, type DataSnapshot } from "firebase/database";
 import { db } from "../firebase";
 import type { Pet, RoomLayers } from "../types";
 
 // Pet related operations
 export const petService = {
-  subscribeToPet: (callback: (pet: Pet) => void) => {
-    console.log("Pet service: Setting up pet subscription");
+  subscribeToPet: (callback: (pet: Pet | null) => void) => {
+    if (import.meta.env.DEV) console.log("Pet service: Setting up pet subscription");
     const petRef = ref(db, `pets/sharedPet`);
-    return onValue(petRef, (snapshot) => {
-      console.log("Pet service: Received snapshot", snapshot.exists());
-      if (snapshot.exists()) {
-        console.log("Pet service: Pet data from Firebase", snapshot.val());
-        callback(snapshot.val());
-      } else {
-        console.log("Pet service: No pet data found in Firebase");
+    return onValue(
+      petRef,
+      (snapshot: DataSnapshot) => {
+        if (import.meta.env.DEV) console.log("Pet service: Received snapshot", snapshot.exists());
+        if (snapshot.exists()) {
+          const value = snapshot.val() as Partial<Pet>;
+          if (import.meta.env.DEV) console.log("Pet service: Pet data from Firebase", value);
+          callback(value as Pet);
+        } else {
+          if (import.meta.env.DEV) console.log("Pet service: No pet data found in Firebase");
+          callback(null);
+        }
+      },
+      (error) => {
+        console.error("Pet service: Error reading pet data", error);
+        callback(null);
       }
-    }, (error) => {
-      console.error("Pet service: Error reading pet data", error);
-    });
+    );
   },
 
   updatePetNeeds: async (updates: Partial<Pet>) => {
     const petRef = ref(db, `pets/sharedPet`);
-    const updatesWithTimestamp = {
+    const updatesWithTimestamp: Partial<Pet> = {
       ...updates,
-      lastNeedsUpdateTime: serverTimestamp()
+      lastNeedsUpdateTime: Date.now(),
     };
     return update(petRef, updatesWithTimestamp);
   }
@@ -32,11 +39,13 @@ export const petService = {
 
 // Room related operations
 export const roomService = {
-  subscribeToRoomLayers: (callback: (layers: RoomLayers) => void) => {
+  subscribeToRoomLayers: (callback: (layers: RoomLayers | null) => void) => {
     const roomRef = ref(db, "roomLayers/sharedRoom");
-    return onValue(roomRef, (snapshot) => {
+    return onValue(roomRef, (snapshot: DataSnapshot) => {
       if (snapshot.exists()) {
-        callback(snapshot.val());
+        callback(snapshot.val() as RoomLayers);
+      } else {
+        callback(null);
       }
     });
   },

@@ -55,10 +55,10 @@ main,
 
 .phraijump-container {
   position: fixed;
-  top: var(--header-height, 52px);
+  top: 0;
   left: 0;
   width: 100vw;
-  height: calc(100vh - var(--header-height, 52px) - var(--nav-height, 56px));
+  height: calc(100vh - var(--nav-height, 56px));
   margin: 0;
   padding: 0;
   display: flex;
@@ -238,7 +238,7 @@ main,
 /* Floating UI elements */
 .floating-score {
   position: fixed;
-  top: 80px;
+  top: 70px;
   right: 20px;
   background: linear-gradient(135deg, #00b894 0%, #00cec9 100%);
   padding: 12px 20px;

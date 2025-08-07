@@ -48,6 +48,10 @@ body.phraicrush-active {
   position: fixed;
   width: 100%;
   height: 100%;
+  /* Prevent overscroll bounce on iOS - only for game */
+  overscroll-behavior: none;
+  /* Prevent pull-to-refresh - only for game */
+  overscroll-behavior-y: none;
 }
 
 /* Game UI Elements */
@@ -395,8 +399,8 @@ body.phraicrush-active {
     min-height: 48px;
   }
   
-  /* Enhanced canvas interaction for mobile */
-  .phraicrush-canvas {
+  /* Enhanced canvas interaction for mobile - only for game canvas */
+  body.phraicrush-active .phraicrush-canvas {
     /* Prevent overscroll bounce */
     overscroll-behavior: none;
     /* Better touch response */
@@ -406,8 +410,8 @@ body.phraicrush-active {
     user-scalable: no;
   }
   
-  /* Prevent mobile browser UI from hiding content */
-  .phraicrush-container {
+  /* Prevent mobile browser UI from hiding content - only for game */
+  body.phraicrush-active .phraicrush-container {
     height: 100vh;
     height: 100dvh; /* Dynamic viewport height for mobile */
     /* Prevent pull-to-refresh */

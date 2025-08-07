@@ -7,11 +7,13 @@ export default function NavBar() {
 
   const isActive = (path: string) => location.pathname === path;
 
+  const go = (path: string): void => { void navigate(path); };
+
   return (
     <nav className="nav-bar">
       <div 
         className={`nav-item ${isActive("/") ? "active" : ""}`} 
-        onClick={() => navigate("/")}
+        onClick={() => go("/")}
       >
         <div className="bubble-container">
           <span>Pet</span>
@@ -20,7 +22,7 @@ export default function NavBar() {
       </div>
       <div 
         className={`nav-item ${isActive("/explore") ? "active" : ""}`} 
-        onClick={() => navigate("/explore")}
+        onClick={() => go("/explore")}
       >
         <div className="bubble-container">
           <span>Explore</span>
@@ -29,7 +31,7 @@ export default function NavBar() {
       </div>
       <div 
         className={`nav-item ${isActive("/play") ? "active" : ""}`} 
-        onClick={() => navigate("/play")}
+        onClick={() => go("/play")}
       >
         <div className="bubble-container">
           <span>Play</span>

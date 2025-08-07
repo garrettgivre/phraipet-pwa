@@ -35,8 +35,6 @@ html, body, #root {
   margin: 0;
   padding: 0;
   overflow-x: hidden; /* Prevent horizontal scroll on these top elements */
-  /* Prevent overscroll bounce on iOS */
-  overscroll-behavior: none;
   /* Prevent text size adjustment on orientation change */
   -webkit-text-size-adjust: 100%;
   background-color: transparent;
@@ -46,12 +44,6 @@ body {
   display: flex; /* Ensures #root can fill if it's the only child */
   flex-direction: column; /* Allows #root to expand vertically */
   min-width: 320px; /* Minimum viewport width */
-  /* Prevent pull-to-refresh on mobile */
-  overscroll-behavior-y: none;
-  /* Ensure content stays within viewport */
-  position: fixed;
-  width: 100%;
-  height: 100%;
   background-color: transparent;
 }
 

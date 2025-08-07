@@ -32,13 +32,24 @@ export default defineConfig({
               cacheName: 'images-cache',
               expiration: {
                 maxEntries: 50,
-                maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
+                maxAgeSeconds: 60 * 60 * 24 * 30
+              }
+            }
+          },
+          {
+            urlPattern: /\.(?:json)$/,
+            handler: 'StaleWhileRevalidate',
+            options: {
+              cacheName: 'json-cache',
+              expiration: {
+                maxEntries: 30,
+                maxAgeSeconds: 60 * 60 * 24 * 7
               }
             }
           }
         ],
         navigateFallback: 'offline.html',
-        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024 // 4MB
+        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024
       },
       manifest: {
         name: 'Phraipets',

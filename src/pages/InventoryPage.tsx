@@ -8,7 +8,7 @@ import type {
   GroomingInventoryItem,
   ToyInventoryItem,
   FoodCategory,
-  GroomingCategory, // This type is now restricted to the 5 main ones
+  GroomingCategory,
   ToyCategory,
   Pet as PetType,
 } from "../types";
@@ -21,16 +21,16 @@ import ItemDetailsModal from "../components/ItemDetailsModal";
 const mainCategories = ["Food", "Grooming", "Toys"] as const;
 type MainCategory = (typeof mainCategories)[number];
 
-const foodSubCategories: FoodCategory[] = [
+const foodSubCategories = [
   "Treat", "Snack", "LightMeal", "HeartyMeal", "Feast",
-];
+] as const satisfies readonly FoodCategory[];
 // MODIFIED: groomingSubCategories now only contains the 5 main types
-const groomingSubCategories: GroomingCategory[] = [
+const groomingSubCategories = [
   "QuickFix", "BasicKit", "StandardSet", "PremiumCare", "LuxurySpa",
-];
-const toySubCategories: ToyCategory[] = [
+] as const satisfies readonly GroomingCategory[];
+const toySubCategories = [
   "Basic", "Classic", "Plushie", "Gadget", "Wonder",
-];
+] as const satisfies readonly ToyCategory[];
 
 interface InventoryLocationState {
   targetMainCategory?: MainCategory;
@@ -83,8 +83,8 @@ function ZoomedImage({ src, alt }: { src: string; alt: string }) {
         maxHeight: '100%',
         width: 'auto',
         height: 'auto',
-        objectFit: 'contain' as 'contain',
-        visibility: 'visible' as 'visible'
+        objectFit: 'contain',
+        visibility: 'visible'
       };
       setImageStyle(simpleStyle);
       setLoaded(true);
@@ -108,12 +108,12 @@ function ZoomedImage({ src, alt }: { src: string; alt: string }) {
         if (!isMounted) return;
         
         // Ensure we have valid dimensions
-          if (bounds.width <= 0 || bounds.height <= 0 || bounds.naturalWidth <= 0 || bounds.naturalHeight <= 0) {
+        if (bounds.width <= 0 || bounds.height <= 0 || bounds.naturalWidth <= 0 || bounds.naturalHeight <= 0) {
           console.warn("Invalid bounds for image:", src, bounds);
           // Fall back to simple loading
           handleSimpleLoading();
-            return;
-          }
+          return;
+        }
         
         // Calculate the scale to fit the visible part of the image
         const scale = Math.min(
@@ -122,28 +122,28 @@ function ZoomedImage({ src, alt }: { src: string; alt: string }) {
         );
         
         // Calculate the dimensions after scaling
-          const scaledNaturalWidth = bounds.naturalWidth * scale;
-          const scaledNaturalHeight = bounds.naturalHeight * scale;
+        const scaledNaturalWidth = bounds.naturalWidth * scale;
+        const scaledNaturalHeight = bounds.naturalHeight * scale;
         
         // Calculate offsets to center the visible part
-          const offsetX = (containerSize - (bounds.width * scale)) / 2 - (bounds.x * scale);
-          const offsetY = (containerSize - (bounds.height * scale)) / 2 - (bounds.y * scale);
+        const offsetX = (containerSize - (bounds.width * scale)) / 2 - (bounds.x * scale);
+        const offsetY = (containerSize - (bounds.height * scale)) / 2 - (bounds.y * scale);
         
         // Create the style object
         const zoomedStyle: React.CSSProperties = {
-          position: 'absolute' as 'absolute',
-            left: `${offsetX}px`,
-            top: `${offsetY}px`,
-            width: `${scaledNaturalWidth}px`,
-            height: `${scaledNaturalHeight}px`,
-          visibility: 'visible' as 'visible'
+          position: 'absolute',
+          left: `${offsetX}px`,
+          top: `${offsetY}px`,
+          width: `${scaledNaturalWidth}px`,
+          height: `${scaledNaturalHeight}px`,
+          visibility: 'visible'
         };
         
         // Cache the calculated style for future use
         zoomStylesCache.set(src, zoomedStyle);
         
         setImageStyle(zoomedStyle);
-          setLoaded(true);
+        setLoaded(true);
       } catch (err) {
         console.error("Error calculating visible bounds:", err);
         // Fall back to simple loading on error
@@ -221,7 +221,7 @@ export default function InventoryPage({ pet, onFeedPet, onGroomPet, onPlayWithTo
       else if (main === "Grooming") sub = (groomingSubCategories.includes(state.targetSubCategory as GroomingCategory) ? state.targetSubCategory : groomingSubCategories[0]) as string;
       else if (main === "Toys") sub = (toySubCategories.includes(state.targetSubCategory as ToyCategory) ? state.targetSubCategory : toySubCategories[0]) as string;
     }
-    return { main, sub };
+    return { main, sub } as const;
   }, [location.state]);
 
   const [selectedMainCategory, setSelectedMainCategory] = useState<MainCategory>(initialTabs.main);
@@ -251,7 +251,7 @@ export default function InventoryPage({ pet, onFeedPet, onGroomPet, onPlayWithTo
       });
     });
     
-    Promise.all(preloadPromises).catch(err => 
+    void Promise.all(preloadPromises).catch(err => 
       console.error("Error preloading inventory images:", err)
     );
   }, [initialTabs.main, initialTabs.sub, getFilteredItems]);
@@ -335,10 +335,10 @@ export default function InventoryPage({ pet, onFeedPet, onGroomPet, onPlayWithTo
   );
 
   const currentSubcategories = useMemo(() => {
-    if (selectedMainCategory === "Food") return foodSubCategories;
-    if (selectedMainCategory === "Grooming") return groomingSubCategories;
-    if (selectedMainCategory === "Toys") return toySubCategories;
-    return [];
+    if (selectedMainCategory === "Food") return foodSubCategories as readonly string[];
+    if (selectedMainCategory === "Grooming") return groomingSubCategories as readonly string[];
+    if (selectedMainCategory === "Toys") return toySubCategories as readonly string[];
+    return [] as const as readonly string[];
   }, [selectedMainCategory]);
 
   return (

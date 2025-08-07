@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { ref, onValue, set } from 'firebase/database';
+import { ref, onValue, runTransaction, type DataSnapshot } from 'firebase/database';
 import { db } from '../firebase';
 
 interface CoinsContextType {
@@ -14,13 +14,13 @@ export function CoinsProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const coinsRef = ref(db, 'playerStats/coins');
-    
-    // Force set coins to 10,000
-    set(coinsRef, 10000);
-    
-    const unsubscribe = onValue(coinsRef, (snapshot) => {
-      const coinsData = snapshot.val();
-      setCoins(coinsData || 0);
+    const unsubscribe = onValue(coinsRef, (snapshot: DataSnapshot) => {
+      const value = snapshot.val();
+      if (typeof value === 'number') {
+        setCoins(value);
+      } else {
+        setCoins(0);
+      }
     });
 
     return () => unsubscribe();
@@ -29,9 +29,10 @@ export function CoinsProvider({ children }: { children: React.ReactNode }) {
   const updateCoins = async (amount: number) => {
     try {
       const coinsRef = ref(db, 'playerStats/coins');
-      const newAmount = coins + amount;
-      await set(coinsRef, newAmount);
-      setCoins(newAmount);
+      await runTransaction(coinsRef, (current) => {
+        const currentNum = typeof current === 'number' ? current : 0;
+        return currentNum + amount;
+      });
     } catch (error) {
       console.error('Error updating coins:', error);
       throw error;

@@ -16,12 +16,17 @@ export default function Header({
   const navigate = useNavigate();
   const iconSize = 20; // Desired display size for icons in the header circles
 
-  console.log("Header - Received needs:", needs);
-  console.log("Header - Needs length:", needs.length);
+  if (import.meta.env.DEV) {
+    console.log("Header - Received needs:", needs);
+    console.log("Header - Needs length:", needs.length);
+  }
+
+  const goHome = (): void => { void navigate("/"); };
+  const goInventory = (): void => { void navigate("/inventory"); };
 
   return (
     <header className="app-header">
-      <div className="pet-icon-wrapper" onClick={() => navigate("/")} style={{ cursor: 'pointer' }}>
+      <div className="pet-icon-wrapper" onClick={goHome} style={{ cursor: 'pointer' }}>
         <img src="/pet/neutral.png" alt="Pet" className="pet-icon" />
       </div>
 
@@ -40,21 +45,20 @@ export default function Header({
                 style={{ stroke: getNeedBarColor(n.value) }}
                 transform="rotate(-90 18 18)"
               />
-              {/* MODIFIED: Use SVG image element for icons */}
               <image
                 href={n.iconSrc}
-                x={(36 - iconSize) / 2} // Center the image
-                y={(36 - iconSize) / 2} // Center the image
+                x={(36 - iconSize) / 2}
+                y={(36 - iconSize) / 2}
                 height={iconSize}
                 width={iconSize}
-                className="need-icon-image" // Add a class for potential specific styling
+                className="need-icon-image"
               />
             </svg>
           </div>
         ))}
       </div>
 
-      <div className="coin-counter" onClick={() => navigate("/inventory")}>
+      <div className="coin-counter" onClick={goInventory}>
         <img src="/assets/icons/coin.png" alt="Coins" className="coin-icon" />
         <span>{coins}</span>
       </div>

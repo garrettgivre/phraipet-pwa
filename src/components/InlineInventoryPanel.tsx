@@ -114,12 +114,8 @@ export default function InlineInventoryPanel({
     if (selectedMainCategory === "Food") return foodSubCategories;
     if (selectedMainCategory === "Grooming") return groomingSubCategories;
     if (selectedMainCategory === "Toys") return toySubCategories;
-    return [];
+    return [] as string[];
   }, [selectedMainCategory]);
-
-  const capitalizeFirstLetter = (str: string) => {
-    return str.charAt(0).toUpperCase() + str.slice(1);
-  };
 
   if (!isOpen) return null;
 
@@ -152,7 +148,7 @@ export default function InlineInventoryPanel({
                 className={selectedSubCategory === categoryValue ? 'active' : ''}
                 onClick={() => handleSubCategoryChange(categoryValue)}
               >
-                {capitalizeFirstLetter(categoryValue)}
+                {categoryValue}
               </button>
             ))}
           </div>
@@ -170,15 +166,9 @@ export default function InlineInventoryPanel({
                 <img src={item.src} alt={item.name} />
                 <div className="item-info">
                   <span className="item-name">{item.name}</span>
-                  {item.itemCategory === "food" && (
-                    <span className="item-effect">Hunger +{(item as FoodInventoryItem).hungerRestored}</span>
-                  )}
-                  {item.itemCategory === "grooming" && (
-                    <span className="item-effect">Clean +{(item as GroomingInventoryItem).cleanlinessBoost}</span>
-                  )}
-                  {item.itemCategory === "toy" && (
-                    <span className="item-effect">Happy +{(item as ToyInventoryItem).happinessBoost}</span>
-                  )}
+                  {item.itemCategory === "food" && <span className="item-effect">Hunger +{(item as FoodInventoryItem).hungerRestored}</span>}
+                  {item.itemCategory === "grooming" && <span className="item-effect">Clean +{(item as GroomingInventoryItem).cleanlinessBoost}</span>}
+                  {item.itemCategory === "toy" && <span className="item-effect">Happy +{(item as ToyInventoryItem).happinessBoost}</span>}
                 </div>
               </div>
             ))

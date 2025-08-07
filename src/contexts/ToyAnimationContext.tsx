@@ -19,29 +19,30 @@ export function ToyAnimationProvider({ children }: { children: React.ReactNode }
     setActiveToy(toy);
     if (toy) {
       setIsPlaying(true);
-      // Update pet needs when playing with toy
       await withErrorHandling(
         async () => {
           const updates = {
-            hunger: -10, // Decrease hunger by 10
-            cleanliness: -5, // Decrease cleanliness by 5
+            hunger: -10,
+            cleanliness: -5,
           };
           await petService.updatePetNeeds(updates);
         },
         "Failed to update pet needs after playing with toy"
       );
-      // Reset after 5 seconds
-      setTimeout(() => {
+      window.setTimeout(() => {
         setIsPlaying(false);
         setActiveToy(null);
       }, 5000);
     }
   };
 
+  // Expose a non-async setter to satisfy strict handler types
+  const exposeSetActiveToy = (toy: ToyInventoryItem | null): void => { void handleSetActiveToy(toy); };
+
   return (
     <ToyAnimationContext.Provider value={{
       activeToy,
-      setActiveToy: handleSetActiveToy,
+      setActiveToy: exposeSetActiveToy,
       isPlaying,
       setIsPlaying
     }}>

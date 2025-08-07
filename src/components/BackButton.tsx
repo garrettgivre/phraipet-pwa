@@ -20,8 +20,8 @@ const BackButton: React.FC<BackButtonProps> = ({
 }) => {
   const navigate = useNavigate();
 
-  const handleClick = () => {
-    navigate(-1); // Go back one page in history
+  const handleClick = (): void => {
+    void navigate(-1); // Go back one page in history
   };
 
   // Compute position style based on provided position props

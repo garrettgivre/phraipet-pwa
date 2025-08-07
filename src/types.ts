@@ -123,7 +123,7 @@ export type InventoryItem =
 export interface TiledProperty {
   name: string;
   type: string;
-  value: any;
+  value: unknown;
 }
 export interface TiledObject {
   id: number;
@@ -143,7 +143,7 @@ export interface TiledObject {
 export interface TiledLayer {
   id?: number;
   name: string;
-  type: "objectgroup" | "imagelayer" | "tilelayer" | string;
+  type: "objectgroup" | "imagelayer" | "tilelayer";
   visible: boolean;
   opacity: number;
   x: number;
@@ -189,6 +189,8 @@ export interface RoomLayers {
   wall: string;
   ceiling: string;
   trim: string;
+  frontDecor: RoomDecorItem[];
+  backDecor: RoomDecorItem[];
   decor: RoomDecorItem[];
   overlay: string;
 }

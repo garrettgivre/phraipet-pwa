@@ -6,15 +6,16 @@ import type { AppHotspot, TiledMapData, TiledObject } from '../types';
 import './Explore.css';
 
 // Helper function to get properties from Tiled objects
-const getTiledObjectProperty = (object: TiledObject, propertyName: string): string | undefined => {
-  if (!object.properties) return undefined;
-  
-  // Case-insensitive property name search to be more forgiving
-  const property = object.properties.find(
-    prop => prop.name.toLowerCase() === propertyName.toLowerCase()
+const getTiledObjectProperty = <T extends string | number | boolean = string>(
+  object: TiledObject,
+  propertyName: string,
+): T | undefined => {
+  const props = object.properties;
+  if (!props) return undefined;
+  const property = props.find(
+    (prop) => prop.name.toLowerCase() === propertyName.toLowerCase()
   );
-  
-  return property?.value?.toString();
+  return property?.value as T | undefined;
 };
 
 // Configuration for the world map
@@ -145,7 +146,7 @@ export default function Explore() {
         if (!response.ok) {
           throw new Error(`Failed to fetch map data from ${mapDataUrl}: ${response.statusText} (status: ${response.status})`);
         }
-        const tiledMapData: TiledMapData = await response.json();
+        const tiledMapData = (await response.json()) as TiledMapData;
         const hotspotLayer = tiledMapData.layers.find(layer => layer.name === "Hotspots" && layer.type === "objectgroup");
 
         if (hotspotLayer && hotspotLayer.objects) {
@@ -155,13 +156,13 @@ export default function Explore() {
             const centerY = obj.y + (obj.height / 2);
             
             // Get properties with case-insensitive lookups
-            const nameProperty = getTiledObjectProperty(obj, 'Name') || getTiledObjectProperty(obj, 'name');
-            const idString = getTiledObjectProperty(obj, 'id_string');
-            const route = getTiledObjectProperty(obj, 'route');
-            const iconSrc = getTiledObjectProperty(obj, 'iconSrc');
-            const iconSizeStr = getTiledObjectProperty(obj, 'iconSize');
-            const radiusStr = getTiledObjectProperty(obj, 'radius');
-            const type = getTiledObjectProperty(obj, 'type') || 'location'; // Default to location
+            const nameProperty = getTiledObjectProperty<string>(obj, 'Name') || getTiledObjectProperty<string>(obj, 'name');
+            const idString = getTiledObjectProperty<string>(obj, 'id_string');
+            const route = getTiledObjectProperty<string>(obj, 'route');
+            const iconSrc = getTiledObjectProperty<string>(obj, 'iconSrc');
+            const iconSizeStr = getTiledObjectProperty<string>(obj, 'iconSize');
+            const radiusStr = getTiledObjectProperty<string>(obj, 'radius');
+            const type = (getTiledObjectProperty<string>(obj, 'type') || 'location') as 'location' | 'building';
             
             // Parse numeric values
             const iconSize = iconSizeStr ? parseInt(iconSizeStr, 10) : undefined;
@@ -183,7 +184,7 @@ export default function Explore() {
               route: route || '/',
               iconSrc: iconSrc,
               iconSize: iconSize ? Math.round(iconSize * Math.min(scaleX, scaleY)) : undefined,
-              type: type as 'location' | 'building'
+              type,
             };
           });
           
@@ -200,7 +201,7 @@ export default function Explore() {
       }
     };
 
-    fetchMapData();
+    void fetchMapData();
     return () => { isMounted = false; };
   }, [mapDimensions, isSunnybrookRoot]);
 
@@ -219,7 +220,7 @@ export default function Explore() {
         navigate('/sunnybrook');
         
         // Fallback to direct navigation after a short delay if needed
-        setTimeout(() => {
+        window.setTimeout(() => {
           if (window.location.pathname !== '/sunnybrook') {
             console.log("Fallback to direct navigation to Sunnybrook");
             window.location.href = '/sunnybrook';

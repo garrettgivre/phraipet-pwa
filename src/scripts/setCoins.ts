@@ -11,4 +11,4 @@ const setCoins = async () => {
   }
 };
 
-setCoins(); 
+void setCoins(); 

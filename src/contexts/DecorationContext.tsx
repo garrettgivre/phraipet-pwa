@@ -6,6 +6,7 @@ import type {
   RoomDecorItem,
   DecorationItemType
 } from "../types";
+import { defaultDecorationItems } from "../data/decorations";
 
 // Re-export for consistent usage across components
 export type DecorItem = RoomDecorItem;
@@ -23,96 +24,7 @@ type RoomLayers = {
 };
 
 // Add export to defaultDecorationItems
-export const defaultDecorationItems: DecorationInventoryItem[] = [
-  // Classic Theme
-  { id: "deco-classic-floor", name: "Classic Floor", itemCategory: "decoration", type: "floor", src: "/assets/floors/classic-floor.png", price: 100 },
-  { id: "deco-classic-wall", name: "Classic Wall", itemCategory: "decoration", type: "wall", src: "/assets/walls/classic-wall.png", price: 100 },
-  { id: "deco-classic-ceiling", name: "Classic Ceiling", itemCategory: "decoration", type: "ceiling", src: "/assets/ceilings/classic-ceiling.png", price: 100 },
-
-  // Neo Steel Theme
-  { id: "deco-neosteel-floor", name: "Neo Steel Floor", itemCategory: "decoration", type: "floor", src: "/assets/floors/neosteel-floor.png", price: 280 },
-  { id: "deco-neosteel-wall", name: "Neo Steel Wall", itemCategory: "decoration", type: "wall", src: "/assets/walls/neosteel-wall.png", price: 280 },
-  { id: "deco-neosteel-ceiling", name: "Neo Steel Ceiling", itemCategory: "decoration", type: "ceiling", src: "/assets/ceilings/neosteel-ceiling.png", price: 280 },
-  { id: "deco-neosteel-trim", name: "Neo Steel Trim", itemCategory: "decoration", type: "trim", src: "/assets/trim/neosteel-trim.png", price: 160 },
-
-  // Science Lab Theme
-  { id: "deco-science-floor", name: "Science Floor", itemCategory: "decoration", type: "floor", src: "/assets/floors/science-floor.png", price: 150 },
-  { id: "deco-science-wall", name: "Science Wall", itemCategory: "decoration", type: "wall", src: "/assets/walls/science-wall.png", price: 150 },
-  { id: "deco-science-ceiling", name: "Science Ceiling", itemCategory: "decoration", type: "ceiling", src: "/assets/ceilings/science-ceiling.png", price: 150 },
-
-  // Aero Theme
-  { id: "deco-aero-floor", name: "Aero Floor", itemCategory: "decoration", type: "floor", src: "/assets/floors/aero-floor.png", price: 200 },
-  { id: "deco-aero-wall", name: "Aero Wall", itemCategory: "decoration", type: "wall", src: "/assets/walls/aero-wall.png", price: 200 },
-  { id: "deco-aero-ceiling", name: "Aero Ceiling", itemCategory: "decoration", type: "ceiling", src: "/assets/ceilings/aero-ceiling.png", price: 200 },
-  { id: "deco-aero-trim", name: "Aero Trim", itemCategory: "decoration", type: "trim", src: "/assets/trim/aero-trim.png", price: 100 },
-
-  // Igloo Theme
-  { id: "deco-igloo-floor", name: "Igloo Floor", itemCategory: "decoration", type: "floor", src: "/assets/floors/igloo-floor.png", price: 220 },
-  { id: "deco-igloo-wall", name: "Igloo Wall", itemCategory: "decoration", type: "wall", src: "/assets/walls/igloo-wall.png", price: 220 },
-  { id: "deco-igloo-ceiling", name: "Igloo Ceiling", itemCategory: "decoration", type: "ceiling", src: "/assets/ceilings/igloo-ceiling.png", price: 220 },
-  { id: "deco-igloo-trim", name: "Igloo Trim", itemCategory: "decoration", type: "trim", src: "/assets/trim/igloo-trim.png", price: 120 },
-
-  // Candy Theme
-  { id: "deco-candy-floor", name: "Candy Floor", itemCategory: "decoration", type: "floor", src: "/assets/floors/candy-floor.png", price: 180 },
-  { id: "deco-candy-wall", name: "Candy Wall", itemCategory: "decoration", type: "wall", src: "/assets/walls/candy-wall.png", price: 180 },
-  { id: "deco-candy-ceiling", name: "Candy Ceiling", itemCategory: "decoration", type: "ceiling", src: "/assets/ceilings/candy-ceiling.png", price: 180 },
-
-  // Krazy Theme
-  { id: "deco-krazy-floor", name: "Krazy Floor", itemCategory: "decoration", type: "floor", src: "/assets/floors/krazy-floor.png", price: 250 },
-  { id: "deco-krazy-wall", name: "Krazy Wall", itemCategory: "decoration", type: "wall", src: "/assets/walls/krazy-wall.png", price: 250 },
-  { id: "deco-krazy-ceiling", name: "Krazy Ceiling", itemCategory: "decoration", type: "ceiling", src: "/assets/ceilings/krazy-ceiling.png", price: 250 },
-  { id: "deco-krazy-trim", name: "Krazy Trim", itemCategory: "decoration", type: "trim", src: "/assets/trim/krazy-trim.png", price: 150 },
-
-  // Basic Theme
-  { id: "deco-basic-floor", name: "Basic Floor", itemCategory: "decoration", type: "floor", src: "/assets/floors/basic-floor.png", price: 50 },
-  { id: "deco-basic-wall", name: "Basic Wall", itemCategory: "decoration", type: "wall", src: "/assets/walls/basic-wall.png", price: 50 },
-  { id: "deco-basic-ceiling", name: "Basic Ceiling", itemCategory: "decoration", type: "ceiling", src: "/assets/ceilings/basic-ceilling.png", price: 50 },
-  { id: "deco-basic-trim", name: "Basic Trim", itemCategory: "decoration", type: "trim", src: "/assets/trim/basic-trim.png", price: 30 },
-
-  // Wacky Theme
-  { id: "deco-wacky-floor", name: "Wacky Floor", itemCategory: "decoration", type: "floor", src: "/assets/floors/wacky-floor.png", price: 225 },
-  { id: "deco-wacky-wall", name: "Wacky Wall", itemCategory: "decoration", type: "wall", src: "/assets/walls/wacky-wall.png", price: 225 },
-  { id: "deco-wacky-ceiling", name: "Wacky Ceiling", itemCategory: "decoration", type: "ceiling", src: "/assets/ceilings/wacky-ceiling.png", price: 225 },
-  { id: "deco-wacky-trim", name: "Wacky Trim", itemCategory: "decoration", type: "trim", src: "/assets/trim/wacky-trim.png", price: 125 },
-
-  // Art Deco Theme
-  { id: "deco-artdeco-floor", name: "Art Deco Floor", itemCategory: "decoration", type: "floor", src: "/assets/floors/artdeco-floor.png", price: 300 },
-  { id: "deco-artdeco-wall", name: "Art Deco Wall", itemCategory: "decoration", type: "wall", src: "/assets/walls/artdeco-wall.png", price: 300 },
-  { id: "deco-artdeco-ceiling", name: "Art Deco Ceiling", itemCategory: "decoration", type: "ceiling", src: "/assets/ceilings/artdeco-ceiling.png", price: 300 },
-  { id: "deco-artdeco-trim", name: "Art Deco Trim", itemCategory: "decoration", type: "trim", src: "/assets/trim/artdeco-trim.png", price: 175 },
-
-  // Tugi Theme
-  { id: "deco-tugi-floor", name: "Tugi Floor", itemCategory: "decoration", type: "floor", src: "/assets/floors/tugi-floor.png", price: 275 },
-  { id: "deco-tugi-wall", name: "Tugi Wall", itemCategory: "decoration", type: "wall", src: "/assets/walls/tugi-wall.png", price: 275 },
-  { id: "deco-tugi-ceiling", name: "Tugi Ceiling", itemCategory: "decoration", type: "ceiling", src: "/assets/ceilings/tugi-ceiling.png", price: 275 },
-  { id: "deco-tugi-trim", name: "Tugi Trim", itemCategory: "decoration", type: "trim", src: "/assets/trim/tugi-trim.png", price: 150 },
-
-  // Zany Theme
-  { id: "deco-zany-floor", name: "Zany Floor", itemCategory: "decoration", type: "floor", src: "/assets/floors/zany-floor.png", price: 290 },
-  { id: "deco-zany-wall", name: "Zany Wall", itemCategory: "decoration", type: "wall", src: "/assets/walls/zany-wall.png", price: 290 },
-  { id: "deco-zany-ceiling", name: "Zany Ceiling", itemCategory: "decoration", type: "ceiling", src: "/assets/ceilings/zany-ceiling.png", price: 290 },
-  { id: "deco-zany-trim", name: "Zany Trim", itemCategory: "decoration", type: "trim", src: "/assets/trim/zany-trim.png", price: 165 },
-  
-  // Furniture Items - Basic
-  { id: "deco-furniture-basic-armchair", name: "Basic Armchair", itemCategory: "decoration", type: "furniture", src: "/assets/furniture/furniture-basic-armchair.png", price: 120, description: "A comfortable armchair for your pet to lounge in." },
-  { id: "deco-furniture-basic-endtable", name: "Basic End Table", itemCategory: "decoration", type: "furniture", src: "/assets/furniture/furniture-basic-endtable.png", price: 85, description: "A stylish end table for your pet's room." },
-  { id: "deco-furniture-basic-plant", name: "Basic Plant", itemCategory: "decoration", type: "furniture", src: "/assets/furniture/furniture-basic-plant.png", price: 65, description: "A decorative plant that adds a touch of nature." },
-  { id: "deco-furniture-basic-wallart", name: "Wall Art", itemCategory: "decoration", type: "furniture", src: "/assets/furniture/furniture-basic-wallart.png", price: 90, description: "Beautiful wall art to brighten up the room." },
-  
-  // Furniture Items - Woodland
-  { id: "deco-furniture-woodland-floorlamp", name: "Woodland Floor Lamp", itemCategory: "decoration", type: "furniture", src: "/assets/furniture/furniture-woodland-floorlamp.png", price: 110, description: "A cozy floor lamp that adds warm lighting." },
-  { id: "deco-furniture-woodland-shelf", name: "Woodland Shelf", itemCategory: "decoration", type: "furniture", src: "/assets/furniture/furniture-woodland-shelf.png", price: 95, description: "A rustic shelf for displaying your pet's treasures." },
-  
-  // Furniture Items - Odd Collection
-  { id: "deco-furniture-odd-plant", name: "Odd Plant", itemCategory: "decoration", type: "furniture", src: "/assets/furniture/furniture-odd-plant.png", price: 75, description: "An unusual plant with a quirky appearance." },
-  { id: "deco-furniture-odd-diningchair", name: "Odd Dining Chair", itemCategory: "decoration", type: "furniture", src: "/assets/furniture/furniture-odd-diningchair.png", price: 95, description: "A uniquely designed chair for dining." },
-  { id: "deco-furniture-odd-diningtable", name: "Odd Dining Table", itemCategory: "decoration", type: "furniture", src: "/assets/furniture/furniture-odd-diningtable.png", price: 130, description: "A modern dining table with an unusual design." },
-  { id: "deco-furniture-odd-sculpture", name: "Odd Sculpture", itemCategory: "decoration", type: "furniture", src: "/assets/furniture/furniture-odd-sculpture.png", price: 150, description: "An abstract sculptural piece for art lovers." },
-  { id: "deco-furniture-odd-tablelamp", name: "Odd Table Lamp", itemCategory: "decoration", type: "furniture", src: "/assets/furniture/furniture-odd-tablelamp.png", price: 85, description: "A decorative table lamp with a peculiar design." },
-  { id: "deco-furniture-odd-endtable", name: "Odd End Table", itemCategory: "decoration", type: "furniture", src: "/assets/furniture/furniture-odd-endtable.png", price: 90, description: "A contemporary end table with unusual proportions." },
-];
-
-const defaultRoomLayersData: RoomLayers = {
+export const defaultRoomLayersData: RoomLayers = {
   floor: "/assets/floors/classic-floor.png",
   wall: "/assets/walls/classic-wall.png",
   ceiling: "/assets/ceilings/classic-ceiling.png",
@@ -165,7 +77,6 @@ const preloadImages = async (items: DecorationInventoryItem[]) => {
       };
     });
   });
-  
   await Promise.all(loadPromises);
 };
 
@@ -178,7 +89,7 @@ export function DecorationProvider({ children }: { children: ReactNode }) {
   const [isLocalUpdate, setIsLocalUpdate] = useState<boolean>(false);
   
   // Add ref to track pending save timeout
-  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const saveTimeoutRef = useRef<number | null>(null);
 
   // Initialize the cache and load room data on first render
   useEffect(() => {
@@ -187,7 +98,7 @@ export function DecorationProvider({ children }: { children: ReactNode }) {
         let timeoutTriggered = false;
         
         // Set a much shorter fallback timeout 
-        const loadingTimeout = setTimeout(() => {
+        const loadingTimeout = window.setTimeout(() => {
           timeoutTriggered = true;
           console.log("Room loading timeout - using cached/default data");
           setRoomLayers(defaultRoomLayersData);
@@ -196,7 +107,7 @@ export function DecorationProvider({ children }: { children: ReactNode }) {
         
         // Don't wait for Firebase authentication - make it non-blocking
         // Start auth in background while proceeding with data loading
-        waitForAuth()?.catch((authError: any) => {
+        waitForAuth()?.catch((authError: unknown) => {
           console.warn("Authentication failed, continuing anyway:", authError);
         });
         
@@ -238,7 +149,7 @@ export function DecorationProvider({ children }: { children: ReactNode }) {
         const roomRef = ref(db, "roomLayers/sharedRoom");
         
         onValue(roomRef, (snapshot) => {
-          clearTimeout(loadingTimeout); // Clear timeout since we got data
+          window.clearTimeout(loadingTimeout); // Clear timeout since we got data
           const roomData = snapshot.val() as RoomLayers | null;
           
           // Don't override local state if we're in the middle of a local update
@@ -300,7 +211,7 @@ export function DecorationProvider({ children }: { children: ReactNode }) {
           }
           setRoomLayersLoading(false);
         }, (error) => {
-          clearTimeout(loadingTimeout);
+          window.clearTimeout(loadingTimeout);
           console.error("Firebase room data error:", error);
           // Use defaults on error to prevent infinite loading
           setRoomLayers(defaultRoomLayersData);
@@ -308,7 +219,7 @@ export function DecorationProvider({ children }: { children: ReactNode }) {
         });
         
         // Continue preloading remaining decorations in the background
-        setTimeout(() => {
+        window.setTimeout(() => {
           preloadImages(defaultDecorationItems.slice(3))
             .catch(err => console.error("Error preloading decoration images:", err));
         }, 1000);
@@ -318,26 +229,26 @@ export function DecorationProvider({ children }: { children: ReactNode }) {
       }
     };
     
-    initializeCache();
+    void initializeCache();
   }, []);
 
   // Cleanup save timeout on unmount
   useEffect(() => {
     return () => {
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
+      if (saveTimeoutRef.current !== null) {
+        window.clearTimeout(saveTimeoutRef.current);
       }
     };
   }, []);
 
   const saveRoomToFirebase = (updatedLayers: RoomLayers) => {
     // Clear any pending save
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current);
+    if (saveTimeoutRef.current !== null) {
+      window.clearTimeout(saveTimeoutRef.current);
     }
     
     // Set a new debounced save
-    saveTimeoutRef.current = setTimeout(() => {
+    saveTimeoutRef.current = window.setTimeout(() => {
       const roomRef = ref(db, "roomLayers/sharedRoom");
       set(roomRef, updatedLayers)
         .then(() => {

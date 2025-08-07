@@ -17,7 +17,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 10px 15px;
-  padding-top: 40px; /* Extra padding at top to avoid coin counter */
+  padding-top: 10px; /* Reduced padding since header overlaps content */
   background-color: #444;
   color: white;
   border-bottom: 1px solid #555;
