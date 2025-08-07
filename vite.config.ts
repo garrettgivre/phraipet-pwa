@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
+  base: './',
   plugins: [
     react(),
     VitePWA({
@@ -18,7 +19,7 @@ export default defineConfig({
               cacheName: 'google-fonts-cache',
               expiration: {
                 maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 365 // <== 365 days
+                maxAgeSeconds: 60 * 60 * 24 * 365
               },
               cacheableResponse: {
                 statuses: [0, 200]
@@ -48,7 +49,7 @@ export default defineConfig({
             }
           }
         ],
-        navigateFallback: 'offline.html',
+        navigateFallback: 'index.html',
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024
       },
       manifest: {
@@ -58,24 +59,12 @@ export default defineConfig({
         theme_color: '#ffd966',
         background_color: '#f0f8ff',
         display: 'standalone',
-        start_url: '/',
+        start_url: '.',
+        scope: '.',
         icons: [
-          {
-            src: '/assets/icons/icon-192.png',
-            sizes: '192x192',
-            type: 'image/png'
-          },
-          {
-            src: '/assets/icons/icon-512.png',
-            sizes: '512x512',
-            type: 'image/png'
-          },
-          {
-            src: '/assets/icons/icon-512.png',
-            sizes: '512x512',
-            type: 'image/png',
-            purpose: 'maskable'
-          }
+          { src: 'assets/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+          { src: 'assets/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+          { src: 'assets/icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' }
         ]
       }
     })
