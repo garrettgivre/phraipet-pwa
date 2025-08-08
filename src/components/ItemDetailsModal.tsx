@@ -39,22 +39,22 @@ const getItemPrice = (item: InventoryItem): string => {
   
   // Fallback to category-based price
   if (item.itemCategory === 'food') {
-    const foodItem = item as FoodInventoryItem;
-    if (foodItem.type === 'Treat') return '10 coins';
-    if (foodItem.type === 'Snack') return '15 coins';
-    if (foodItem.type === 'LightMeal') return '25 coins';
-    if (foodItem.type === 'HeartyMeal') return '35 coins';
-    if (foodItem.type === 'Feast') return '45 coins';
+    const t = item.type;
+    if (t === 'Treat') return '10 coins';
+    if (t === 'Snack') return '15 coins';
+    if (t === 'LightMeal') return '25 coins';
+    if (t === 'HeartyMeal') return '35 coins';
+    if (t === 'Feast') return '45 coins';
     return '20 coins';
   }
   
   if (item.itemCategory === 'grooming') {
-    const groomingItem = item as GroomingInventoryItem;
-    if (groomingItem.type === 'QuickFix') return '15 coins';
-    if (groomingItem.type === 'BasicKit') return '20 coins';
-    if (groomingItem.type === 'StandardSet') return '30 coins';
-    if (groomingItem.type === 'PremiumCare') return '50 coins';
-    if (groomingItem.type === 'LuxurySpa') return '70 coins';
+    const t = item.type;
+    if (t === 'QuickFix') return '15 coins';
+    if (t === 'BasicKit') return '20 coins';
+    if (t === 'StandardSet') return '30 coins';
+    if (t === 'PremiumCare') return '50 coins';
+    if (t === 'LuxurySpa') return '70 coins';
     return '25 coins';
   }
   
@@ -98,18 +98,18 @@ export default function ItemDetailsModal({
   if (!isOpen || !item) return null;
 
   // For food items, try to get the detailed description from our food database
-  const getEnhancedDescription = (item: InventoryItem): string => {
-    if (item.itemCategory === 'food') {
+  const getEnhancedDescription = (it: InventoryItem): string => {
+    if (it.itemCategory === 'food') {
       // Try to match by name
-      return getFoodDescription(item.name);
+      return getFoodDescription(it.name);
     }
     // For other item types, use the item's description or a default
-    return item.description || "No description available.";
+    return it.description || "No description available.";
   };
 
   // For food items, try to get additional info like category
-  const getFoodInfo = (item: FoodInventoryItem) => {
-    const foodData = getFoodItemByName(item.name);
+  const getFoodInfo = (it: FoodInventoryItem) => {
+    const foodData = getFoodItemByName(it.name);
     if (foodData) {
       return {
         category: foodData.category,
@@ -118,8 +118,8 @@ export default function ItemDetailsModal({
     }
     // Default values
     return {
-      category: capitalizeFirstLetter(item.type),
-      mealSize: getMealSize(item)
+      category: capitalizeFirstLetter(it.type),
+      mealSize: getMealSize(it)
     };
   };
 
@@ -144,10 +144,7 @@ export default function ItemDetailsModal({
   };
 
   // For food items, get enhanced info
-  let foodInfo = undefined;
-  if (item.itemCategory === 'food') {
-    foodInfo = getFoodInfo(item as FoodInventoryItem);
-  }
+  const foodInfo = item.itemCategory === 'food' ? getFoodInfo(item) : undefined;
 
   return (
     <div className="item-details-overlay" onClick={handleOverlayClick}>
@@ -172,15 +169,15 @@ export default function ItemDetailsModal({
           <div className="item-info">
             {item.itemCategory === 'food' && (
               <div className="item-stats">
-                <div className="item-stat"><strong>Category:</strong> {foodInfo?.category || capitalizeFirstLetter((item as FoodInventoryItem).type)}</div>
-                <div className="item-stat"><strong>Meal Size:</strong> {foodInfo?.mealSize || getMealSize(item as FoodInventoryItem)}</div>
+                <div className="item-stat"><strong>Category:</strong> {foodInfo?.category || capitalizeFirstLetter(item.type)}</div>
+                <div className="item-stat"><strong>Meal Size:</strong> {foodInfo?.mealSize || getMealSize(item)}</div>
                 <div className="item-stat">
                   <strong>Hunger Boost:</strong> 
                   <span style={{ 
-                    color: getHungerDisplayColor((item as FoodInventoryItem).hungerBoost),
+                    color: getHungerDisplayColor(item.hungerBoost),
                     fontWeight: 'bold'
                   }}>
-                    +{(item as FoodInventoryItem).hungerBoost}
+                    +{item.hungerBoost}
                   </span>
                 </div>
                 <div className="item-stat">
@@ -194,8 +191,8 @@ export default function ItemDetailsModal({
             
             {item.itemCategory === 'grooming' && (
               <div className="item-stats">
-                <div className="item-stat"><strong>Category:</strong> {capitalizeFirstLetter((item as GroomingInventoryItem).type)}</div>
-                <div className="item-stat"><strong>Cleanliness Boost:</strong> +{(item as GroomingInventoryItem).cleanlinessBoost}</div>
+                <div className="item-stat"><strong>Category:</strong> {capitalizeFirstLetter(item.type)}</div>
+                <div className="item-stat"><strong>Cleanliness Boost:</strong> +{item.cleanlinessBoost}</div>
                 <div className="item-stat">
                   <strong>Price:</strong> 
                   <span className="item-price">
@@ -207,8 +204,8 @@ export default function ItemDetailsModal({
             
             {item.itemCategory === 'toy' && (
               <div className="item-stats">
-                <div className="item-stat"><strong>Category:</strong> {capitalizeFirstLetter((item as ToyInventoryItem).type)}</div>
-                <div className="item-stat"><strong>Happiness Boost:</strong> +{(item as ToyInventoryItem).happinessBoost}</div>
+                <div className="item-stat"><strong>Category:</strong> {capitalizeFirstLetter(item.type)}</div>
+                <div className="item-stat"><strong>Happiness Boost:</strong> +{item.happinessBoost}</div>
                 <div className="item-stat">
                   <strong>Price:</strong> 
                   <span className="item-price">

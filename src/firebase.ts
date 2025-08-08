@@ -15,7 +15,16 @@ const firebaseConfig: FirebaseOptions = {
 
 /* Init services */
 const app  = initializeApp(firebaseConfig);
-export const db   = getDatabase(app);
+
+// Ensure we always pass a valid Realtime Database URL
+const resolvedDatabaseUrl = String(
+  import.meta.env.VITE_FIREBASE_DATABASE_URL ||
+  "https://phraipet-default-rtdb.firebaseio.com"
+);
+if (import.meta.env.DEV && (!resolvedDatabaseUrl || !resolvedDatabaseUrl.startsWith("https://"))) {
+  console.error("Firebase: Invalid database URL. Expected https://<project>-default-rtdb.firebaseio.com but got:", resolvedDatabaseUrl);
+}
+export const db   = getDatabase(app, resolvedDatabaseUrl);
 export const auth = getAuth(app);
 
 /* Track authentication state */

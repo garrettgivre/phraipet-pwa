@@ -334,13 +334,18 @@ function AppContent() {
     };
   }, []);
 
+  const handleFeedPetVoid = (foodItem: FoodInventoryItem): void => { void handleFeedPet(foodItem); };
+  const handleGroomPetVoid = (groomingItem: GroomingInventoryItem): void => { void handleGroomPet(groomingItem); };
+  const handlePlayWithToyVoid = (toyItem: ToyInventoryItem): void => { void handlePlayWithToy(toyItem); };
+  const handleIncreaseAffectionVoid = (amount: number): void => { void handleIncreaseAffection(amount); };
+
   return (
     <AppShell
       pet={pet}
-      handleFeedPet={handleFeedPet}
-      handleGroomPet={handleGroomPet}
-      handlePlayWithToy={handlePlayWithToy}
-      handleIncreaseAffection={handleIncreaseAffection}
+      handleFeedPet={handleFeedPetVoid}
+      handleGroomPet={handleGroomPetVoid}
+      handlePlayWithToy={handlePlayWithToyVoid}
+      handleIncreaseAffection={handleIncreaseAffectionVoid}
       needInfo={needInfo}
     />
   );

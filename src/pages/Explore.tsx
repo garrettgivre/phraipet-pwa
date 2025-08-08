@@ -44,12 +44,8 @@ export default function Explore() {
     const updateMapDimensions = () => {
       const viewportHeight = window.innerHeight;
       const viewportWidth = window.innerWidth;
-      
-      // Calculate dimensions to ensure map fills viewport without duplicates
-      const mapHeight = viewportHeight * 1.2; // 120% of viewport height
+      const mapHeight = viewportHeight * 1.2;
       const mapWidth = mapHeight * MAP_ASPECT_RATIO;
-      
-      // If map is too wide for viewport, scale it down
       if (mapWidth < viewportWidth * 1.2) {
         const scaledWidth = viewportWidth * 1.2;
         const scaledHeight = scaledWidth / MAP_ASPECT_RATIO;
@@ -81,27 +77,20 @@ export default function Explore() {
       let newScrollLeft = scrollLeft;
       let newScrollTop = scrollTop;
 
-      // Handle horizontal wrapping
       if (scrollLeft < mapWidth) {
         newScrollLeft = scrollLeft + mapWidth;
       } else if (scrollLeft > mapWidth * 2) {
         newScrollLeft = scrollLeft - mapWidth;
       }
 
-      // Handle vertical wrapping
       if (scrollTop < mapHeight) {
         newScrollTop = scrollTop + mapHeight;
       } else if (scrollTop > mapHeight * 2) {
         newScrollTop = scrollTop - mapHeight;
       }
 
-      // Apply new scroll position if it changed
       if (newScrollLeft !== scrollLeft || newScrollTop !== scrollTop) {
-        container.scrollTo({
-          left: newScrollLeft,
-          top: newScrollTop,
-          behavior: 'auto'
-        });
+        container.scrollTo({ left: newScrollLeft, top: newScrollTop, behavior: 'auto' });
       }
 
       isScrolling = false;
@@ -115,15 +104,9 @@ export default function Explore() {
   useEffect(() => {
     const container = containerRef.current;
     if (!container || !mapDimensions.width || !mapDimensions.height) return;
-
-    // Only set initial position if we're at the default scroll position
     if (container.scrollLeft === 0 && container.scrollTop === 0) {
       requestAnimationFrame(() => {
-        container.scrollTo({
-          left: mapDimensions.width,
-          top: mapDimensions.height,
-          behavior: 'auto'
-        });
+        container.scrollTo({ left: mapDimensions.width, top: mapDimensions.height, behavior: 'auto' });
       });
     }
   }, [mapDimensions]);
@@ -131,31 +114,20 @@ export default function Explore() {
   // Effect to fetch and process Tiled map data for hotspots
   useEffect(() => {
     let isMounted = true;
-    
-    // Determine which map data to load based on current route
     let mapDataUrl = TILED_MAP_DATA_URL;
-    if (isSunnybrookRoot) {
-      mapDataUrl = '/maps/sunnybrook_map_data.json';
-    }
-    
+    if (isSunnybrookRoot) mapDataUrl = '/maps/sunnybrook_map_data.json';
+
     const fetchMapData = async () => {
       if (!isMounted) return;
-
       try {
         const response = await fetch(mapDataUrl);
-        if (!response.ok) {
-          throw new Error(`Failed to fetch map data from ${mapDataUrl}: ${response.statusText} (status: ${response.status})`);
-        }
+        if (!response.ok) throw new Error(`Failed to fetch map data from ${mapDataUrl}: ${response.statusText} (status: ${response.status})`);
         const tiledMapData = (await response.json()) as TiledMapData;
         const hotspotLayer = tiledMapData.layers.find(layer => layer.name === "Hotspots" && layer.type === "objectgroup");
-
         if (hotspotLayer && hotspotLayer.objects) {
           const processedHotspots: AppHotspot[] = hotspotLayer.objects.map((obj: TiledObject) => {
-            // Get the center point of the object
             const centerX = obj.x + (obj.width / 2);
             const centerY = obj.y + (obj.height / 2);
-            
-            // Get properties with case-insensitive lookups
             const nameProperty = getTiledObjectProperty<string>(obj, 'Name') || getTiledObjectProperty<string>(obj, 'name');
             const idString = getTiledObjectProperty<string>(obj, 'id_string');
             const route = getTiledObjectProperty<string>(obj, 'route');
@@ -163,18 +135,13 @@ export default function Explore() {
             const iconSizeStr = getTiledObjectProperty<string>(obj, 'iconSize');
             const radiusStr = getTiledObjectProperty<string>(obj, 'radius');
             const type = (getTiledObjectProperty<string>(obj, 'type') || 'location') as 'location' | 'building';
-            
-            // Parse numeric values
             const iconSize = iconSizeStr ? parseInt(iconSizeStr, 10) : undefined;
             const clickRadius = radiusStr ? parseInt(radiusStr, 10) : Math.max(obj.width, obj.height) / 1.5;
-
-            // Scale coordinates based on current map dimensions
             const scaleX = mapDimensions.width / TILED_MAP_WIDTH;
             const scaleY = mapDimensions.height / TILED_MAP_HEIGHT;
             const scaledX = centerX * scaleX;
             const scaledY = centerY * scaleY;
             const scaledRadius = clickRadius * Math.min(scaleX, scaleY);
-
             return {
               id: idString || `tiled-obj-${obj.id}`,
               name: nameProperty || obj.name || 'Unnamed Hotspot',
@@ -187,7 +154,6 @@ export default function Explore() {
               type,
             };
           });
-          
           if (isMounted) setHotspots(processedHotspots);
         } else {
           console.warn(`Explore: Could not find 'Hotspots' object layer in Tiled map data at ${mapDataUrl}.`);
@@ -195,9 +161,7 @@ export default function Explore() {
         }
       } catch (err) {
         console.error("Explore: Error loading or processing Tiled JSON data:", err);
-        if (isMounted) {
-          setHotspots([]);
-        }
+        if (isMounted) setHotspots([]);
       }
     };
 
@@ -210,16 +174,10 @@ export default function Explore() {
   }
 
   const handleHotspotClick = (hotspot: AppHotspot) => {
-    // Simple direct navigation with fallbacks
     try {
-      // For Sunnybrook specifically
-      if (hotspot.name === "Sunnybrook" || 
-          (hotspot.route && hotspot.route.includes('sunnybrook'))) {
+      if (hotspot.name === "Sunnybrook" || (hotspot.route && hotspot.route.includes('sunnybrook'))) {
         console.log("Navigating to Sunnybrook...");
-        // Try React Router first
-        navigate('/sunnybrook');
-        
-        // Fallback to direct navigation after a short delay if needed
+        void navigate('/sunnybrook');
         window.setTimeout(() => {
           if (window.location.pathname !== '/sunnybrook') {
             console.log("Fallback to direct navigation to Sunnybrook");
@@ -228,47 +186,27 @@ export default function Explore() {
         }, 100);
         return;
       }
-      
-      // For other locations
-      navigate(hotspot.route);
+      void navigate(hotspot.route);
     } catch (err) {
       console.error("Navigation error:", err);
-      // Ultimate fallback - direct navigation
       window.location.href = hotspot.route;
     }
   };
 
-  // Toggle debug mode (double click/tap on map)
-  const handleDoubleClick = () => {
-    setShowBuildingAreas(!showBuildingAreas);
-  };
+  const handleDoubleClick = () => { setShowBuildingAreas(!showBuildingAreas); };
 
   return (
     <div className="explore-page">
       <div 
         ref={containerRef}
         className="map-container"
-        style={{
-          width: '100%',
-          height: '100vh',
-          overflow: 'auto',
-          position: 'relative',
-          backgroundColor: '#f2ead3' // Match the background color
-        }}
+        style={{ width: '100%', height: '100vh', overflow: 'auto', position: 'relative', backgroundColor: '#f2ead3' }}
         onDoubleClick={handleDoubleClick}
       >
         <div 
           className="map-grid"
-          style={{
-            width: mapDimensions.width * GRID_SIZE,
-            height: mapDimensions.height * GRID_SIZE,
-            position: 'relative',
-            transform: 'translateZ(0)', // Force GPU acceleration
-            backfaceVisibility: 'hidden',
-            willChange: 'transform'
-          }}
+          style={{ width: mapDimensions.width * GRID_SIZE, height: mapDimensions.height * GRID_SIZE, position: 'relative', transform: 'translateZ(0)', backfaceVisibility: 'hidden', willChange: 'transform' }}
         >
-          {/* Render map tiles */}
           {Array.from({ length: GRID_SIZE * GRID_SIZE }).map((_, index) => {
             const row = Math.floor(index / GRID_SIZE);
             const col = index % GRID_SIZE;
@@ -296,8 +234,6 @@ export default function Explore() {
               />
             );
           })}
-          
-          {/* Render hotspots canvas */}
           <MapCanvas
             hotspots={hotspots}
             canvasWidth={mapDimensions.width * GRID_SIZE}

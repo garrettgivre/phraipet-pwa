@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useInventory } from '../contexts/InventoryContext';
 import type { 
   InventoryItem, 
@@ -59,14 +59,12 @@ export default function InlineInventoryPanel({
     return foodSubCategories[0];
   });
 
-  // Update selected categories when initial props change
   useEffect(() => {
     if (isOpen) {
       setSelectedMainCategory(initialCategory);
       if (initialSubCategory) {
         setSelectedSubCategory(initialSubCategory);
       } else {
-        // Set default subcategory for the category
         if (initialCategory === "Food") setSelectedSubCategory(foodSubCategories[0]);
         else if (initialCategory === "Grooming") setSelectedSubCategory(groomingSubCategories[0]);
         else if (initialCategory === "Toys") setSelectedSubCategory(toySubCategories[0]);
@@ -92,17 +90,17 @@ export default function InlineInventoryPanel({
     }
 
     if (item.itemCategory === "food") {
-      onFeedPet(item as FoodInventoryItem);
+      onFeedPet(item);
       consumeItem(item.id);
     } else if (item.itemCategory === "grooming") {
-      onGroomPet(item as GroomingInventoryItem);
+      onGroomPet(item);
       consumeItem(item.id);
     } else if (item.itemCategory === "toy") {
-      onPlayWithToy(item as ToyInventoryItem);
+      onPlayWithToy(item);
       consumeItem(item.id);
     }
     
-    onClose(); // Close panel after using item
+    onClose();
   }, [pet, onFeedPet, onGroomPet, onPlayWithToy, consumeItem, onClose]);
 
   const filteredItems = useMemo(() => 
@@ -121,9 +119,7 @@ export default function InlineInventoryPanel({
 
   return (
     <div className="inline-inventory-panel">
-      {/* Sliding inventory panel */}
       <div className="inventory-panel">
-        {/* Close button positioned above the panel */}
         <button className="close-inventory-btn" onClick={onClose} title="Close Inventory">
           ✕
         </button>
@@ -166,9 +162,15 @@ export default function InlineInventoryPanel({
                 <img src={item.src} alt={item.name} />
                 <div className="item-info">
                   <span className="item-name">{item.name}</span>
-                  {item.itemCategory === "food" && <span className="item-effect">Hunger +{(item as FoodInventoryItem).hungerRestored}</span>}
-                  {item.itemCategory === "grooming" && <span className="item-effect">Clean +{(item as GroomingInventoryItem).cleanlinessBoost}</span>}
-                  {item.itemCategory === "toy" && <span className="item-effect">Happy +{(item as ToyInventoryItem).happinessBoost}</span>}
+                  {item.itemCategory === "food" && (
+                    <span className="item-effect">Hunger +{item.hungerBoost}</span>
+                  )}
+                  {item.itemCategory === "grooming" && (
+                    <span className="item-effect">Clean +{item.cleanlinessBoost}</span>
+                  )}
+                  {item.itemCategory === "toy" && (
+                    <span className="item-effect">Happy +{item.happinessBoost}</span>
+                  )}
                 </div>
               </div>
             ))
