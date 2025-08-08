@@ -76,7 +76,7 @@ export default function RescuePals() {
   const [hero, setHero] = useState<Hero>(level.startHero);
   const [rescued, setRescued] = useState(0);
   const [showTutorial, setShowTutorial] = useState<boolean>(level.id === 1);
-  const [tutorialAck, setTutorialAck] = useState<boolean>(false);
+  const [_tutorialAck, setTutorialAck] = useState<boolean>(false);
   const [showComplete, setShowComplete] = useState(false);
 
   const w = level.width;
@@ -160,7 +160,7 @@ export default function RescuePals() {
   }
 
   // Simple hazard: water flood converts adjacent empties (Level 2+)
-  function floodStep() {
+  function _floodStep() {
     if (level.id < 2) return;
     setBoard(prev => {
       const next = prev.map(c => ({ ...c }));

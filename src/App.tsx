@@ -1,5 +1,5 @@
 // src/App.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 import { BrowserRouter, Routes, Route, useLocation, useNavigate } from "react-router-dom";
 import type { Pet, NeedInfo, FoodInventoryItem, GroomingInventoryItem, ToyInventoryItem } from "./types";
@@ -257,10 +257,12 @@ function AppContent() {
     );
   };
 
+  const hasInitialPetRef = useRef<boolean>(false);
+
   useEffect(() => {
     if (isDev) console.log("Setting up pet subscription...");
     const fallbackTimeout = setTimeout(() => {
-      if (!pet || pet === defaultPetData) {
+      if (!hasInitialPetRef.current) {
         if (isDev) console.log("Pet loading timeout, using default pet data");
         setPet(defaultPetData);
       }
@@ -269,6 +271,7 @@ function AppContent() {
     const unsubscribe = petService.subscribeToPet((petData) => {
       if (isDev) console.log("Pet data received from Firebase:", petData);
       clearTimeout(fallbackTimeout);
+      hasInitialPetRef.current = true;
       const currentTime = Date.now();
       let needsFirebaseUpdate = false;
       if (petData) {

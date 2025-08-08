@@ -14,7 +14,7 @@
   top: 0;
   left: 0;
   right: 0;
-  bottom: 70px; /* Leave space for UI bar at bottom */
+  bottom: 86px; /* Leave space for action bar + nav bar */
   background-color: rgba(0, 0, 0, 0.05); /* Very light overlay */
   pointer-events: auto;
   border-radius: 8px;
@@ -90,7 +90,7 @@
 /* Toggle inventory button */
 .toggle-inventory-btn {
   position: absolute;
-  bottom: 10px;
+  bottom: 64px; /* Clear the nav bar */
   right: 10px;
   width: 50px;
   height: 50px;
@@ -274,7 +274,7 @@
 /* Sliding inventory panel */
 .inventory-panel {
   position: absolute;
-  bottom: 0;
+  bottom: 56px; /* Sit above the nav bar */
   left: 0;
   right: 0;
   background-color: rgba(0, 0, 0, 0.9);
@@ -285,7 +285,7 @@
   pointer-events: auto;
   transform: translateY(0);
   transition: transform 0.3s ease;
-  z-index: 2000; /* Above everything */
+  z-index: 2200000000; /* Above most UI, still below extreme values */
 }
 
 /* Floating paintbrush button above the panel */
@@ -401,7 +401,7 @@
   grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
   gap: 8px;
   padding: 12px;
-  max-height: 140px;
+  max-height: 180px; /* Slightly taller since panel is above nav */
   overflow-y: auto;
 }
 

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useDecoration } from '../contexts/DecorationContext';
 import type { DecorationInventoryItem, RoomDecorItem, DecorationItemType } from '../types';
 import './InlineRoomEditor.css';
@@ -55,9 +55,16 @@ export default function InlineRoomEditor({ isOpen, onClose, petImage, petPositio
   // State
   const [activeCategory, setActiveCategory] = useState<DecorationItemType>('furniture');
   const [availableItems, setAvailableItems] = useState<DecorationInventoryItem[]>([]);
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [sortBy, setSortBy] = useState<'name' | 'price'>('name');
   const [selectedItem, setSelectedItem] = useState<EditableFurnitureItem | null>(null);
   const [showInventory, setShowInventory] = useState(true);
   const [editMode, setEditMode] = useState<'move' | 'rotate' | 'resize'>('move');
+
+  // Placement helpers
+  const [snapToGrid, setSnapToGrid] = useState<boolean>(true);
+  const [gridSizePct, setGridSizePct] = useState<number>(5); // percentage grid size
+  const [snapToZones, setSnapToZones] = useState<boolean>(true);
   
   // Interaction state
   const [isDragging, setIsDragging] = useState(false);
@@ -77,6 +84,20 @@ export default function InlineRoomEditor({ isOpen, onClose, petImage, petPositio
     setShowInventory(true);
   }, [activeCategory, getFilteredDecorations]);
 
+  const filteredAndSortedItems = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    let list = availableItems;
+    if (q) {
+      list = list.filter(it => it.name.toLowerCase().includes(q));
+    }
+    if (sortBy === 'name') {
+      list = [...list].sort((a, b) => a.name.localeCompare(b.name));
+    } else {
+      list = [...list].sort((a, b) => a.price - b.price);
+    }
+    return list;
+  }, [availableItems, searchQuery, sortBy]);
+
   // Convert screen coordinates to room percentages
   const screenToRoomPercent = useCallback((screenX: number, screenY: number) => {
     const containerEl = roomRef.current;
@@ -87,6 +108,12 @@ export default function InlineRoomEditor({ isOpen, onClose, petImage, petPositio
       y: Math.max(0, Math.min(100, ((screenY - rect.top) / rect.height) * 100))
     };
   }, []);
+
+  const snapPercent = useCallback((value: number): number => {
+    if (!snapToGrid || gridSizePct <= 0) return value;
+    const step = gridSizePct;
+    return Math.round(value / step) * step;
+  }, [snapToGrid, gridSizePct]);
 
   // Match PetRoom's calculatePosition function exactly
   const calculatePosition = useCallback((x: number, y: number, width: number, height: number) => {
@@ -223,8 +250,8 @@ export default function InlineRoomEditor({ isOpen, onClose, petImage, petPositio
       const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
 
         if (isDragging) {
-        const { x, y } = screenToRoomPercent(clientX, clientY);
-        // Clamp by item size so it stays fully inside the room
+        let { x, y } = screenToRoomPercent(clientX, clientY);
+        // Soften edge constraints to allow near-edge placement
         const containerEl = roomRef.current;
         const rect = containerEl?.getBoundingClientRect();
         const containerW = rect?.width || 1;
@@ -233,12 +260,27 @@ export default function InlineRoomEditor({ isOpen, onClose, petImage, petPositio
         const scaledH = (selectedItem.height * selectedItem.scale) || 0;
         const halfWPct = Math.min(50, (scaledW / containerW) * 50);
         const halfHPct = Math.min(50, (scaledH / containerH) * 50);
-        // Allow full edge placement (no extra side margins)
-        const leftBound = halfWPct;
-        const rightBound = 100 - halfWPct;
-          const clampedX = Math.max(leftBound, Math.min(rightBound, x));
-        // Allow to edges: do not enforce extra 5% margins
-        const clampedY = Math.max(halfHPct, Math.min(100 - halfHPct, y));
+        const marginPct = 0.5; // allow almost to the edge
+        const leftBound = Math.max(0, halfWPct - marginPct);
+        const rightBound = Math.min(100, 100 - halfWPct + marginPct);
+        let clampedX = Math.max(leftBound, Math.min(rightBound, x));
+        let clampedY = Math.max(Math.max(0, halfHPct - marginPct), Math.min(Math.min(100, 100 - halfHPct + marginPct), y));
+
+        // Snap to grid if enabled
+        clampedX = snapPercent(clampedX);
+        clampedY = snapPercent(clampedY);
+
+        // Snap to zone bands (center lines) if enabled
+        if (snapToZones) {
+          const ceilingCenter = (ROOM_ZONES.CEILING.startY + ROOM_ZONES.CEILING.endY) / 2;
+          const wallCenter = (ROOM_ZONES.WALL.startY + ROOM_ZONES.WALL.endY) / 2;
+          const floorCenter = (ROOM_ZONES.FLOOR.startY + ROOM_ZONES.FLOOR.endY) / 2;
+          const candidates = [ceilingCenter, wallCenter, floorCenter];
+          const closest = candidates.reduce((prev, curr) => Math.abs(curr - clampedY) < Math.abs(prev - clampedY) ? curr : prev, candidates[0]!);
+          if (Math.abs(closest - clampedY) <= 2.5) {
+            clampedY = closest;
+          }
+        }
         setSelectedItem(prev => prev ? { ...prev, x: clampedX, y: clampedY } : null);
       } else if (isRotating) {
         const containerEl = roomRef.current;
@@ -284,6 +326,17 @@ export default function InlineRoomEditor({ isOpen, onClose, petImage, petPositio
     }
   }, [isDragging, isRotating, isResizing, selectedItem, dragStart, initialState, screenToRoomPercent]);
 
+  const nudgeSelected = (dx: number, dy: number) => {
+    setSelectedItem(prev => {
+      if (!prev) return prev;
+      let nx = Math.max(0, Math.min(100, prev.x + dx));
+      let ny = Math.max(0, Math.min(100, prev.y + dy));
+      nx = snapPercent(nx);
+      ny = snapPercent(ny);
+      return { ...prev, x: nx, y: ny };
+    });
+  };
+
   // Save furniture placement
   const handleSave = () => {
     if (!selectedItem) return;
@@ -325,6 +378,21 @@ export default function InlineRoomEditor({ isOpen, onClose, petImage, petPositio
   const handleCancel = () => {
     setSelectedItem(null);
     setShowInventory(true);
+  };
+
+  // Duplicate currently selected item
+  const handleDuplicate = () => {
+    if (!selectedItem) return;
+    const dupe: EditableFurnitureItem = {
+      ...selectedItem,
+      id: `dup-${Date.now()}`,
+      x: Math.min(100, selectedItem.x + 5),
+      y: Math.min(100, selectedItem.y + 5),
+      originalIndex: undefined,
+      originalLayer: selectedItem.layer,
+    };
+    setSelectedItem(dupe);
+    setShowInventory(false);
   };
 
   // Position overlay to match pet room container exactly
@@ -621,10 +689,21 @@ export default function InlineRoomEditor({ isOpen, onClose, petImage, petPositio
                 </button>
               ))}
             </div>
+            <div className="inventory-tools">
+              <input
+                placeholder="Search items"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              <select value={sortBy} onChange={(e) => setSortBy(e.target.value as 'name' | 'price')}>
+                <option value="name">Sort: Name</option>
+                <option value="price">Sort: Price</option>
+              </select>
+            </div>
           </div>
 
           <div className="inventory-grid" key={`${activeCategory}-${availableItems.length}`}>
-            {availableItems.map((item, index) => (
+            {filteredAndSortedItems.map((item, index) => (
               <div
                 key={`${item.src}-${index}`}
                 className="inventory-item"
@@ -655,6 +734,34 @@ export default function InlineRoomEditor({ isOpen, onClose, petImage, petPositio
             <button onClick={handleSave} className="save-btn">
               {selectedItem.originalIndex !== undefined ? 'Update' : 'Place'}
             </button>
+            <button onClick={handleDuplicate} className="duplicate-btn" title="Duplicate">Duplicate</button>
+            <div className="nudge-controls" aria-label="Nudge">
+              <button onClick={() => nudgeSelected(0, -1)} title="Up">▲</button>
+              <div>
+                <button onClick={() => nudgeSelected(-1, 0)} title="Left">◀</button>
+                <button onClick={() => nudgeSelected(1, 0)} title="Right">▶</button>
+              </div>
+              <button onClick={() => nudgeSelected(0, 1)} title="Down">▼</button>
+            </div>
+            <div className="snap-controls">
+              <label>
+                <input type="checkbox" checked={snapToGrid} onChange={(e) => setSnapToGrid(e.target.checked)} />
+                Snap grid
+              </label>
+              <input
+                type="number"
+                min={1}
+                max={25}
+                value={gridSizePct}
+                onChange={(e) => setGridSizePct(Math.max(1, Math.min(25, Number(e.target.value) || 5)))}
+                style={{ width: 56 }}
+                aria-label="Grid size percent"
+              />
+              <label>
+                <input type="checkbox" checked={snapToZones} onChange={(e) => setSnapToZones(e.target.checked)} />
+                Snap zones
+              </label>
+            </div>
           </div>
         </div>
       )}

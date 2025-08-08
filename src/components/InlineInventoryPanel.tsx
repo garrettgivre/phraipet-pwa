@@ -117,13 +117,11 @@ export default function InlineInventoryPanel({
 
   // Resizable panel state
   const [panelHeightPct, setPanelHeightPct] = useState<number>(50); // percent of viewport height
-  const [isResizing, setIsResizing] = useState<boolean>(false);
 
   const beginResize = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
     e.preventDefault();
     const startY = e.clientY;
     const startPct = panelHeightPct;
-    setIsResizing(true);
 
     const onMove = (ev: PointerEvent) => {
       const dy = startY - ev.clientY; // dragging up increases height
@@ -134,13 +132,12 @@ export default function InlineInventoryPanel({
     };
 
     const onUp = () => {
-      setIsResizing(false);
-      window.removeEventListener('pointermove', onMove as any);
+      window.removeEventListener('pointermove', onMove);
       window.removeEventListener('pointerup', onUp);
       window.removeEventListener('pointercancel', onUp);
     };
 
-    window.addEventListener('pointermove', onMove as any, { passive: false });
+    window.addEventListener('pointermove', onMove, { passive: false });
     window.addEventListener('pointerup', onUp);
     window.addEventListener('pointercancel', onUp);
   }, [panelHeightPct]);

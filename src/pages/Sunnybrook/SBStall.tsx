@@ -30,7 +30,7 @@ export default function SBStall() {
   const getEligibleItems = useCallback(() => {
     return items.filter((item) => {
       if (item.itemCategory !== "food") return false;
-      const foodItem = item as FoodInventoryItem;
+      const foodItem: FoodInventoryItem = item;
       if (foodItem.type !== "Treat" && foodItem.type !== "Snack") return false;
       const id = foodItem.id.toLowerCase();
       if (id.includes('exotic')) return false;

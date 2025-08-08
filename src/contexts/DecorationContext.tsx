@@ -230,7 +230,7 @@ export function DecorationProvider({ children }: { children: ReactNode }) {
     };
     
     void initializeCache();
-  }, []);
+  }, [isLocalUpdate]);
 
   // Cleanup save timeout on unmount
   useEffect(() => {
