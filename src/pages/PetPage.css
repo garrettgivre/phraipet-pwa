@@ -1,15 +1,15 @@
 /* src/pages/PetPage.css */
 .pet-page {
-  position: relative; 
+  position: relative;
   width: 100%;
-  height: 100vh;
-  background-color: #f0f8ff; 
+  min-height: 100dvh; /* mobile-friendly */
+  background-color: #f0f8ff;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start; /* start below header */
   align-items: center;
-  padding: 0 5px 10px 5px;
+  padding: calc(var(--app-header-height, 56px) + env(safe-area-inset-top)) 5px calc(var(--app-nav-height, 56px) + env(safe-area-inset-bottom)) 5px;
   box-sizing: border-box;
 }
 
@@ -24,21 +24,22 @@
 /* New bordered pet room container */
 .pet-room-bordered-container {
   position: relative;
-  width: min(100%, 500px);
-  height: min(97vh, 820px);
+  width: min(100%, 520px);
+  aspect-ratio: 9/16;
+  height: auto; /* derive from aspect-ratio */
+  max-height: calc(100dvh - var(--app-header-height, 56px) - var(--app-nav-height, 56px) - 24px);
   margin: 0 auto;
-  display: flex;
-  flex-direction: column;
+  display: grid; /* layout main area + control bar */
+  grid-template-rows: 1fr auto;
   overflow: hidden;
   background-color: #ffffff;
-  aspect-ratio: 9/16;
 }
 
 /* Explicitly set the pet room container height to leave room for the UI bar */
 .pet-room-inner-container {
   position: relative;
   width: 100%;
-  height: calc(100% - 70px);
+  height: 100%;
   background-color: #fff;
   border-bottom: 2px solid #eaeaea;
   overflow: hidden;
@@ -100,28 +101,26 @@
 
 /* Border UI area containing controls and need indicators */
 .pet-room-border-ui {
-  position: relative; 
+  position: relative;
   width: 100%;
   height: 70px;
   background-color: #ffffff;
-  display: flex;
+  display: grid;
+  grid-template-columns: 56px 1fr 56px; /* button | needs | spacer */
   align-items: center;
-  padding: 0;
+  padding: 0 8px;
   box-sizing: border-box;
 }
 
 /* Decoration button positioned like a Tamagotchi menu button */
 .decoration-button {
-  position: absolute;
+  justify-self: start;
   width: 40px;
   height: 40px;
   min-width: 40px;
   border-radius: 50%;
   background-color: #ffffff;
   border: 2px solid #e8e8e8;
-  left: 15px;
-  top: 50%;
-  transform: translateY(-50%);
   z-index: 20;
   display: flex;
   align-items: center;
@@ -148,9 +147,6 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  padding-left: 70px; /* Space for decoration button */
-  padding-right: 15px;
-  box-sizing: border-box;
   width: 100%;
   height: 100%;
 }
@@ -158,7 +154,7 @@
 /* Add a Tamagotchi-like title */
 .pet-room-title {
   position: absolute;
-  top: -30px;
+  top: 6px;
   left: 50%;
   transform: translateX(-50%);
   background-color: rgba(255, 255, 255, 0.9);
@@ -166,9 +162,10 @@
   font-weight: bold;
   color: #333;
   padding: 3px 10px;
-  border-radius: 12px 12px 0 0;
+  border-radius: 12px;
   text-transform: uppercase;
   letter-spacing: 1px;
+  z-index: 5;
 }
 
 /* Room background layers styling */
@@ -421,7 +418,7 @@
 /* For smaller screens, scale elements down */
 @media (max-height: 600px) {
   .pet-room-inner-container {
-    height: calc(100% - 60px);
+    height: 100%;
   }
   
   .pet-room-border-ui {
@@ -442,7 +439,8 @@
 /* For wider screens, allow more room width and reduce side padding further */
 @media (min-width: 768px) {
   .pet-page {
-    padding: 0 2px 10px 2px; /* Even less side padding on larger screens */
+    padding-left: 2px;
+    padding-right: 2px;
   }
   
   .pet-room-bordered-container {
@@ -453,12 +451,13 @@
 /* For very wide screens (desktop), maximize usage of available space */
 @media (min-width: 1024px) {
   .pet-page {
-    padding: 0 0 10px 0; /* No side padding on desktop */
+    padding-left: 0; /* No side padding on desktop */
+    padding-right: 0;
   }
   
   .pet-room-bordered-container {
-    width: min(100%, 700px); /* Even more width on desktop */
-    max-width: calc(100vh * 9/16); /* Respect aspect ratio but use available height */
+    width: min(100%, 700px);
+    max-width: calc(100dvh * 9/16); /* Respect aspect ratio with mobile-friendly unit */
   }
 }
 
@@ -466,7 +465,7 @@
 @media (min-width: 1440px) {
   .pet-room-bordered-container {
     width: min(100%, 800px);
-    max-width: calc(100vh * 9/16);
+    max-width: calc(100dvh * 9/16);
   }
 }
 

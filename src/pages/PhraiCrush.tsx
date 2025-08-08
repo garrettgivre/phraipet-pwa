@@ -1,1270 +1,885 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './PhraiCrush.css';
 
-// Game constants
+// Core constants
 const BOARD_SIZE = 8;
-const MATCH_MIN = 3;
-const COMBO_MULTIPLIERS = [1, 1.2, 1.5, 2, 2.5, 3, 4, 5];
+const MOVES_PER_GAME = 30;
+const COLORS = ['#e74c3c', '#27ae60', '#3498db', '#f1c40f', '#9b59b6', '#e67e22'] as const;
 
-// Zone-themed candies from Phraijump
-type CandyType = 
-  | 'land_crystal' | 'land_flower' | 'land_root'
-  | 'sky_cloud' | 'sky_lightning' | 'sky_wind'  
-  | 'atmosphere_fire' | 'atmosphere_metal' | 'atmosphere_lava'
-  | 'space_star' | 'space_planet' | 'space_nebula'
-  | 'deepspace_void' | 'deepspace_crystal' | 'deepspace_energy'
-  | 'blackhole_matter' | 'blackhole_gravity' | 'blackhole_singularity'
-  | 'rainbow_magic' | 'rainbow_sparkle' | 'rainbow_wish';
+type TileColor = (typeof COLORS)[number];
+type Special = 'stripedH' | 'stripedV' | 'wrapped' | 'colorBomb';
 
-type SpecialCandyType = 
-  | 'none' 
-  | 'horizontal_blast' | 'vertical_blast' 
-  | 'bomb' | 'rainbow_burst' 
-  | 'zone_clearer' | 'mega_blast';
+interface Tile {
+  id: number;
+  color: TileColor;
+  special: Special | null;
+}
 
-type GameMode = 'classic' | 'pvp' | 'tournament' | 'endless' | 'challenge';
+type Cell = Tile | null;
+type Board = Cell[][]; // [row][col]
 
-interface Candy {
-  type: CandyType;
-  special: SpecialCandyType;
-  zone: string;
-  id: string;
+interface Position {
   row: number;
   col: number;
-  falling: boolean;
-  fallDistance: number;
-  matched: boolean;
-  animationTimer: number;
-  glowIntensity: number;
-  pulsePhase: number;
 }
 
-interface Match {
-  candies: Candy[];
-  pattern: 'line' | 'L' | 'T' | '+' | 'square';
-  combo: number;
-  zoneBonus: boolean;
-}
+// Helpers
+let tileIdCounter = 1;
+const randomColor = (): TileColor => {
+  const idx = Math.floor(Math.random() * COLORS.length);
+  return COLORS[idx] ?? COLORS[0];
+};
 
-interface Player {
-  id: string;
-  name: string;
-  score: number;
-  moves: number;
-  level: number;
-  board: Candy[][];
-  zone: string;
-  powerUps: PowerUp[];
-  comboStreak: number;
-  specialMeter: number;
-}
+const createTile = (color?: TileColor, special?: Special | null): Tile => ({
+  id: tileIdCounter++,
+  color: color ?? randomColor(),
+  special: special ?? null,
+});
 
-interface PowerUp {
-  type: 'hammer' | 'swap' | 'shuffle' | 'zone_blast' | 'time_freeze' | 'double_score';
-  uses: number;
-  zone: string;
-}
+const inBounds = (row: number, col: number): boolean =>
+  row >= 0 && row < BOARD_SIZE && col >= 0 && col < BOARD_SIZE;
 
-interface Tournament {
-  id: string;
-  name: string;
-  players: Player[];
-  duration: number;
-  startTime: number;
-  prizes: string[];
-  theme: string;
-}
+const areAdjacent = (a: Position, b: Position): boolean => {
+  const dr = Math.abs(a.row - b.row);
+  const dc = Math.abs(a.col - b.col);
+  return (dr === 1 && dc === 0) || (dr === 0 && dc === 1);
+};
 
-interface Achievement {
-  id: string;
-  name: string;
-  description: string;
-  progress: number;
-  target: number;
-  completed: boolean;
-  reward: string;
-}
+const getCell = (b: Board, r: number, c: number): Cell =>
+  r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE ? b[r]?.[c] ?? null : null;
+
+type MatchEffects = {
+  matched: Set<string>;
+  rowClears: number[]; // rows with 4+ in a row
+  colClears: number[]; // cols with 4+ in a col
+  bombs: Array<{ r: number; c: number; color: TileColor }>; // 2x2 squares
+};
+
+// Find all positions part of any match and detect special patterns
+const computeMatchesDetailed = (board: Board): MatchEffects => {
+  const matched = new Set<string>();
+  const rowClears: number[] = [];
+  const colClears: number[] = [];
+  const bombs: Array<{ r: number; c: number; color: TileColor }> = [];
+
+  // Horizontal grouped runs
+  for (let r = 0; r < BOARD_SIZE; r++) {
+    let c = 0;
+    while (c < BOARD_SIZE) {
+      const start = c;
+      const startCell = getCell(board, r, c);
+      if (!startCell) {
+        c += 1;
+        continue;
+      }
+      const color = startCell.color;
+      while (c + 1 < BOARD_SIZE) {
+        const nextCell = getCell(board, r, c + 1);
+        if (nextCell && nextCell.color === color) c += 1; else break;
+      }
+      const runLen = c - start + 1;
+      if (runLen >= 3) {
+        for (let cc = start; cc <= c; cc++) matched.add(`${r},${cc}`);
+        if (runLen >= 4) rowClears.push(r);
+      }
+      c += 1;
+    }
+  }
+
+  // Vertical grouped runs
+  for (let c = 0; c < BOARD_SIZE; c++) {
+    let r = 0;
+    while (r < BOARD_SIZE) {
+      const start = r;
+      const startCell = getCell(board, r, c);
+      if (!startCell) {
+        r += 1;
+        continue;
+      }
+      const color = startCell.color;
+      while (r + 1 < BOARD_SIZE) {
+        const nextCell = getCell(board, r + 1, c);
+        if (nextCell && nextCell.color === color) r += 1; else break;
+      }
+      const runLen = r - start + 1;
+      if (runLen >= 3) {
+        for (let rr = start; rr <= r; rr++) matched.add(`${rr},${c}`);
+        if (runLen >= 4) colClears.push(c);
+      }
+      r += 1;
+    }
+  }
+
+  // 2x2 squares
+  for (let r = 0; r < BOARD_SIZE - 1; r++) {
+    for (let c = 0; c < BOARD_SIZE - 1; c++) {
+      const a = getCell(board, r, c);
+      const b = getCell(board, r, c + 1);
+      const d = getCell(board, r + 1, c);
+      const e = getCell(board, r + 1, c + 1);
+      if (!a || !b || !d || !e) continue;
+      if (a.color === b.color && a.color === d.color && a.color === e.color) {
+        matched.add(`${r},${c}`);
+        matched.add(`${r},${c + 1}`);
+        matched.add(`${r + 1},${c}`);
+        matched.add(`${r + 1},${c + 1}`);
+        bombs.push({ r: r + 0, c: c + 0, color: a.color });
+      }
+    }
+  }
+
+  return { matched, rowClears, colClears, bombs };
+};
+
+// Backward-compatible simple matcher for initial board generation
+const findMatches = (board: Board): Set<string> => computeMatchesDetailed(board).matched;
+
+// Check whether swapping a<->b yields any match
+const isValidSwap = (board: Board, a: Position, b: Position): boolean => {
+  if (!areAdjacent(a, b)) return false;
+  const copy = board.map((row) => row.slice());
+  const aCell = copy[a.row]?.[a.col] ?? null;
+  const bCell = copy[b.row]?.[b.col] ?? null;
+  copy[a.row]![a.col] = bCell;
+  copy[b.row]![b.col] = aCell;
+  return findMatches(copy).size > 0;
+};
+
+// Remove matches, apply gravity, and refill. Returns score gained for this cascade and whether anything changed.
+
+// Ensure initial board has no immediate matches
+const generateInitialBoard = (): Board => {
+  const board: Board = Array.from({ length: BOARD_SIZE }, () =>
+    Array.from({ length: BOARD_SIZE }, () => null as Cell)
+  );
+  for (let r = 0; r < BOARD_SIZE; r++) {
+    for (let c = 0; c < BOARD_SIZE; c++) {
+      board[r]![c] = createTile();
+    }
+  }
+  let matches = findMatches(board);
+  let guard = 0;
+  while (matches.size > 0 && guard < 100) {
+    matches.forEach((key) => {
+      const [rStr, cStr] = key.split(',');
+      const r = Number(rStr);
+      const c = Number(cStr);
+      board[r]![c] = createTile();
+    });
+    matches = findMatches(board);
+    guard++;
+  }
+  return board;
+};
 
 export default function PhraiCrush() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const gameLoopRef = useRef<number | undefined>(undefined);
   const navigate = useNavigate();
 
-  // Game state
-  const [gameMode, setGameMode] = useState<GameMode>('classic');
-  const [gameStarted, setGameStarted] = useState(false);
-  const [gameOver, setGameOver] = useState(false);
-  const [paused, setPaused] = useState(false);
-  
-  // Player state
-  const [player, setPlayer] = useState<Player>({
-    id: 'player1',
-    name: 'Player',
-    score: 0,
-    moves: 30,
-    level: 1,
-    board: [],
-    zone: 'LAND',
-    powerUps: [],
-    comboStreak: 0,
-    specialMeter: 0
-  });
+  const [board, setBoard] = useState<Board>(() => generateInitialBoard());
+  const [selected, setSelected] = useState<Position | null>(null);
+  const [moves, setMoves] = useState<number>(MOVES_PER_GAME);
+  const [score, setScore] = useState<number>(0);
+  const [isResolving, setIsResolving] = useState<boolean>(false);
+  const [gameOver, setGameOver] = useState<boolean>(false);
+  const [swipeStart, setSwipeStart] = useState<(Position & { x: number; y: number }) | null>(null);
+  const [vanishingIds, setVanishingIds] = useState<Set<number>>(new Set());
+  // const [swappingIds, setSwappingIds] = useState<Set<number>>(new Set());
+  const [fallingIds, setFallingIds] = useState<Set<number>>(new Set());
+  const [spawningIds, setSpawningIds] = useState<Set<number>>(new Set());
+  const [spawnOffsets, setSpawnOffsets] = useState<Map<number, number>>(new Map());
+  const [spawnsArmed, setSpawnsArmed] = useState<boolean>(true);
+  const [tileDurations, setTileDurations] = useState<Map<number, number>>(new Map());
+  type Particle = { id: number; x: number; y: number; color: string; size: number; dx: number; dy: number };
+  const [particles, setParticles] = useState<Particle[]>([]);
+  const [rowFlash, setRowFlash] = useState<number | null>(null);
+  const [colFlash, setColFlash] = useState<number | null>(null);
 
-  // UI state
-  const [selectedCandy, setSelectedCandy] = useState<{row: number, col: number} | null>(null);
-  const [validMoves, setValidMoves] = useState<{row: number, col: number}[]>([]);
-  const [currentZone, setCurrentZone] = useState('LAND');
-  const [zoneProgress, setZoneProgress] = useState(0);
-  const [showPowerUpMenu, setShowPowerUpMenu] = useState(false);
-  const [animations, setAnimations] = useState<any[]>([]);
-  const [particles, setParticles] = useState<any[]>([]);
-  
-  // Multiplayer state
-  const [opponent, setOpponent] = useState<Player | null>(null);
-  const [matchmaking, setMatchmaking] = useState(false);
-  const [tournament, setTournament] = useState<Tournament | null>(null);
-  
-  // Screen dimensions and dynamic sizing
-  const [canvasDimensions, setCanvasDimensions] = useState({ 
-    width: window.innerWidth, 
-    height: window.innerHeight
-  });
-  
-  // Calculate candy size dynamically to fill screen
-  const getCandySize = () => {
-    const padding = 40; // Padding around board
-    const availableWidth = canvasDimensions.width - padding;
-    const availableHeight = canvasDimensions.height - 120; // Space for UI
-    const maxSize = Math.min(availableWidth / BOARD_SIZE, availableHeight / BOARD_SIZE);
-    return Math.floor(maxSize);
-  };
-  
-  const CANDY_SIZE = getCandySize();
-
-  // Zone definitions from Phraijump
-  const ZONES = {
-    LAND: { colors: ['#8B4513', '#228B22', '#FFD700'], name: 'Mystic Lands' },
-    SKY: { colors: ['#87CEEB', '#FFFFFF', '#FFE4B5'], name: 'Cloud Kingdom' },
-    ATMOSPHERE: { colors: ['#FF6347', '#FF8C00', '#DC143C'], name: 'Molten Forge' },
-    SPACE: { colors: ['#191970', '#4169E1', '#00CED1'], name: 'Stellar Nexus' },
-    DEEP_SPACE: { colors: ['#4B0082', '#8A2BE2', '#9932CC'], name: 'Cosmic Depths' },
-    BLACK_HOLE: { colors: ['#000000', '#8A2BE2', '#FF1493'], name: 'Event Horizon' },
-    RAINBOW: { colors: ['#FF0000', '#00FF00', '#0000FF'], name: 'Rainbow Realm' }
-  };
-
-  // Add body class and viewport settings for full-screen game
-  useEffect(() => {
-    document.body.classList.add('phraicrush-active');
-    
-    // Update viewport for game-specific touch optimization
-    const viewport = document.querySelector('meta[name="viewport"]');
-    const originalContent = viewport?.getAttribute('content') || 'width=device-width, initial-scale=1.0';
-    if (viewport) {
-      viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover');
-    }
-    
-    return () => {
-      document.body.classList.remove('phraicrush-active');
-      // Restore original viewport
-      if (viewport) {
-        viewport.setAttribute('content', originalContent);
-      }
-    };
-  }, []);
-
-  // Initialize game and setup high DPI canvas
-  useEffect(() => {
-    const handleResize = () => {
-      setCanvasDimensions({
-        width: window.innerWidth,
-        height: window.innerHeight
-      });
-    };
-
-    // Setup high DPI canvas
-    const setupCanvas = () => {
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-      
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
-      
-      // Get device pixel ratio for crisp graphics
-      const dpr = window.devicePixelRatio || 1;
-      
-      // Set actual canvas size in pixels
-      canvas.width = canvasDimensions.width * dpr;
-      canvas.height = canvasDimensions.height * dpr;
-      
-      // Scale canvas back down using CSS
-      canvas.style.width = canvasDimensions.width + 'px';
-      canvas.style.height = canvasDimensions.height + 'px';
-      
-      // Scale the drawing context to match device pixel ratio
-      ctx.scale(dpr, dpr);
-      
-      // Enable crisp pixel rendering
-      ctx.imageSmoothingEnabled = false;
-    };
-
-    window.addEventListener('resize', handleResize);
-    
-    // Setup canvas first
-    setupCanvas();
-    
-    // Initialize game
-    initializeGame();
-    
-    return () => window.removeEventListener('resize', handleResize);
-  }, [canvasDimensions.width, canvasDimensions.height]);
-
-  const initializeGame = useCallback(() => {
-    console.log('Initializing PhraiCrush game...');
-    
-    // Reset all states
-    setGameOver(false);
-    setPaused(false);
-    setSelectedCandy(null);
-    setValidMoves([]);
-    setParticles([]);
-    setGameStarted(false);
-    
-    try {
-      const newBoard = generateBoard();
-      console.log('Generated board with', newBoard.length, 'rows');
-      
-      setPlayer({
-        id: 'player1',
-        name: 'Player',
-        score: 0,
-        moves: 30,
-        level: 1,
-        board: newBoard,
-        zone: 'LAND',
-        powerUps: [],
-        comboStreak: 0,
-        specialMeter: 0
-      });
-      
-      // Start game after board is set
-      setTimeout(() => {
-        setGameStarted(true);
-        console.log('Game started successfully');
-      }, 100);
-      
-    } catch (error) {
-      console.error('Failed to initialize game:', error);
-    }
-  }, []);
-
-  const generateBoard = (): Candy[][] => {
-    const board: Candy[][] = [];
-    
-    for (let row = 0; row < BOARD_SIZE; row++) {
-      board[row] = [];
-      for (let col = 0; col < BOARD_SIZE; col++) {
-        board[row][col] = generateCandy(row, col);
-      }
-    }
-    
-    // Ensure no initial matches
-    removeInitialMatches(board);
-    
-    return board;
-  };
-
-  const generateCandy = (row: number, col: number): Candy => {
-    const zone = getCurrentZone(row);
-    const candyTypes = getCandyTypesForZone(zone);
-    const type = candyTypes[Math.floor(Math.random() * candyTypes.length)];
-    
-    return {
-      type,
-      special: 'none',
-      zone,
-      id: `${row}-${col}-${Date.now()}`,
-      row,
-      col,
-      falling: false,
-      fallDistance: 0,
-      matched: false,
-      animationTimer: 0,
-      glowIntensity: 0,
-      pulsePhase: Math.random() * Math.PI * 2
-    };
-  };
-
-  const getCurrentZone = (row: number): string => {
-    const progress = row / BOARD_SIZE;
-    if (progress < 0.15) return 'LAND';
-    if (progress < 0.3) return 'SKY';
-    if (progress < 0.45) return 'ATMOSPHERE';
-    if (progress < 0.6) return 'SPACE';
-    if (progress < 0.75) return 'DEEP_SPACE';
-    if (progress < 0.9) return 'BLACK_HOLE';
-    return 'RAINBOW';
-  };
-
-  const getCandyTypesForZone = (zone: string): CandyType[] => {
-    switch (zone) {
-      case 'LAND':
-        return ['land_crystal', 'land_flower', 'land_root'];
-      case 'SKY':
-        return ['sky_cloud', 'sky_lightning', 'sky_wind'];
-      case 'ATMOSPHERE':
-        return ['atmosphere_fire', 'atmosphere_metal', 'atmosphere_lava'];
-      case 'SPACE':
-        return ['space_star', 'space_planet', 'space_nebula'];
-      case 'DEEP_SPACE':
-        return ['deepspace_void', 'deepspace_crystal', 'deepspace_energy'];
-      case 'BLACK_HOLE':
-        return ['blackhole_matter', 'blackhole_gravity', 'blackhole_singularity'];
-      case 'RAINBOW':
-        return ['rainbow_magic', 'rainbow_sparkle', 'rainbow_wish'];
-      default:
-        return ['land_crystal', 'land_flower', 'land_root'];
-    }
-  };
-
-  const removeInitialMatches = (board: Candy[][]) => {
-    let hasMatches = true;
-    let attempts = 0;
-    
-    while (hasMatches && attempts < 100) {
-      hasMatches = false;
-      attempts++;
-      
-      for (let row = 0; row < BOARD_SIZE; row++) {
-        for (let col = 0; col < BOARD_SIZE; col++) {
-          if (hasMatchAt(board, row, col)) {
-            board[row][col] = generateCandy(row, col);
-            hasMatches = true;
-          }
-        }
-      }
-    }
-  };
-
-  const hasMatchAt = (board: Candy[][], row: number, col: number): boolean => {
-    const candy = board[row][col];
-    
-    // Check horizontal match
-    let horizontalCount = 1;
-    for (let c = col - 1; c >= 0 && board[row][c].type === candy.type; c--) {
-      horizontalCount++;
-    }
-    for (let c = col + 1; c < BOARD_SIZE && board[row][c].type === candy.type; c++) {
-      horizontalCount++;
-    }
-    
-    // Check vertical match
-    let verticalCount = 1;
-    for (let r = row - 1; r >= 0 && board[r][col].type === candy.type; r--) {
-      verticalCount++;
-    }
-    for (let r = row + 1; r < BOARD_SIZE && board[r][col].type === candy.type; r++) {
-      verticalCount++;
-    }
-    
-    return horizontalCount >= MATCH_MIN || verticalCount >= MATCH_MIN;
-  };
-
-  const handleCandyClick = (row: number, col: number) => {
-    if (!gameStarted || gameOver || paused) return;
-    
-    if (!selectedCandy) {
-      // First selection
-      setSelectedCandy({ row, col });
-      setValidMoves(getValidMoves(row, col));
-    } else if (selectedCandy.row === row && selectedCandy.col === col) {
-      // Deselect
-      setSelectedCandy(null);
-      setValidMoves([]);
-    } else if (isValidMove(selectedCandy, { row, col })) {
-      // Valid swap
-      performSwap(selectedCandy, { row, col });
-      setSelectedCandy(null);
-      setValidMoves([]);
-    } else {
-      // New selection
-      setSelectedCandy({ row, col });
-      setValidMoves(getValidMoves(row, col));
-    }
-  };
-
-  const getValidMoves = (row: number, col: number): {row: number, col: number}[] => {
-    const moves = [];
-    const directions = [[-1, 0], [1, 0], [0, -1], [0, 1]];
-    
-    for (const [dr, dc] of directions) {
-      const newRow = row + dr;
-      const newCol = col + dc;
-      
-      if (newRow >= 0 && newRow < BOARD_SIZE && newCol >= 0 && newCol < BOARD_SIZE) {
-        if (isValidMove({ row, col }, { row: newRow, col: newCol })) {
-          moves.push({ row: newRow, col: newCol });
-        }
-      }
-    }
-    
-    return moves;
-  };
-
-  const isValidMove = (from: {row: number, col: number}, to: {row: number, col: number}): boolean => {
-    // Check if adjacent
-    const rowDiff = Math.abs(from.row - to.row);
-    const colDiff = Math.abs(from.col - to.col);
-    if ((rowDiff === 1 && colDiff === 0) || (rowDiff === 0 && colDiff === 1)) {
-      // Simulate swap and check for matches
-      const tempBoard = player.board.map(row => [...row]);
-      [tempBoard[from.row][from.col], tempBoard[to.row][to.col]] = 
-      [tempBoard[to.row][to.col], tempBoard[from.row][from.col]];
-      
-      return hasMatchAt(tempBoard, from.row, from.col) || hasMatchAt(tempBoard, to.row, to.col);
-    }
-    return false;
-  };
-
-  const performSwap = (from: {row: number, col: number}, to: {row: number, col: number}) => {
-    setPlayer(prev => {
-      const newBoard = prev.board.map(row => [...row]);
-      [newBoard[from.row][from.col], newBoard[to.row][to.col]] = 
-      [newBoard[to.row][to.col], newBoard[from.row][from.col]];
-      
-      // Update positions
-      newBoard[from.row][from.col].row = from.row;
-      newBoard[from.row][from.col].col = from.col;
-      newBoard[to.row][to.col].row = to.row;
-      newBoard[to.row][to.col].col = to.col;
-      
-      return {
-        ...prev,
-        board: newBoard,
-        moves: prev.moves - 1
-      };
-    });
-    
-    // Process matches after swap
-    setTimeout(() => processMatches(), 300);
-  };
-
-  const processMatches = () => {
-    const matches = findMatches();
-    
-    if (matches.length > 0) {
-      // Mark matched candies
-      matches.forEach(match => {
-        match.candies.forEach(candy => {
-          candy.matched = true;
-          candy.animationTimer = Date.now();
-        });
-      });
-      
-      // Calculate score
-      const scoreGain = calculateScore(matches);
-      setPlayer(prev => ({ 
-        ...prev, 
-        score: prev.score + scoreGain,
-        comboStreak: prev.comboStreak + 1,
-        specialMeter: Math.min(100, prev.specialMeter + matches.length * 5)
-      }));
-      
-      // Add particles
-      matches.forEach(match => {
-        match.candies.forEach(candy => {
-          addMatchParticles(candy);
-        });
-      });
-      
-      // Remove matched candies and drop new ones
-      setTimeout(() => {
-        removeMatchedCandies();
-        dropCandies();
-        setTimeout(() => processMatches(), 500); // Check for cascade matches
-      }, 500);
-    } else {
-      // Reset combo if no matches
-      setPlayer(prev => ({ ...prev, comboStreak: 0 }));
-      
-      // Check for game over
-      if (player.moves <= 0 && !hasValidMoves()) {
-        setGameOver(true);
-      }
-    }
-  };
-
-  const findMatches = (): Match[] => {
-    const matches: Match[] = [];
-    const board = player.board;
-    
-    // Find horizontal matches
-    for (let row = 0; row < BOARD_SIZE; row++) {
-      let currentMatch: Candy[] = [board[row][0]];
-      
-      for (let col = 1; col < BOARD_SIZE; col++) {
-        if (board[row][col].type === currentMatch[0].type && !board[row][col].matched) {
-          currentMatch.push(board[row][col]);
-        } else {
-          if (currentMatch.length >= MATCH_MIN) {
-            matches.push({
-              candies: currentMatch,
-              pattern: 'line',
-              combo: player.comboStreak,
-              zoneBonus: currentMatch.every(c => c.zone === currentMatch[0].zone)
-            });
-          }
-          currentMatch = [board[row][col]];
-        }
-      }
-      
-      if (currentMatch.length >= MATCH_MIN) {
-        matches.push({
-          candies: currentMatch,
-          pattern: 'line',
-          combo: player.comboStreak,
-          zoneBonus: currentMatch.every(c => c.zone === currentMatch[0].zone)
-        });
-      }
-    }
-    
-    // Find vertical matches
-    for (let col = 0; col < BOARD_SIZE; col++) {
-      let currentMatch: Candy[] = [board[0][col]];
-      
-      for (let row = 1; row < BOARD_SIZE; row++) {
-        if (board[row][col].type === currentMatch[0].type && !board[row][col].matched) {
-          currentMatch.push(board[row][col]);
-        } else {
-          if (currentMatch.length >= MATCH_MIN) {
-            matches.push({
-              candies: currentMatch,
-              pattern: 'line',
-              combo: player.comboStreak,
-              zoneBonus: currentMatch.every(c => c.zone === currentMatch[0].zone)
-            });
-          }
-          currentMatch = [board[row][col]];
-        }
-      }
-      
-      if (currentMatch.length >= MATCH_MIN) {
-        matches.push({
-          candies: currentMatch,
-          pattern: 'line',
-          combo: player.comboStreak,
-          zoneBonus: currentMatch.every(c => c.zone === currentMatch[0].zone)
-        });
-      }
-    }
-    
-    return matches;
-  };
-
-  const calculateScore = (matches: Match[]): number => {
-    let score = 0;
-    
-    matches.forEach(match => {
-      let baseScore = match.candies.length * 100;
-      
-      // Combo multiplier
-      const comboMultiplier = COMBO_MULTIPLIERS[Math.min(match.combo, COMBO_MULTIPLIERS.length - 1)];
-      baseScore *= comboMultiplier;
-      
-      // Zone bonus
-      if (match.zoneBonus) {
-        baseScore *= 1.5;
-      }
-      
-      // Special pattern bonus
-      if (match.pattern !== 'line') {
-        baseScore *= 2;
-      }
-      
-      score += baseScore;
-    });
-    
-    return Math.floor(score);
-  };
-
-  const addMatchParticles = (candy: Candy) => {
-    const zoneColors = ZONES[candy.zone as keyof typeof ZONES]?.colors || ['#FFD700'];
-    const centerX = candy.col * CANDY_SIZE + CANDY_SIZE / 2;
-    const centerY = candy.row * CANDY_SIZE + CANDY_SIZE / 2;
-    
-    for (let i = 0; i < 8; i++) {
-      setParticles(prev => [...prev, {
-        x: centerX,
-        y: centerY,
-        vx: (Math.random() - 0.5) * 10,
-        vy: (Math.random() - 0.5) * 10,
-        color: zoneColors[Math.floor(Math.random() * zoneColors.length)],
-        size: Math.random() * 6 + 2,
-        life: 1,
-        decay: 0.02,
-        type: 'sparkle'
-      }]);
-    }
-  };
-
-  const removeMatchedCandies = () => {
-    setPlayer(prev => {
-      const newBoard = prev.board.map(row => [...row]);
-      
-      for (let row = 0; row < BOARD_SIZE; row++) {
-        for (let col = 0; col < BOARD_SIZE; col++) {
-          if (newBoard[row][col].matched) {
-            newBoard[row][col] = generateCandy(row, col);
-            newBoard[row][col].falling = true;
-            newBoard[row][col].fallDistance = row * CANDY_SIZE;
-          }
-        }
-      }
-      
-      return { ...prev, board: newBoard };
-    });
-  };
-
-  const dropCandies = () => {
-    // Implement gravity for falling candies
-    setPlayer(prev => {
-      const newBoard = prev.board.map(row => [...row]);
-      
-      for (let col = 0; col < BOARD_SIZE; col++) {
-        let writeRow = BOARD_SIZE - 1;
-        
-        for (let readRow = BOARD_SIZE - 1; readRow >= 0; readRow--) {
-          if (!newBoard[readRow][col].matched) {
-            if (writeRow !== readRow) {
-              newBoard[writeRow][col] = { ...newBoard[readRow][col] };
-              newBoard[writeRow][col].row = writeRow;
-              newBoard[writeRow][col].falling = true;
-              newBoard[readRow][col] = generateCandy(readRow, col);
-            }
-            writeRow--;
-          }
-        }
-        
-        // Fill empty spaces with new candies
-        for (let row = writeRow; row >= 0; row--) {
-          newBoard[row][col] = generateCandy(row, col);
-          newBoard[row][col].falling = true;
-          newBoard[row][col].fallDistance = (writeRow - row + 1) * CANDY_SIZE;
-        }
-      }
-      
-      return { ...prev, board: newBoard };
-    });
-  };
-
-  const hasValidMoves = (): boolean => {
-    for (let row = 0; row < BOARD_SIZE; row++) {
-      for (let col = 0; col < BOARD_SIZE; col++) {
-        if (getValidMoves(row, col).length > 0) {
-          return true;
-        }
-      }
-    }
-    return false;
-  };
-
-  const startGameLoop = useCallback(() => {
-    console.log('Starting game loop...');
-    
-    if (gameLoopRef.current) {
-      cancelAnimationFrame(gameLoopRef.current);
-    }
-    
-    const gameLoop = (timestamp: number) => {
-      try {
-        updateGame(timestamp);
-        renderGame(timestamp);
-        
-        if (gameStarted && !gameOver && !paused) {
-          gameLoopRef.current = requestAnimationFrame(gameLoop);
-        }
-      } catch (error) {
-        console.error('Game loop error:', error);
-      }
-    };
-    
-    gameLoopRef.current = requestAnimationFrame(gameLoop);
-  }, [gameStarted, gameOver, paused]);
-
-  const updateGame = (timestamp: number) => {
-    // Update falling candies
-    setPlayer(prev => {
-      const newBoard = prev.board.map(row => [...row]);
-      let needsUpdate = false;
-      
-      for (let row = 0; row < BOARD_SIZE; row++) {
-        for (let col = 0; col < BOARD_SIZE; col++) {
-          const candy = newBoard[row][col];
-          
-          if (candy.falling && candy.fallDistance > 0) {
-            candy.fallDistance = Math.max(0, candy.fallDistance - 8);
-            needsUpdate = true;
-            
-            if (candy.fallDistance === 0) {
-              candy.falling = false;
-            }
-          }
-          
-          // Update animations (simplified)
-          candy.pulsePhase += 0.05;
-        }
-      }
-      
-      return needsUpdate ? { ...prev, board: newBoard } : prev;
-    });
-    
-    // Update particles
-    setParticles(prev => 
-      prev.map(particle => ({
-        ...particle,
-        x: particle.x + particle.vx,
-        y: particle.y + particle.vy,
-        life: particle.life - particle.decay,
-        size: particle.size * 0.98
-      })).filter(particle => particle.life > 0)
+  const computeTileSize = (): number => {
+    const padding = 24;
+    const maxWidth = Math.min(window.innerWidth, 520);
+    const maxHeight = Math.min(window.innerHeight - 160, 720);
+    const size = Math.floor(
+      Math.min((maxWidth - padding) / BOARD_SIZE, (maxHeight - padding) / BOARD_SIZE)
     );
+    return Math.max(32, Math.min(64, size));
   };
+  const [tileSize, setTileSize] = useState<number>(() => computeTileSize());
+  useEffect(() => {
+    const onResize = () => setTileSize(computeTileSize());
+    window.addEventListener('resize', onResize, { passive: true });
+    window.addEventListener('orientationchange', onResize, { passive: true } as any);
+    return () => {
+      window.removeEventListener('resize', onResize as any);
+      window.removeEventListener('orientationchange', onResize as any);
+    };
+  }, []);
 
-  const renderGame = (timestamp: number) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    
-    // Clear canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    // Render zone background
-    renderZoneBackground(ctx, timestamp);
-    
-    // Render board
-    renderBoard(ctx);
-    
-    // Render UI
-    renderUI(ctx);
-    
-    // Render particles
-    renderParticles(ctx);
-  };
+  const handleNewGame = useCallback(() => {
+    tileIdCounter = 1;
+    setBoard(generateInitialBoard());
+    setSelected(null);
+    setMoves(MOVES_PER_GAME);
+    setScore(0);
+    setIsResolving(false);
+    setGameOver(false);
+  }, []);
 
-  const renderZoneBackground = (ctx: CanvasRenderingContext2D, timestamp: number) => {
-    const currentZoneData = ZONES[currentZone as keyof typeof ZONES];
-    if (!currentZoneData) return;
-    
-    // Create gradient background
-    const gradient = ctx.createLinearGradient(0, 0, 0, canvasDimensions.height);
-    currentZoneData.colors.forEach((color, index) => {
-      gradient.addColorStop(index / (currentZoneData.colors.length - 1), color);
-    });
-    
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, canvasDimensions.width, canvasDimensions.height);
-    
-    // Add animated effects based on zone
-    renderZoneEffects(ctx, timestamp);
-  };
+  // Process cascades starting from a specific board state
+  const processCascadesFrom = useCallback(async (start: Board) => {
+    if (isResolving) return;
+    setIsResolving(true);
 
-  const renderZoneEffects = (ctx: CanvasRenderingContext2D, timestamp: number) => {
-    const time = timestamp * 0.001;
-    
-    switch (currentZone) {
-      case 'SKY':
-        // Floating clouds
-        ctx.save();
-        ctx.globalAlpha = 0.3;
-        ctx.fillStyle = '#FFFFFF';
-        for (let i = 0; i < 5; i++) {
-          const x = (time * 20 + i * 100) % (canvasDimensions.width + 100) - 50;
-          const y = 100 + Math.sin(time + i) * 20;
-          ctx.beginPath();
-          ctx.arc(x, y, 30, 0, Math.PI * 2);
-          ctx.fill();
+    const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+    let cascade = 0;
+    let working = start.map((row) => row.slice());
+
+    while (true) {
+      // Detect matches without mutating first
+      const { matched, rowClears, colClears, bombs } = computeMatchesDetailed(working);
+      if (matched.size === 0) break;
+
+      // Mark vanishing tiles for animation
+      const idsToVanish: number[] = [];
+      const particlesToAdd: Particle[] = [];
+      matched.forEach((key) => {
+        const [rStr, cStr] = key.split(',');
+        const r = Number(rStr);
+        const c = Number(cStr);
+        const t = working[r]?.[c];
+        if (t && t.id != null) {
+          idsToVanish.push(t.id);
+          // Spawn burst particles from tile center
+          const baseX = 8 + c * (tileSize + 4) + tileSize / 2;
+          const baseY = 8 + r * (tileSize + 4) + tileSize / 2;
+          const count = 10;
+          for (let i = 0; i < count; i++) {
+            const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.6;
+            const dist = (tileSize * 0.4) + Math.random() * (tileSize * 0.6);
+            const dx = Math.cos(angle) * dist;
+            const dy = Math.sin(angle) * dist;
+            const size = Math.max(3, Math.min(7, 3 + Math.floor(Math.random() * 6)));
+            particlesToAdd.push({
+              id: Date.now() + Math.floor(Math.random() * 1000000) + i,
+              x: baseX,
+              y: baseY,
+              color: t.color,
+              size,
+              dx,
+              dy,
+            });
+          }
         }
-        ctx.restore();
-        break;
-        
-      case 'SPACE':
-        // Twinkling stars
-        ctx.save();
-        for (let i = 0; i < 20; i++) {
-          const x = (i * 47) % canvasDimensions.width;
-          const y = (i * 73) % canvasDimensions.height;
-          const alpha = Math.sin(time * 2 + i) * 0.5 + 0.5;
-          ctx.globalAlpha = alpha;
-          ctx.fillStyle = '#FFFFFF';
-          ctx.fillRect(x, y, 2, 2);
-        }
-        ctx.restore();
-        break;
-    }
-  };
+      });
+      setVanishingIds(new Set(idsToVanish));
+      if (particlesToAdd.length > 0) {
+        setParticles((prev) => [...prev, ...particlesToAdd]);
+        const toRemoveIds = particlesToAdd.map((p) => p.id);
+        // Clean up particles after animation ends
+        window.setTimeout(() => {
+          setParticles((prev) => prev.filter((p) => !toRemoveIds.includes(p.id)));
+        }, 600);
+      }
 
-  const renderBoard = (ctx: CanvasRenderingContext2D) => {
-    const boardOffsetX = (canvasDimensions.width - BOARD_SIZE * CANDY_SIZE) / 2;
-    const boardOffsetY = (canvasDimensions.height - BOARD_SIZE * CANDY_SIZE) / 2;
-    
-    ctx.save();
-    ctx.translate(boardOffsetX, boardOffsetY);
-    
-    // Render candies - add safety check
-    if (player.board && player.board.length > 0) {
-      for (let row = 0; row < BOARD_SIZE; row++) {
-        for (let col = 0; col < BOARD_SIZE; col++) {
-          if (player.board[row] && player.board[row][col]) {
-            const candy = player.board[row][col];
-            renderCandy(ctx, candy, col * CANDY_SIZE, row * CANDY_SIZE);
+      // Score gain before removal
+      const scoreGained = matched.size * 10 + (rowClears.length + colClears.length) * 20 + bombs.length * 40;
+      cascade += 1;
+      const multiplier = 1 + (cascade - 1) * 0.5;
+      setScore((prev) => prev + Math.floor(scoreGained * multiplier));
+
+      // Let vanish animation play
+      // eslint-disable-next-line no-await-in-loop
+      await delay(200);
+
+      // Trigger visual effects for powerups
+      if (rowClears.length > 0) {
+        setRowFlash(rowClears[0]!);
+        window.setTimeout(() => setRowFlash(null), 350);
+      }
+      if (colClears.length > 0) {
+        setColFlash(colClears[0]!);
+        window.setTimeout(() => setColFlash(null), 350);
+      }
+
+      // Decide special tile spawns and remove matches
+      // Priority: 5-in-a-row => colorBomb, 2x2 => wrapped, 4-in-a-row => striped
+      let spawnedSpecial: { r: number; c: number; special: Special; color?: TileColor } | null = null;
+
+      // Check for 5-in-a-row horizontally or vertically at any matched cell
+      // Simple heuristic: if any row/col has run >=5, place colorBomb at the first cell of that run
+      let hasFive = false;
+      for (let r = 0; r < BOARD_SIZE; r++) {
+        let c = 0;
+        while (c < BOARD_SIZE) {
+          const start = c;
+          const t = working[r]?.[c];
+          if (!t) { c++; continue; }
+          const col = t.color;
+          while (c + 1 < BOARD_SIZE && working[r]?.[c + 1]?.color === col) c++;
+          const len = c - start + 1;
+          if (len >= 5) {
+            spawnedSpecial = { r, c: start, special: 'colorBomb' };
+            hasFive = true;
+            break;
+          }
+          c++;
+        }
+        if (hasFive) break;
+      }
+      if (!hasFive) {
+        for (let c = 0; c < BOARD_SIZE; c++) {
+          let r = 0;
+          while (r < BOARD_SIZE) {
+            const start = r;
+            const t = working[r]?.[c];
+            if (!t) { r++; continue; }
+            const col = t.color;
+            while (r + 1 < BOARD_SIZE && working[r + 1]?.[c]?.color === col) r++;
+            const len = r - start + 1;
+            if (len >= 5) {
+              spawnedSpecial = { r: start, c, special: 'colorBomb' };
+              hasFive = true;
+              break;
+            }
+            r++;
+          }
+          if (hasFive) break;
+        }
+      }
+
+      // If 2x2 square found, spawn wrapped candy at its top-left
+      if (!hasFive && bombs.length > 0) {
+        const b = bombs[0]!;
+        spawnedSpecial = { r: b.r, c: b.c, special: 'wrapped', color: b.color };
+      }
+
+      // If 4+ line (but not 5), spawn striped at the center of the run
+      if (!hasFive && !spawnedSpecial && (rowClears.length > 0 || colClears.length > 0)) {
+        if (rowClears.length > 0) {
+          const rr = rowClears[0]!;
+          // find a contiguous colored run in this row (>=4) to pick color
+          let best: { start: number; end: number; color: TileColor } | null = null;
+          let c = 0;
+          while (c < BOARD_SIZE) {
+            const start = c;
+            const t = working[rr]?.[c];
+            if (!t) { c++; continue; }
+            const col = t.color;
+            while (c + 1 < BOARD_SIZE && working[rr]?.[c + 1]?.color === col) c++;
+            const len = c - start + 1;
+            if (len >= 4) best = { start, end: c, color: col };
+            c++;
+          }
+          if (best) {
+            const mid = Math.floor((best.start + best.end) / 2);
+            spawnedSpecial = { r: rr, c: mid, special: 'stripedH', color: best.color };
+          }
+        } else if (colClears.length > 0) {
+          const cc = colClears[0]!;
+          let best: { start: number; end: number; color: TileColor } | null = null;
+          let r = 0;
+          while (r < BOARD_SIZE) {
+            const start = r;
+            const t = working[r]?.[cc];
+            if (!t) { r++; continue; }
+            const col = t.color;
+            while (r + 1 < BOARD_SIZE && working[r + 1]?.[cc]?.color === col) r++;
+            const len = r - start + 1;
+            if (len >= 4) best = { start, end: r, color: col };
+            r++;
+          }
+          if (best) {
+            const mid = Math.floor((best.start + best.end) / 2);
+            spawnedSpecial = { r: mid, c: cc, special: 'stripedV', color: best.color };
           }
         }
       }
-    } else {
-      // Debug: Show that board is empty
-      ctx.fillStyle = 'white';
-      ctx.font = '20px Arial';
-      ctx.textAlign = 'center';
-      ctx.fillText('Loading board...', BOARD_SIZE * CANDY_SIZE / 2, BOARD_SIZE * CANDY_SIZE / 2);
-    }
-    
-    // Render selection and valid moves
-    if (selectedCandy) {
-      ctx.strokeStyle = '#FFD700';
-      ctx.lineWidth = 3;
-      ctx.strokeRect(
-        selectedCandy.col * CANDY_SIZE, 
-        selectedCandy.row * CANDY_SIZE, 
-        CANDY_SIZE, 
-        CANDY_SIZE
-      );
-    }
-    
-    validMoves.forEach(move => {
-      ctx.save();
-      ctx.globalAlpha = 0.5;
-      ctx.fillStyle = '#00FF00';
-      ctx.fillRect(move.col * CANDY_SIZE, move.row * CANDY_SIZE, CANDY_SIZE, CANDY_SIZE);
-      ctx.restore();
-    });
-    
-    ctx.restore();
-  };
 
-  const renderCandy = (ctx: CanvasRenderingContext2D, candy: Candy, x: number, y: number) => {
-    if (!candy) return;
-    
-    const adjustedY = y - (candy.fallDistance || 0);
-    
-    ctx.save();
-    ctx.translate(x + CANDY_SIZE / 2, adjustedY + CANDY_SIZE / 2);
-    
-    // Special candy subtle pulsing effect only
-    if (candy.special !== 'none') {
-      const pulseScale = 1 + Math.sin(candy.pulsePhase) * 0.03;
-      ctx.scale(pulseScale, pulseScale);
-    }
-    
-    // Main candy with crisp rendering
-    ctx.fillStyle = getCandyColor(candy.type);
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
-    ctx.lineWidth = 1.5;
-    
-    drawCandyShape(ctx, candy.type, -CANDY_SIZE / 2 + 2, -CANDY_SIZE / 2 + 2, CANDY_SIZE - 4);
-    
-    // Fill and stroke
-    ctx.fill();
-    ctx.stroke();
-    
-    // Add subtle inner highlight for depth
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
-    drawCandyShape(ctx, candy.type, -CANDY_SIZE / 2 + 4, -CANDY_SIZE / 2 + 4, CANDY_SIZE - 8);
-    ctx.fill();
-    
-    // Special candy indicators (toned down)
-    if (candy.special && candy.special !== 'none') {
-      renderSpecialCandyEffect(ctx, candy.special);
-    }
-    
-    // Match animation
-    if (candy.matched) {
-      const elapsed = Date.now() - candy.animationTimer;
-      const progress = Math.min(elapsed / 500, 1);
-      ctx.globalAlpha = 1 - progress;
-      ctx.scale(1 + progress * 0.3, 1 + progress * 0.3);
-    }
-    
-    ctx.restore();
-  };
+      // Remove matched base tiles (but leave spot for special if any)
+      matched.forEach((key) => {
+        const [rStr, cStr] = key.split(',');
+        const r = Number(rStr);
+        const c = Number(cStr);
+        if (r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE) {
+          working[r]![c] = null;
+        }
+      });
 
-  const getCandyColor = (type: CandyType): string => {
-    const colorMap: { [key in CandyType]: string } = {
-      // Land zone
-      'land_crystal': '#8B4513',
-      'land_flower': '#FFD700',
-      'land_root': '#228B22',
-      
-      // Sky zone
-      'sky_cloud': '#FFFFFF',
-      'sky_lightning': '#FFE4B5',
-      'sky_wind': '#87CEEB',
-      
-      // Atmosphere zone
-      'atmosphere_fire': '#FF6347',
-      'atmosphere_metal': '#DC143C',
-      'atmosphere_lava': '#FF8C00',
-      
-      // Space zone
-      'space_star': '#00CED1',
-      'space_planet': '#4169E1',
-      'space_nebula': '#191970',
-      
-      // Deep space zone
-      'deepspace_void': '#4B0082',
-      'deepspace_crystal': '#9932CC',
-      'deepspace_energy': '#8A2BE2',
-      
-      // Black hole zone
-      'blackhole_matter': '#000000',
-      'blackhole_gravity': '#8A2BE2',
-      'blackhole_singularity': '#FF1493',
-      
-      // Rainbow zone
-      'rainbow_magic': '#FF0000',
-      'rainbow_sparkle': '#00FF00',
-      'rainbow_wish': '#0000FF'
-    };
-    
-    return colorMap[type] || '#FFD700';
-  };
+      // Clear matched row/col tiles (they are also null; this reinforces)
+      rowClears.forEach((r) => {
+        for (let c = 0; c < BOARD_SIZE; c++) working[r]![c] = null;
+      });
+      colClears.forEach((c) => {
+        for (let r = 0; r < BOARD_SIZE; r++) working[r]![c] = null;
+      });
 
-  const drawCandyShape = (ctx: CanvasRenderingContext2D, type: CandyType, x: number, y: number, size: number) => {
-    const centerX = x + size / 2;
-    const centerY = y + size / 2;
-    const radius = size * 0.35;
-    
-    ctx.beginPath();
-    
-    if (type.includes('crystal')) {
-      // Diamond shape for crystals
-      ctx.moveTo(centerX, centerY - radius);
-      ctx.lineTo(centerX + radius, centerY);
-      ctx.lineTo(centerX, centerY + radius);
-      ctx.lineTo(centerX - radius, centerY);
-      ctx.closePath();
-    } else if (type.includes('star')) {
-      // Star shape
-      drawStar(ctx, centerX, centerY, 5, radius, radius * 0.5);
-    } else if (type.includes('cloud')) {
-      // Fluffy cloud shape - draw main body first
-      ctx.arc(centerX, centerY, radius * 0.8, 0, Math.PI * 2);
-      ctx.fill();
-      
-      // Add smaller puffs
-      ctx.beginPath();
-      ctx.arc(centerX - radius * 0.4, centerY - radius * 0.3, radius * 0.5, 0, Math.PI * 2);
-      ctx.fill();
-      
-      ctx.beginPath();
-      ctx.arc(centerX + radius * 0.4, centerY - radius * 0.3, radius * 0.5, 0, Math.PI * 2);
-      ctx.fill();
-      
-      return; // Skip the main fill since we already filled
-    } else if (type.includes('flower')) {
-      // Flower shape - multiple petals
-      for (let i = 0; i < 6; i++) {
-        const angle = (i * Math.PI * 2) / 6;
-        const petalX = centerX + Math.cos(angle) * radius * 0.7;
-        const petalY = centerY + Math.sin(angle) * radius * 0.7;
-        ctx.beginPath();
-        ctx.arc(petalX, petalY, radius * 0.4, 0, Math.PI * 2);
-        ctx.fill();
+      // Place special tile if applicable
+      if (spawnedSpecial) {
+        const { r, c, special, color } = spawnedSpecial;
+        const baseColor = color ?? (working[r]?.[c]?.color ?? randomColor());
+        working[r]![c] = createTile(baseColor, special);
       }
-      // Center
-      ctx.beginPath();
-      ctx.arc(centerX, centerY, radius * 0.3, 0, Math.PI * 2);
-    } else {
-      // Default circle
-      ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
-    }
-    
-    ctx.fill();
-  };
 
-  const drawStar = (ctx: CanvasRenderingContext2D, cx: number, cy: number, spikes: number, outerRadius: number, innerRadius: number) => {
-    let rot = Math.PI / 2 * 3;
-    let x = cx;
-    let y = cy;
-    const step = Math.PI / spikes;
-
-    ctx.beginPath();
-    ctx.moveTo(cx, cy - outerRadius);
-
-    for (let i = 0; i < spikes; i++) {
-      x = cx + Math.cos(rot) * outerRadius;
-      y = cy + Math.sin(rot) * outerRadius;
-      ctx.lineTo(x, y);
-      rot += step;
-
-      x = cx + Math.cos(rot) * innerRadius;
-      y = cy + Math.sin(rot) * innerRadius;
-      ctx.lineTo(x, y);
-      rot += step;
-    }
-
-    ctx.lineTo(cx, cy - outerRadius);
-    ctx.closePath();
-  };
-
-  const renderSpecialCandyEffect = (ctx: CanvasRenderingContext2D, special: SpecialCandyType) => {
-    ctx.save();
-    
-    switch (special) {
-      case 'horizontal_blast':
-        ctx.strokeStyle = '#FFD700';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(-CANDY_SIZE / 3, 0);
-        ctx.lineTo(CANDY_SIZE / 3, 0);
-        ctx.stroke();
-        break;
-        
-      case 'vertical_blast':
-        ctx.strokeStyle = '#FFD700';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(0, -CANDY_SIZE / 3);
-        ctx.lineTo(0, CANDY_SIZE / 3);
-        ctx.stroke();
-        break;
-        
-      case 'bomb':
-        ctx.fillStyle = '#FF0000';
-        ctx.beginPath();
-        ctx.arc(0, 0, CANDY_SIZE / 6, 0, Math.PI * 2);
-        ctx.fill();
-        break;
-    }
-    
-    ctx.restore();
-  };
-
-  const renderUI = (ctx: CanvasRenderingContext2D) => {
-    const boardTop = (canvasDimensions.height - BOARD_SIZE * CANDY_SIZE) / 2;
-    const boardBottom = boardTop + (BOARD_SIZE * CANDY_SIZE);
-    
-    // Score (top left)
-    ctx.font = 'bold 24px Arial';
-    ctx.fillStyle = '#FFFFFF';
-    ctx.textAlign = 'left';
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
-    ctx.shadowBlur = 4;
-    ctx.fillText(`Score: ${player.score.toLocaleString()}`, 20, 40);
-    
-    // Moves (top left, below score)
-    ctx.font = 'bold 20px Arial';
-    ctx.fillText(`Moves: ${player.moves}`, 20, 70);
-    
-    // Level (top right)
-    ctx.font = 'bold 20px Arial';
-    ctx.textAlign = 'right';
-    ctx.fillText(`Level: ${player.level}`, canvasDimensions.width - 20, 40);
-    
-    // Zone (top center, above board)
-    ctx.font = 'bold 18px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText(`${ZONES[currentZone as keyof typeof ZONES]?.name || currentZone}`, canvasDimensions.width / 2, boardTop - 20);
-    
-    // Combo streak (center of screen when active)
-    if (player.comboStreak > 0) {
-      ctx.font = 'bold 32px Arial';
-      ctx.fillStyle = '#FFD700';
-      ctx.textAlign = 'center';
-      ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
-      ctx.shadowBlur = 6;
-      ctx.fillText(`${player.comboStreak}x COMBO!`, canvasDimensions.width / 2, canvasDimensions.height / 2 - 50);
-    }
-    
-    // Instructions (bottom center, below board)
-    ctx.font = '16px Arial';
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-    ctx.textAlign = 'center';
-    ctx.shadowBlur = 2;
-    ctx.fillText('Tap candies to select and swap', canvasDimensions.width / 2, boardBottom + 30);
-    
-    // Special meter
-    renderSpecialMeter(ctx);
-  };
-
-  const renderSpecialMeter = (ctx: CanvasRenderingContext2D) => {
-    const meterX = canvasDimensions.width - 40;
-    const meterY = 100;
-    const meterWidth = 20;
-    const meterHeight = 200;
-    
-    // Background
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
-    ctx.fillRect(meterX, meterY, meterWidth, meterHeight);
-    
-    // Fill
-    const fillHeight = (player.specialMeter / 100) * meterHeight;
-    const gradient = ctx.createLinearGradient(0, meterY + meterHeight, 0, meterY);
-    gradient.addColorStop(0, '#FF0000');
-    gradient.addColorStop(0.5, '#FFD700');
-    gradient.addColorStop(1, '#00FF00');
-    
-    ctx.fillStyle = gradient;
-    ctx.fillRect(meterX, meterY + meterHeight - fillHeight, meterWidth, fillHeight);
-    
-    // Border
-    ctx.strokeStyle = '#FFFFFF';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(meterX, meterY, meterWidth, meterHeight);
-  };
-
-  const renderParticles = (ctx: CanvasRenderingContext2D) => {
-    particles.forEach(particle => {
-      ctx.save();
-      ctx.globalAlpha = particle.life;
-      ctx.fillStyle = particle.color;
-      
-      if (particle.type === 'sparkle') {
-        drawStar(ctx, particle.x, particle.y, 4, particle.size, particle.size * 0.5);
-        ctx.fill();
-      } else {
-        ctx.beginPath();
-        ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
-        ctx.fill();
+      // Gravity with falling/spawn tracking
+      const beforePositions = new Map<number, { r: number; c: number }>();
+      for (let r = 0; r < BOARD_SIZE; r++) {
+        for (let c = 0; c < BOARD_SIZE; c++) {
+          const t = working[r]?.[c];
+          if (t && t.id != null) beforePositions.set(t.id, { r, c });
+        }
       }
-      
-      ctx.restore();
-    });
-  };
 
-  // Enhanced Touch/Click handlers for full responsiveness
+      const prevIds = new Set(beforePositions.keys());
+
+      for (let c = 0; c < BOARD_SIZE; c++) {
+        let write = BOARD_SIZE - 1;
+        for (let r = BOARD_SIZE - 1; r >= 0; r--) {
+          const cell = working[r]?.[c] ?? null;
+          if (cell !== null) {
+            working[write]![c] = cell; // keep column index unchanged
+            if (write !== r) working[r]![c] = null;
+            write--;
+          }
+        }
+        for (let r = write; r >= 0; r--) {
+          working[r]![c] = createTile();
+        }
+      }
+
+      const afterPositions = new Map<number, { r: number; c: number }>();
+      for (let r = 0; r < BOARD_SIZE; r++) {
+        for (let c = 0; c < BOARD_SIZE; c++) {
+          const t = working[r]?.[c];
+          if (t && t.id != null) afterPositions.set(t.id, { r, c });
+        }
+      }
+
+      const falling: number[] = [];
+      const durationUpdates = new Map<number, number>();
+      afterPositions.forEach((pos, id) => {
+        const before = beforePositions.get(id);
+        if (before && pos.r > before.r) {
+          falling.push(id);
+          const deltaRows = pos.r - before.r;
+          // Longer, gravity-like fall duration scaled by distance
+          const ms = Math.max(320, Math.min(1100, 220 * deltaRows));
+          durationUpdates.set(id, ms);
+        }
+      });
+      const spawned: number[] = [];
+      afterPositions.forEach((_pos, id) => {
+        if (!prevIds.has(id)) spawned.push(id);
+      });
+
+      // Compute spawn offsets per id so new tiles fall from above their column top
+      const spawnOffsetUpdates = new Map<number, number>();
+      if (spawned.length > 0) {
+        const colToMaxRow = new Map<number, number>();
+        spawned.forEach((id) => {
+          const pos = afterPositions.get(id);
+          if (pos) {
+            const cur = colToMaxRow.get(pos.c) ?? -1;
+            colToMaxRow.set(pos.c, Math.max(cur, pos.r));
+          }
+        });
+        spawned.forEach((id) => {
+          const pos = afterPositions.get(id);
+          if (!pos) return;
+          const maxRow = colToMaxRow.get(pos.c) ?? pos.r;
+          const offsetRows = Math.max(1, maxRow - pos.r + 1);
+          spawnOffsetUpdates.set(id, offsetRows);
+          // Duration for spawns scales with distance too
+          const ms = Math.max(320, Math.min(1100, 220 * offsetRows));
+          durationUpdates.set(id, ms);
+        });
+      }
+      setFallingIds(new Set(falling));
+      setSpawningIds(new Set(spawned));
+      if (durationUpdates.size > 0) {
+        setTileDurations((prev) => {
+          const next = new Map(prev);
+          durationUpdates.forEach((ms, id) => next.set(id, ms));
+          return next;
+        });
+      }
+      if (spawnOffsetUpdates.size > 0) {
+        setSpawnOffsets((prev) => {
+          const next = new Map(prev);
+          spawnOffsetUpdates.forEach((rows, id) => next.set(id, rows));
+          return next;
+        });
+        // Arm on next frame to trigger transition from above to final position
+        setSpawnsArmed(false);
+        requestAnimationFrame(() => setSpawnsArmed(true));
+      }
+
+      // Update board and clear vanishing marks for next cycle
+      setBoard(working.map((row) => row.slice()));
+      setVanishingIds(new Set());
+      // Allow fall animation to complete before clearing flags (based on max duration this tick)
+      const maxDuration = durationUpdates.size > 0
+        ? Array.from(durationUpdates.values()).reduce((a, b) => Math.max(a, b), 0)
+        : 450;
+      window.setTimeout(() => {
+        setFallingIds(new Set());
+        setSpawningIds(new Set());
+        setSpawnOffsets(new Map());
+      }, maxDuration + 100);
+
+      // Small pause between cascades for readability
+      // eslint-disable-next-line no-await-in-loop
+      await delay(140);
+    }
+
+    setIsResolving(false);
+  }, [isResolving, tileSize]);
+
+  // Convenience wrapper (currently unused but kept for future use)
+  // const processCascades = useCallback(async () => {
+  //   await processCascadesFrom(board);
+  // }, [board, processCascadesFrom]);
+
+  // Auto-resolve if any matches exist on the current board (covers manual edits and edge cases)
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    
-    const handleInteraction = (e: MouseEvent | TouchEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      
-      if (!gameStarted || gameOver || paused) {
-        console.log('Game not ready for interaction');
+    if (isResolving || gameOver) return;
+    const m = findMatches(board);
+    if (m.size > 0) {
+      const snapshot = board.map((row) => row.slice());
+      void processCascadesFrom(snapshot);
+    }
+  }, [board, isResolving, gameOver, processCascadesFrom]);
+
+  // Attempt a swap and resolve if valid
+  const attemptSwap = useCallback(
+    (a: Position, b: Position) => {
+      if (!inBounds(a.row, a.col) || !inBounds(b.row, b.col)) return;
+      if (!areAdjacent(a, b)) return;
+      if (isResolving || gameOver) return;
+
+      let didSwap = false;
+      let nextForResolve: Board | null = null;
+      // Pre-compute swap tile ids from current board for duration tuning
+      const aId = board[a.row]?.[a.col]?.id;
+      const bId = board[b.row]?.[b.col]?.id;
+      if (aId != null || bId != null) {
+        setTileDurations((prev) => {
+          const next = new Map(prev);
+          if (aId != null) next.set(aId, 260);
+          if (bId != null) next.set(bId, 260);
+          return next;
+        });
+      }
+      setBoard((prev) => {
+        const next = prev.map((row) => row.slice());
+        if (!isValidSwap(next, a, b)) {
+          return prev; // invalid move leaves state unchanged
+        }
+        const aCell = next[a.row]?.[a.col] ?? null;
+        const bCell = next[b.row]?.[b.col] ?? null;
+        // Optional: track swapping tiles for extra highlight
+        next[a.row]![a.col] = bCell;
+        next[b.row]![b.col] = aCell;
+        didSwap = true;
+        nextForResolve = next.map((row) => row.slice());
+        return next;
+      });
+
+      if (didSwap && nextForResolve) {
+        setMoves((prev) => prev - 1);
+        setSelected(null);
+        // Resolve cascades from the swapped board to avoid stale closures
+        void processCascadesFrom(nextForResolve);
+        // Optional: clear swapping highlight after motion
+      }
+    },
+    [board, isResolving, gameOver, processCascadesFrom]
+  );
+
+  // Swipe helpers
+  const handlePointerDown = useCallback(
+    (e: React.PointerEvent<HTMLButtonElement>, row: number, col: number) => {
+      if (gameOver) return;
+      setSelected({ row, col });
+      setSwipeStart({ row, col, x: e.clientX, y: e.clientY });
+      try {
+        (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
+      } catch {
+        /* noop */
+      }
+    },
+    [gameOver]
+  );
+
+  const handlePointerMove = useCallback(
+    (e: React.PointerEvent<HTMLButtonElement>) => {
+      if (!swipeStart || isResolving || gameOver) return;
+      const dx = e.clientX - swipeStart.x;
+      const dy = e.clientY - swipeStart.y;
+      const threshold = 10; // px before committing a swipe
+      if (Math.abs(dx) < threshold && Math.abs(dy) < threshold) return;
+
+      // Determine primary direction
+      const horizontal = Math.abs(dx) >= Math.abs(dy);
+      let target: Position = { row: swipeStart.row, col: swipeStart.col };
+      if (horizontal) {
+        target = { row: swipeStart.row, col: swipeStart.col + (dx > 0 ? 1 : -1) };
+      } else {
+        target = { row: swipeStart.row + (dy > 0 ? 1 : -1), col: swipeStart.col };
+      }
+
+      if (inBounds(target.row, target.col)) {
+        attemptSwap({ row: swipeStart.row, col: swipeStart.col }, target);
+      }
+      setSwipeStart(null);
+    },
+    [swipeStart, attemptSwap, isResolving, gameOver]
+  );
+
+  const handlePointerUp = useCallback(() => {
+    setSwipeStart(null);
+  }, []);
+
+
+
+  const handleCellClick = useCallback(
+    (row: number, col: number) => {
+      if (gameOver) return;
+      const pos = { row, col };
+      if (!selected) {
+        setSelected(pos);
         return;
       }
-      
-      const rect = canvas.getBoundingClientRect();
-      const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-      const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
-      
-      const x = (clientX - rect.left) * (canvas.width / rect.width);
-      const y = (clientY - rect.top) * (canvas.height / rect.height);
-      
-      const boardOffsetX = (canvasDimensions.width - BOARD_SIZE * CANDY_SIZE) / 2;
-      const boardOffsetY = (canvasDimensions.height - BOARD_SIZE * CANDY_SIZE) / 2;
-      
-      console.log('Interaction at:', { x, y, boardOffsetX, boardOffsetY });
-      
-      if (x >= boardOffsetX && y >= boardOffsetY && 
-          x < boardOffsetX + BOARD_SIZE * CANDY_SIZE && 
-          y < boardOffsetY + BOARD_SIZE * CANDY_SIZE) {
-        
-        const col = Math.floor((x - boardOffsetX) / CANDY_SIZE);
-        const row = Math.floor((y - boardOffsetY) / CANDY_SIZE);
-        
-        console.log('Clicked candy at:', { row, col });
-        
-        if (row >= 0 && row < BOARD_SIZE && col >= 0 && col < BOARD_SIZE) {
-          handleCandyClick(row, col);
-        }
+      if (selected.row === row && selected.col === col) {
+        setSelected(null);
+        return;
       }
-    };
+      if (areAdjacent(selected, pos)) {
+        attemptSwap(selected, pos);
+        return;
+      }
+      setSelected(pos);
+    },
+    [selected, attemptSwap, gameOver]
+  );
 
-    // Add multiple event types for maximum responsiveness
-    canvas.addEventListener('click', handleInteraction, { passive: false });
-    canvas.addEventListener('touchstart', handleInteraction, { passive: false });
-    canvas.addEventListener('touchend', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-    }, { passive: false });
-    canvas.addEventListener('touchmove', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-    }, { passive: false });
-    
-    return () => {
-      canvas.removeEventListener('click', handleInteraction);
-      canvas.removeEventListener('touchstart', handleInteraction);
-      canvas.removeEventListener('touchend', handleInteraction);
-      canvas.removeEventListener('touchmove', handleInteraction);
-    };
-  }, [gameStarted, gameOver, paused, canvasDimensions, handleCandyClick]);
-
-  // Game loop management - start immediately when game is ready
+  // End game when out of moves and resolution is finished
   useEffect(() => {
-    console.log('Game state:', { gameStarted, gameOver, paused, boardLength: player.board.length });
-    
-    if (gameStarted && !gameOver && !paused && player.board.length > 0) {
-      console.log('Starting game loop now...');
-      startGameLoop();
-    }
-    
-    return () => {
-      if (gameLoopRef.current) {
-        console.log('Stopping game loop...');
-        cancelAnimationFrame(gameLoopRef.current);
-      }
-    };
-  }, [gameStarted, gameOver, paused, startGameLoop, player.board.length]);
+    if (moves > 0 || isResolving) return;
+    setGameOver(true);
+  }, [moves, isResolving]);
+
+  // Styles
+  const containerStyle: React.CSSProperties = {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    width: '100%',
+    height: '100vh',
+    // Leave room for the app header
+    paddingTop: 'calc(96px + env(safe-area-inset-top))',
+  };
+
+  const boardStyle: React.CSSProperties = {
+    position: 'relative',
+    width: BOARD_SIZE * (tileSize + 4) - 4 + 16,
+    height: BOARD_SIZE * (tileSize + 4) - 4 + 16,
+    padding: 8,
+    borderRadius: 12,
+    background: 'rgba(0,0,0,0.25)',
+    boxShadow: '0 8px 24px rgba(0,0,0,0.25)',
+  };
+
+  const gridOverlayStyle: React.CSSProperties = {
+    position: 'absolute',
+    inset: 8,
+    display: 'grid',
+    gridTemplateColumns: `repeat(${BOARD_SIZE}, ${tileSize}px)`,
+    gridTemplateRows: `repeat(${BOARD_SIZE}, ${tileSize}px)`,
+    gap: 4,
+    pointerEvents: 'none',
+  };
+
+  const topBarStyle: React.CSSProperties = {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: 'min(520px, 95vw)',
+    marginBottom: 12,
+    color: '#fff',
+    fontWeight: 700,
+  };
+
+  const statPill: React.CSSProperties = {
+    background: 'rgba(0,0,0,0.35)',
+    padding: '8px 12px',
+    borderRadius: 12,
+  };
+
+  const buttonStyle: React.CSSProperties = {
+    background: 'rgba(0,0,0,0.7)',
+    color: '#fff',
+    border: '2px solid rgba(255,255,255,0.3)',
+    borderRadius: 10,
+    padding: '8px 12px',
+    fontWeight: 700,
+    cursor: 'pointer',
+  };
 
   return (
-    <div className="phraicrush-container">
-      <canvas
-        ref={canvasRef}
-        width={canvasDimensions.width}
-        height={canvasDimensions.height}
-        className="phraicrush-canvas"
-      />
-      
-      {/* Loading indicator */}
-      {(!gameStarted || player.board.length === 0) && (
-        <div className="loading-spinner"></div>
-      )}
-      
+    <div className="phraicrush-container" style={containerStyle}>
+      <div style={topBarStyle}>
+        <button style={buttonStyle} onClick={() => { void navigate('/play'); }}>← Back</button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <div style={statPill}>Score: {score.toLocaleString()}</div>
+          <div style={statPill}>Moves: {moves}</div>
+        </div>
+        <button style={buttonStyle} onClick={handleNewGame}>New Game</button>
+      </div>
+
+      <div style={boardStyle} className="crush-board" aria-label="Candy board" role="grid">
+        {/* Grid overlay for cells */}
+        <div style={gridOverlayStyle} className="crush-board-grid">
+          {Array.from({ length: BOARD_SIZE * BOARD_SIZE }).map((_, i) => (
+            <div key={`grid-${i}`} className="crush-grid-cell" />
+          ))}
+          {rowFlash != null && (
+            <div
+              className="row-flash"
+              style={{
+                gridColumn: `1 / ${BOARD_SIZE + 1}`,
+                gridRow: `${rowFlash + 1} / ${rowFlash + 2}`,
+              }}
+            />
+          )}
+          {colFlash != null && (
+            <div
+              className="col-flash"
+              style={{
+                gridRow: `1 / ${BOARD_SIZE + 1}`,
+                gridColumn: `${colFlash + 1} / ${colFlash + 2}`,
+              }}
+            />
+          )}
+        </div>
+
+        {/* Absolute-positioned tiles with transforms */}
+        {board.map((row, r) =>
+          row.map((cell, c) => {
+            if (!cell) return null;
+            const x = 8 + c * (tileSize + 4);
+            let y = 8 + r * (tileSize + 4);
+            // If tile was just spawned and not armed yet, start it above the board by its spawn offset rows
+            const spawnRows = spawnOffsets.get(cell.id);
+            if (spawnRows && !spawnsArmed) {
+              y -= spawnRows * (tileSize + 4);
+            }
+            const isSelected = selected && selected.row === r && selected.col === c;
+            const classes = [
+              'tile',
+              fallingIds.has(cell.id) ? 'falling' : '',
+              spawningIds.has(cell.id) ? 'spawning' : '',
+            ].filter(Boolean).join(' ');
+            const innerClasses = [
+              'tile-inner',
+              vanishingIds.has(cell.id) ? 'vanish' : '',
+              spawningIds.has(cell.id) ? 'spawning' : '',
+              fallingIds.has(cell.id) ? 'falling' : '',
+              cell.special ? `special ${cell.special}` : '',
+            ].filter(Boolean).join(' ');
+
+            const isFallingOrSpawn = fallingIds.has(cell.id) || spawnOffsets.has(cell.id);
+            const style: React.CSSProperties = {
+              width: tileSize,
+              height: tileSize,
+              transform: `translate3d(${x}px, ${y}px, 0)`,
+              outline: isSelected ? '3px solid #FFD700' : '2px solid rgba(255,255,255,0.15)',
+              transitionDuration: `${tileDurations.get(cell.id) ?? (fallingIds.has(cell.id) || spawnOffsets.has(cell.id) ? 520 : 300)}ms`,
+              transitionTimingFunction: isFallingOrSpawn ? 'cubic-bezier(0.2, 0.8, 0.2, 1)' : undefined,
+            };
+            return (
+              <button
+                key={cell.id}
+                className={classes}
+                role="gridcell"
+                aria-label={`Cell ${r},${c}`}
+                onClick={() => handleCellClick(r, c)}
+                onPointerDown={(e) => handlePointerDown(e, r, c)}
+                onPointerMove={handlePointerMove}
+                onPointerUp={handlePointerUp}
+                onPointerCancel={handlePointerUp}
+                style={style}
+              >
+                <div
+                  className={innerClasses}
+                  style={{
+                    background: cell.color,
+                    width: '100%',
+                    height: '100%',
+                    borderRadius: 10,
+                    boxShadow: 'inset 0 2px 6px rgba(255,255,255,0.15), inset 0 -2px 6px rgba(0,0,0,0.25)'
+                  }}
+                />
+              </button>
+            );
+          })
+        )}
+
+        {/* Particle burst overlay */}
+        <div className="particles-container">
+          {particles.map((p) => (
+            <div
+              key={p.id}
+              className="particle"
+              style={{
+                top: p.y,
+                left: p.x,
+                width: p.size,
+                height: p.size,
+                background: p.color,
+                boxShadow: `0 0 8px ${p.color}`,
+                // CSS variables to drive keyframes
+                ['--dx' as any]: `${p.dx}px`,
+                ['--dy' as any]: `${p.dy}px`,
+              } as unknown as React.CSSProperties}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Legend / Key */}
+      <div className="crush-legend">
+        <div className="legend-item">
+          <div className="legend-icon tile-inner special stripedH" style={{ background: '#3498db' }} />
+          <div className="legend-text">Striped (Row): clears entire row</div>
+        </div>
+        <div className="legend-item">
+          <div className="legend-icon tile-inner special stripedV" style={{ background: '#e74c3c' }} />
+          <div className="legend-text">Striped (Column): clears entire column</div>
+        </div>
+        <div className="legend-item">
+          <div className="legend-icon tile-inner special wrapped" style={{ background: '#27ae60' }} />
+          <div className="legend-text">Wrapped: 3×3 explosion</div>
+        </div>
+        <div className="legend-item">
+          <div className="legend-icon tile-inner special colorBomb" style={{ background: '#9b59b6' }} />
+          <div className="legend-text">Color Bomb: clears all tiles of a color</div>
+        </div>
+      </div>
+
       {gameOver && (
         <div className="game-over-overlay">
           <div className="game-over-content">
             <h2>Game Over!</h2>
-            <p>Final Score: {player.score.toLocaleString()}</p>
-            <button onClick={() => navigate('/play')}>Back to Games</button>
-            <button onClick={() => {
-              setGameOver(false);
-              setGameStarted(false);
-              initializeGame();
-            }}>Play Again</button>
+            <p>Final Score: {score.toLocaleString()}</p>
+            <button onClick={() => { void navigate('/play'); }}>Back to Games</button>
+            <button onClick={handleNewGame}>Play Again</button>
           </div>
         </div>
       )}
-      
-      <div className="phraicrush-ui">
-        <button 
-          className="back-button"
-          onClick={() => navigate('/play')}
-        >
-          ← Back
-        </button>
-        
-        <button 
-          className="pause-button"
-          onClick={() => setPaused(!paused)}
-        >
-          {paused ? '▶' : '⏸'}
-        </button>
-      </div>
     </div>
   );
 }
+
+

@@ -1,14 +1,11 @@
 import React from "react";
 import BuildingTemplate from "./BuildingTemplate";
-import type { DecorationInventoryItem, FoodInventoryItem, GroomingInventoryItem, ToyInventoryItem, InventoryItem } from "../../types";
-import { useCoins } from "../../contexts/CoinsContext";
+import type { DecorationInventoryItem, FoodInventoryItem, GroomingInventoryItem, ToyInventoryItem } from "../../types";
 import "../../pages/InventoryPage.css";
 import "./StoreTemplate.css";
 
-// Define a union type of all possible inventory items
 export type StoreItem = FoodInventoryItem | GroomingInventoryItem | ToyInventoryItem | DecorationInventoryItem;
 
-// Define an interface that extends inventory items with stock
 export interface StoreItemWithStock {
   id: string;
   name: string;
@@ -18,7 +15,6 @@ export interface StoreItemWithStock {
   price: number;
   type: string;
   stock: number;
-  // Optional type-specific properties
   hungerRestored?: number;
   cleanlinessBoost?: number;
   happinessBoost?: number;
@@ -29,33 +25,20 @@ export interface StoreTemplateProps {
   imagePath: string;
   storeItems: StoreItemWithStock[];
   coins?: number;
-  onPurchase: (item: StoreItemWithStock) => void;
+  onPurchase: (item: StoreItemWithStock) => void | Promise<void>;
   nextRestockTime: Date | null;
   isLoading?: boolean;
   onForceRestock?: () => void;
 }
 
-// Helper function to capitalize first letter of category names
-const capitalizeFirstLetter = (string: string) => {
-  if (!string) return '';
-  return string
-    .replace(/([A-Z])/g, ' $1')  // Add space before capital letters
-    .replace(/^./, str => str.toUpperCase());  // Capitalize first letter
-};
-
-// Calculate time until next restock
 export const getTimeUntilRestock = (nextRestockTime: Date | null): string => {
   if (!nextRestockTime) return 'Unknown';
-  
   const now = new Date();
   const timeDiff = nextRestockTime.getTime() - now.getTime();
-  
   if (timeDiff <= 0) return 'Soon';
-  
   const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
   const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
   const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
-  
   if (days > 0) {
     return `${days} day${days !== 1 ? 's' : ''} and ${hours} hour${hours !== 1 ? 's' : ''}`;
   } else if (hours > 0) {
@@ -65,28 +48,21 @@ export const getTimeUntilRestock = (nextRestockTime: Date | null): string => {
   }
 };
 
-// Component to display a purchasable item with stock
 const ShopItem = ({ 
   item, 
   onPurchase 
 }: { 
   item: StoreItemWithStock, 
-  onPurchase: (item: StoreItemWithStock) => void 
+  onPurchase: (item: StoreItemWithStock) => void | Promise<void> 
 }) => {
-  // Format the price for display
-  const formatPrice = (price: any): string => {
+  const formatPrice = (price: number | string): string => {
     if (price === undefined || price === null) {
       return 'Price unavailable';
     }
-    
-    // Handle both string and number types
     const numericPrice = typeof price === 'string' ? parseInt(price, 10) : price;
-    
-    // Check if it's a valid number
-    if (isNaN(numericPrice) || numericPrice <= 0) {
+    if (Number.isNaN(numericPrice) || numericPrice <= 0) {
       return 'Price unavailable';
     }
-    
     return `${numericPrice} coins`;
   };
   
@@ -115,7 +91,7 @@ const ShopItem = ({
         </div>
         <button 
           className="shop-buy-button" 
-          onClick={() => onPurchase(item)}
+          onClick={() => void onPurchase(item)}
           disabled={item.stock <= 0}
         >
           Buy
@@ -134,7 +110,6 @@ export default function StoreTemplate({
   isLoading,
   onForceRestock
 }: StoreTemplateProps) {
-  const { coins } = useCoins();
   const restockMessage = nextRestockTime 
     ? `Next restock in: ${getTimeUntilRestock(nextRestockTime)}`
     : '';

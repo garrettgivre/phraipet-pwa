@@ -19,6 +19,7 @@ import SBStall from "./pages/Sunnybrook/SBStall";
 import SBToy from "./pages/Sunnybrook/SBToy";
 import SBToyStore from "./pages/Sunnybrook/SBToyStore";
 import SBFurnitureStore from "./pages/Sunnybrook/SBFurnitureStore";
+import RescuePals from "./pages/RescuePals";
 
 interface RouteProps {
   pet: Pet | null;
@@ -64,6 +65,10 @@ export function createRoutes({
     {
       path: "/phraicrush",
       element: <PhraiCrush />,
+    },
+    {
+      path: "/rescuepals",
+      element: <RescuePals />,
     },
     {
       path: "/inventory",

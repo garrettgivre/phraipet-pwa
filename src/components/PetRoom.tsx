@@ -69,20 +69,21 @@ export default function PetRoom({
     zone?: "FLOOR" | "WALL" | "CEILING",
     relativeTo?: { itemSrc: string; offsetX: number; offsetY: number } | null
   ) => {
-    const constrainedX = constrainToRoom ? Math.max(ROOM_BOUNDARIES.LEFT, Math.min(ROOM_BOUNDARIES.RIGHT, x)) : x;
+    // Furniture/decor should be placeable to full edges; only pet/food are constrained elsewhere
+    const constrainedX = x;
 
-    let resolvedZone: "FLOOR" | "WALL" | "CEILING" = zone || "WALL";
     if (!zone) {
-      if (y >= ROOM_ZONES.FLOOR.startY) resolvedZone = "FLOOR";
-      else if (y <= ROOM_ZONES.CEILING.endY) resolvedZone = "CEILING";
+      if (y >= ROOM_ZONES.FLOOR.startY) {
+        // FLOOR zone implied
+      } else if (y <= ROOM_ZONES.CEILING.endY) {
+        // CEILING zone implied
+      }
     }
     if (relativeTo) {
       const allItems = [...itemsBehindPet, ...itemsInFrontOfPet];
       const referenceItem = allItems.find(item => item.src === relativeTo.itemSrc);
       if (referenceItem) {
-        const refX = constrainToRoom 
-          ? Math.max(ROOM_BOUNDARIES.LEFT, Math.min(ROOM_BOUNDARIES.RIGHT, referenceItem.x + relativeTo.offsetX))
-          : referenceItem.x + relativeTo.offsetX;
+        const refX = referenceItem.x + relativeTo.offsetX;
         return {
           left: `${refX}%`,
           top: `${referenceItem.y + relativeTo.offsetY}%`,

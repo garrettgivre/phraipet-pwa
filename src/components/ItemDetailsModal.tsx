@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect } from 'react';
 import './ItemDetailsModal.css';
-import type { FoodInventoryItem, GroomingInventoryItem, ToyInventoryItem, InventoryItem } from '../types';
+import type { FoodInventoryItem, InventoryItem } from '../types';
 import { getFoodDescription, getFoodItemByName } from '../data/foodDescriptions';
 import { getHungerDisplayColor } from '../utils/foodUtils';
 

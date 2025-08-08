@@ -79,15 +79,12 @@ export default function InlineRoomEditor({ isOpen, onClose, petImage, petPositio
 
   // Convert screen coordinates to room percentages
   const screenToRoomPercent = useCallback((screenX: number, screenY: number) => {
-    // Use the actual pet room container directly
-    const petRoomContainer = document.querySelector('.pet-room-inner-container') as HTMLElement;
-    
-    if (!petRoomContainer) return { x: 50, y: 50 };
-    
-    const rect = petRoomContainer.getBoundingClientRect();
+    const containerEl = roomRef.current;
+    if (!containerEl) return { x: 50, y: 50 };
+    const rect = containerEl.getBoundingClientRect();
     return {
-      x: Math.max(5, Math.min(95, ((screenX - rect.left) / rect.width) * 100)),
-      y: Math.max(5, Math.min(95, ((screenY - rect.top) / rect.height) * 100))
+      x: Math.max(0, Math.min(100, ((screenX - rect.left) / rect.width) * 100)),
+      y: Math.max(0, Math.min(100, ((screenY - rect.top) / rect.height) * 100))
     };
   }, []);
 
@@ -225,14 +222,28 @@ export default function InlineRoomEditor({ isOpen, onClose, petImage, petPositio
       const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
       const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
 
-      if (isDragging) {
+        if (isDragging) {
         const { x, y } = screenToRoomPercent(clientX, clientY);
-        setSelectedItem(prev => prev ? { ...prev, x, y } : null);
+        // Clamp by item size so it stays fully inside the room
+        const containerEl = roomRef.current;
+        const rect = containerEl?.getBoundingClientRect();
+        const containerW = rect?.width || 1;
+        const containerH = rect?.height || 1;
+        const scaledW = (selectedItem.width * selectedItem.scale) || 0;
+        const scaledH = (selectedItem.height * selectedItem.scale) || 0;
+        const halfWPct = Math.min(50, (scaledW / containerW) * 50);
+        const halfHPct = Math.min(50, (scaledH / containerH) * 50);
+        // Allow full edge placement (no extra side margins)
+        const leftBound = halfWPct;
+        const rightBound = 100 - halfWPct;
+          const clampedX = Math.max(leftBound, Math.min(rightBound, x));
+        // Allow to edges: do not enforce extra 5% margins
+        const clampedY = Math.max(halfHPct, Math.min(100 - halfHPct, y));
+        setSelectedItem(prev => prev ? { ...prev, x: clampedX, y: clampedY } : null);
       } else if (isRotating) {
-        const petRoomContainer = document.querySelector('.pet-room-inner-container') as HTMLElement;
-        
-        if (petRoomContainer) {
-          const rect = petRoomContainer.getBoundingClientRect();
+        const containerEl = roomRef.current;
+        if (containerEl) {
+          const rect = containerEl.getBoundingClientRect();
           const centerX = rect.left + (rect.width * selectedItem.x / 100);
           const centerY = rect.top + (rect.height * selectedItem.y / 100);
           const angle = Math.atan2(clientY - centerY, clientX - centerX);
@@ -522,16 +533,6 @@ export default function InlineRoomEditor({ isOpen, onClose, petImage, petPositio
                 <img src={selectedItem.src} alt="" draggable={false} />
                 <div className="furniture-controls" style={{ zIndex: 1700 }}>
                   <div 
-                    style={{ position: 'absolute', top: '-50px', left: '-50px', width: '36px', height: '36px', backgroundColor: '#673AB7', border: '2px solid white', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '25px', color: 'white', fontWeight: 'bold', cursor: 'pointer', zIndex: 1700, pointerEvents: 'auto', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)' }}
-                    title="Send Forward/Back"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedItem(prev => prev ? { ...prev, layer: prev.layer === 'front' ? 'back' : 'front' } : null);
-                    }}
-                  >
-                    ⬆️
-                  </div>
-                  <div 
                     style={{ position: 'absolute', top: '-50px', left: '50%', transform: 'translateX(-50%)', width: '36px', height: '36px', backgroundColor: '#9C27B0', border: '2px solid white', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '25px', color: 'white', fontWeight: 'bold', cursor: 'grab', zIndex: 1700, pointerEvents: 'auto', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)' }}
                     title="Rotate"
                     onPointerDown={(e) => handleStartDrag(e, 'rotate')}
@@ -539,14 +540,14 @@ export default function InlineRoomEditor({ isOpen, onClose, petImage, petPositio
                     ↻
                   </div>
                   <div 
-                    style={{ position: 'absolute', bottom: '-50px', left: '-50px', width: '36px', height: '36px', backgroundColor: '#FFC107', border: '2px solid white', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '25px', color: 'black', fontWeight: 'bold', cursor: 'pointer', zIndex: 1700, pointerEvents: 'auto', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)' }}
-                    title={`Layer: ${selectedItem.layer === 'front' ? 'Front' : 'Back'}`}
+                    style={{ position: 'absolute', bottom: '-50px', left: '-50px', width: '36px', height: '36px', backgroundColor: '#FFC107', border: '2px solid white', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', color: '#111', fontWeight: 700, cursor: 'pointer', zIndex: 1700, pointerEvents: 'auto', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)' }}
+                    title={`Layer: ${selectedItem.layer === 'front' ? 'Front (in front of pet)' : 'Back (behind pet)'}`}
                     onClick={(e) => {
                       e.stopPropagation();
                       setSelectedItem(prev => prev ? { ...prev, layer: prev.layer === 'front' ? 'back' : 'front' } : null);
                     }}
                   >
-                    {selectedItem.layer === 'front' ? 'F' : 'B'}
+                    {selectedItem.layer === 'front' ? 'Front' : 'Back'}
                   </div>
                   <div 
                     style={{ position: 'absolute', bottom: '-50px', left: '50%', transform: 'translateX(-50%)', width: '36px', height: '36px', backgroundColor: '#2196F3', border: '2px solid white', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '25px', color: 'white', fontWeight: 'bold', cursor: 'nw-resize', zIndex: 1700, pointerEvents: 'auto', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)' }}

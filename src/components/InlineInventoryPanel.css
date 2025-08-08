@@ -18,11 +18,25 @@
   backdrop-filter: blur(10px);
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px 12px 0 0;
-  max-height: 50%;
+  max-height: 75%;
+  min-height: 25%;
   pointer-events: auto;
   transform: translateY(0);
   transition: transform 0.3s ease;
   box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Drag handle for resizing panel height */
+.inventory-drag-handle {
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 48px;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255,255,255,0.35);
+  cursor: ns-resize;
 }
 
 /* Close button above the panel */
@@ -136,7 +150,7 @@
   grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
   gap: 8px;
   padding: 12px;
-  max-height: 200px;
+  max-height: calc(100% - 140px); /* leave room for header */
   overflow-y: auto;
 }
 

@@ -15,9 +15,9 @@ export function CoinsProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const coinsRef = ref(db, 'playerStats/coins');
     const unsubscribe = onValue(coinsRef, (snapshot: DataSnapshot) => {
-      const value = snapshot.val();
-      if (typeof value === 'number') {
-        setCoins(value);
+      const valueUnknown: unknown = snapshot.val();
+      if (typeof valueUnknown === 'number') {
+        setCoins(valueUnknown);
       } else {
         setCoins(0);
       }

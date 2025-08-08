@@ -66,7 +66,7 @@ export default function FurnitureEditOverlay({ isOpen, onClose }: FurnitureEditO
       roomContainerRef.current?.clientWidth || 0,
       roomContainerRef.current?.clientHeight || 0
     );
-    const baseSize = (100 / 100) * baseMeasure;
+    const baseSize = baseMeasure;
     return (sizePercent / 100) * baseSize;
   }, []);
 
@@ -148,7 +148,7 @@ export default function FurnitureEditOverlay({ isOpen, onClose }: FurnitureEditO
   const handlePointerUp = (e: React.PointerEvent) => {
     setIsDragging(false);
     setIsRotating(false);
-    try { (e.target as Element).releasePointerCapture(e.pointerId); } catch {}
+    try { (e.target as Element).releasePointerCapture(e.pointerId); } catch { /* ignore */ }
   };
 
   const handleLayerToggle = () => { if (selectedItem) setSelectedItem({ ...selectedItem, layer: selectedItem.layer === 'front' ? 'back' : 'front' }); };
@@ -206,8 +206,14 @@ export default function FurnitureEditOverlay({ isOpen, onClose }: FurnitureEditO
     );
   };
 
+  const rootVars: React.CSSProperties = {
+    ['--floor-start' as unknown as keyof React.CSSProperties]: `${ROOM_ZONES.FLOOR.startY}%`,
+    ['--wall-start' as unknown as keyof React.CSSProperties]: `${ROOM_ZONES.WALL.startY}%`,
+    ['--ceiling-start' as unknown as keyof React.CSSProperties]: `${ROOM_ZONES.CEILING.startY}%`,
+  };
+
   return (
-    <div className="furniture-edit-overlay" style={{ ['--floor-start' as any]: `${ROOM_ZONES.FLOOR.startY}%`, ['--wall-start' as any]: `${ROOM_ZONES.WALL.startY}%`, ['--ceiling-start' as any]: `${ROOM_ZONES.CEILING.startY}%` }}>
+    <div className="furniture-edit-overlay" style={rootVars}>
       <div className="furniture-edit-header">
         <button className="close-button" onClick={onClose}>×</button>
         <h2>{mode === 'browse' ? 'Select Item' : (mode === 'place' ? 'Place Item' : 'Edit Item')}</h2>

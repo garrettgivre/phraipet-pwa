@@ -10,11 +10,15 @@ export default function Play() {
   };
 
   const handlePhraiJump = () => {
-    navigate('/phraijump');
+    void navigate('/phraijump');
   };
 
   const handlePhraiCrush = () => {
-    navigate('/phraicrush');
+    void navigate('/phraicrush');
+  };
+
+  const handleRescuePals = () => {
+    void navigate('/rescuepals');
   };
 
   return (
@@ -40,7 +44,14 @@ export default function Play() {
           <div className="game-subtitle">Advanced Match-3</div>
         </button>
         
-        {/* Space for more games in the future */}
+        <button 
+          className="game-button rescuepals-button"
+          onClick={handleRescuePals}
+        >
+          <div className="game-icon">🦆🐈</div>
+          <div className="game-title">Rescue Pals</div>
+          <div className="game-subtitle">Duck & Cat Puzzle</div>
+        </button>
       </div>
       
       <button 

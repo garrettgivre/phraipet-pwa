@@ -115,11 +115,42 @@ export default function InlineInventoryPanel({
     return [] as string[];
   }, [selectedMainCategory]);
 
+  // Resizable panel state
+  const [panelHeightPct, setPanelHeightPct] = useState<number>(50); // percent of viewport height
+  const [isResizing, setIsResizing] = useState<boolean>(false);
+
+  const beginResize = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const startY = e.clientY;
+    const startPct = panelHeightPct;
+    setIsResizing(true);
+
+    const onMove = (ev: PointerEvent) => {
+      const dy = startY - ev.clientY; // dragging up increases height
+      const vh = window.innerHeight || 1;
+      const deltaPct = (dy / vh) * 100;
+      const next = Math.max(25, Math.min(75, Math.round(startPct + deltaPct)));
+      setPanelHeightPct(next);
+    };
+
+    const onUp = () => {
+      setIsResizing(false);
+      window.removeEventListener('pointermove', onMove as any);
+      window.removeEventListener('pointerup', onUp);
+      window.removeEventListener('pointercancel', onUp);
+    };
+
+    window.addEventListener('pointermove', onMove as any, { passive: false });
+    window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onUp);
+  }, [panelHeightPct]);
+
   if (!isOpen) return null;
 
   return (
     <div className="inline-inventory-panel">
-      <div className="inventory-panel">
+      <div className="inventory-panel" style={{ height: `${panelHeightPct}dvh` }}>
+        <div className="inventory-drag-handle" onPointerDown={beginResize} />
         <button className="close-inventory-btn" onClick={onClose} title="Close Inventory">
           ✕
         </button>

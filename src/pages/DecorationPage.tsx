@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useMemo, useCallback, useRef } from "react";
-import { useNavigate } from "react-router-dom";
 import { useDecoration, decorImageCache, decorZoomStylesCache } from "../contexts/DecorationContext";
 import { defaultDecorationItems } from "../data/decorations";
 import type {
@@ -502,7 +501,7 @@ export default function DecorationPage() {
       if (import.meta.env.DEV) console.log("Missing new theme items, triggering auto-refresh");
       void handleRefreshFurniture();
     }
-  }, [decorations]);
+  }, [decorations, handleRefreshFurniture]);
 
   const handleSelectFurniture = (item: DecorationInventoryItem) => {
     if (item.type === "furniture") {
@@ -540,7 +539,7 @@ export default function DecorationPage() {
     window.setTimeout(() => setIsTransitioning(false), 150);
   };
 
-  const handleRefreshFurniture = async () => {
+  const handleRefreshFurniture = useCallback(async () => {
     setIsRefreshing(true);
     const success = await forceUpdateFurnitureItems(decorations);
     if (success) {
@@ -549,7 +548,7 @@ export default function DecorationPage() {
       alert("Failed to refresh furniture. Check console for details.");
       setIsRefreshing(false);
     }
-  };
+  }, [decorations]);
 
   const furnitureItemsExist = useMemo(() => decorations.some(item => item.type === "furniture"), [decorations]);
 

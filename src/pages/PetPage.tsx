@@ -39,42 +39,25 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection, onFeedPet,
   const [localHungerValue, setLocalHungerValue] = useState<number | null>(null);
   const [localCleanlinessValue, setLocalCleanlinessValue] = useState<number | null>(null);
   
-  // New state for furniture edit mode
   const [isEditMode, setIsEditMode] = useState(false);
-  
-  // New state for inventory panel
   const [isInventoryOpen, setIsInventoryOpen] = useState(false);
   const [inventoryCategory, setInventoryCategory] = useState<"Food" | "Grooming" | "Toys">("Food");
   const [inventorySubCategory, setInventorySubCategory] = useState<string | undefined>(undefined);
   
-  // Initialize local hunger value when pet changes
   useEffect(() => {
-    if (pet && typeof pet.hunger === 'number') {
-      setLocalHungerValue(pet.hunger);
-    }
+    if (pet && typeof pet.hunger === 'number') { setLocalHungerValue(pet.hunger); }
   }, [pet]);
   
-  // Initialize local cleanliness value when pet changes
   useEffect(() => {
-    if (pet && typeof pet.cleanliness === 'number') {
-      setLocalCleanlinessValue(pet.cleanliness);
-    }
+    if (pet && typeof pet.cleanliness === 'number') { setLocalCleanlinessValue(pet.cleanliness); }
   }, [pet]);
   
-  // Get the current hunger value to display (either local animated value or from pet data)
   const currentHungerValue = localHungerValue !== null ? localHungerValue : (pet?.hunger || 0);
-  
-  // Get the current cleanliness value to display (either local animated value or from pet data)
   const currentCleanlinessValue = localCleanlinessValue !== null ? localCleanlinessValue : (pet?.cleanliness || 0);
   
-  // Create a modified needInfo array with our local values
   const modifiedNeedInfo = needInfo.map(need => {
-    if (need.need === "hunger" && localHungerValue !== null) {
-      return { ...need, value: currentHungerValue };
-    }
-    if (need.need === "cleanliness" && localCleanlinessValue !== null) {
-      return { ...need, value: currentCleanlinessValue };
-    }
+    if (need.need === "hunger" && localHungerValue !== null) return { ...need, value: currentHungerValue };
+    if (need.need === "cleanliness" && localCleanlinessValue !== null) return { ...need, value: currentCleanlinessValue };
     return need;
   });
 
@@ -143,9 +126,7 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection, onFeedPet,
       }
     };
     updateMoodPhrase();
-    const interval = window.setInterval(() => {
-      if (Math.random() < 0.3) updateMoodPhrase();
-    }, 10000 + Math.random() * 5000);
+    const interval = window.setInterval(() => { if (Math.random() < 0.3) updateMoodPhrase(); }, 10000 + Math.random() * 5000);
     return () => window.clearInterval(interval);
   }, [pet, isPlaying, activeToy]);
 
@@ -163,7 +144,7 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection, onFeedPet,
   const handleNeedClick = (needType: Need) => {
     switch (needType) {
       case "affection":
-        onIncreaseAffection(5);
+        void onIncreaseAffection(5);
         break;
       case "hunger":
         setInventoryCategory("Food");
@@ -253,7 +234,7 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection, onFeedPet,
         <ConfirmationDialog isOpen={showConfirmDialog} title="Feed Pet?" message="Would you like to feed this to your pet?" onConfirm={confirmUseFood} onCancel={cancelUseFood} />
       )}
       <InlineRoomEditor isOpen={isEditMode} onClose={() => setIsEditMode(false)} petImage={petImage} petPosition={position} moodPhrase={showSpeechBubble ? currentMoodPhrase : undefined} isFacingRight={isFacingRight} />
-      <InlineInventoryPanel isOpen={isInventoryOpen} onClose={() => setIsInventoryOpen(false)} pet={pet} onFeedPet={onFeedPet} onGroomPet={onGroomPet} onPlayWithToy={onPlayWithToy} initialCategory={inventoryCategory} initialSubCategory={inventorySubCategory} />
+      <InlineInventoryPanel isOpen={isInventoryOpen} onClose={() => setIsInventoryOpen(false)} pet={pet} onFeedPet={(i) => { void onFeedPet(i); }} onGroomPet={(i) => { void onGroomPet(i); }} onPlayWithToy={(i) => { void onPlayWithToy(i); }} initialCategory={inventoryCategory} initialSubCategory={inventorySubCategory} />
     </div>
   );
 }

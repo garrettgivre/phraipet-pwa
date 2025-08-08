@@ -166,14 +166,84 @@ export default function Phraijump() {
     powerUpsUsed: 0,
     specialPlatformsUsed: 0
   });
+
+  // Gyro controls (tilt left/right)
+  const gyroEnabledRef = useRef<boolean>(false);
+  const tiltXRef = useRef<number>(0); // degrees, gamma from -90(left) to 90(right)
+  const lastGyroTsRef = useRef<number>(0);
+  // Touch control state
+  const touchActiveRef = useRef<boolean>(false);
+  const touchStartXRef = useRef<number>(0);
+  const touchDirRef = useRef<-1 | 0 | 1>(0);
+  const [tiltStatus, setTiltStatus] = useState<'idle' | 'enabling' | 'enabled' | 'unsupported' | 'no-sensor'>('idle');
+
+  const enableGyroControls = useCallback(async () => {
+    try {
+      setTiltStatus('enabling');
+      // iOS 13+ permission gate for DeviceMotion
+      const dmAny: any = (window as any).DeviceMotionEvent;
+      if (dmAny && typeof dmAny.requestPermission === 'function') {
+        const permission = await dmAny.requestPermission();
+        if (permission !== 'granted') {
+          console.warn('Gyro permission not granted');
+          setTiltStatus('unsupported');
+          return;
+        }
+      }
+
+      // DeviceOrientation provides gamma tilt for left/right
+      const handleOrientation = (e: DeviceOrientationEvent) => {
+        if (typeof e.gamma === 'number') {
+          tiltXRef.current = e.gamma; // -90..90
+          lastGyroTsRef.current = Date.now();
+          if (!gyroEnabledRef.current) setTiltStatus('enabled');
+          gyroEnabledRef.current = true;
+        }
+      };
+
+      window.addEventListener('deviceorientation', handleOrientation as EventListener, { passive: true } as AddEventListenerOptions);
+
+      // Fallback: DeviceMotion (Android) -> approximate gamma from acceleration including gravity
+      const handleMotion = (e: DeviceMotionEvent) => {
+        const g = e.accelerationIncludingGravity;
+        if (g && typeof g.x === 'number' && typeof g.z === 'number') {
+          const angle = Math.atan2(g.x as number, g.z as number) * (180 / Math.PI); // approx left/right tilt
+          tiltXRef.current = angle;
+          lastGyroTsRef.current = Date.now();
+          if (!gyroEnabledRef.current) setTiltStatus('enabled');
+          gyroEnabledRef.current = true;
+        }
+      };
+      window.addEventListener('devicemotion', handleMotion as EventListener, { passive: true } as AddEventListenerOptions);
+
+      // Cleanup listener on page unload
+      const cleanup = () => {
+        window.removeEventListener('deviceorientation', handleOrientation as EventListener);
+        window.removeEventListener('devicemotion', handleMotion as EventListener);
+        gyroEnabledRef.current = false;
+      };
+      window.addEventListener('pagehide', cleanup);
+
+      // If no events arrive shortly, inform user
+      window.setTimeout(() => {
+        const since = Date.now() - lastGyroTsRef.current;
+        if (since > 2500 && tiltStatus !== 'enabled') {
+          setTiltStatus('no-sensor');
+        }
+      }, 3000);
+    } catch (err) {
+      console.error('Failed to enable gyro controls', err);
+      setTiltStatus('unsupported');
+    }
+  }, []);
   
   // Game constants - these will be scaled based on screen size
   const BASE_WIDTH = 400;
   const BASE_HEIGHT = 600;
-  const GRAVITY = 0.8;
-  const JUMP_FORCE = -18;
-  const PLAYER_SPEED = 5;
-  const PLATFORM_WIDTH = 80;
+  const GRAVITY = 0.68; // slightly lighter gravity for easier control
+  const JUMP_FORCE = -20.5; // stronger jump for forgiveness
+  const PLAYER_SPEED = 5.5; // a touch more lateral control
+  const PLATFORM_WIDTH = 100; // wider default platforms
   const PLATFORM_HEIGHT = 15;
   
   // Initialize achievements system
@@ -1418,8 +1488,64 @@ export default function Phraijump() {
     });
   };
   
+  // Helper: draw a soft, multi-lobed cloud with lighting and soft edges
+  const drawSoftCloud = (
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    baseSize: number,
+    alpha: number,
+    timeMs: number
+  ) => {
+    const t = timeMs * 0.001;
+    const lobes = 4 + ((Math.abs(Math.floor(x + y)) % 3)); // 4-6 lobes
+    const wind = Math.sin(t * 0.2 + (x + y) * 0.0005) * 6; // gentle wobble
+
+    // Subtle shadow underneath
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, alpha * 0.35);
+    ctx.fillStyle = 'rgba(0,0,0,0.18)';
+    ctx.beginPath();
+    ctx.ellipse(x + 6, y + baseSize * 0.28, baseSize * 1.0, baseSize * 0.35, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // Build cloud body with radial gradients per lobe
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    for (let i = 0; i < lobes; i++) {
+      const angle = (Math.PI * 2 * i) / lobes;
+      const lx = x + Math.cos(angle) * baseSize * (0.25 + 0.25 * Math.sin(i * 1.7 + t));
+      const ly = y + Math.sin(angle) * baseSize * (0.18 + 0.22 * Math.cos(i * 1.3 + t)) + wind * 0.1;
+      const r = baseSize * (0.42 + 0.18 * Math.sin(i * 2.1 + t * 0.8));
+
+      const grad = ctx.createRadialGradient(lx - r * 0.25, ly - r * 0.35, r * 0.1, lx, ly, r);
+      grad.addColorStop(0, `rgba(255,255,255, ${alpha * 0.95})`);
+      grad.addColorStop(0.6, `rgba(255,255,255, ${alpha * 0.7})`);
+      grad.addColorStop(1, `rgba(255,255,255, 0)`);
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(lx, ly, r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+
+    // Soft rim light on top-left
+    ctx.save();
+    ctx.globalAlpha = alpha * 0.6;
+    const rim = ctx.createRadialGradient(x - baseSize * 0.4, y - baseSize * 0.5, baseSize * 0.2, x, y, baseSize * 1.2);
+    rim.addColorStop(0, 'rgba(255,255,255,0.5)');
+    rim.addColorStop(0.4, 'rgba(255,255,255,0.25)');
+    rim.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = rim;
+    ctx.beginPath();
+    ctx.ellipse(x, y, baseSize * 1.4, baseSize * 0.9, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  };
+
   // Render clouds for sky zone with proper atmospheric layering
-  const renderClouds = (ctx: CanvasRenderingContext2D, cameraY: number) => {
+  const renderClouds = (ctx: CanvasRenderingContext2D, cameraY: number, time: number) => {
     // Define cloud layer altitude ranges
     const CLOUD_LAYER_TOP = -1000;    // Clouds start appearing
     const CLOUD_LAYER_THICK = -1500;  // Dense cloud layer
@@ -1484,8 +1610,6 @@ export default function Phraijump() {
       
       if (layerAlpha <= 0.01) return; // Skip invisible layers
       
-      ctx.fillStyle = `rgba(255, 255, 255, ${layerAlpha})`;
-      
       // Generate clouds at fixed positions in the world
       const cloudsInLayer = Math.floor(40 * layer.density);
       
@@ -1501,29 +1625,19 @@ export default function Phraijump() {
         
         // Very subtle parallax effect (clouds barely move relative to camera)
         const parallaxOffset = cameraY * layer.parallax;
-        const screenX = worldX;
+        const drift = Math.sin((time * 0.0003) + (worldY * 0.001)) * (10 + layerIndex * 6); // subtle horizontal drift
+        const screenX = worldX + drift;
         const screenY = worldY - cameraY + parallaxOffset;
         
         // Only render visible clouds
         if (screenY > -150 && screenY < BASE_HEIGHT + 150 && 
             screenX > -200 && screenX < BASE_WIDTH + 200) {
           
-          const sizeMultiplier = (0.8 + ((seedSize % 40) / 100)) * layer.scale;
-          const cloudSize = 25 * sizeMultiplier;
-          
-          // Add some variation to cloud positions
-          const offsetX1 = ((seedX * 13) % 30) - 15;
-          const offsetX2 = ((seedX * 19) % 24) - 12;
-          const offsetY1 = ((seedY * 23) % 16) - 8;
-          
-          // Draw fluffy cloud shape
-          ctx.beginPath();
-          ctx.arc(screenX + offsetX1, screenY + offsetY1, cloudSize * 0.7, 0, Math.PI * 2);
-          ctx.arc(screenX + 20 + offsetX2, screenY, cloudSize * 0.9, 0, Math.PI * 2);
-          ctx.arc(screenX + 40 + offsetX1 * 0.7, screenY + offsetY1 * 0.5, cloudSize * 0.8, 0, Math.PI * 2);
-          ctx.arc(screenX + 20, screenY - 18 + offsetY1, cloudSize * 0.6, 0, Math.PI * 2);
-          ctx.arc(screenX + 35, screenY - 10, cloudSize * 0.5, 0, Math.PI * 2);
-          ctx.fill();
+          const sizeMultiplier = (0.85 + ((seedSize % 40) / 90)) * layer.scale;
+          const cloudSize = 30 * sizeMultiplier;
+
+          const cloudAlpha = layerAlpha * (0.9 - layerIndex * 0.12);
+          drawSoftCloud(ctx, screenX, screenY, cloudSize, Math.max(0, cloudAlpha), time);
         }
       }
     });
@@ -2523,8 +2637,8 @@ export default function Phraijump() {
     });
     
     // Generate initial batch of platforms with variety
-    for (let i = 1; i < 200; i++) {
-      const platformY = BASE_HEIGHT - 100 - (i * 120);
+    for (let i = 1; i < 220; i++) {
+      const platformY = BASE_HEIGHT - 100 - (i * 105); // denser spacing
       const { currentZone } = getZoneInfo(platformY);
       
       // Zone-specific platform generation
@@ -2533,9 +2647,9 @@ export default function Phraijump() {
       
       // Platform width based on zone
       if (currentZone === 'LAND') {
-        chosenWidth = PLATFORM_WIDTH; // All same size in LAND
+        chosenWidth = PLATFORM_WIDTH * 1.1;
       } else {
-        const widthVariation = [0.8, 1.0, 1.2, 1.5, 0.6, 1.3];
+        const widthVariation = [1.0, 1.2, 1.4, 1.6, 0.9, 1.3];
         chosenWidth = PLATFORM_WIDTH * widthVariation[Math.floor(Math.random() * widthVariation.length)];
       }
       
@@ -2615,12 +2729,12 @@ export default function Phraijump() {
     const highestPlatform = Math.min(...platforms.map(p => p.y));
     
     // If player is getting close to the highest platform, generate more
-    if (playerY - highestPlatform < 2000) {
+    if (playerY - highestPlatform < 2200) {
       const numPlatforms = platforms.length;
       
       // Add 50 more platforms with variety
-      for (let i = 0; i < 50; i++) {
-        const platformY = highestPlatform - (i + 1) * 120;
+      for (let i = 0; i < 60; i++) {
+        const platformY = highestPlatform - (i + 1) * 105; // denser spacing continuing
         const { currentZone } = getZoneInfo(platformY);
         
         // Zone-specific platform generation
@@ -2628,9 +2742,9 @@ export default function Phraijump() {
         
         // Platform width based on zone
         if (currentZone === 'LAND') {
-          chosenWidth = PLATFORM_WIDTH; // All same size in LAND
+          chosenWidth = PLATFORM_WIDTH * 1.1;
         } else {
-          const widthVariation = [0.8, 1.0, 1.2, 1.5, 0.6, 1.3];
+          const widthVariation = [1.0, 1.2, 1.4, 1.6, 0.9, 1.3];
           chosenWidth = PLATFORM_WIDTH * widthVariation[Math.floor(Math.random() * widthVariation.length)];
         }
         
@@ -2788,7 +2902,7 @@ export default function Phraijump() {
     
     // Render clouds in SKY zone
     if (currentZone === 'SKY' || (currentZone === 'LAND' && nextZone === 'SKY' && progress > 0.2)) {
-      renderClouds(ctx, cameraYRef.current);
+      renderClouds(ctx, cameraYRef.current, time);
     }
     
     // Render twinkling stars in SPACE and DEEP_SPACE zones
@@ -2807,9 +2921,9 @@ export default function Phraijump() {
     updatePowerUps(player, time);
     
     // Advanced platformer mechanics constants
-    const COYOTE_TIME_MS = 150; // 150ms grace period after leaving platform
-    const JUMP_BUFFER_MS = 100; // 100ms jump buffer window
-    const AIR_CONTROL = 0.7; // Air movement control (70% of ground control)
+    const COYOTE_TIME_MS = 220; // more forgiving coyote time
+    const JUMP_BUFFER_MS = 150; // longer jump buffer
+    const AIR_CONTROL = 0.82; // more air control
     const CORNER_CORRECTION = 6; // Pixels to check for corner correction
     
     // Update advanced mechanics timers
@@ -2863,7 +2977,7 @@ export default function Phraijump() {
       sessionStatsRef.current.jumps += 1;
       } else if (canJump && player.grounded) {
         // Normal ground jump
-        player.velocityY = -20; // Original jump height
+        player.velocityY = JUMP_FORCE;
         player.jumpBufferTime = 0;
         player.grounded = false;
         // Zone-themed landing particles - more subtle
@@ -2882,7 +2996,7 @@ export default function Phraijump() {
       sessionStatsRef.current.jumps += 1;
     } else if (canDoubleJump) {
       // Double jump
-      player.velocityY = -20; // Original jump height
+      player.velocityY = JUMP_FORCE * 0.92; // slightly weaker than ground jump
       player.doubleJumpAvailable = false;
               // Zone-themed double jump particles - more controlled
               const { currentZone: currentZone3 } = getZoneInfo(cameraYRef.current);
@@ -2905,12 +3019,27 @@ export default function Phraijump() {
     const effectiveSpeed = PLAYER_SPEED * player.speedMultiplier;
     const movementStrength = player.grounded ? 1.0 : AIR_CONTROL;
     
-    if (keysRef.current.has('ArrowLeft') || keysRef.current.has('a')) {
-      const targetVelX = -effectiveSpeed * movementStrength;
-      player.velocityX += (targetVelX - player.velocityX) * (player.grounded ? 0.3 : 0.1);
-    } else if (keysRef.current.has('ArrowRight') || keysRef.current.has('d')) {
-      const targetVelX = effectiveSpeed * movementStrength;
-      player.velocityX += (targetVelX - player.velocityX) * (player.grounded ? 0.3 : 0.1);
+    // Keyboard input influence
+    let inputAxis = 0; // -1 left, +1 right
+    if (keysRef.current.has('ArrowLeft') || keysRef.current.has('a')) inputAxis -= 1;
+    if (keysRef.current.has('ArrowRight') || keysRef.current.has('d')) inputAxis += 1;
+
+    // Gyro influence (if enabled and touch not active): map gamma (-90..90) to [-1,1] with deadzone
+    let tiltAxis = 0;
+    if (gyroEnabledRef.current && !touchActiveRef.current) {
+      const gamma = tiltXRef.current; // degrees
+      const dead = 3; // degrees deadzone
+      const clampGamma = Math.max(-45, Math.min(45, gamma));
+      if (Math.abs(clampGamma) > dead) {
+        tiltAxis = clampGamma / 45; // -1..1
+      }
+    }
+
+    const axis = Math.max(-1, Math.min(1, inputAxis + tiltAxis));
+
+    if (axis !== 0) {
+      const targetVelX = axis * effectiveSpeed * movementStrength;
+      player.velocityX += (targetVelX - player.velocityX) * (player.grounded ? 0.35 : 0.15);
     } else {
       // Enhanced friction - different for ground vs air
       player.velocityX *= player.grounded ? 0.75 : 0.95;
@@ -3297,7 +3426,7 @@ export default function Phraijump() {
     gameLoopRef.current = requestAnimationFrame(gameLoop);
   }, [canvasDimensions]);
   
-  // Simplified touch controls for mobile - side-to-side movement only
+  // Touch controls for mobile - swipe/drag left-right; ignores gyro while active
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     e.preventDefault();
     const touch = e.touches[0];
@@ -3305,13 +3434,18 @@ export default function Phraijump() {
     if (!rect) return;
     
     const x = touch.clientX - rect.left;
+    touchActiveRef.current = true;
+    touchStartXRef.current = x;
+    // Initial intent relative to canvas center
     const centerX = rect.width / 2;
-    
-    // Left or right side movement
+    keysRef.current.delete('ArrowLeft');
+    keysRef.current.delete('ArrowRight');
     if (x < centerX) {
       keysRef.current.add('ArrowLeft');
+      touchDirRef.current = -1;
     } else {
       keysRef.current.add('ArrowRight');
+      touchDirRef.current = 1;
     }
   }, []);
   
@@ -3321,11 +3455,33 @@ export default function Phraijump() {
     // Clear movement keys
     keysRef.current.delete('ArrowLeft');
     keysRef.current.delete('ArrowRight');
+    touchActiveRef.current = false;
+    touchDirRef.current = 0;
   }, []);
   
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
     e.preventDefault();
-    // Prevent scrolling while playing
+    const touch = e.touches[0];
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const x = touch.clientX - rect.left;
+    const dx = x - touchStartXRef.current;
+    const threshold = 8; // px
+    const prevDir = touchDirRef.current;
+    if (Math.abs(dx) > threshold) {
+      const dir: -1 | 1 = dx < 0 ? -1 : 1;
+      if (dir !== prevDir) {
+        // Update key set to reflect new direction
+        if (dir === -1) {
+          keysRef.current.delete('ArrowRight');
+          keysRef.current.add('ArrowLeft');
+        } else {
+          keysRef.current.delete('ArrowLeft');
+          keysRef.current.add('ArrowRight');
+        }
+        touchDirRef.current = dir;
+      }
+    }
   }, []);
   
   // Enhanced keyboard controls with proper input tracking
@@ -4039,6 +4195,16 @@ export default function Phraijump() {
               <button className="start-button" onClick={startGame}>
                 Start Game
               </button>
+              <button className="menu-button" onClick={() => { void enableGyroControls(); }}>
+                {tiltStatus === 'enabled' ? 'Tilt Enabled' : 'Enable Tilt Controls'}
+              </button>
+              {tiltStatus !== 'idle' && tiltStatus !== 'enabled' && (
+                <div style={{ marginTop: 8, color: 'rgba(255,255,255,0.85)', fontSize: 14 }}>
+                  {tiltStatus === 'enabling' && 'Awaiting permission/sensor...'}
+                  {tiltStatus === 'unsupported' && 'Tilt permission denied or unsupported.'}
+                  {tiltStatus === 'no-sensor' && 'No motion/orientation events detected.'}
+                </div>
+              )}
               
               {/* Show some recent achievements */}
               {achievements.filter(a => a.completed).length > 0 && (
