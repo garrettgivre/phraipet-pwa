@@ -3,24 +3,30 @@ import { initializeApp, type FirebaseOptions } from "firebase/app";
 import { getDatabase }   from "firebase/database";
 import { getAuth, signInAnonymously, onAuthStateChanged } from "firebase/auth";
 
+const fallbackConfig: FirebaseOptions = {
+  apiKey: "AIzaSyCsDWPHyJt6VzAo5CIlqIOl9ekctSdcEgQ",
+  authDomain: "phraipet.firebaseapp.com",
+  databaseURL: "https://phraipet-default-rtdb.firebaseio.com",
+  projectId: "phraipet",
+  storageBucket: "phraipet.appspot.com",
+  messagingSenderId: "939633456385",
+  appId: "1:939633456385:web:7f58b7377b0a8f2c921700",
+};
+
 const firebaseConfig: FirebaseOptions = {
-  apiKey: String(import.meta.env.VITE_FIREBASE_API_KEY ?? ""),
-  authDomain: String(import.meta.env.VITE_FIREBASE_AUTH_DOMAIN ?? ""),
-  databaseURL: String(import.meta.env.VITE_FIREBASE_DATABASE_URL ?? ""),
-  projectId: String(import.meta.env.VITE_FIREBASE_PROJECT_ID ?? ""),
-  storageBucket: String(import.meta.env.VITE_FIREBASE_STORAGE_BUCKET ?? ""),
-  messagingSenderId: String(import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID ?? ""),
-  appId: String(import.meta.env.VITE_FIREBASE_APP_ID ?? ""),
+  apiKey: String(import.meta.env.VITE_FIREBASE_API_KEY || fallbackConfig.apiKey),
+  authDomain: String(import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || fallbackConfig.authDomain),
+  databaseURL: String(import.meta.env.VITE_FIREBASE_DATABASE_URL || fallbackConfig.databaseURL),
+  projectId: String(import.meta.env.VITE_FIREBASE_PROJECT_ID || fallbackConfig.projectId),
+  storageBucket: String(import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || fallbackConfig.storageBucket),
+  messagingSenderId: String(import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || fallbackConfig.messagingSenderId),
+  appId: String(import.meta.env.VITE_FIREBASE_APP_ID || fallbackConfig.appId),
 };
 
 /* Init services */
 const app  = initializeApp(firebaseConfig);
 
-// Ensure we always pass a valid Realtime Database URL
-const resolvedDatabaseUrl = String(
-  import.meta.env.VITE_FIREBASE_DATABASE_URL ||
-  "https://phraipet-default-rtdb.firebaseio.com"
-);
+const resolvedDatabaseUrl = String(firebaseConfig.databaseURL || fallbackConfig.databaseURL);
 if (import.meta.env.DEV && (!resolvedDatabaseUrl || !resolvedDatabaseUrl.startsWith("https://"))) {
   console.error("Firebase: Invalid database URL. Expected https://<project>-default-rtdb.firebaseio.com but got:", resolvedDatabaseUrl);
 }
