@@ -12,6 +12,7 @@ import ConfirmationDialog from "../components/ConfirmationDialog";
 import InlineRoomEditor from "../components/InlineRoomEditor";
 import RoomDesigner from "../components/RoomDesigner";
 import MobileRoomDesigner from "../components/MobileRoomDesigner";
+// duplicate React import removed
 import GroomingItem from "../components/GroomingItem";
 import InlineInventoryPanel from "../components/InlineInventoryPanel";
 import { getRandomMoodPhrase, getRandomToyPhrase } from "../utils/petPhrases";
@@ -183,6 +184,17 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection, onFeedPet,
   const cancelUseFood = () => { setShowConfirmDialog(false); setPendingFoodItem(null); };
   const toggleEditMode = () => { setIsEditMode(!isEditMode); };
   
+  // Decide which editor to render to avoid double overlays on mobile
+  const [isMobile, setIsMobile] = React.useState<boolean>(() =>
+    typeof window !== 'undefined' ? window.matchMedia('(max-width: 600px)').matches : false
+  );
+  React.useEffect(() => {
+    const mq = window.matchMedia('(max-width: 600px)');
+    const onChange = () => setIsMobile(mq.matches);
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
+
   return (
     <div className={`pet-page ${isEditMode ? 'edit-mode' : ''}`}>
       <CoinDisplay coins={coins} className={isEditMode ? "edit-mode-coin-display" : ""} />
@@ -236,10 +248,11 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection, onFeedPet,
         <ConfirmationDialog isOpen={showConfirmDialog} title="Feed Pet?" message="Would you like to feed this to your pet?" onConfirm={confirmUseFood} onCancel={cancelUseFood} />
       )}
       <InlineRoomEditor isOpen={isEditMode} onClose={() => setIsEditMode(false)} petImage={petImage} petPosition={position} moodPhrase={showSpeechBubble ? currentMoodPhrase : undefined} isFacingRight={isFacingRight} />
-      {/* Desktop/Tablet editor */}
-      <RoomDesigner isOpen={isEditMode} onClose={() => setIsEditMode(false)} />
-      {/* Mobile portrait editor */}
-      <MobileRoomDesigner isOpen={isEditMode} onClose={() => setIsEditMode(false)} />
+      {isMobile ? (
+        <MobileRoomDesigner isOpen={isEditMode} onClose={() => setIsEditMode(false)} />
+      ) : (
+        <RoomDesigner isOpen={isEditMode} onClose={() => setIsEditMode(false)} />
+      )}
       <InlineInventoryPanel isOpen={isInventoryOpen} onClose={() => setIsInventoryOpen(false)} pet={pet} onFeedPet={(i) => { void onFeedPet(i); }} onGroomPet={(i) => { void onGroomPet(i); }} onPlayWithToy={(i) => { void onPlayWithToy(i); }} initialCategory={inventoryCategory} initialSubCategory={inventorySubCategory} />
     </div>
   );

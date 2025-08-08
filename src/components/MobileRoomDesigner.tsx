@@ -11,7 +11,7 @@ export default function MobileRoomDesigner({ isOpen, onClose }: { isOpen: boolea
   const { roomLayers, getFilteredDecorations, addDecorItem, updateDecorItem, removeDecorItem, setRoomLayer } = useDecoration()
 
   const overlayRef = useRef<HTMLDivElement>(null)
-  const [sheetPct, setSheetPct] = useState<number>(65) // bottom sheet height (% of viewport)
+  const [sheetPct, setSheetPct] = useState<number>(48) // bottom sheet height (% of viewport)
   const [category, setCategory] = useState<DecorationItemType>('furniture')
   const [query, setQuery] = useState('')
   const [items, setItems] = useState<DecorationInventoryItem[]>([])
@@ -168,7 +168,7 @@ export default function MobileRoomDesigner({ isOpen, onClose }: { isOpen: boolea
         <div className="mrd-drag" onPointerDown={(e) => {
           const sy = e.clientY; const sh = sheetPct
           const onMove = (ev: PointerEvent) => {
-            const dy = ev.clientY - sy; const next = Math.max(28, Math.min(92, sh - (dy / window.innerHeight) * 100)); setSheetPct(Math.round(next))
+            const dy = ev.clientY - sy; const next = Math.max(24, Math.min(80, sh - (dy / window.innerHeight) * 100)); setSheetPct(Math.round(next))
           }
           const onUp = () => { window.removeEventListener('pointermove', onMove as any); window.removeEventListener('pointerup', onUp) }
           window.addEventListener('pointermove', onMove as any, { passive: false }); window.addEventListener('pointerup', onUp)
