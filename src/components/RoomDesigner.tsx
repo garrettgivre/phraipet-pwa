@@ -47,7 +47,8 @@ export default function RoomDesigner({ isOpen, onClose }: RoomDesignerProps) {
   const [snapGrid, setSnapGrid] = useState(true)
   const [gridPct, setGridPct] = useState(5)
   const [snapZones, setSnapZones] = useState(true)
-  const [showInspector, setShowInspector] = useState(true)
+  const [showInspector, setShowInspector] = useState(() => (typeof window !== 'undefined' ? !window.matchMedia('(max-width: 600px)').matches : true))
+  const [showCatalog, setShowCatalog] = useState(true)
 
   // Align editor canvas precisely over the pet room container
   const [overlayBounds, setOverlayBounds] = useState<{ top: number; left: number; width: number; height: number }>({ top: 0, left: 0, width: 0, height: 0 })
@@ -76,6 +77,14 @@ export default function RoomDesigner({ isOpen, onClose }: RoomDesignerProps) {
     const list = getFilteredDecorations(activeCategory)
     setItems(list)
   }, [isOpen, activeCategory, getFilteredDecorations])
+
+  useEffect(() => {
+    if (!isOpen) return
+    const mq = window.matchMedia('(max-width: 600px)')
+    const onChange = () => setShowInspector(!mq.matches)
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
+  }, [isOpen])
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -249,6 +258,7 @@ export default function RoomDesigner({ isOpen, onClose }: RoomDesignerProps) {
       rotation: 0,
       layer: 'back',
     })
+    setShowCatalog(false)
   }
 
   const duplicate = () => {
@@ -281,6 +291,7 @@ export default function RoomDesigner({ isOpen, onClose }: RoomDesignerProps) {
         <input className="rd-number" type="number" min={1} max={25} value={gridPct} onChange={(e) => setGridPct(Math.max(1, Math.min(25, Number(e.target.value) || 5)))} />
         <label className="rd-toggle"><input type="checkbox" checked={snapZones} onChange={(e) => setSnapZones(e.target.checked)} /> Zones</label>
         <button className="rd-btn" onClick={() => setShowInspector((s) => !s)} title="Toggle properties">Props</button>
+        <button className="rd-btn" onClick={() => setShowCatalog((c) => !c)} title="Toggle catalog">Items</button>
       </div>
 
       <div
@@ -365,6 +376,7 @@ export default function RoomDesigner({ isOpen, onClose }: RoomDesignerProps) {
         </div>
       </div>
 
+      {showCatalog && (
       <div className="rd-catalog">
         <div className="rd-cat-header">
           <div className="rd-tabs">
@@ -389,6 +401,10 @@ export default function RoomDesigner({ isOpen, onClose }: RoomDesignerProps) {
           ))}
         </div>
       </div>
+      )}
+      {!showCatalog && (
+        <button className="rd-fab" onClick={() => setShowCatalog(true)} title="Open items">📦</button>
+      )}
     </div>
   )
 }

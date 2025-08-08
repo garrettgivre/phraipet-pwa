@@ -11,6 +11,7 @@ import PetNeedsDisplay from "../components/PetNeedsDisplay";
 import ConfirmationDialog from "../components/ConfirmationDialog";
 import InlineRoomEditor from "../components/InlineRoomEditor";
 import RoomDesigner from "../components/RoomDesigner";
+import MobileRoomDesigner from "../components/MobileRoomDesigner";
 import GroomingItem from "../components/GroomingItem";
 import InlineInventoryPanel from "../components/InlineInventoryPanel";
 import { getRandomMoodPhrase, getRandomToyPhrase } from "../utils/petPhrases";
@@ -235,7 +236,10 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection, onFeedPet,
         <ConfirmationDialog isOpen={showConfirmDialog} title="Feed Pet?" message="Would you like to feed this to your pet?" onConfirm={confirmUseFood} onCancel={cancelUseFood} />
       )}
       <InlineRoomEditor isOpen={isEditMode} onClose={() => setIsEditMode(false)} petImage={petImage} petPosition={position} moodPhrase={showSpeechBubble ? currentMoodPhrase : undefined} isFacingRight={isFacingRight} />
+      {/* Desktop/Tablet editor */}
       <RoomDesigner isOpen={isEditMode} onClose={() => setIsEditMode(false)} />
+      {/* Mobile portrait editor */}
+      <MobileRoomDesigner isOpen={isEditMode} onClose={() => setIsEditMode(false)} />
       <InlineInventoryPanel isOpen={isInventoryOpen} onClose={() => setIsInventoryOpen(false)} pet={pet} onFeedPet={(i) => { void onFeedPet(i); }} onGroomPet={(i) => { void onGroomPet(i); }} onPlayWithToy={(i) => { void onPlayWithToy(i); }} initialCategory={inventoryCategory} initialSubCategory={inventorySubCategory} />
     </div>
   );

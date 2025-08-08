@@ -88,6 +88,8 @@
 .rd-slot img { width: 100%; height: 64px; object-fit: contain; margin-bottom: 6px; }
 .rd-label { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
+.rd-fab { position: fixed; right: 12px; bottom: 70px; width: 52px; height: 52px; border-radius: 50%; background: #4caf50; color: #fff; border: 0; box-shadow: 0 6px 14px rgba(0,0,0,.35); font-size: 24px; display: flex; align-items: center; justify-content: center; pointer-events: auto; }
+
 @media (max-width: 480px) {
   .rd-toolbar { gap: 6px; padding: 6px; }
   .rd-number { width: 52px; }
