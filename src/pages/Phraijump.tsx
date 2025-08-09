@@ -147,6 +147,7 @@ export default function Phraijump() {
     const v = localStorage.getItem('phraijump_highscore');
     return v ? Number(v) || 0 : 0;
   });
+  const [controlMode, setControlMode] = useState<'auto' | 'tilt' | 'keyboard'>('auto');
   const [canvasDimensions, setCanvasDimensions] = useState({ 
     width: window.innerWidth, 
     height: window.innerHeight - 52 - 56 // Account for header and navbar only
@@ -177,6 +178,7 @@ export default function Phraijump() {
   const gyroEnabledRef = useRef<boolean>(false);
   const tiltXRef = useRef<number>(0); // degrees, gamma from -90(left) to 90(right)
   const lastGyroTsRef = useRef<number>(0);
+  const tiltOffsetRef = useRef<number>(0); // baseline calibration
   // Touch control state
   const touchActiveRef = useRef<boolean>(false);
   const touchStartXRef = useRef<number>(0);
@@ -186,14 +188,18 @@ export default function Phraijump() {
   const enableGyroControls = useCallback(async () => {
     try {
       setTiltStatus('enabling');
-      // iOS 13+ permission gate for DeviceMotion
+      // iOS 13+ permission gate for DeviceMotion, Android/Chrome does not require requestPermission()
       const dmAny: any = (window as any).DeviceMotionEvent;
       if (dmAny && typeof dmAny.requestPermission === 'function') {
-        const permission = await dmAny.requestPermission();
-        if (permission !== 'granted') {
-          console.warn('Gyro permission not granted');
-          setTiltStatus('unsupported');
-          return;
+        try {
+          const permission = await dmAny.requestPermission();
+          if (permission !== 'granted') {
+            console.warn('Gyro permission not granted');
+            setTiltStatus('unsupported');
+            return;
+          }
+        } catch {
+          // Fall through for Android/other browsers that reject
         }
       }
 
@@ -237,6 +243,13 @@ export default function Phraijump() {
           setTiltStatus('no-sensor');
         }
       }, 3000);
+
+      // Calibrate baseline tilt and set mode to tilt, clear any held keys
+      window.setTimeout(() => {
+        tiltOffsetRef.current = tiltXRef.current;
+        setControlMode('tilt');
+        keysRef.current.clear();
+      }, 200);
     } catch (err) {
       console.error('Failed to enable gyro controls', err);
       setTiltStatus('unsupported');
@@ -3060,18 +3073,20 @@ export default function Phraijump() {
     if (keysRef.current.has('ArrowLeft') || keysRef.current.has('a')) inputAxis -= 1;
     if (keysRef.current.has('ArrowRight') || keysRef.current.has('d')) inputAxis += 1;
 
-    // Gyro influence (if enabled and touch not active): map gamma (-90..90) to [-1,1] with deadzone
+    // Gyro influence (if enabled and mode is tilt): map calibrated gamma to [-1,1] with deadzone and smoothing
     let tiltAxis = 0;
-    if (gyroEnabledRef.current && !touchActiveRef.current) {
-      const gamma = tiltXRef.current; // degrees
-      const dead = 3; // degrees deadzone
-      const clampGamma = Math.max(-45, Math.min(45, gamma));
+    if (gyroEnabledRef.current && !touchActiveRef.current && (controlMode === 'tilt' || controlMode === 'auto')) {
+      const gammaRaw = tiltXRef.current - tiltOffsetRef.current; // degrees around baseline
+      const dead = 2; // smaller deadzone for more responsive feel
+      const clampGamma = Math.max(-45, Math.min(45, gammaRaw));
       if (Math.abs(clampGamma) > dead) {
-        tiltAxis = clampGamma / 45; // -1..1
+        const target = clampGamma / 30; // a bit more sensitive than /45
+        // Smooth tilt to avoid sudden jumps
+        tiltAxis = Math.max(-1, Math.min(1, target));
       }
     }
 
-    const axis = Math.max(-1, Math.min(1, inputAxis + tiltAxis));
+    const axis = Math.max(-1, Math.min(1, (controlMode === 'keyboard' ? inputAxis : (inputAxis + tiltAxis))));
 
     if (axis !== 0) {
       const targetVelX = axis * effectiveSpeed * movementStrength;
@@ -4253,6 +4268,12 @@ export default function Phraijump() {
               <button className="menu-button" onClick={() => { void enableGyroControls(); }}>
                 {tiltStatus === 'enabled' ? 'Tilt Enabled' : 'Enable Tilt Controls'}
               </button>
+              <div style={{ marginTop: 10, display: 'flex', gap: 8, justifyContent: 'center' }}>
+                <button className="menu-button" onClick={() => setControlMode('keyboard')}>Keyboard</button>
+                <button className="menu-button" onClick={() => setControlMode('tilt')}>Tilt</button>
+                <button className="menu-button" onClick={() => setControlMode('auto')}>Auto</button>
+                <button className="menu-button" onClick={() => { tiltOffsetRef.current = tiltXRef.current; }}>Recalibrate</button>
+              </div>
               {tiltStatus !== 'idle' && tiltStatus !== 'enabled' && (
                 <div style={{ marginTop: 8, color: 'rgba(255,255,255,0.85)', fontSize: 14 }}>
                   {tiltStatus === 'enabling' && 'Awaiting permission/sensor...'}
