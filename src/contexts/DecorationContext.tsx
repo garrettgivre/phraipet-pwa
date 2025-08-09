@@ -47,6 +47,7 @@ interface DecorationContextType {
   addDecorItem: (item: RoomDecorItem, position?: "front" | "back") => void; // Updated signature
   removeDecorItem: (position: "front" | "back", index: number) => void; // New method
   updateDecorItem: (originalLayer: "front" | "back", originalIndex: number, newItem: RoomDecorItem, newLayer: "front" | "back") => void; // New method
+  reorderDecorItem: (layer: "front" | "back", fromIndex: number, toIndex: number) => void; // Move within a layer
   getFilteredDecorations: (subCategory: DecorationItemType) => DecorationInventoryItem[];
 }
 
@@ -395,6 +396,23 @@ export function DecorationProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const reorderDecorItem = useCallback((layer: "front" | "back", fromIndex: number, toIndex: number) => {
+    setIsLocalUpdate(true);
+    setRoomLayers(prevLayers => {
+      const updated = { ...prevLayers };
+      const list = layer === "front" ? [...updated.frontDecor] : [...updated.backDecor];
+      if (fromIndex < 0 || fromIndex >= list.length) return prevLayers;
+      const clampedTo = Math.max(0, Math.min(list.length - 1, toIndex));
+      if (fromIndex === clampedTo) return prevLayers;
+      const [moved] = list.splice(fromIndex, 1);
+      list.splice(clampedTo, 0, moved);
+      if (layer === "front") updated.frontDecor = list; else updated.backDecor = list;
+      updated.decor = [...updated.backDecor, ...updated.frontDecor];
+      saveRoomToFirebase(updated);
+      return updated;
+    });
+  }, []);
+
   const getFilteredDecorations = useCallback(
     (subCategory: DecorationItemType) => {
       console.log(`Getting filtered decorations for ${subCategory}`);
@@ -420,6 +438,7 @@ export function DecorationProvider({ children }: { children: ReactNode }) {
         addDecorItem,
         removeDecorItem,
         updateDecorItem,
+        reorderDecorItem,
         getFilteredDecorations,
       }}
     >

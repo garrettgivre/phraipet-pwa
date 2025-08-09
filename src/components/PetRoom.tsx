@@ -51,14 +51,15 @@ export default function PetRoom({
 
   useEffect(() => { setIsEating(!!foodItem); }, [foodItem]);
 
+  // Prefer explicit front/back arrays; only fall back to legacy `decor` if both are empty
   const itemsBehindPet = [...backDecor];
   const itemsInFrontOfPet = [...frontDecor];
 
-  if (decor && decor.length > 0) {
-    decor.forEach(item => {
+  if (itemsBehindPet.length === 0 && itemsInFrontOfPet.length === 0 && decor && decor.length > 0) {
+    for (const item of decor) {
       if (item.position === "back") itemsBehindPet.push(item);
       else itemsInFrontOfPet.push(item);
-    });
+    }
   }
 
   const calculatePosition = (
@@ -128,7 +129,7 @@ export default function PetRoom({
       {itemsBehindPet.map((item, idx) => {
         const position = calculatePosition(item.x, item.y, item.width || 0, item.height || 0, item.zone, item.relativeTo);
         return (
-          <img key={`back-decor-${idx}`} className="decor" src={item.src} style={{ position: 'absolute', left: position.left, top: position.top, width: position.width, height: position.height, zIndex: 10 + idx, objectFit: "contain", transform: item.rotation ? `translate(-50%, -50%) rotate(${item.rotation}deg)` : position.transform }} alt="" />
+          <img key={`back-decor-${idx}`} className="decor" src={item.src} style={{ position: 'absolute', left: position.left, top: position.top, width: position.width, height: position.height, zIndex: 10 + idx, objectFit: "contain", transform: `${position.transform}${item.rotation ? ` rotate(${item.rotation}deg)` : ''}${item.flipped ? ' scaleX(-1)' : ''}${item.flippedV ? ' scaleY(-1)' : ''}` }} alt="" />
         );
       })}
 
@@ -152,7 +153,7 @@ export default function PetRoom({
       {itemsInFrontOfPet.map((item, idx) => {
         const position = calculatePosition(item.x, item.y, item.width || 0, item.height || 0, item.zone, item.relativeTo);
         return (
-          <img key={`front-decor-${idx}`} className="decor" src={item.src} style={{ position: 'absolute', left: position.left, top: position.top, width: position.width, height: position.height, zIndex: 40 + idx, objectFit: "contain", transform: item.rotation ? `translate(-50%, -50%) rotate(${item.rotation}deg)` : position.transform }} alt="" />
+          <img key={`front-decor-${idx}`} className="decor" src={item.src} style={{ position: 'absolute', left: position.left, top: position.top, width: position.width, height: position.height, zIndex: 40 + idx, objectFit: "contain", transform: `${position.transform}${item.rotation ? ` rotate(${item.rotation}deg)` : ''}${item.flipped ? ' scaleX(-1)' : ''}${item.flippedV ? ' scaleY(-1)' : ''}` }} alt="" />
         );
       })}
 

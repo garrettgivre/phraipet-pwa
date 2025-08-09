@@ -9,6 +9,7 @@
   background-color: #ffffff;
   box-sizing: border-box;
   /* Reference size is 1080x1920 */
+  z-index: 500;
 }
 
 /* Room background layers container - fixed positioning */

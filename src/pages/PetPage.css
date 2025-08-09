@@ -1,3 +1,5 @@
+/* Lift the paintbrush when the catalog is open */
+.pet-page.edit-mode .paintbrush-floating-btn{bottom:calc(22vh + env(safe-area-inset-bottom, 0px) + 12px)}
 /* src/pages/PetPage.css */
 .pet-page {
   position: relative;
@@ -9,7 +11,7 @@
   flex-direction: column;
   justify-content: flex-start; /* start below header */
   align-items: center;
-  padding: calc(var(--app-header-height, 56px) + env(safe-area-inset-top)) 5px calc(var(--app-nav-height, 56px) + env(safe-area-inset-bottom)) 5px;
+  padding: calc(var(--app-header-height, 56px) + env(safe-area-inset-top)) 0 var(--app-nav-height, 56px) 0;
   box-sizing: border-box;
 }
 

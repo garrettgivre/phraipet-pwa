@@ -141,6 +141,12 @@ export default function Phraijump() {
   const [score, setScore] = useState(0);
   const [gameOver, setGameOver] = useState(false);
   const [gameStarted, setGameStarted] = useState(false);
+  const pausedRef = useRef<boolean>(false);
+  const [isPaused, setIsPaused] = useState<boolean>(false);
+  const [highScore, setHighScore] = useState<number>(() => {
+    const v = localStorage.getItem('phraijump_highscore');
+    return v ? Number(v) || 0 : 0;
+  });
   const [canvasDimensions, setCanvasDimensions] = useState({ 
     width: window.innerWidth, 
     height: window.innerHeight - 52 - 56 // Account for header and navbar only
@@ -240,8 +246,9 @@ export default function Phraijump() {
   // Game constants - these will be scaled based on screen size
   const BASE_WIDTH = 400;
   const BASE_HEIGHT = 600;
-  const GRAVITY = 0.68; // slightly lighter gravity for easier control
-  const JUMP_FORCE = -20.5; // stronger jump for forgiveness
+  const GRAVITY = 0.8; // add a bit more weight
+  const JUMP_FORCE = -18.0; // reduce initial jump impulse for less poppy start
+  const BOUNCE_MULTIPLIER = 0.8; // dampen platform bounce to feel less springy
   const PLAYER_SPEED = 5.5; // a touch more lateral control
   const PLATFORM_WIDTH = 100; // wider default platforms
   const PLATFORM_HEIGHT = 15;
@@ -2623,6 +2630,23 @@ export default function Phraijump() {
     return () => window.removeEventListener('resize', updateCanvasDimensions);
   }, [updateCanvasDimensions]);
 
+  // Pause / resume
+  const togglePause = useCallback(() => {
+    pausedRef.current = !pausedRef.current;
+    setIsPaused(pausedRef.current);
+  }, []);
+
+  useEffect(() => {
+    const onVis = () => {
+      if (document.hidden) {
+        pausedRef.current = true;
+        setIsPaused(true);
+      }
+    };
+    document.addEventListener('visibilitychange', onVis);
+    return () => document.removeEventListener('visibilitychange', onVis);
+  }, []);
+
   // Initialize platforms - now generates infinitely as player progresses
   const initializePlatforms = useCallback(() => {
     const platforms: Platform[] = [];
@@ -2825,6 +2849,18 @@ export default function Phraijump() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     
+    // Pause overlay
+    if (pausedRef.current) {
+      ctx.clearRect(0, 0, canvasDimensions.width, canvasDimensions.height);
+      ctx.fillStyle = 'rgba(0,0,0,0.5)';
+      ctx.fillRect(0, 0, canvasDimensions.width, canvasDimensions.height);
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 28px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText('Paused (P/Esc)', canvasDimensions.width / 2, canvasDimensions.height / 2);
+      gameLoopRef.current = requestAnimationFrame(gameLoop);
+      return;
+    }
     const player = playerRef.current;
     const platforms = platformsRef.current;
     const scale = scaleRef.current;
@@ -2921,7 +2957,7 @@ export default function Phraijump() {
     updatePowerUps(player, time);
     
     // Advanced platformer mechanics constants
-    const COYOTE_TIME_MS = 220; // more forgiving coyote time
+    const COYOTE_TIME_MS = 200; // slightly less to reduce pogo feel
     const JUMP_BUFFER_MS = 150; // longer jump buffer
     const AIR_CONTROL = 0.82; // more air control
     const CORNER_CORRECTION = 6; // Pixels to check for corner correction
@@ -2958,8 +2994,8 @@ export default function Phraijump() {
     const canDoubleJump = !player.grounded && !canCoyoteJump && player.doubleJumpAvailable && jumpJustPressed && player.velocityY > -5;
     
     if (canJump && !player.grounded) {
-      // Coyote time jump
-      player.velocityY = -20; // Original jump height
+      // Coyote time jump - slightly reduced impulse for weight
+      player.velocityY = JUMP_FORCE * 0.95;
       player.jumpBufferTime = 0;
               // Zone-themed landing particles - more subtle
       const { currentZone } = getZoneInfo(cameraYRef.current);
@@ -2976,7 +3012,7 @@ export default function Phraijump() {
       addParticles(player.x + player.width/2, player.y + player.height, particleColor, 5, 'impact');
       sessionStatsRef.current.jumps += 1;
       } else if (canJump && player.grounded) {
-        // Normal ground jump
+        // Normal ground jump (heavier feel)
         player.velocityY = JUMP_FORCE;
         player.jumpBufferTime = 0;
         player.grounded = false;
@@ -2995,8 +3031,8 @@ export default function Phraijump() {
         addParticles(player.x + player.width/2, player.y + player.height, particleColor2, 5, 'impact');
       sessionStatsRef.current.jumps += 1;
     } else if (canDoubleJump) {
-      // Double jump
-      player.velocityY = JUMP_FORCE * 0.92; // slightly weaker than ground jump
+      // Double jump - even softer for weight
+      player.velocityY = JUMP_FORCE * 0.9;
       player.doubleJumpAvailable = false;
               // Zone-themed double jump particles - more controlled
               const { currentZone: currentZone3 } = getZoneInfo(cameraYRef.current);
@@ -3016,7 +3052,7 @@ export default function Phraijump() {
 
     
     // Enhanced horizontal movement with air control
-    const effectiveSpeed = PLAYER_SPEED * player.speedMultiplier;
+    const effectiveSpeed = (PLAYER_SPEED * 0.92) * player.speedMultiplier; // slightly slower for heavier feel
     const movementStrength = player.grounded ? 1.0 : AIR_CONTROL;
     
     // Keyboard input influence
@@ -3053,7 +3089,8 @@ export default function Phraijump() {
     
 
     
-    player.velocityY += gravity;
+    // Apply gravity with a small terminal acceleration ramp for weight
+    player.velocityY += gravity * (player.grounded ? 1.0 : 1.05);
     
     // Enhanced coin magnetism effect with smooth attraction
     if (player.magnetRange > 100) {
@@ -3085,7 +3122,7 @@ export default function Phraijump() {
     }
     
     // Terminal velocity limits for more realistic physics
-    const MAX_FALL_SPEED = 20;
+    const MAX_FALL_SPEED = 18; // cap fall speed a bit lower to avoid rubbery rebounds
     const MAX_HORIZONTAL_SPEED = 12;
     
     // Apply velocity limits
@@ -3180,7 +3217,7 @@ export default function Phraijump() {
           player.velocityY > 0) {
         
         player.y = platform.y - player.height;
-        player.velocityY = JUMP_FORCE * player.jumpMultiplier;
+        player.velocityY = (JUMP_FORCE * player.jumpMultiplier) * BOUNCE_MULTIPLIER;
         player.grounded = true;
         
         // Handle special platform effects
@@ -3364,6 +3401,12 @@ export default function Phraijump() {
     
     // Check game over
     if (player.y > cameraYRef.current + BASE_HEIGHT + 100) {
+      // Save high score
+      setHighScore(prev => {
+        const next = Math.max(prev, score);
+        localStorage.setItem('phraijump_highscore', String(next));
+        return next;
+      });
       setGameOver(true);
       ctx.restore();
       return;
@@ -3491,6 +3534,10 @@ export default function Phraijump() {
       if ([' ', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'w', 'a', 's', 'd'].includes(e.key)) {
         e.preventDefault();
       }
+      if (e.key.toLowerCase() === 'p' || e.key === 'Escape') {
+        togglePause();
+        return;
+      }
       
       keysRef.current.add(e.key);
     };
@@ -3537,6 +3584,8 @@ export default function Phraijump() {
     setGameStarted(true);
     setGameOver(false);
     setScore(0);
+    pausedRef.current = false;
+    setIsPaused(false);
     
     // Reset player
     playerRef.current = {
@@ -4194,6 +4243,12 @@ export default function Phraijump() {
               
               <button className="start-button" onClick={startGame}>
                 Start Game
+              </button>
+              <div style={{ marginTop: 10, color: 'rgba(255,255,255,0.9)', fontSize: 14 }}>
+                High Score: {highScore}
+              </div>
+              <button className="menu-button" onClick={togglePause}>
+                {isPaused ? 'Resume (P/Esc)' : 'Pause (P/Esc)'}
               </button>
               <button className="menu-button" onClick={() => { void enableGyroControls(); }}>
                 {tiltStatus === 'enabled' ? 'Tilt Enabled' : 'Enable Tilt Controls'}

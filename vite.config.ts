@@ -70,11 +70,11 @@ export default defineConfig({
     })
   ],
   server: {
-    host: 'localhost',
+    host: true,
     port: 5173
   },
   preview: {
-    host: 'localhost',
+    host: true,
     port: 5173
   }
 });

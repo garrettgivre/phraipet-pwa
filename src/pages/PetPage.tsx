@@ -9,9 +9,7 @@ import CoinDisplay from "../components/CoinDisplay";
 import PetRoom from "../components/PetRoom";
 import PetNeedsDisplay from "../components/PetNeedsDisplay";
 import ConfirmationDialog from "../components/ConfirmationDialog";
-import InlineRoomEditor from "../components/InlineRoomEditor";
-import RoomDesigner from "../components/RoomDesigner";
-import MobileRoomDesigner from "../components/MobileRoomDesigner";
+import DecorStudio from "../components/DecorStudio";
 // duplicate React import removed
 import GroomingItem from "../components/GroomingItem";
 import InlineInventoryPanel from "../components/InlineInventoryPanel";
@@ -212,7 +210,7 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection, onFeedPet,
               overlay={overlaySrc}
               petImage={petImage}
               petPosition={position}
-              moodPhrase={showSpeechBubble ? currentMoodPhrase : undefined}
+              moodPhrase={isEditMode ? undefined : (showSpeechBubble ? currentMoodPhrase : undefined)}
               activeToy={activeToy}
               isPlaying={isPlaying}
               isWalking={isWalking}
@@ -247,12 +245,7 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection, onFeedPet,
       {showConfirmDialog && (
         <ConfirmationDialog isOpen={showConfirmDialog} title="Feed Pet?" message="Would you like to feed this to your pet?" onConfirm={confirmUseFood} onCancel={cancelUseFood} />
       )}
-      <InlineRoomEditor isOpen={isEditMode} onClose={() => setIsEditMode(false)} petImage={petImage} petPosition={position} moodPhrase={showSpeechBubble ? currentMoodPhrase : undefined} isFacingRight={isFacingRight} />
-      {isMobile ? (
-        <MobileRoomDesigner isOpen={isEditMode} onClose={() => setIsEditMode(false)} />
-      ) : (
-        <RoomDesigner isOpen={isEditMode} onClose={() => setIsEditMode(false)} />
-      )}
+      <DecorStudio isOpen={isEditMode} onClose={() => setIsEditMode(false)} />
       <InlineInventoryPanel isOpen={isInventoryOpen} onClose={() => setIsInventoryOpen(false)} pet={pet} onFeedPet={(i) => { void onFeedPet(i); }} onGroomPet={(i) => { void onGroomPet(i); }} onPlayWithToy={(i) => { void onPlayWithToy(i); }} initialCategory={inventoryCategory} initialSubCategory={inventorySubCategory} />
     </div>
   );

@@ -54,6 +54,8 @@ export interface RoomDecorItem {
     offsetX: number;
     offsetY: number;
   } | null;
+  flipped?: boolean; // Horizontal flip
+  flippedV?: boolean; // Vertical flip
 }
 
 // Defines the types of decoration items available in the inventory.
