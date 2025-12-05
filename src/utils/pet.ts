@@ -142,7 +142,7 @@ const defaultPetBase = {
   cleanliness: 100,
   affection: 50,
   spirit: 0,
-  image: "/pet/neutral.png",
+  image: "/pet/Neutral.png",
   lastNeedsUpdateTime: 0, // Will be overridden
   affectionGainedToday: 0,
 };

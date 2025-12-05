@@ -110,20 +110,38 @@ const MapCanvas: React.FC<MapCanvasProps> = ({
           
           if (hotspot.iconSrc) {
             const iconDiv = document.createElement('div');
-            const size = hotspot.iconSize || 80;
             
-            iconDiv.className = 'map-hotspot-icon';
+            // Use full grid cell dimensions if available in hotspot (passed as radius/iconSize/etc or just calculated)
+            // We want the whole grid cell to be clickable.
+            // In Explore.tsx, we are passing specific width/height via iconSize/radius? 
+            // Actually, Explore.tsx sets x,y to center and a radius.
+            // Let's assume the hotspot.radius represents half the width/height of the clickable area if we want to fill the cell.
+            // OR better: we should pass width/height explicitly.
+            // For now, let's use the width/height we calculated for grid cells:
+            const ROWS = 26; 
+            const COLS = 20; 
+            const cellHeight = mapHeight / ROWS;
+            const cellWidth = mapWidth / COLS;
+            
+            iconDiv.className = 'map-hotspot-overlay';
             iconDiv.style.position = 'absolute';
-            iconDiv.style.left = `${hotspot.x + offsetX - size/2}px`;
-            iconDiv.style.top = `${hotspot.y + offsetY - size/2}px`;
-            iconDiv.style.width = `${size}px`;
-            iconDiv.style.height = `${size}px`;
-            iconDiv.style.backgroundImage = `url(${hotspot.iconSrc})`;
-            iconDiv.style.backgroundSize = 'contain';
-            iconDiv.style.backgroundPosition = 'center';
-            iconDiv.style.backgroundRepeat = 'no-repeat';
+            // hotspot.x/y is center, so subtract half width/height
+            iconDiv.style.left = `${hotspot.x + offsetX - (cellWidth/2)}px`;
+            iconDiv.style.top = `${hotspot.y + offsetY - (cellHeight/2)}px`;
+            iconDiv.style.width = `${cellWidth}px`;
+            iconDiv.style.height = `${cellHeight}px`;
             iconDiv.style.cursor = 'pointer';
             iconDiv.style.zIndex = '20';
+            
+            // Control visibility based on grid setting
+            // If grid is shown, show red overlay. If hidden, make transparent but clickable
+            if (showGrid) {
+              iconDiv.style.backgroundColor = 'rgba(255, 0, 0, 0.3)';
+              iconDiv.style.border = '1px solid rgba(255, 0, 0, 0.5)';
+            } else {
+              iconDiv.style.backgroundColor = 'transparent';
+              iconDiv.style.border = 'none';
+            }
             
             // Add name as title attribute
             iconDiv.title = hotspot.name;
@@ -138,7 +156,7 @@ const MapCanvas: React.FC<MapCanvasProps> = ({
         });
       }
     }
-  }, [hotspots, mapWidth, mapHeight, gridSize, onHotspotClick]);
+  }, [hotspots, mapWidth, mapHeight, gridSize, onHotspotClick, showGrid]);
 
   // Handle building hotspots with clear visual elements
   useEffect(() => {

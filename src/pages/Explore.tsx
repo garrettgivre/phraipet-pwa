@@ -31,40 +31,33 @@ const RED_DOT_ICON = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53
 
 interface GridLocation {
   name: string;
-  grid: string; // e.g. "E4"
+  grids: string[]; // Array of grid coordinates e.g. ["E4", "F4"]
   route?: string;
 }
 
 const STATIC_LOCATIONS: GridLocation[] = [
-  { name: "Crystal", grid: "E4", route: "/explore/crystal" },
-  { name: "Magic Forest", grid: "G5", route: "/explore/magic-forest" },
-  { name: "Flowers", grid: "O4", route: "/explore/flowers" },
-  { name: "Sunnybrook", grid: "M2", route: "/sunnybrook" },
-  { name: "Danger Shore", grid: "P2", route: "/explore/danger-shore" },
-  // Whirlpool Cluster
-  { name: "Whirlpool", grid: "V3", route: "/explore/whirlpool" },
-  { name: "Whirlpool", grid: "V4", route: "/explore/whirlpool" },
-  { name: "Whirlpool", grid: "U3", route: "/explore/whirlpool" },
-  { name: "Whirlpool", grid: "U4", route: "/explore/whirlpool" },
-  { name: "Whirlpool", grid: "W3", route: "/explore/whirlpool" },
-  { name: "Whirlpool", grid: "W4", route: "/explore/whirlpool" },
-  
-  { name: "Terror Point", grid: "G14", route: "/explore/terror-point" },
-  { name: "Icy Point", grid: "D14", route: "/explore/icy-point" },
-  { name: "Snowy Point", grid: "C15", route: "/explore/snowy-point" },
-  { name: "Scorched Forest", grid: "N17", route: "/explore/scorched-forest" },
-  { name: "Cybttopolis", grid: "S16", route: "/explore/cybttopolis" },
-  { name: "Tiny Island", grid: "V18", route: "/explore/tiny-island" },
-  { name: "The Island", grid: "T19", route: "/explore/the-island" },
-  { name: "The Island", grid: "U19", route: "/explore/the-island" },
-  { name: "Fragment Island", grid: "K19", route: "/explore/fragment-island" },
-  { name: "The Fall", grid: "J20", route: "/explore/the-fall" },
-  { name: "Snowy Island", grid: "D17", route: "/explore/snowy-island" },
-  { name: "Red Cliffs", grid: "E9", route: "/explore/red-cliffs" },
-  { name: "Emerald Mines", grid: "N9", route: "/explore/emerald-mines" },
-  { name: "Emerald Forest", grid: "M11", route: "/explore/emerald-forest" },
-  { name: "The Depths", grid: "X10", route: "/explore/the-depths" },
-  { name: "Snowfall Forest", grid: "H16", route: "/explore/snowfall-forest" },
+  { name: "Amethyst Spires", grids: ["B4", "C4", "D4", "D5", "E3", "E4", "E5"], route: "/explore/amethyst-spires" },
+  { name: "Entrance to The Amethyst Woods", grids: ["F3", "G3"], route: "/explore/amethyst-woods-entrance" },
+  { name: "Sunnybrook Village", grids: ["H2", "I1", "I2", "J1", "J2", "K2"], route: "/explore/sunnybrook-village" },
+  { name: "Petila Town", grids: ["K3", "L3", "L4", "M3", "M4", "N3", "N4", "O3", "O4", "O5"], route: "/explore/petila-town" },
+  { name: "Revivin Coast", grids: ["P2", "P3", "Q3"], route: "/explore/revivin-coast" },
+  { name: "The Spiral Gate", grids: ["U3", "U4", "V3", "V4", "W3", "W4"], route: "/explore/spiral-gate" },
+  { name: "Sunstep Plateau", grids: ["D9", "E9"], route: "/explore/sunstep-plateau" },
+  { name: "The Verdi Stop", grids: ["H9", "I9", "J9"], route: "/explore/verdi-stop" },
+  { name: "Essic Town", grids: ["P8", "P9", "Q8", "Q9", "R8"], route: "/explore/essic-town" },
+  { name: "Tideglass Depths", grids: ["W9", "W10", "X9", "X10"], route: "/explore/tideglass-depths" },
+  { name: "Frostember Peak", grids: ["D14", "E14", "F14", "G15", "F15"], route: "/explore/frostember-peak" },
+  { name: "Smolderfume Town", grids: ["J15", "I15", "I16", "J16", "K15"], route: "/explore/smolderfume-town" },
+  { name: "Mütlich Peak", grids: ["C15", "C16", "D15", "D16", "E15", "E16"], route: "/explore/mutlich-peak" },
+  { name: "Ashenroot Ridge", grids: ["F16", "G16", "G17", "F17"], route: "/explore/ashenroot-ridge" },
+  { name: "Revelrid Town", grids: ["L16", "M16", "M17", "L17", "K17", "J17", "K16"], route: "/explore/revelrid-town" },
+  { name: "Creykenp City", grids: ["O16", "P16", "P17", "Q15", "Q16", "Q17", "R15", "R16", "R17", "S15", "S16", "S17", "T15", "T16", "T17", "U15", "U16"], route: "/explore/creykenp-city" },
+  { name: "Prism Sanctum", grids: ["A17", "A18", "B17", "B18", "B19", "C17", "C18", "C19", "D17", "D18", "D19", "E17", "E18"], route: "/explore/prism-sanctum" },
+  { name: "Everfall Perch", grids: ["G19", "G20", "H19", "H20", "I19", "I20", "J19"], route: "/explore/everfall-perch" },
+  { name: "Mistblossom Village", grids: ["K19", "K18", "K20", "L19"], route: "/explore/mistblossom-village" },
+  { name: "Reqool Island", grids: ["S19", "T19", "T20", "U19", "U20", "V19", "V20", "W19", "W20"], route: "/explore/reqool-island" },
+  { name: "Castaway’s Knoll", grids: ["V18"], route: "/explore/castaways-knoll" },
+  { name: "Treuse Island", grids: ["J11", "J12", "K11", "K12", "L11", "L12", "M11", "M12", "N11"], route: "/explore/treuse-island" },
 ];
 
 export default function Explore() {
@@ -73,16 +66,25 @@ export default function Explore() {
   const isSunnybrookRoot = location.pathname === "/sunnybrook";
   const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement>(null);
-  const [mapDimensions, setMapDimensions] = useState({ width: 0, height: 0 });
   const [hotspots, setHotspots] = useState<AppHotspot[]>([]);
   const [showBuildingAreas, setShowBuildingAreas] = useState(false);
   
-  const [showGrid, setShowGrid] = useState(() => {
+    const [showGrid, setShowGrid] = useState(() => {
     const saved = localStorage.getItem('show_map_grid');
     return saved === 'true';
   });
 
   const [zoomLevel, setZoomLevel] = useState(1);
+  const mapGridRef = useRef<HTMLDivElement>(null);
+  const [windowSize, setWindowSize] = useState({ width: window.innerWidth, height: window.innerHeight });
+
+  // Calculate map dimensions directly from state to ensure sync updates
+  const baseMapHeight = windowSize.height;
+  const baseMapWidth = baseMapHeight * MAP_ASPECT_RATIO;
+  const mapDimensions = {
+    width: baseMapWidth * zoomLevel,
+    height: baseMapHeight * zoomLevel
+  };
 
   // Listen for grid toggle event from Settings
   useEffect(() => {
@@ -103,42 +105,24 @@ export default function Explore() {
   const minZoomRef = useRef(1);
   const initialPinchDistanceRef = useRef<number | null>(null);
   const initialZoomRef = useRef<number>(1);
+  const initialPinchCenterRef = useRef<{ x: number; y: number } | null>(null);
+  const initialTouchCenterRef = useRef<{ x: number; y: number } | null>(null);
+  const initialScrollRef = useRef<{ left: number; top: number } | null>(null);
 
-  // Calculate map dimensions based on viewport height and zoom
+  // Handle Window Resize
   useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    const updateMapDimensions = () => {
-      const viewportHeight = window.innerHeight;
-      const viewportWidth = window.innerWidth;
-      
-      // Calculate base dimensions (zoom = 1)
-      // Constraint: mapHeight >= viewportHeight
-      const baseMapHeight = viewportHeight;
-      const baseMapWidth = baseMapHeight * MAP_ASPECT_RATIO;
-      
-      // If width is smaller than viewport at min height, we might need to scale up?
-      // User said: "The furthest I should be able to zoom out is where the map fills the screen vertically."
-      // This implies base state is vertically filling.
-      
-      minZoomRef.current = 1;
-      
-      const currentMapHeight = baseMapHeight * zoomLevel;
-      const currentMapWidth = baseMapWidth * zoomLevel;
-      
-      setMapDimensions({ width: currentMapWidth, height: currentMapHeight });
+    const handleResize = () => {
+      setWindowSize({ width: window.innerWidth, height: window.innerHeight });
     };
-
-    updateMapDimensions();
-    window.addEventListener('resize', updateMapDimensions);
-    return () => window.removeEventListener('resize', updateMapDimensions);
-  }, [zoomLevel]);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Handle Pinch Zoom
   useEffect(() => {
     const container = containerRef.current;
-    if (!container) return;
+    const mapGrid = mapGridRef.current;
+    if (!container || !mapGrid) return;
 
     const handleTouchStart = (e: TouchEvent) => {
       if (e.touches.length === 2) {
@@ -148,66 +132,165 @@ export default function Explore() {
         );
         initialPinchDistanceRef.current = dist;
         initialZoomRef.current = zoomLevel;
+        
+        const centerX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+        const centerY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+        
+        initialTouchCenterRef.current = { x: centerX, y: centerY };
+        
+        const rect = mapGrid.getBoundingClientRect();
+        // Calculate pinch center relative to the map grid element
+        initialPinchCenterRef.current = {
+          x: centerX - rect.left,
+          y: centerY - rect.top
+        };
+        
+        initialScrollRef.current = {
+          left: container.scrollLeft,
+          top: container.scrollTop
+        };
       }
     };
 
     const handleTouchMove = (e: TouchEvent) => {
-      if (e.touches.length === 2 && initialPinchDistanceRef.current !== null) {
+      if (e.touches.length === 2 && 
+          initialPinchDistanceRef.current !== null && 
+          initialPinchCenterRef.current && 
+          initialScrollRef.current &&
+          initialTouchCenterRef.current) {
+        
         e.preventDefault(); // Prevent page zoom
         
-        const touch1 = e.touches[0];
-        const touch2 = e.touches[1];
-        
-        // Calculate center point of the pinch (relative to viewport)
-        const centerX = (touch1.clientX + touch2.clientX) / 2;
-        const centerY = (touch1.clientY + touch2.clientY) / 2;
-        
-        // Calculate current scroll position + center point offset
-        // This gives us the "world coordinate" we are zooming on
-        const scrollLeft = container.scrollLeft;
-        const scrollTop = container.scrollTop;
-        const worldX = scrollLeft + centerX;
-        const worldY = scrollTop + centerY;
-        
         const dist = Math.hypot(
-          touch1.clientX - touch2.clientX,
-          touch1.clientY - touch2.clientY
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
         );
-        const ratio = dist / initialPinchDistanceRef.current;
-        let newZoom = initialZoomRef.current * ratio;
         
-        // Constraints
-        newZoom = Math.max(1, Math.min(newZoom, 3));
+        // Calculate target scale
+        const rawScale = dist / initialPinchDistanceRef.current;
+        let currentZoom = initialZoomRef.current * rawScale;
         
-        if (newZoom !== zoomLevel) {
-          // Calculate scaling factor relative to current zoom
-          const scaleFactor = newZoom / zoomLevel;
-          
-          setZoomLevel(newZoom);
-          
-          // Adjust scroll position to keep the pinch center stable
-          // New World Coordinate = Old World Coordinate * ScaleFactor
-          // New Scroll Position = New World Coordinate - Viewport Center Offset
-          requestAnimationFrame(() => {
-            const newScrollLeft = (worldX * scaleFactor) - centerX;
-            const newScrollTop = (worldY * scaleFactor) - centerY;
-            container.scrollTo({ left: newScrollLeft, top: newScrollTop, behavior: 'auto' });
-          });
-        }
+        // Clamp zoom level
+        currentZoom = Math.max(1, Math.min(currentZoom, 3));
+        
+        // Calculate effective scale relative to the start of the gesture
+        const effectiveScale = currentZoom / initialZoomRef.current;
+        
+        const centerX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+        const centerY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+        
+        // Calculate pan translation
+        const panX = centerX - initialTouchCenterRef.current.x;
+        const panY = centerY - initialTouchCenterRef.current.y;
+        
+        // Apply transform efficiently
+        mapGrid.style.transformOrigin = `${initialPinchCenterRef.current.x}px ${initialPinchCenterRef.current.y}px`;
+        mapGrid.style.transform = `translate(${panX}px, ${panY}px) scale(${effectiveScale})`;
       }
     };
 
-    const handleTouchEnd = () => {
+    const handleTouchEnd = (e: TouchEvent) => {
+      // If fingers drop below 2, the pinch is over. Commit the change.
+      if (e.touches.length < 2) {
+         resetPinchState();
+      }
+    };
+
+    // We need state to store the last valid transform values to commit on end
+    let lastEffectiveScale = 1;
+    let lastPanX = 0;
+    let lastPanY = 0;
+
+    const handleTouchMoveWithState = (e: TouchEvent) => {
+      if (e.touches.length === 2 && 
+          initialPinchDistanceRef.current !== null && 
+          initialPinchCenterRef.current && 
+          initialScrollRef.current &&
+          initialTouchCenterRef.current) {
+            
+        e.preventDefault();
+        
+        const dist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        
+        const rawScale = dist / initialPinchDistanceRef.current;
+        let currentZoom = initialZoomRef.current * rawScale;
+        currentZoom = Math.max(1, Math.min(currentZoom, 3));
+        const effectiveScale = currentZoom / initialZoomRef.current;
+        
+        const centerX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+        const centerY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+        
+        const panX = centerX - initialTouchCenterRef.current.x;
+        const panY = centerY - initialTouchCenterRef.current.y;
+        
+        lastEffectiveScale = effectiveScale;
+        lastPanX = panX;
+        lastPanY = panY;
+        
+        mapGrid.style.transformOrigin = `${initialPinchCenterRef.current.x}px ${initialPinchCenterRef.current.y}px`;
+        mapGrid.style.transform = `translate(${panX}px, ${panY}px) scale(${effectiveScale})`;
+      }
+    };
+    
+    const resetPinchState = () => {
+      if (initialPinchDistanceRef.current === null) return; // Already reset
+      
+      // Commit the zoom and scroll
+      if (lastEffectiveScale !== 1 || lastPanX !== 0 || lastPanY !== 0) {
+        const newZoom = initialZoomRef.current * lastEffectiveScale;
+        const originX = initialPinchCenterRef.current?.x || 0;
+        const originY = initialPinchCenterRef.current?.y || 0;
+        const oldScrollLeft = initialScrollRef.current?.left || 0;
+        const oldScrollTop = initialScrollRef.current?.top || 0;
+        
+        // Calculate new scroll position
+        // Correct math: The point (originX) on the map moves to (originX * k).
+        // We want to position the viewport such that this point remains at the same screen offset.
+        // Screen Offset = originX - oldScrollLeft + panX
+        // newScrollLeft = (originX * k) - (Screen Offset)
+        // newScrollLeft = originX * k - (originX - oldScrollLeft + panX)
+        // newScrollLeft = originX * k - originX + oldScrollLeft - panX
+        // newScrollLeft = oldScrollLeft + originX * (k - 1) - panX
+        
+        const newScrollLeft = oldScrollLeft + originX * (lastEffectiveScale - 1) - lastPanX;
+        const newScrollTop = oldScrollTop + originY * (lastEffectiveScale - 1) - lastPanY;
+        
+        // Update state - this triggers a re-render with new mapDimensions
+        setZoomLevel(newZoom);
+        
+        // We must remove the transform immediately to prevent "double scaling" visually
+        // But we must also apply the new scroll position.
+        // Since mapDimensions updates synchronously in the next render (now that it's derived),
+        // we can try to schedule the scroll update immediately after render.
+        
+        mapGrid.style.transform = '';
+        mapGrid.style.transformOrigin = '';
+        
+        // Use requestAnimationFrame to allow the layout to update first
+        requestAnimationFrame(() => {
+          container.scrollTo({ left: newScrollLeft, top: newScrollTop, behavior: 'auto' });
+        });
+      }
+      
       initialPinchDistanceRef.current = null;
+      initialPinchCenterRef.current = null;
+      initialTouchCenterRef.current = null;
+      initialScrollRef.current = null;
+      lastEffectiveScale = 1;
+      lastPanX = 0;
+      lastPanY = 0;
     };
 
     container.addEventListener('touchstart', handleTouchStart, { passive: false });
-    container.addEventListener('touchmove', handleTouchMove, { passive: false });
+    container.addEventListener('touchmove', handleTouchMoveWithState, { passive: false });
     container.addEventListener('touchend', handleTouchEnd);
 
     return () => {
       container.removeEventListener('touchstart', handleTouchStart);
-      container.removeEventListener('touchmove', handleTouchMove);
+      container.removeEventListener('touchmove', handleTouchMoveWithState);
       container.removeEventListener('touchend', handleTouchEnd);
     };
   }, [zoomLevel]);
@@ -323,35 +406,37 @@ export default function Explore() {
             const scaleY = mapDimensions.height / TILED_MAP_HEIGHT;
 
             STATIC_LOCATIONS.forEach(loc => {
-              // Parse grid string "E4" -> Row E, Col 4
-              const rowChar = loc.grid.charAt(0).toUpperCase();
-              const colNumStr = loc.grid.slice(1);
-              
-              const rowIndex = rowChar.charCodeAt(0) - 65; // A=0, B=1...
-              const colIndex = parseInt(colNumStr, 10) - 1; // 1=0, 2=1...
-              
-              if (rowIndex >= 0 && rowIndex < 26 && colIndex >= 0 && colIndex < 20) {
-                // Calculate center of grid cell in base map coordinates
-                const baseX = (colIndex * COL_WIDTH) + (COL_WIDTH / 2);
-                const baseY = (rowIndex * ROW_HEIGHT) + (ROW_HEIGHT / 2);
+              loc.grids.forEach(grid => {
+                // Parse grid string "E4" -> Row E, Col 4
+                const rowChar = grid.charAt(0).toUpperCase();
+                const colNumStr = grid.slice(1);
                 
-                // Scale to current viewport
-                const scaledX = baseX * scaleX;
-                const scaledY = baseY * scaleY;
+                const rowIndex = rowChar.charCodeAt(0) - 65; // A=0, B=1...
+                const colIndex = parseInt(colNumStr, 10) - 1; // 1=0, 2=1...
                 
-                // Add to list
-                processedHotspots.push({
-                  id: `static-${loc.name}-${loc.grid}`,
-                  name: loc.name,
-                  x: scaledX,
-                  y: scaledY,
-                  radius: 30, // Click radius
-                  route: loc.route,
-                  iconSrc: RED_DOT_ICON,
-                  iconSize: 24, // Red dot size
-                  type: 'location'
-                });
-              }
+                if (rowIndex >= 0 && rowIndex < 26 && colIndex >= 0 && colIndex < 20) {
+                  // Calculate center of grid cell in base map coordinates
+                  const baseX = (colIndex * COL_WIDTH) + (COL_WIDTH / 2);
+                  const baseY = (rowIndex * ROW_HEIGHT) + (ROW_HEIGHT / 2);
+                  
+                  // Scale to current viewport
+                  const scaledX = baseX * scaleX;
+                  const scaledY = baseY * scaleY;
+                  
+                  // Add to list
+                  processedHotspots.push({
+                    id: `static-${loc.name}-${grid}`,
+                    name: loc.name,
+                    x: scaledX,
+                    y: scaledY,
+                    radius: 30, // Click radius
+                    route: loc.route,
+                    iconSrc: RED_DOT_ICON,
+                    iconSize: 24, // Red dot size
+                    type: 'location'
+                  });
+                }
+              });
             });
           }
 
@@ -408,6 +493,7 @@ export default function Explore() {
         onDoubleClick={handleDoubleClick}
       >
         <div 
+          ref={mapGridRef}
           className="map-grid"
           style={{ width: mapDimensions.width * GRID_SIZE, height: mapDimensions.height * GRID_SIZE, position: 'relative', transform: 'translateZ(0)', backfaceVisibility: 'hidden', willChange: 'transform' }}
         >

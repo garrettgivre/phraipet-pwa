@@ -21,6 +21,8 @@ import SBToyStore from "./pages/Sunnybrook/SBToyStore";
 import SBFurnitureStore from "./pages/Sunnybrook/SBFurnitureStore";
 import RescuePals from "./pages/RescuePals";
 import Settings from "./pages/Settings";
+import LocationDummy from "./pages/LocationDummy";
+import * as World from "./pages/World/Locations";
 
 interface RouteProps {
   pet: Pet | null;
@@ -54,6 +56,10 @@ export function createRoutes({
     {
       path: "/explore",
       element: <Explore />,
+    },
+    {
+      path: "/explore/:locationId",
+      element: <LocationDummy />,
     },
     {
       path: "/play",
@@ -131,6 +137,28 @@ export function createRoutes({
     {
       path: "/sunnybrook/SBFurnitureStore",
       element: <SBFurnitureStore />,
-    }
+    },
+    { path: "/explore/amethyst-spires", element: <World.AmethystSpires /> },
+    { path: "/explore/amethyst-woods-entrance", element: <World.AmethystWoodsEntrance /> },
+    { path: "/explore/sunnybrook-village", element: <World.SunnybrookVillage /> },
+    { path: "/explore/petila-town", element: <World.PetilaTown /> },
+    { path: "/explore/revivin-coast", element: <World.RevivinCoast /> },
+    { path: "/explore/spiral-gate", element: <World.SpiralGate /> },
+    { path: "/explore/sunstep-plateau", element: <World.SunstepPlateau /> },
+    { path: "/explore/verdi-stop", element: <World.VerdiStop /> },
+    { path: "/explore/essic-town", element: <World.EssicTown /> },
+    { path: "/explore/tideglass-depths", element: <World.TideglassDepths /> },
+    { path: "/explore/frostember-peak", element: <World.FrostemberPeak /> },
+    { path: "/explore/smolderfume-town", element: <World.SmolderfumeTown /> },
+    { path: "/explore/mutlich-peak", element: <World.MutlichPeak /> },
+    { path: "/explore/ashenroot-ridge", element: <World.AshenrootRidge /> },
+    { path: "/explore/revelrid-town", element: <World.RevelridTown /> },
+    { path: "/explore/creykenp-city", element: <World.CreykenpCity /> },
+    { path: "/explore/prism-sanctum", element: <World.PrismSanctum /> },
+    { path: "/explore/everfall-perch", element: <World.EverfallPerch /> },
+    { path: "/explore/mistblossom-village", element: <World.MistblossomVillage /> },
+    { path: "/explore/reqool-island", element: <World.ReqoolIsland /> },
+    { path: "/explore/castaways-knoll", element: <World.CastawaysKnoll /> },
+    { path: "/explore/treuse-island", element: <World.TreuseIsland /> }
   ];
 } 

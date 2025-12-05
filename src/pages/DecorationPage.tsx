@@ -280,7 +280,7 @@ function FurniturePlacementOverlay({
           frontDecor={roomLayers.frontDecor}
           backDecor={roomLayers.backDecor}
           overlay={roomLayers.overlay || ""}
-          petImage="/pet/neutral.png"
+          petImage="/pet/Neutral.png"
           petPosition={50}
         />
       </div>

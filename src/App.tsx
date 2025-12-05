@@ -108,6 +108,7 @@ function AppShell({ pet, handleFeedPet, handleGroomPet, handlePlayWithToy, handl
   );
 }
 
+
 function AppContent() {
   const [pet, setPet] = useState<Pet | null>(getDefaultPet);
   const { setActiveToy, setIsPlaying } = useToyAnimation();

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { petService } from '../services/firebase';
+import { getPetEmotionImage } from "../utils/petImageSelector";
 import './Phraijump.css';
 
 interface Platform {
@@ -1578,14 +1579,16 @@ export default function Phraijump() {
   const platformsRef = useRef<Platform[]>([]);
   const collectiblesRef = useRef<Collectible[]>([]);
   const enemiesRef = useRef<Enemy[]>([]);
-  const [petImage, setPetImage] = useState<string>('/pet/neutral.png');
+  const [petImage, setPetImage] = useState<string>('/pet/Neutral.png');
   const petImageRef = useRef<HTMLImageElement | null>(null);
 
   // Load pet image
   useEffect(() => {
     const unsubscribe = petService.subscribeToPet((pet) => {
-      if (pet && pet.image) {
-        setPetImage(pet.image);
+      if (pet) {
+        setPetImage(getPetEmotionImage(pet));
+      } else {
+        setPetImage('/pet/Neutral.png');
       }
     });
     return () => unsubscribe();

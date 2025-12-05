@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { petService } from '../services/firebase';
 import type { NeedInfo } from "../types";
 import { getNeedBarColor } from "../utils/colorUtils";
+import { getPetEmotionImage } from "../utils/petImageSelector";
 import "./Header.css";
 
 interface HeaderProps {
@@ -20,12 +21,28 @@ export default function Header({
 }: HeaderProps) {
   const navigate = useNavigate();
   const iconSize = 20; // Desired display size for icons in the header circles
-  const [petImage, setPetImage] = useState<string>('/pet/neutral.png');
+  const [petImage, setPetImage] = useState<string>('/pet/Neutral.png');
 
   useEffect(() => {
+    // Initial load
+    if (import.meta.env.DEV) console.log("Header - Setting up pet subscription");
+    
+    // Try to get local pet data immediately to avoid flash
+    try {
+       // We don't have direct access to App's state here, but we can try default if needed
+       // or wait for firebase.
+    } catch (e) {
+      console.error("Header - error reading local state", e);
+    }
+
     const unsubscribe = petService.subscribeToPet((pet) => {
-      if (pet && pet.image) {
-        setPetImage(pet.image);
+      if (pet) {
+        const image = getPetEmotionImage(pet);
+        if (import.meta.env.DEV) console.log("Header - Updating pet image:", image);
+        setPetImage(image);
+      } else {
+         if (import.meta.env.DEV) console.log("Header - No pet image found, using default");
+         setPetImage('/pet/Neutral.png');
       }
     });
     return () => unsubscribe();

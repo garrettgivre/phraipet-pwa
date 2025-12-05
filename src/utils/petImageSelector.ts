@@ -2,7 +2,7 @@ import type { Pet } from "../types";
 
 // Helper function to determine pet emotion based on needs
 export function getPetEmotionImage(pet: Pet): string {
-  if (!pet) return "/pet/neutral.png";
+  if (!pet) return "/pet/Neutral.png";
   
   // Calculate which need is lowest
   const needs = [
@@ -24,7 +24,7 @@ export function getPetEmotionImage(pet: Pet): string {
       case "happiness": return "/pet/Sad.png";
       case "cleanliness": return "/pet/confused.png";
       case "affection": return "/pet/Sad.png";
-      default: return "/pet/neutral.png";
+      default: return "/pet/Neutral.png";
     }
   } else if (lowestNeed.value < 40) {
     // Low need - show mild concern
@@ -33,7 +33,7 @@ export function getPetEmotionImage(pet: Pet): string {
   // Removed the happy state based on spirit, keeping neutral as default
   
   // Default state - always neutral when needs are fine
-  return "/pet/neutral.png";
+  return "/pet/Neutral.png";
 }
 
 export function getPetImage(
@@ -44,7 +44,7 @@ export function getPetImage(
   isSpeaking: boolean = false, // New parameter to check if the pet is speaking
   isTurning: boolean = false // New parameter for turning state
 ): string {
-  if (!pet) return "/pet/neutral.png";
+  if (!pet) return "/pet/Neutral.png";
 
   // Priority 1: Turning (Transitions)
   if (isTurning) {
