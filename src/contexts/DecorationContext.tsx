@@ -101,7 +101,7 @@ export function DecorationProvider({ children }: { children: ReactNode }) {
         // Set a much shorter fallback timeout 
         const loadingTimeout = window.setTimeout(() => {
           timeoutTriggered = true;
-          console.log("Room loading timeout - using cached/default data");
+          if (import.meta.env.DEV) console.log("Room loading timeout - using cached/default data");
           setRoomLayers(defaultRoomLayersData);
           setRoomLayersLoading(false);
         }, 2000); // Reduced from 3 seconds to 2 seconds
@@ -155,7 +155,7 @@ export function DecorationProvider({ children }: { children: ReactNode }) {
           
           // Don't override local state if we're in the middle of a local update
           if (isLocalUpdate) {
-            console.log("Skipping Firebase update - local update in progress");
+            if (import.meta.env.DEV) console.log("Skipping Firebase update - local update in progress");
             return;
           }
           
@@ -253,7 +253,7 @@ export function DecorationProvider({ children }: { children: ReactNode }) {
       const roomRef = ref(db, "roomLayers/sharedRoom");
       set(roomRef, updatedLayers)
         .then(() => {
-          console.log("Room saved to Firebase successfully");
+          if (import.meta.env.DEV) console.log("Room saved to Firebase successfully");
           // Clear the local update flag after successful save
           setIsLocalUpdate(false);
         })
@@ -278,14 +278,10 @@ export function DecorationProvider({ children }: { children: ReactNode }) {
       position
     };
     
-    console.log("addDecorItem called:", { item: itemWithPosition, position });
-    
     // Set local update flag to prevent Firebase interference
     setIsLocalUpdate(true);
     
     setRoomLayers(prevLayers => {
-      console.log("Before add - frontDecor count:", prevLayers.frontDecor.length, "backDecor count:", prevLayers.backDecor.length);
-      
       // Update the appropriate array based on position
       const updatedLayers = { ...prevLayers };
       
@@ -298,8 +294,6 @@ export function DecorationProvider({ children }: { children: ReactNode }) {
       // Update the legacy decor array for backward compatibility
       updatedLayers.decor = [...updatedLayers.backDecor, ...updatedLayers.frontDecor];
       
-      console.log("After add - frontDecor count:", updatedLayers.frontDecor.length, "backDecor count:", updatedLayers.backDecor.length);
-      
       // Save to Firebase
       saveRoomToFirebase(updatedLayers);
       
@@ -308,27 +302,21 @@ export function DecorationProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const removeDecorItem = useCallback((position: "front" | "back", index: number) => {
-    console.log("removeDecorItem called:", { position, index });
-    
     // Set local update flag to prevent Firebase interference
     setIsLocalUpdate(true);
     
     setRoomLayers(prevLayers => {
-      console.log("Before remove - frontDecor count:", prevLayers.frontDecor.length, "backDecor count:", prevLayers.backDecor.length);
-      
       const updatedLayers = { ...prevLayers };
       
       if (position === "front") {
         const newFrontDecor = [...updatedLayers.frontDecor];
         if (index < newFrontDecor.length) {
-          console.log("Removing item from front layer at index:", index);
           newFrontDecor.splice(index, 1);
           updatedLayers.frontDecor = newFrontDecor;
         }
       } else {
         const newBackDecor = [...updatedLayers.backDecor];
         if (index < newBackDecor.length) {
-          console.log("Removing item from back layer at index:", index);
           newBackDecor.splice(index, 1); 
           updatedLayers.backDecor = newBackDecor;
         }
@@ -336,8 +324,6 @@ export function DecorationProvider({ children }: { children: ReactNode }) {
       
       // Update the combined decor array
       updatedLayers.decor = [...updatedLayers.backDecor, ...updatedLayers.frontDecor];
-      
-      console.log("After remove - frontDecor count:", updatedLayers.frontDecor.length, "backDecor count:", updatedLayers.backDecor.length);
       
       // Save to Firebase
       saveRoomToFirebase(updatedLayers);
@@ -347,28 +333,22 @@ export function DecorationProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const updateDecorItem = useCallback((originalLayer: "front" | "back", originalIndex: number, newItem: RoomDecorItem, newLayer: "front" | "back") => {
-    console.log("updateDecorItem called:", { originalLayer, originalIndex, newLayer, newItem });
-    
     // Set local update flag to prevent Firebase interference
     setIsLocalUpdate(true);
     
     setRoomLayers(prevLayers => {
-      console.log("Before update - frontDecor count:", prevLayers.frontDecor.length, "backDecor count:", prevLayers.backDecor.length);
-      
       const updatedLayers = { ...prevLayers };
       
       // Remove from original layer
       if (originalLayer === "front") {
         const newFrontDecor = [...updatedLayers.frontDecor];
         if (originalIndex < newFrontDecor.length) {
-          console.log("Removing item from front layer at index:", originalIndex);
           newFrontDecor.splice(originalIndex, 1);
           updatedLayers.frontDecor = newFrontDecor;
         }
       } else {
         const newBackDecor = [...updatedLayers.backDecor];
         if (originalIndex < newBackDecor.length) {
-          console.log("Removing item from back layer at index:", originalIndex);
           newBackDecor.splice(originalIndex, 1);
           updatedLayers.backDecor = newBackDecor;
         }
@@ -377,17 +357,13 @@ export function DecorationProvider({ children }: { children: ReactNode }) {
       // Add to new layer
       const itemWithPosition = { ...newItem, position: newLayer };
       if (newLayer === "front") {
-        console.log("Adding item to front layer");
         updatedLayers.frontDecor = [...updatedLayers.frontDecor, itemWithPosition];
       } else {
-        console.log("Adding item to back layer");
         updatedLayers.backDecor = [...updatedLayers.backDecor, itemWithPosition];
       }
       
       // Update the combined decor array
       updatedLayers.decor = [...updatedLayers.backDecor, ...updatedLayers.frontDecor];
-      
-      console.log("After update - frontDecor count:", updatedLayers.frontDecor.length, "backDecor count:", updatedLayers.backDecor.length);
       
       // Save to Firebase
       saveRoomToFirebase(updatedLayers);
@@ -415,14 +391,7 @@ export function DecorationProvider({ children }: { children: ReactNode }) {
 
   const getFilteredDecorations = useCallback(
     (subCategory: DecorationItemType) => {
-      console.log(`Getting filtered decorations for ${subCategory}`);
-      console.log(`Total decorations: ${decorations.length}`);
-      console.log(`Available categories:`, decorations.map(d => d.type));
-      
       const filtered = decorations.filter(item => item.type === subCategory);
-      console.log(`Found ${filtered.length} items for ${subCategory}:`, 
-        filtered.length > 0 ? filtered.map(i => i.name) : 'None');
-      
       return filtered;
     },
     [decorations]

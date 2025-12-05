@@ -6,13 +6,14 @@ import type { Pet, NeedInfo, FoodInventoryItem, GroomingInventoryItem, ToyInvent
 import { InventoryProvider } from "./contexts/InventoryContext";
 import { DecorationProvider } from "./contexts/DecorationContext";
 import { ToyAnimationProvider, useToyAnimation } from "./contexts/ToyAnimationContext";
+import { ThemeProvider } from './contexts/ThemeContext';
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { petService, withErrorHandling } from "./services/firebase";
 import { createRoutes } from "./routes";
 import Header from "./components/Header";
 import NavBar from "./components/NavBar";
 import { CoinsProvider, useCoins } from './contexts/CoinsContext';
-import { clampNeed, computeSpirit, describeNeed, applyNeedsDecay, MAX_NEED_VALUE } from './utils/pet'
+import { clampNeed, computeSpirit, describeNeed, applyNeedsDecay, MAX_NEED_VALUE, getTodayDateString, defaultPetData, validatePet, getDefaultPet } from './utils/pet'
 
 const AFFECTION_DAILY_GAIN_CAP = 20;
 const HUNGER_DECAY_PER_DAY = 100;
@@ -21,14 +22,6 @@ const CLEANLINESS_DECAY_PER_DAY = 100;
 const AFFECTION_DECAY_PER_DAY = 10;
 
 const isDev = import.meta.env.DEV;
-
-const getTodayDateString = (): string => {
-  const today = new Date();
-  const year = today.getFullYear();
-  const month = (today.getMonth() + 1).toString().padStart(2, '0');
-  const day = today.getDate().toString().padStart(2, '0');
-  return `${year}-${month}-${day}`;
-};
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -115,24 +108,8 @@ function AppShell({ pet, handleFeedPet, handleGroomPet, handlePlayWithToy, handl
   );
 }
 
-const defaultPetData: Pet = {
-  id: "default-pet",
-  name: "Buddy",
-  type: "default",
-  hunger: 100,
-  happiness: 100,
-  cleanliness: 100,
-  affection: 50,
-  spirit: 0,
-  image: "/pet/neutral.png",
-  lastNeedsUpdateTime: Date.now(),
-  affectionGainedToday: 0,
-  lastAffectionGainDate: getTodayDateString(),
-};
-defaultPetData.spirit = computeSpirit(defaultPetData);
-
 function AppContent() {
-  const [pet, setPet] = useState<Pet | null>(defaultPetData);
+  const [pet, setPet] = useState<Pet | null>(getDefaultPet);
   const { setActiveToy, setIsPlaying } = useToyAnimation();
   const navigate = useNavigate();
 
@@ -264,7 +241,7 @@ function AppContent() {
     const fallbackTimeout = setTimeout(() => {
       if (!hasInitialPetRef.current) {
         if (isDev) console.log("Pet loading timeout, using default pet data");
-        setPet(defaultPetData);
+        setPet(getDefaultPet());
       }
     }, 1500);
 
@@ -276,25 +253,18 @@ function AppContent() {
       let needsFirebaseUpdate = false;
       if (petData) {
         if (isDev) console.log("Processing pet data...");
-        const processedPetData: Pet = {
-          ...defaultPetData,
-          ...petData,
-          hunger: (typeof petData.hunger === 'number' && !isNaN(petData.hunger)) ? petData.hunger : defaultPetData.hunger,
-          happiness: (typeof petData.happiness === 'number' && !isNaN(petData.happiness)) ? petData.happiness : defaultPetData.happiness,
-          cleanliness: (typeof petData.cleanliness === 'number' && !isNaN(petData.cleanliness)) ? petData.cleanliness : defaultPetData.cleanliness,
-          affection: (typeof petData.affection === 'number' && !isNaN(petData.affection)) ? petData.affection : defaultPetData.affection,
-          image: petData.image || defaultPetData.image,
-        };
-        const lastUpdate = processedPetData.lastNeedsUpdateTime;
-        processedPetData.lastNeedsUpdateTime = (typeof lastUpdate === 'number' && lastUpdate > 0 && !isNaN(lastUpdate)) ? lastUpdate : currentTime;
-        processedPetData.affectionGainedToday = processedPetData.affectionGainedToday ?? 0;
-        processedPetData.lastAffectionGainDate = processedPetData.lastAffectionGainDate || getTodayDateString();
+        
+        // Validate and normalize pet data using utility
+        const processedPetData = validatePet(petData);
+        
+        // Check for day change to reset daily limits
         const todayStr = getTodayDateString();
         if (processedPetData.lastAffectionGainDate !== todayStr) {
           processedPetData.affectionGainedToday = 0;
           processedPetData.lastAffectionGainDate = todayStr;
           needsFirebaseUpdate = true;
         }
+        
         const timeElapsedMs = currentTime - processedPetData.lastNeedsUpdateTime;
         if (timeElapsedMs > 1000) {
           needsFirebaseUpdate = true;
@@ -323,9 +293,10 @@ function AppContent() {
           );
         }
       } else {
-        setPet(defaultPetData);
+        const newPet = getDefaultPet();
+        setPet(newPet);
         void withErrorHandling(
-          () => petService.updatePetNeeds(defaultPetData),
+          () => petService.updatePetNeeds(newPet),
           "Failed to initialize pet data"
         );
       }
@@ -361,9 +332,11 @@ export default function App() {
         <CoinsProvider>
       <ToyAnimationProvider>
         <DecorationProvider>
+          <ThemeProvider>
             <BrowserRouter>
               <AppContent />
             </BrowserRouter>
+          </ThemeProvider>
         </DecorationProvider>
       </ToyAnimationProvider>
         </CoinsProvider>

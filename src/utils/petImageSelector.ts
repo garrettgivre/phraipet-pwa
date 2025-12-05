@@ -41,25 +41,33 @@ export function getPetImage(
   isPlaying: boolean,
   isWalking: boolean,
   walkingStep: number,
-  isSpeaking: boolean = false // New parameter to check if the pet is speaking
+  isSpeaking: boolean = false, // New parameter to check if the pet is speaking
+  isTurning: boolean = false // New parameter for turning state
 ): string {
   if (!pet) return "/pet/neutral.png";
 
-  // When speaking and in a good mood, show happy face
+  // Priority 1: Turning (Transitions)
+  if (isTurning) {
+      return "/pet/Walk-Turning.png";
+  }
+
+  // Priority 2: Happy/Speaking
   if (isSpeaking && pet.spirit > 60) {
     return "/pet/Happy.png";
   }
 
+  // Priority 3: Playing
   if (isPlaying) {
     return "/pet/Happy.png";
   }
 
+  // Priority 4: Walking
   if (isWalking) {
     // Always use the same walking images regardless of direction
     // The flipping will be handled by CSS based on isFacingRight flag
     return walkingStep === 0 ? "/pet/Walk-Sideways-A.png" : "/pet/Walk-Sideways-B.png";
   }
 
-  // Use the emotion-based image instead of pet.image
+  // Priority 5: Idle / Emotion
   return getPetEmotionImage(pet);
 } 

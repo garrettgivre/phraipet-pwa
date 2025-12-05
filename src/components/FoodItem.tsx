@@ -47,8 +47,6 @@ export default function FoodItem({ src, position, onEaten, hungerRestored = 15, 
     // Set animation flag
     animationRef.current = { isAnimating: true, mounted: true };
     
-    console.log("Starting food animation sequence");
-    
     // First bite after a delay
     const startAnimation = () => {
       if (!animationRef.current.mounted) return;
@@ -56,28 +54,24 @@ export default function FoodItem({ src, position, onEaten, hungerRestored = 15, 
       // First bite
       setTimeout(() => {
         if (!animationRef.current.mounted) return;
-        console.log("Bite 1");
         setBiteStage(1);
         triggerPetChomp(1);
         
         // Second bite
         setTimeout(() => {
           if (!animationRef.current.mounted) return;
-          console.log("Bite 2");
           setBiteStage(2);
           triggerPetChomp(2);
           
           // Third bite
           setTimeout(() => {
             if (!animationRef.current.mounted) return;
-            console.log("Bite 3");
             setBiteStage(3);
             triggerPetChomp(3);
             
             // Complete
             setTimeout(() => {
               if (!animationRef.current.mounted) return;
-              console.log("Eating complete");
               propsRef.current.onEaten(); // Use the ref version
             }, 800);
           }, 1200);
@@ -90,7 +84,6 @@ export default function FoodItem({ src, position, onEaten, hungerRestored = 15, 
     
     // Cleanup function
     return () => {
-      console.log("Cleaning up food animation");
       animationRef.current.mounted = false;
       animationRef.current.isAnimating = false;
     };

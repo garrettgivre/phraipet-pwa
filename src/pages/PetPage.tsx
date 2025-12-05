@@ -1,11 +1,12 @@
 // src/pages/PetPage.tsx
 import React, { useState, useEffect } from "react";
+import { BrowserRouter, Routes, Route, useLocation, useNavigate } from "react-router-dom";
 import type { Pet, Need, NeedInfo, FoodInventoryItem, GroomingInventoryItem, ToyInventoryItem } from "../types.ts";
 import { useToyAnimation } from "../contexts/ToyAnimationContext";
 import { useDecoration } from "../contexts/DecorationContext";
 import { useCoins } from "../contexts/CoinsContext";
 import "./PetPage.css";
-import CoinDisplay from "../components/CoinDisplay";
+import Header from "../components/Header";
 import PetRoom from "../components/PetRoom";
 import PetNeedsDisplay from "../components/PetNeedsDisplay";
 import ConfirmationDialog from "../components/ConfirmationDialog";
@@ -30,7 +31,7 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection, onFeedPet,
   const { roomLayers, roomLayersLoading } = useDecoration();
   const { activeToy, isPlaying } = useToyAnimation();
   const { coins } = useCoins();
-  const { position, isWalking, walkingStep, isFacingRight } = usePetMovement(pet);
+  const { position, isWalking, walkingStep, isFacingRight, isTurning, isSquashing } = usePetMovement(pet);
   const [foodItem, setFoodItem] = useState<{ src: string; position: number; hungerRestored?: number } | null>(null);
   const [groomingItem, setGroomingItem] = useState<{ src: string; position: number; cleanlinessBoost?: number } | null>(null);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
@@ -131,7 +132,7 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection, onFeedPet,
     return () => window.clearInterval(interval);
   }, [pet, isPlaying, activeToy]);
 
-  const petImage = getPetImage(pet, isPlaying, isWalking, walkingStep, showSpeechBubble);
+  const petImage = getPetImage(pet, isPlaying, isWalking, walkingStep, showSpeechBubble, isTurning);
 
   const currentCeiling = roomLayers?.ceiling || "/assets/ceilings/classic-ceiling.png";
   const currentWall = roomLayers?.wall || "/assets/walls/classic-wall.png";
@@ -181,6 +182,8 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection, onFeedPet,
   };
   const cancelUseFood = () => { setShowConfirmDialog(false); setPendingFoodItem(null); };
   const toggleEditMode = () => { setIsEditMode(!isEditMode); };
+  const navigate = useNavigate();
+  const goToSettings = () => { navigate('/settings'); };
   
   // Decide which editor to render to avoid double overlays on mobile
   const [isMobile, setIsMobile] = React.useState<boolean>(() =>
@@ -193,11 +196,21 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection, onFeedPet,
     return () => mq.removeEventListener('change', onChange);
   }, []);
 
+  // Effect to handle navigation from NavBar to reset state
+  const location = useLocation();
+  useEffect(() => {
+    if (location.pathname === '/' && location.state && (location.state as any).reset) {
+      setIsInventoryOpen(false);
+      setIsEditMode(false);
+      // Clear the state to prevent repeated resets if we stay on the page
+      window.history.replaceState({}, document.title);
+    }
+  }, [location]);
+
   return (
     <div className={`pet-page ${isEditMode ? 'edit-mode' : ''}`}>
-      <CoinDisplay coins={coins} className={isEditMode ? "edit-mode-coin-display" : ""} />
+      <Header coins={coins} compact={true} onSettingsClick={goToSettings} />
       <div className="pet-room-bordered-container">
-        <div className="pet-room-title">PhRAI Pet</div>
         <div className="pet-room-inner-container">
           {pet && !roomLayersLoading && (
             <PetRoom
@@ -215,6 +228,7 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection, onFeedPet,
               isPlaying={isPlaying}
               isWalking={isWalking}
               isFacingRight={isFacingRight}
+              isSquashing={isSquashing}
               foodItem={foodItem}
               onFoodEaten={handleFoodEaten}
               onFoodBite={handleFoodBite}

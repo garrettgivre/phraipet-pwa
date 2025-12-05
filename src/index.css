@@ -23,6 +23,9 @@
   
   /* Apply box-sizing globally for more predictable layouts */
   box-sizing: border-box;
+  
+  /* Theme CSS Variable */
+  --theme-hue-rotate: 0deg;
 }
 
 *, *::before, *::after {

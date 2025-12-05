@@ -12,6 +12,7 @@ interface MapCanvasProps {
   mapHeight: number;
   gridSize: number;
   showBuildingAreas?: boolean; // Used to toggle visibility of building markers
+  showGrid?: boolean; // Shows coordinate grid for development
 }
 
 const MapCanvas: React.FC<MapCanvasProps> = ({
@@ -23,9 +24,71 @@ const MapCanvas: React.FC<MapCanvasProps> = ({
   mapHeight,
   gridSize,
   showBuildingAreas = false,
+  showGrid = false,
 }) => {
   const iconsRef = useRef<HTMLDivElement>(null);
   const buildingsRef = useRef<HTMLDivElement>(null);
+  const gridRef = useRef<HTMLDivElement>(null);
+
+  // Handle Coordinate Grid
+  useEffect(() => {
+    const gridContainer = gridRef.current;
+    if (!gridContainer) return;
+
+    gridContainer.innerHTML = '';
+    if (!showGrid) return;
+
+    // Grid configuration
+    const ROWS = 26; // A-Z
+    const COLS = 20; // 1-20
+    const rowHeight = mapHeight / ROWS;
+    const colWidth = mapWidth / COLS;
+
+    // Draw grid for each tile if needed, or just one large grid over the whole area
+    // Assuming single map area repeated by gridSize, let's draw grid on the base map dimensions
+    // repeated for the canvas size
+    
+    // Create grid cells
+    // Since the grid container is sized to canvasWidth/canvasHeight (which is GRID_SIZE * mapWidth),
+    // we need to fill the entire area with the grid pattern.
+    // mapWidth/Height is the base tile size.
+    
+    const canvasRows = Math.ceil(canvasHeight / rowHeight);
+    const canvasCols = Math.ceil(canvasWidth / colWidth);
+
+    for (let y = 0; y < canvasRows; y++) {
+      for (let x = 0; x < canvasCols; x++) {
+        // Calculate label based on position relative to the base map tile
+        // The map repeats every mapWidth/mapHeight
+        // So we mod the coordinate by the base dimension to get the label
+        
+        const relativeY = y % ROWS;
+        const relativeX = x % COLS;
+        
+        const cellId = `${String.fromCharCode(65 + relativeY)}${relativeX + 1}`; // A1... Z20 repeating
+        
+        const cell = document.createElement('div');
+        cell.className = 'map-grid-cell';
+        cell.style.position = 'absolute';
+        cell.style.left = `${x * colWidth}px`;
+        cell.style.top = `${y * rowHeight}px`;
+        cell.style.width = `${colWidth}px`;
+        cell.style.height = `${rowHeight}px`;
+        cell.style.border = '1px solid rgba(255, 255, 255, 0.3)';
+        cell.style.display = 'flex';
+        cell.style.alignItems = 'center';
+        cell.style.justifyContent = 'center';
+        cell.style.color = 'rgba(255, 255, 255, 0.8)';
+        cell.style.fontSize = '16px'; // Reduced font size for denser grid
+        cell.style.fontWeight = 'bold';
+        cell.style.pointerEvents = 'none';
+        cell.style.textShadow = '0 0 4px black';
+        cell.textContent = cellId;
+        
+        gridContainer.appendChild(cell);
+      }
+    }
+  }, [showGrid, mapWidth, mapHeight, canvasWidth, canvasHeight]);
 
   // Handle all location hotspots (with icons)
   useEffect(() => {
@@ -181,6 +244,19 @@ const MapCanvas: React.FC<MapCanvasProps> = ({
           width: canvasWidth,
           height: canvasHeight,
           pointerEvents: 'auto'
+        }}
+      />
+      {/* Grid layer (for dev) */}
+      <div 
+        ref={gridRef}
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: canvasWidth, // Repeat grid over the entire canvas
+          height: canvasHeight,
+          pointerEvents: 'none',
+          zIndex: 100
         }}
       />
       {/* Icons layer (above buildings) */}

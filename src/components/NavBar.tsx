@@ -7,7 +7,13 @@ export default function NavBar() {
 
   const isActive = (path: string) => location.pathname === path;
 
-  const go = (path: string): void => { void navigate(path); };
+  const go = (path: string): void => { 
+    if (path === '/') {
+      navigate(path, { state: { reset: Date.now() } });
+    } else {
+      navigate(path); 
+    }
+  };
 
   return (
     <nav className="nav-bar">

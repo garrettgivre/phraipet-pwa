@@ -61,8 +61,6 @@ export default function GroomingItem({ src, position, onGroomed, cleanlinessBoos
   useEffect(() => {
     animationRef.current = { isAnimating: true, mounted: true };
     
-    console.log("Starting grooming animation sequence");
-    
     const startAnimation = () => {
       if (!animationRef.current.mounted) return;
       
@@ -74,7 +72,6 @@ export default function GroomingItem({ src, position, onGroomed, cleanlinessBoos
       // First grooming step
       setTimeout(() => {
         if (!animationRef.current.mounted) return;
-        console.log("Grooming step 1");
         setGroomingStage(1);
         triggerPetGrooming(1);
         generateBubbles();
@@ -82,7 +79,6 @@ export default function GroomingItem({ src, position, onGroomed, cleanlinessBoos
         // Second grooming step
         setTimeout(() => {
           if (!animationRef.current.mounted) return;
-          console.log("Grooming step 2");
           setGroomingStage(2);
           triggerPetGrooming(2);
           generateBubbles();
@@ -90,7 +86,6 @@ export default function GroomingItem({ src, position, onGroomed, cleanlinessBoos
           // Third grooming step
           setTimeout(() => {
             if (!animationRef.current.mounted) return;
-            console.log("Grooming step 3");
             setGroomingStage(3);
             triggerPetGrooming(3);
             generateBubbles();
@@ -98,7 +93,6 @@ export default function GroomingItem({ src, position, onGroomed, cleanlinessBoos
             // Complete grooming
             setTimeout(() => {
               if (!animationRef.current.mounted) return;
-              console.log("Grooming complete");
               propsRef.current.onGroomed();
             }, 1000);
           }, 1500);
@@ -109,7 +103,6 @@ export default function GroomingItem({ src, position, onGroomed, cleanlinessBoos
     startAnimation();
     
     return () => {
-      console.log("Cleaning up grooming animation");
       animationRef.current.mounted = false;
       animationRef.current.isAnimating = false;
     };

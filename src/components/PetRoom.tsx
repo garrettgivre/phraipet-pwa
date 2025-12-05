@@ -20,6 +20,7 @@ interface PetRoomProps {
   isPlaying?: boolean;
   isWalking?: boolean;
   isFacingRight?: boolean;
+  isSquashing?: boolean;
   foodItem?: { src: string; position: number; hungerRestored?: number } | null;
   onFoodEaten?: () => void;
   onFoodBite?: (biteNumber: number, hungerAmount: number) => void;
@@ -38,14 +39,17 @@ const ROOM_BOUNDARIES = {
 };
 
 export default function PetRoom({ 
-  floor, wall, ceiling, trim, decor = [], frontDecor = [], backDecor = [], overlay, 
-  petImage, petPosition, moodPhrase, activeToy, isPlaying, isWalking, isFacingRight = false,
+  floor, wall, ceiling, trim, decor = [], frontDecor = [], backDecor = [],   overlay, 
+  petImage, petPosition, moodPhrase, activeToy, isPlaying, isWalking, isFacingRight = false, isSquashing = false,
   foodItem, onFoodEaten, onFoodBite, constrainToRoom = false
 }: PetRoomProps) {
   const [isEating, setIsEating] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const constrainedPetPosition = constrainToRoom 
+  // Check if the pet image is the turning image to apply special flipping logic
+  const isTurning = petImage.includes('Walk-Turning');
+
+  const constrainedPetPosition = constrainToRoom
     ? Math.max(ROOM_BOUNDARIES.LEFT, Math.min(ROOM_BOUNDARIES.RIGHT, petPosition))
     : petPosition;
 
@@ -141,7 +145,7 @@ export default function PetRoom({
         <FoodItem key={`food-${foodItem.src}`} src={foodItem.src} position={constrainToRoom ? Math.max(ROOM_BOUNDARIES.LEFT, Math.min(ROOM_BOUNDARIES.RIGHT, foodItem.position)) : foodItem.position} hungerRestored={foodItem.hungerRestored || 15} onEaten={() => { if (onFoodEaten) onFoodEaten(); }} onBite={onFoodBite} />
       )}
 
-      <img className={`pet-layer ${isPlaying ? 'playing' : ''} ${isWalking ? 'waddling' : ''} ${isFacingRight ? 'flip' : ''} ${isEating ? 'pet-eating' : ''}`} src={petImage} style={{ left: `${constrainedPetPosition}%` }} alt="Pet" />
+      <img className={`pet-layer ${isPlaying ? 'playing' : ''} ${isWalking ? 'waddling' : ''} ${isFacingRight ? 'flip' : ''} ${isEating ? 'pet-eating' : ''} ${isTurning && isFacingRight ? 'flip-turning' : ''} ${isSquashing ? 'squashing' : ''}`} src={petImage} style={{ left: `${constrainedPetPosition}%` }} alt="Pet" />
 
       {moodPhrase && (
         <div className="pet-mood-bubble" style={{ left: `${constrainedPetPosition}%` }}>

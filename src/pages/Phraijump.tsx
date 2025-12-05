@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { petService } from '../services/firebase';
 import './Phraijump.css';
 
 interface Platform {
@@ -61,6 +62,22 @@ interface Player {
   lastJumpInput: number; // Timestamp of last jump input
   isJumpHeld: boolean; // Whether jump is currently held
   framesSinceGrounded: number; // Frames since leaving ground
+}
+
+interface Enemy {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  type: 'basic' | 'flying' | 'spiky';
+  speedX: number;
+  speedY: number;
+  range: number;
+  originalX: number;
+  originalY: number;
+  zoneType: string;
+  dead?: boolean;
+  rotation?: number;
 }
 
 interface Collectible {
@@ -147,7 +164,6 @@ export default function Phraijump() {
     const v = localStorage.getItem('phraijump_highscore');
     return v ? Number(v) || 0 : 0;
   });
-  const [controlMode, setControlMode] = useState<'auto' | 'tilt' | 'keyboard'>('auto');
   const [canvasDimensions, setCanvasDimensions] = useState({ 
     width: window.innerWidth, 
     height: window.innerHeight - 52 - 56 // Account for header and navbar only
@@ -174,95 +190,19 @@ export default function Phraijump() {
     specialPlatformsUsed: 0
   });
 
-  // Gyro controls (tilt left/right)
-  const gyroEnabledRef = useRef<boolean>(false);
-  const tiltXRef = useRef<number>(0); // degrees, gamma from -90(left) to 90(right)
-  const lastGyroTsRef = useRef<number>(0);
-  const tiltOffsetRef = useRef<number>(0); // baseline calibration
   // Touch control state
   const touchActiveRef = useRef<boolean>(false);
   const touchStartXRef = useRef<number>(0);
   const touchDirRef = useRef<-1 | 0 | 1>(0);
-  const [tiltStatus, setTiltStatus] = useState<'idle' | 'enabling' | 'enabled' | 'unsupported' | 'no-sensor'>('idle');
-
-  const enableGyroControls = useCallback(async () => {
-    try {
-      setTiltStatus('enabling');
-      // iOS 13+ permission gate for DeviceMotion, Android/Chrome does not require requestPermission()
-      const dmAny: any = (window as any).DeviceMotionEvent;
-      if (dmAny && typeof dmAny.requestPermission === 'function') {
-        try {
-          const permission = await dmAny.requestPermission();
-          if (permission !== 'granted') {
-            console.warn('Gyro permission not granted');
-            setTiltStatus('unsupported');
-            return;
-          }
-        } catch {
-          // Fall through for Android/other browsers that reject
-        }
-      }
-
-      // DeviceOrientation provides gamma tilt for left/right
-      const handleOrientation = (e: DeviceOrientationEvent) => {
-        if (typeof e.gamma === 'number') {
-          tiltXRef.current = e.gamma; // -90..90
-          lastGyroTsRef.current = Date.now();
-          if (!gyroEnabledRef.current) setTiltStatus('enabled');
-          gyroEnabledRef.current = true;
-        }
-      };
-
-      window.addEventListener('deviceorientation', handleOrientation as EventListener, { passive: true } as AddEventListenerOptions);
-
-      // Fallback: DeviceMotion (Android) -> approximate gamma from acceleration including gravity
-      const handleMotion = (e: DeviceMotionEvent) => {
-        const g = e.accelerationIncludingGravity;
-        if (g && typeof g.x === 'number' && typeof g.z === 'number') {
-          const angle = Math.atan2(g.x as number, g.z as number) * (180 / Math.PI); // approx left/right tilt
-          tiltXRef.current = angle;
-          lastGyroTsRef.current = Date.now();
-          if (!gyroEnabledRef.current) setTiltStatus('enabled');
-          gyroEnabledRef.current = true;
-        }
-      };
-      window.addEventListener('devicemotion', handleMotion as EventListener, { passive: true } as AddEventListenerOptions);
-
-      // Cleanup listener on page unload
-      const cleanup = () => {
-        window.removeEventListener('deviceorientation', handleOrientation as EventListener);
-        window.removeEventListener('devicemotion', handleMotion as EventListener);
-        gyroEnabledRef.current = false;
-      };
-      window.addEventListener('pagehide', cleanup);
-
-      // If no events arrive shortly, inform user
-      window.setTimeout(() => {
-        const since = Date.now() - lastGyroTsRef.current;
-        if (since > 2500 && tiltStatus !== 'enabled') {
-          setTiltStatus('no-sensor');
-        }
-      }, 3000);
-
-      // Calibrate baseline tilt and set mode to tilt, clear any held keys
-      window.setTimeout(() => {
-        tiltOffsetRef.current = tiltXRef.current;
-        setControlMode('tilt');
-        keysRef.current.clear();
-      }, 200);
-    } catch (err) {
-      console.error('Failed to enable gyro controls', err);
-      setTiltStatus('unsupported');
-    }
-  }, []);
+  
   
   // Game constants - these will be scaled based on screen size
   const BASE_WIDTH = 400;
   const BASE_HEIGHT = 600;
-  const GRAVITY = 0.8; // add a bit more weight
-  const JUMP_FORCE = -18.0; // reduce initial jump impulse for less poppy start
+  const GRAVITY = 0.45; // Slightly reduced again for better float
+  const JUMP_FORCE = -13.5; // Matched to gravity
   const BOUNCE_MULTIPLIER = 0.8; // dampen platform bounce to feel less springy
-  const PLAYER_SPEED = 5.5; // a touch more lateral control
+  const PLAYER_SPEED = 4.5; // Reduced from 5.5 for better control
   const PLATFORM_WIDTH = 100; // wider default platforms
   const PLATFORM_HEIGHT = 15;
   
@@ -634,143 +574,48 @@ export default function Phraijump() {
     ctx.fill();
     ctx.restore();
     
-    // 3D sphere with proper lighting
-    const lightX = centerX - radiusX * 0.3;
-    const lightY = finalCenterY - radiusY * 0.4;
-    
-         // High-quality 3D sphere body with multiple gradient layers
-     const bodyGradient = ctx.createRadialGradient(lightX, lightY, 0, centerX, finalCenterY, Math.max(radiusX, radiusY) * 1.2);
-     bodyGradient.addColorStop(0, '#FFFFFF'); // Pure white highlight
-     bodyGradient.addColorStop(0.15, '#FFE5F1'); // Soft transition
-     bodyGradient.addColorStop(0.3, '#FFB3E6'); // Light pink area
-     bodyGradient.addColorStop(0.5, '#FF6B9D'); // Main vibrant color
-     bodyGradient.addColorStop(0.75, '#E91E63'); // Rich mid-tone
-     bodyGradient.addColorStop(0.9, '#C2185B'); // Deep shadow
-     bodyGradient.addColorStop(1, '#8E1538'); // Edge shadow
-    
-    ctx.fillStyle = bodyGradient;
-    ctx.beginPath();
-     ctx.ellipse(centerX, finalCenterY, radiusX, radiusY, 0, 0, Math.PI * 2);
-    ctx.fill();
-    
-     // Enhanced rim lighting with soft glow
-     const rimGradient = ctx.createRadialGradient(centerX, finalCenterY, Math.max(radiusX, radiusY) * 0.7, centerX, finalCenterY, Math.max(radiusX, radiusY) * 1.1);
-     rimGradient.addColorStop(0, 'rgba(255, 255, 255, 0)');
-     rimGradient.addColorStop(0.8, 'rgba(255, 255, 255, 0)');
-     rimGradient.addColorStop(0.95, 'rgba(255, 255, 255, 0.4)');
-     rimGradient.addColorStop(1, 'rgba(255, 255, 255, 0.1)');
-     ctx.fillStyle = rimGradient;
-     ctx.beginPath();
-     ctx.ellipse(centerX, finalCenterY, radiusX, radiusY, 0, 0, Math.PI * 2);
-     ctx.fill();
-     
-     // Subtle inner highlight for extra depth
-     const innerHighlight = ctx.createRadialGradient(lightX, lightY, 0, lightX, lightY, Math.max(radiusX, radiusY) * 0.4);
-     innerHighlight.addColorStop(0, 'rgba(255, 255, 255, 0.6)');
-     innerHighlight.addColorStop(0.5, 'rgba(255, 255, 255, 0.2)');
-     innerHighlight.addColorStop(1, 'rgba(255, 255, 255, 0)');
-     ctx.fillStyle = innerHighlight;
-     ctx.beginPath();
-     ctx.ellipse(centerX, finalCenterY, radiusX, radiusY, 0, 0, Math.PI * 2);
-     ctx.fill();
-    
-    // Determine character's emotional state
-    const isJumping = player.velocityY < -5;
-    const isFalling = player.velocityY > 8;
-    const isMovingFast = Math.abs(player.velocityX) > 3;
-    const isGrounded = player.grounded;
-    
-    // Expressive eyes that show emotion
-    const eyeSize = 5;
-    const eyeOffset = radiusX * 0.4;
-    
-    // Eye shape changes based on emotion
-    let eyeWidth = eyeSize;
-    let eyeHeight = eyeSize;
-    
-    if (isJumping) {
-      eyeHeight = eyeSize * 1.3; // Wide eyes when jumping
-    } else if (isFalling) {
-      eyeHeight = eyeSize * 0.6; // Squinted when falling
-    } else if (isMovingFast) {
-      eyeWidth = eyeSize * 1.2; // Focused eyes when moving fast
-    }
-    
-    // Eye direction based on movement
-    const eyeLookX = Math.max(-1.5, Math.min(1.5, player.velocityX * 0.1));
-    const eyeLookY = Math.max(-1, Math.min(1, player.velocityY * 0.03));
-    
-    // Eye whites with 3D shading
-    ctx.fillStyle = '#FFFFFF';
     ctx.save();
-    ctx.shadowColor = 'rgba(0,0,0,0.2)';
-    ctx.shadowBlur = 2;
-    ctx.shadowOffsetX = 1;
-    ctx.shadowOffsetY = 1;
-    ctx.beginPath();
-    ctx.ellipse(centerX - eyeOffset, finalCenterY - 6, eyeWidth, eyeHeight, 0, 0, Math.PI * 2);
-    ctx.ellipse(centerX + eyeOffset, finalCenterY - 6, eyeWidth, eyeHeight, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-    
-    // Pupils with directional gaze
-    ctx.fillStyle = '#1A1A1A';
-    const pupilSize = Math.min(eyeWidth, eyeHeight) * 0.7;
-    ctx.beginPath();
-    ctx.arc(centerX - eyeOffset + eyeLookX, finalCenterY - 6 + eyeLookY, pupilSize, 0, Math.PI * 2);
-    ctx.arc(centerX + eyeOffset + eyeLookX, finalCenterY - 6 + eyeLookY, pupilSize, 0, Math.PI * 2);
-    ctx.fill();
-    
-         // Multiple eye highlights for sparkling effect
-     ctx.fillStyle = '#FFFFFF';
-    ctx.beginPath();
-     // Main highlight
-     ctx.arc(centerX - eyeOffset + eyeLookX + 1.5, finalCenterY - 7 + eyeLookY, 2, 0, Math.PI * 2);
-     ctx.arc(centerX + eyeOffset + eyeLookX + 1.5, finalCenterY - 7 + eyeLookY, 2, 0, Math.PI * 2);
-    ctx.fill();
-    
-     // Secondary smaller highlight for extra sparkle
-    ctx.beginPath();
-     ctx.arc(centerX - eyeOffset + eyeLookX - 1, finalCenterY - 5 + eyeLookY, 0.8, 0, Math.PI * 2);
-     ctx.arc(centerX + eyeOffset + eyeLookX - 1, finalCenterY - 5 + eyeLookY, 0.8, 0, Math.PI * 2);
-     ctx.fill();
-    
-     // Mouth removed for cleaner look
-    
-    // Dynamic cheek blush based on activity
-    const blushIntensity = Math.min(0.5, (Math.abs(player.velocityX) + Math.abs(player.velocityY)) * 0.02);
-    if (blushIntensity > 0.1) {
-      ctx.fillStyle = `rgba(255, 150, 180, ${blushIntensity})`;
-    ctx.beginPath();
-      ctx.arc(centerX - radiusX * 0.7, finalCenterY + 3, 3, 0, Math.PI * 2);
-      ctx.arc(centerX + radiusX * 0.7, finalCenterY + 3, 3, 0, Math.PI * 2);
-    ctx.fill();
-    }
-    
-    // Eyebrows for extra expression
-    if (isFalling || isMovingFast) {
-      ctx.strokeStyle = '#2C3E50';
-      ctx.lineWidth = 2;
-      ctx.lineCap = 'round';
+    ctx.translate(centerX, finalCenterY);
+    ctx.scale(squishFactorX, squishFactorY);
+
+    if (petImageRef.current) {
+      // Draw pet image
+      ctx.drawImage(petImageRef.current, -radius, -radius, radius * 2, radius * 2);
       
-      if (isFalling) {
-        // Worried eyebrows
-        ctx.beginPath();
-        ctx.moveTo(centerX - eyeOffset - 3, finalCenterY - 12);
-        ctx.lineTo(centerX - eyeOffset + 2, finalCenterY - 14);
-        ctx.moveTo(centerX + eyeOffset + 3, finalCenterY - 12);
-        ctx.lineTo(centerX + eyeOffset - 2, finalCenterY - 14);
-        ctx.stroke();
-      } else if (isMovingFast) {
-        // Determined eyebrows
-        ctx.beginPath();
-        ctx.moveTo(centerX - eyeOffset - 2, finalCenterY - 14);
-        ctx.lineTo(centerX - eyeOffset + 3, finalCenterY - 12);
-        ctx.moveTo(centerX + eyeOffset + 2, finalCenterY - 14);
-        ctx.lineTo(centerX + eyeOffset - 3, finalCenterY - 12);
-        ctx.stroke();
-      }
+      // Add some shine/gloss to the pet image
+      const gloss = ctx.createRadialGradient(-radius * 0.3, -radius * 0.4, 0, 0, 0, radius * 0.8);
+      gloss.addColorStop(0, 'rgba(255, 255, 255, 0.3)');
+      gloss.addColorStop(1, 'rgba(255, 255, 255, 0)');
+      ctx.fillStyle = gloss;
+      ctx.beginPath();
+      ctx.arc(0, 0, radius, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      // Fallback: Simple gradient circle
+      const bodyGradient = ctx.createRadialGradient(-radius * 0.3, -radius * 0.4, 0, 0, 0, radius * 1.2);
+      bodyGradient.addColorStop(0, '#FFFFFF');
+      bodyGradient.addColorStop(0.5, '#FF6B9D');
+      bodyGradient.addColorStop(1, '#8E1538');
+      
+      ctx.fillStyle = bodyGradient;
+      ctx.beginPath();
+      ctx.arc(0, 0, radius, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Simple eyes
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
+      ctx.arc(-radius * 0.4, -6, 5, 0, Math.PI * 2);
+      ctx.arc(radius * 0.4, -6, 5, 0, Math.PI * 2);
+      ctx.fill();
+      
+      ctx.fillStyle = '#000000';
+      ctx.beginPath();
+      ctx.arc(-radius * 0.4, -6, 2, 0, Math.PI * 2);
+      ctx.arc(radius * 0.4, -6, 2, 0, Math.PI * 2);
+      ctx.fill();
     }
+    ctx.restore();
   };
   
   // Enhanced platform rendering with zone-specific designs and animations
@@ -1732,6 +1577,43 @@ export default function Phraijump() {
   
   const platformsRef = useRef<Platform[]>([]);
   const collectiblesRef = useRef<Collectible[]>([]);
+  const enemiesRef = useRef<Enemy[]>([]);
+  const [petImage, setPetImage] = useState<string>('/pet/neutral.png');
+  const petImageRef = useRef<HTMLImageElement | null>(null);
+
+  // Load pet image
+  useEffect(() => {
+    const unsubscribe = petService.subscribeToPet((pet) => {
+      if (pet && pet.image) {
+        setPetImage(pet.image);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    const img = new Image();
+    img.src = petImage;
+    img.onload = () => {
+      if (import.meta.env.DEV) console.log("Pet image loaded:", img.src);
+      petImageRef.current = img;
+    };
+    img.onerror = (e) => {
+      if (import.meta.env.DEV) console.error("Failed to load pet image:", img.src, e);
+    };
+    
+    // Also try loading relative path if absolute fails
+    if (petImage.startsWith('/')) {
+      const relativeImg = new Image();
+      relativeImg.src = `.${petImage}`;
+      relativeImg.onload = () => {
+        if (!petImageRef.current) {
+           if (import.meta.env.DEV) console.log("Relative pet image loaded:", relativeImg.src);
+           petImageRef.current = relativeImg;
+        }
+      };
+    }
+  }, [petImage]);
   const cameraYRef = useRef(0);
   const smoothCameraYRef = useRef(0); // For smooth camera movement
   const highestYRef = useRef(BASE_HEIGHT - 150);
@@ -2236,7 +2118,6 @@ export default function Phraijump() {
       
       // Show power-up notification
       // This could be enhanced with a UI notification system
-      console.log(`Power-up collected: ${getPowerUpName(collectible.powerUpType)}`);
     }
     
     // Check for streak achievements
@@ -2660,6 +2541,39 @@ export default function Phraijump() {
     return () => document.removeEventListener('visibilitychange', onVis);
   }, []);
 
+  const generateEnemy = (x: number, y: number, zone: string): Enemy => {
+    const types: Enemy['type'][] = ['basic', 'flying', 'spiky'];
+    const type = types[Math.floor(Math.random() * types.length)];
+    
+    let width = 40;
+    let height = 40;
+    let speedX = 0;
+    let speedY = 0;
+    let range = 100;
+    
+    if (type === 'flying') {
+      speedX = (Math.random() * 2 - 1) * 1.5;
+      speedY = (Math.random() * 2 - 1) * 0.5;
+    } else {
+      speedX = (Math.random() * 2 - 1) * 1.0;
+    }
+    
+    return {
+      x,
+      y,
+      width,
+      height,
+      type,
+      speedX,
+      speedY,
+      range,
+      originalX: x,
+      originalY: y,
+      zoneType: zone,
+      rotation: 0
+    };
+  };
+
   // Initialize platforms - now generates infinitely as player progresses
   const initializePlatforms = useCallback(() => {
     const platforms: Platform[] = [];
@@ -2675,7 +2589,7 @@ export default function Phraijump() {
     
     // Generate initial batch of platforms with variety
     for (let i = 1; i < 220; i++) {
-      const platformY = BASE_HEIGHT - 100 - (i * 105); // denser spacing
+      const platformY = BASE_HEIGHT - 100 - (i * 135); // Consistent spacing with ensurePlatforms
       const { currentZone } = getZoneInfo(platformY);
       
       // Zone-specific platform generation
@@ -2751,6 +2665,16 @@ export default function Phraijump() {
       
       platforms.push(platform);
       
+      // Generate enemies (15% chance, starting from platform 10)
+      if (i > 10 && Math.random() < 0.15) {
+        if (import.meta.env.DEV) console.log("Enemy spawned at", platform.y - 60);
+        enemiesRef.current.push(generateEnemy(
+          platform.x + (Math.random() * (platform.width - 40)), 
+          platform.y - 60, 
+          currentZone
+        ));
+      }
+      
       // Generate collectibles near some platforms (30% chance)
       if (Math.random() < 0.3) {
         collectiblesRef.current.push(generateCollectible(platform.x + platform.width/2, platform.y, currentZone));
@@ -2771,7 +2695,11 @@ export default function Phraijump() {
       
       // Add 50 more platforms with variety
       for (let i = 0; i < 60; i++) {
-        const platformY = highestPlatform - (i + 1) * 105; // denser spacing continuing
+        // Adjusted vertical spacing based on new jump height and physics
+        // JUMP_FORCE -13.5 & GRAVITY 0.45 gives max height approx 200px
+        // 105px was too dense, but also safer. Let's increase slightly to challenge but keep safe.
+        // 135px allows for comfortable jumps without being pixel perfect max height
+        const platformY = highestPlatform - (i + 1) * 135; 
         const { currentZone } = getZoneInfo(platformY);
         
         // Zone-specific platform generation
@@ -2846,6 +2774,15 @@ export default function Phraijump() {
         
         platforms.push(platform);
         
+        // Generate enemies (15% chance)
+        if (Math.random() < 0.15) {
+          enemiesRef.current.push(generateEnemy(
+            platform.x + (Math.random() * (platform.width - 40)), 
+            platform.y - 60, 
+            currentZone
+          ));
+        }
+
         // Generate collectibles near some platforms (30% chance)
         if (Math.random() < 0.3) {
           collectiblesRef.current.push(generateCollectible(platform.x + platform.width/2, platform.y, currentZone));
@@ -2854,6 +2791,103 @@ export default function Phraijump() {
     }
   }, []);
   
+  const updateEnemies = (player: Player) => {
+    const enemies = enemiesRef.current;
+    for (let i = enemies.length - 1; i >= 0; i--) {
+      const enemy = enemies[i];
+      
+      // Movement
+      enemy.x += enemy.speedX;
+      enemy.y += enemy.speedY;
+      
+      if (enemy.type === 'flying' || enemy.type === 'basic') {
+        if (Math.abs(enemy.x - enemy.originalX) > enemy.range) {
+          enemy.speedX *= -1;
+        }
+        if (enemy.type === 'flying') {
+           if (Math.abs(enemy.y - enemy.originalY) > 30) {
+             enemy.speedY *= -1;
+           }
+        }
+      }
+
+      // Remove if too far below camera
+      if (enemy.y > cameraYRef.current + BASE_HEIGHT + 200) {
+        enemies.splice(i, 1);
+        continue;
+      }
+      
+      // Collision with player
+      if (!enemy.dead && 
+          player.x < enemy.x + enemy.width &&
+          player.x + player.width > enemy.x &&
+          player.y < enemy.y + enemy.height &&
+          player.y + player.height > enemy.y) {
+            
+        // Check if jumping on top
+        const isJumpingOnTop = player.velocityY > 0 && player.y + player.height < enemy.y + enemy.height * 0.5;
+        
+        if (isJumpingOnTop && enemy.type !== 'spiky') {
+          // Kill enemy
+          enemy.dead = true;
+          player.velocityY = JUMP_FORCE; // Bounce
+          enemies.splice(i, 1);
+          setScore(s => s + 50); // Bonus score
+          addParticles(enemy.x + enemy.width/2, enemy.y + enemy.height/2, '#FF0000', 10, 'explosion');
+        } else if (!player.shieldActive && !player.activePowerUps.some(p => p.type === 'shield')) {
+           // Game Over
+           setGameOver(true);
+        }
+      }
+    }
+  };
+
+  const renderEnemy = (ctx: CanvasRenderingContext2D, enemy: Enemy, cameraY: number) => {
+    const screenY = enemy.y - cameraY;
+    if (screenY < -50 || screenY > BASE_HEIGHT + 50) return;
+    
+    ctx.save();
+    ctx.translate(enemy.x + enemy.width/2, screenY + enemy.height/2);
+    
+    if (enemy.type === 'flying') {
+      // Draw wings or something
+      ctx.fillStyle = '#FF5555';
+      ctx.beginPath();
+      ctx.arc(0, 0, 20, 0, Math.PI * 2);
+      ctx.fill();
+      // Wings
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
+      ctx.ellipse(-20, -5, 15, 8, 0.2, 0, Math.PI * 2);
+      ctx.ellipse(20, -5, 15, 8, -0.2, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (enemy.type === 'spiky') {
+      ctx.fillStyle = '#555555';
+      ctx.beginPath();
+      ctx.moveTo(0, -20);
+      ctx.lineTo(15, 15);
+      ctx.lineTo(-15, 15);
+      ctx.fill();
+    } else {
+      // Basic
+      ctx.fillStyle = '#AA0000';
+      ctx.fillRect(-20, -20, 40, 40);
+      // Eyes
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
+      ctx.arc(-8, -5, 5, 0, Math.PI * 2);
+      ctx.arc(8, -5, 5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#000000';
+      ctx.beginPath();
+      ctx.arc(-8, -5, 2, 0, Math.PI * 2);
+      ctx.arc(8, -5, 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    
+    ctx.restore();
+  };
+
   // Game loop
   const gameLoop = useCallback(() => {
     if (!canvasRef.current) return;
@@ -3073,27 +3107,15 @@ export default function Phraijump() {
     if (keysRef.current.has('ArrowLeft') || keysRef.current.has('a')) inputAxis -= 1;
     if (keysRef.current.has('ArrowRight') || keysRef.current.has('d')) inputAxis += 1;
 
-    // Gyro influence (if enabled and mode is tilt): map calibrated gamma to [-1,1] with deadzone and smoothing
-    let tiltAxis = 0;
-    if (gyroEnabledRef.current && !touchActiveRef.current && (controlMode === 'tilt' || controlMode === 'auto')) {
-      const gammaRaw = tiltXRef.current - tiltOffsetRef.current; // degrees around baseline
-      const dead = 2; // smaller deadzone for more responsive feel
-      const clampGamma = Math.max(-45, Math.min(45, gammaRaw));
-      if (Math.abs(clampGamma) > dead) {
-        const target = clampGamma / 30; // a bit more sensitive than /45
-        // Smooth tilt to avoid sudden jumps
-        tiltAxis = Math.max(-1, Math.min(1, target));
-      }
-    }
-
-    const axis = Math.max(-1, Math.min(1, (controlMode === 'keyboard' ? inputAxis : (inputAxis + tiltAxis))));
+    const axis = Math.max(-1, Math.min(1, inputAxis));
 
     if (axis !== 0) {
       const targetVelX = axis * effectiveSpeed * movementStrength;
-      player.velocityX += (targetVelX - player.velocityX) * (player.grounded ? 0.35 : 0.15);
+      // Smooth acceleration
+      player.velocityX += (targetVelX - player.velocityX) * (player.grounded ? 0.25 : 0.15); 
     } else {
-      // Enhanced friction - different for ground vs air
-      player.velocityX *= player.grounded ? 0.75 : 0.95;
+      // Enhanced friction - more friction on ground to prevent sliding
+      player.velocityX *= player.grounded ? 0.6 : 0.95;
     }
     
     // Apply gravity with power-up modifications
@@ -3379,6 +3401,9 @@ export default function Phraijump() {
       // Future: Add power-up particle effects here
     }
     
+    // Update enemies
+    updateEnemies(player);
+    
     // Update and render particle system
     updateAndRenderParticles(ctx, cameraYRef.current);
     
@@ -3473,6 +3498,14 @@ export default function Phraijump() {
       }
     }
     
+    // Render enemies
+    enemiesRef.current.forEach(enemy => {
+      ctx.save();
+      ctx.translate(effectiveCameraX, 0);
+      renderEnemy(ctx, enemy, effectiveCameraY);
+      ctx.restore();
+    });
+
     // Render player with custom character design and screen shake
     const playerScreenY = player.y - effectiveCameraY;
     ctx.save();
@@ -4265,22 +4298,6 @@ export default function Phraijump() {
               <button className="menu-button" onClick={togglePause}>
                 {isPaused ? 'Resume (P/Esc)' : 'Pause (P/Esc)'}
               </button>
-              <button className="menu-button" onClick={() => { void enableGyroControls(); }}>
-                {tiltStatus === 'enabled' ? 'Tilt Enabled' : 'Enable Tilt Controls'}
-              </button>
-              <div style={{ marginTop: 10, display: 'flex', gap: 8, justifyContent: 'center' }}>
-                <button className="menu-button" onClick={() => setControlMode('keyboard')}>Keyboard</button>
-                <button className="menu-button" onClick={() => setControlMode('tilt')}>Tilt</button>
-                <button className="menu-button" onClick={() => setControlMode('auto')}>Auto</button>
-                <button className="menu-button" onClick={() => { tiltOffsetRef.current = tiltXRef.current; }}>Recalibrate</button>
-              </div>
-              {tiltStatus !== 'idle' && tiltStatus !== 'enabled' && (
-                <div style={{ marginTop: 8, color: 'rgba(255,255,255,0.85)', fontSize: 14 }}>
-                  {tiltStatus === 'enabling' && 'Awaiting permission/sensor...'}
-                  {tiltStatus === 'unsupported' && 'Tilt permission denied or unsupported.'}
-                  {tiltStatus === 'no-sensor' && 'No motion/orientation events detected.'}
-                </div>
-              )}
               
               {/* Show some recent achievements */}
               {achievements.filter(a => a.completed).length > 0 && (

@@ -1,5 +1,6 @@
-// src/components/Header.tsx
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from "react-router-dom";
+import { petService } from '../services/firebase';
 import type { NeedInfo } from "../types";
 import { getNeedBarColor } from "../utils/colorUtils";
 import "./Header.css";
@@ -7,14 +8,28 @@ import "./Header.css";
 interface HeaderProps {
   coins?: number;
   needs?: NeedInfo[];
+  compact?: boolean; // New prop for compact mode on Pet Page
+  onSettingsClick?: () => void; // Optional setting click handler
 }
 
 export default function Header({
   coins = 100,
-  needs = []
+  needs = [],
+  compact = false,
+  onSettingsClick
 }: HeaderProps) {
   const navigate = useNavigate();
   const iconSize = 20; // Desired display size for icons in the header circles
+  const [petImage, setPetImage] = useState<string>('/pet/neutral.png');
+
+  useEffect(() => {
+    const unsubscribe = petService.subscribeToPet((pet) => {
+      if (pet && pet.image) {
+        setPetImage(pet.image);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
 
   if (import.meta.env.DEV) {
     console.log("Header - Received needs:", needs);
@@ -26,12 +41,20 @@ export default function Header({
 
   return (
     <header className="app-header">
-      <div className="pet-icon-wrapper" onClick={goHome} style={{ cursor: 'pointer' }}>
-        <img src="/pet/neutral.png" alt="Pet" className="pet-icon" />
-      </div>
+      {compact ? (
+        // Compact Header for Pet Page
+        <div className="pet-icon-wrapper settings-wrapper" onClick={onSettingsClick} style={{ cursor: 'pointer' }}>
+          <img src="/assets/icons/settings.png" alt="Settings" className="settings-icon" />
+        </div>
+      ) : (
+        // Standard Header
+        <div className="pet-icon-wrapper" onClick={goHome} style={{ cursor: 'pointer' }}>
+          <img src={petImage} alt="Pet" className="pet-icon" />
+        </div>
+      )}
 
       <div className="needs-wrapper">
-        {needs && needs.map((n) => (
+        {!compact && needs && needs.map((n) => (
           <div key={n.need} className="need-circle" title={`${n.need}: ${n.desc} (${n.value})`}>
             <svg viewBox="0 0 36 36" className="circular-chart" preserveAspectRatio="xMidYMid meet">
               <path

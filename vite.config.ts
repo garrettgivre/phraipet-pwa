@@ -51,7 +51,7 @@ export default defineConfig({
           }
         ],
         navigateFallback: 'index.html',
-        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024
+        maximumFileSizeToCacheInBytes: 50 * 1024 * 1024
       },
       manifest: {
         name: 'Phraipets',
@@ -70,6 +70,17 @@ export default defineConfig({
       }
     })
   ],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'firebase-vendor': ['firebase/app', 'firebase/auth', 'firebase/database'],
+        }
+      }
+    },
+    chunkSizeWarningLimit: 1000
+  },
   server: {
     host: true,
     port: 5173

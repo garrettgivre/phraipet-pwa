@@ -35,6 +35,7 @@
   z-index: -1; /* Place behind content */
   pointer-events: none; /* Don't block clicks */
   transform: translateY(0); /* Position relative to navbar */
+  filter: hue-rotate(var(--theme-hue-rotate)); /* Apply theme rotation */
 }
 
 .nav-item {

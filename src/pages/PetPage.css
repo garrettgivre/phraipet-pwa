@@ -6,22 +6,29 @@
   width: 100%;
   min-height: 100dvh; /* mobile-friendly */
   background-color: #f0f8ff;
+  /* Add a subtle pattern to fill empty space */
+  background-image: radial-gradient(#d6eaf8 2px, transparent 2px);
+  background-size: 24px 24px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start; /* start below header */
+  justify-content: flex-start;
   align-items: center;
-  padding: calc(var(--app-header-height, 56px) + env(safe-area-inset-top)) 0 var(--app-nav-height, 56px) 0;
+  /* Reduced top padding to move window up behind header */
+  padding: calc(30px + env(safe-area-inset-top)) 0 0 0;
   box-sizing: border-box;
 }
 
 /* Coin display */
 .coin-display {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  z-index: 1000;
+  display: none; /* Hidden in favor of Header coin display */
 }
+
+/* Settings Icon Button */
+.settings-icon-btn {
+  display: none; /* Hidden in favor of Header button */
+}
+
 
 /* New bordered pet room container */
 .pet-room-bordered-container {
@@ -29,12 +36,15 @@
   width: min(100%, 520px);
   aspect-ratio: 9/16;
   height: auto; /* derive from aspect-ratio */
-  max-height: calc(100dvh - var(--app-header-height, 56px) - var(--app-nav-height, 56px) - 24px);
+  max-height: calc(100dvh - 30px - env(safe-area-inset-top)); /* Extend to bottom */
   margin: 0 auto;
   display: grid; /* layout main area + control bar */
   grid-template-rows: 1fr auto;
-  overflow: hidden;
+  overflow: visible; /* visible so needs bar can extend down */
   background-color: #ffffff;
+  /* Add shadow to separate from background pattern */
+  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+  border-radius: 0;
 }
 
 /* Explicitly set the pet room container height to leave room for the UI bar */
@@ -46,6 +56,7 @@
   border-bottom: 2px solid #eaeaea;
   overflow: hidden;
   transition: all 0.3s ease;
+  z-index: 1; /* Keep below UI */
 }
 
 /* Edit mode styling */
@@ -105,43 +116,35 @@
 .pet-room-border-ui {
   position: relative;
   width: 100%;
-  height: 70px;
-  background-color: #ffffff;
+  height: 136px; /* Increased height to go behind nav bar */
+  margin-bottom: -56px; /* Negative margin to overlap nav space */
+  padding-bottom: 56px; /* Padding to push content up from nav */
+  background-color: #ffffff; /* Fallback background */
   display: grid;
   grid-template-columns: 56px 1fr 56px; /* button | needs | spacer */
-  align-items: center;
-  padding: 0 8px;
+  align-items: start; /* Align items to the top */
+  padding-top: 6px; /* Reduced top padding */
+  padding-left: 8px;
+  padding-right: 8px;
   box-sizing: border-box;
-}
-
-/* Decoration button positioned like a Tamagotchi menu button */
-.decoration-button {
-  justify-self: start;
-  width: 40px;
-  height: 40px;
-  min-width: 40px;
-  border-radius: 50%;
-  background-color: #ffffff;
-  border: 2px solid #e8e8e8;
   z-index: 20;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  cursor: pointer;
-  transition: transform 0.2s;
+  overflow: visible; /* Changed from hidden to allow icons to overlap */
 }
 
-.decoration-button:hover {
-  transform: translateY(-50%) scale(1.1);
-  background-color: #f5f5f5;
-}
-
-.decoration-button img {
-  width: 28px;
-  height: 28px;
-  object-fit: contain;
-  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.1));
+/* Blurred background pseudo-element */
+.pet-room-border-ui::before {
+  content: "";
+  position: absolute;
+  top: -50%; /* Extend well beyond the container */
+  left: -50%;
+  width: 200%; /* Ensure it covers everything even when zoomed/rotated */
+  height: 200%;
+  background-image: url("/assets/backgrounds/nav-bg.png");
+  background-size: cover;
+  background-position: center;
+  filter: hue-rotate(var(--theme-hue-rotate)) blur(20px); /* Theme color + heavy blur */
+  z-index: -1; /* Place behind content */
+  transform: translateZ(0); /* Fix for potential rendering issues */
 }
 
 /* Need indicators container - centered in the UI area */
@@ -151,6 +154,78 @@
   align-items: center;
   width: 100%;
   height: 100%;
+  /* Removed counter-rotation since background is separate layer now */
+}
+
+/* Style override for need circles SPECIFIC to the Pet Page */
+.pet-room-border-ui .need-circle {
+  width: 56px; /* Standard size */
+  height: 56px;
+  margin-top: -40px; /* Pull up significantly to overlap border */
+  background: rgba(255, 255, 255, 0.6); /* More transparent white to see blurred color */
+  backdrop-filter: blur(5px); /* Glassmorphism effect */
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.1),
+    0 1px 2px rgba(0, 0, 0, 0.06);
+  transform: translateY(0);
+  border-radius: 50%;
+}
+
+/* Adjust hover state for these specifically positioned icons */
+.pet-room-border-ui .need-circle:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.pet-room-border-ui .need-circle:active {
+  transform: translateY(1px);
+}
+
+/* Responsive sizing for smaller screens on Pet Page */
+@media (max-height: 600px) {
+  .pet-room-border-ui {
+    height: 120px;
+    margin-bottom: -56px;
+    padding-bottom: 56px;
+  }
+  .pet-room-border-ui .need-circle {
+    width: 48px;
+    height: 48px;
+    margin-top: -6px;
+  }
+}
+
+/* Decoration button positioned like a Tamagotchi menu button */
+.decoration-button {
+  justify-self: start;
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  border-radius: 50%;
+  margin-top: -40px; /* Align with need circles */
+  background-color: rgba(255, 255, 255, 0.6); /* Match need circles */
+  backdrop-filter: blur(5px);
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  cursor: pointer;
+  transition: transform 0.2s;
+  /* Removed hue rotation since button is on top of blurred bg */
+}
+
+.decoration-button:hover {
+  transform: translateY(-50%) scale(1.1);
+  background-color: rgba(255, 255, 255, 0.8);
+}
+
+.decoration-button img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.1));
 }
 
 /* Add a Tamagotchi-like title */
@@ -470,4 +545,3 @@
     max-width: calc(100dvh * 9/16);
   }
 }
-

@@ -6,11 +6,15 @@ interface PetMovementState {
   isWalking: boolean;
   walkingStep: number;
   isFacingRight: boolean;
+  isTurning: boolean; // New state for turning animation
+  isSquashing: boolean;
 }
 
 export const usePetMovement = (pet: Pet | null): PetMovementState => {
   const [position, setPosition] = useState(50);
   const [isWalking, setIsWalking] = useState(false);
+  const [isTurning, setIsTurning] = useState(false); // New turning state
+  const [isSquashing, setIsSquashing] = useState(false);
   // Use 0 or 1 for the walking step (A or B image)
   const [walkingStep, setWalkingStep] = useState(0);
   const [isFacingRight, setIsFacingRight] = useState(false);
@@ -25,14 +29,25 @@ export const usePetMovement = (pet: Pet | null): PetMovementState => {
   
   // Constant for step timing - one step every 300ms
   const STEP_INTERVAL = 300;
+  const TURN_DURATION = 300; // Duration of turn animation
 
   useEffect(() => {
     if (!pet) return;
 
     // Decision to start walking happens every 6-12 seconds
     const moveInterval = setInterval(() => {
-      // If we're not currently walking, decide on a new target
-      if (!isWalking) {
+      // If we're not currently walking or turning, decide on a new target
+      if (!isWalking && !isTurning && !isSquashing) {
+        // Randomly decide to squash (idle animation) instead of moving
+        // 30% chance to squash
+        if (Math.random() < 0.3) {
+          setIsSquashing(true);
+          setTimeout(() => {
+            setIsSquashing(false);
+          }, 1000);
+          return;
+        }
+
       setPosition(prevPos => {
           // Determine direction based on current position and random choice
         let direction;
@@ -60,14 +75,29 @@ export const usePetMovement = (pet: Pet | null): PetMovementState => {
             direction = -1; // Force left direction after bounce
           }
 
-          // Set the target and start walking
-          setTargetPosition(boundedTarget);
-        setIsWalking(true);
-        setIsFacingRight(direction > 0);
+          // Determine if we need to turn before walking
+          const newFacingRight = direction > 0;
+          const needsToTurn = newFacingRight !== isFacingRight;
 
-          // Reset walking step for new walking animation
-          setWalkingStep(0);
-          setLastStepTime(Date.now());
+          if (needsToTurn) {
+             setIsTurning(true);
+             // Schedule the start of walking after the turn
+             setTimeout(() => {
+                 setIsTurning(false);
+                 setIsFacingRight(newFacingRight); // Actually flip direction now
+                 setTargetPosition(boundedTarget);
+                 setIsWalking(true);
+                 setWalkingStep(0);
+                 setLastStepTime(Date.now());
+             }, TURN_DURATION);
+          } else {
+            // No turn needed, start walking immediately
+            setIsFacingRight(newFacingRight);
+            setTargetPosition(boundedTarget);
+            setIsWalking(true);
+            setWalkingStep(0);
+            setLastStepTime(Date.now());
+          }
 
           return prevPos; // Current position doesn't change yet
         });
@@ -76,7 +106,7 @@ export const usePetMovement = (pet: Pet | null): PetMovementState => {
 
     // Position update interval - updates position continuously
     const positionInterval = setInterval(() => {
-      if (isWalking && targetPosition !== null) {
+      if (isWalking && targetPosition !== null && !isTurning) {
             setPosition(prevPos => {
           const distanceToTarget = targetPosition - prevPos;
           const absDistance = Math.abs(distanceToTarget);
@@ -86,6 +116,15 @@ export const usePetMovement = (pet: Pet | null): PetMovementState => {
             setIsWalking(false);
             setWalkingStep(0);
             setTargetPosition(null);
+            
+            // After stopping, maybe do a "settle" turn or just stop
+            // For now, we just stop. 
+            // Could optionally turn back to front here if desired, but user asked for before/after walking turns 
+            // usually implying the sideways turn. The "Walk-Turning" image is typically for the transition 
+            // from Front <-> Side or Side <-> Side.
+            // If we want to turn back to "Front" (neutral) we could add logic here.
+            // Assuming user meant turning *into* the walk direction.
+            
             return targetPosition;
           }
           
@@ -93,8 +132,8 @@ export const usePetMovement = (pet: Pet | null): PetMovementState => {
           const stepSize = Math.min(0.8, absDistance * 0.06);
           const direction = distanceToTarget > 0 ? 1 : -1;
           
-          // Update facing direction based on movement direction
-          setIsFacingRight(direction > 0);
+          // Update facing direction based on movement direction (should already be set, but safe to enforce)
+          // setIsFacingRight(direction > 0);
           
           return prevPos + (direction * stepSize);
         });
@@ -104,7 +143,7 @@ export const usePetMovement = (pet: Pet | null): PetMovementState => {
     // Separate stepping animation interval
     // This ensures consistent A-B-A-B stepping regardless of movement speed
     const steppingInterval = setInterval(() => {
-      if (isWalking) {
+      if (isWalking && !isTurning) {
         const now = Date.now();
         
         // Only update step if enough time has passed
@@ -121,7 +160,7 @@ export const usePetMovement = (pet: Pet | null): PetMovementState => {
       clearInterval(positionInterval);
       clearInterval(steppingInterval);
     };
-  }, [pet, isWalking, targetPosition, lastStepTime]);
+  }, [pet, isWalking, targetPosition, lastStepTime, isTurning, isFacingRight, isSquashing]); // Added dependencies
 
-  return { position, isWalking, walkingStep, isFacingRight };
+  return { position, isWalking, walkingStep, isFacingRight, isTurning, isSquashing };
 }; 

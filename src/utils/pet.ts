@@ -1,3 +1,5 @@
+import type { Pet } from '../types';
+
 export type NeedName = 'hunger' | 'happiness' | 'cleanliness' | 'affection' | 'spirit'
 
 export const MAX_NEED_VALUE = 120
@@ -121,4 +123,66 @@ export function applyNeedsDecay(
     spirit: computeSpirit({ hunger, happiness, cleanliness, affection }),
     lastNeedsUpdateTime: now,
   }
-} 
+}
+
+export const getTodayDateString = (): string => {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = (today.getMonth() + 1).toString().padStart(2, '0');
+  const day = today.getDate().toString().padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const defaultPetBase = {
+  id: "default-pet",
+  name: "Buddy",
+  type: "default",
+  hunger: 100,
+  happiness: 100,
+  cleanliness: 100,
+  affection: 50,
+  spirit: 0,
+  image: "/pet/neutral.png",
+  lastNeedsUpdateTime: 0, // Will be overridden
+  affectionGainedToday: 0,
+};
+
+export const getDefaultPet = (): Pet => ({
+  ...defaultPetBase,
+  lastNeedsUpdateTime: Date.now(),
+  lastAffectionGainDate: getTodayDateString(),
+  spirit: computeSpirit(defaultPetBase),
+});
+
+// Keep for compatibility if needed, but prefer getDefaultPet()
+export const defaultPetData: Pet = getDefaultPet();
+
+export function validatePet(data: unknown): Pet {
+  const defaults = getDefaultPet();
+  const safeData = (typeof data === 'object' && data !== null) ? data as Partial<Pet> : {};
+  
+  const hunger = typeof safeData.hunger === 'number' && !isNaN(safeData.hunger) ? safeData.hunger : defaults.hunger;
+  const happiness = typeof safeData.happiness === 'number' && !isNaN(safeData.happiness) ? safeData.happiness : defaults.happiness;
+  const cleanliness = typeof safeData.cleanliness === 'number' && !isNaN(safeData.cleanliness) ? safeData.cleanliness : defaults.cleanliness;
+  const affection = typeof safeData.affection === 'number' && !isNaN(safeData.affection) ? safeData.affection : defaults.affection;
+  
+  // Calculate spirit based on current values
+  const spirit = computeSpirit({ hunger, happiness, cleanliness, affection });
+  
+  const lastNeedsUpdateTime = (typeof safeData.lastNeedsUpdateTime === 'number' && safeData.lastNeedsUpdateTime > 0 && !isNaN(safeData.lastNeedsUpdateTime)) 
+    ? safeData.lastNeedsUpdateTime 
+    : Date.now();
+
+  return {
+    ...defaults,
+    ...safeData,
+    hunger,
+    happiness,
+    cleanliness,
+    affection,
+    spirit,
+    lastNeedsUpdateTime,
+    affectionGainedToday: typeof safeData.affectionGainedToday === 'number' ? safeData.affectionGainedToday : defaults.affectionGainedToday,
+    lastAffectionGainDate: safeData.lastAffectionGainDate || getTodayDateString(),
+  };
+}

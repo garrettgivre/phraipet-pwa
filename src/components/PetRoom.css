@@ -359,6 +359,28 @@
   }
 }
 
+.pet-layer.flip-turning {
+  transform: translateX(-50%) scaleX(-1);
+}
+
+.pet-layer.squashing {
+  animation: petSquash 1s ease-in-out;
+}
+
+.pet-layer.flip.squashing {
+  animation: petSquashFlip 1s ease-in-out;
+}
+
+@keyframes petSquash {
+  0%, 100% { transform: translateX(-50%) scale(1, 1); }
+  50% { transform: translateX(-50%) scale(1.15, 0.85); }
+}
+
+@keyframes petSquashFlip {
+  0%, 100% { transform: translateX(-50%) scaleX(-1) scale(1, 1); }
+  50% { transform: translateX(-50%) scaleX(-1) scale(1.15, 0.85); }
+}
+
 /* When pet is playing, don't show the waddle animation */
 .pet-layer.playing.waddling {
   animation: squishBounce 0.8s infinite alternate;
