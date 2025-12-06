@@ -63,7 +63,6 @@ const STATIC_LOCATIONS: GridLocation[] = [
 export default function Explore() {
   const location = useLocation();
   const isExploreRoot = location.pathname === "/explore";
-  const isSunnybrookRoot = location.pathname === "/sunnybrook";
   const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement>(null);
   const [hotspots, setHotspots] = useState<AppHotspot[]>([]);
@@ -357,7 +356,6 @@ export default function Explore() {
   useEffect(() => {
     let isMounted = true;
     let mapDataUrl = TILED_MAP_DATA_URL;
-    if (isSunnybrookRoot) mapDataUrl = '/maps/sunnybrook_map_data.json';
 
     const fetchMapData = async () => {
       if (!isMounted) return;
@@ -399,7 +397,6 @@ export default function Explore() {
           
           // Merge fetched hotspots with static red dot locations
           // Only for the main map, not Sunnybrook
-          if (!isSunnybrookRoot) {
             const ROW_HEIGHT = TILED_MAP_HEIGHT / 26;
             const COL_WIDTH = TILED_MAP_WIDTH / 20;
             const scaleX = mapDimensions.width / TILED_MAP_WIDTH;
@@ -438,7 +435,6 @@ export default function Explore() {
                 }
               });
             });
-          }
 
           if (isMounted) setHotspots(processedHotspots);
         } else {
@@ -453,25 +449,14 @@ export default function Explore() {
 
     void fetchMapData();
     return () => { isMounted = false; };
-  }, [mapDimensions, isSunnybrookRoot]);
+  }, [mapDimensions]);
 
-  if (!isExploreRoot && !isSunnybrookRoot) {
+  if (!isExploreRoot) {
     return <Outlet />;
   }
 
   const handleHotspotClick = (hotspot: AppHotspot) => {
     try {
-      if (hotspot.name === "Sunnybrook" || (hotspot.route && hotspot.route.includes('sunnybrook'))) {
-        console.log("Navigating to Sunnybrook...");
-        void navigate('/sunnybrook');
-        window.setTimeout(() => {
-          if (window.location.pathname !== '/sunnybrook') {
-            console.log("Fallback to direct navigation to Sunnybrook");
-            window.location.href = '/sunnybrook';
-          }
-        }, 100);
-        return;
-      }
       void navigate(hotspot.route);
     } catch (err) {
       console.error("Navigation error:", err);
@@ -510,7 +495,7 @@ export default function Explore() {
                   top: Math.floor(row * mapDimensions.height),
                   width: Math.ceil(mapDimensions.width),
                   height: Math.ceil(mapDimensions.height),
-                  backgroundImage: `url(${isSunnybrookRoot ? '/maps/sunnybrook_map_background.png' : MAP_BACKGROUND_IMAGE_URL})`,
+                  backgroundImage: `url(${MAP_BACKGROUND_IMAGE_URL})`,
                   backgroundSize: '100% 100%',
                   backgroundPosition: 'center',
                   transform: 'translateZ(0)',

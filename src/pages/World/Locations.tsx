@@ -49,3 +49,4 @@ export const ReqoolIsland = () => <LocationTemplate name="Reqool Island" />;
 export const CastawaysKnoll = () => <LocationTemplate name="Castaway’s Knoll" />;
 export const TreuseIsland = () => <LocationTemplate name="Treuse Island" />;
 
+

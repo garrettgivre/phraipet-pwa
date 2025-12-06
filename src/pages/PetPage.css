@@ -135,16 +135,18 @@
 .pet-room-border-ui::before {
   content: "";
   position: absolute;
-  top: -50%; /* Extend well beyond the container */
-  left: -50%;
-  width: 200%; /* Ensure it covers everything even when zoomed/rotated */
-  height: 200%;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   background-image: url("/assets/backgrounds/nav-bg.png");
   background-size: cover;
   background-position: center;
   filter: hue-rotate(var(--theme-hue-rotate)) blur(20px); /* Theme color + heavy blur */
   z-index: -1; /* Place behind content */
   transform: translateZ(0); /* Fix for potential rendering issues */
+  /* Clip the blur to the container to prevent bleeding */
+  clip-path: inset(0);
 }
 
 /* Need indicators container - centered in the UI area */

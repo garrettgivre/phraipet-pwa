@@ -66,7 +66,20 @@ export default function Header({
       ) : (
         // Standard Header
         <div className="pet-icon-wrapper" onClick={goHome} style={{ cursor: 'pointer' }}>
-          <img src={petImage} alt="Pet" className="pet-icon" />
+          <img 
+            src={petImage} 
+            alt="Pet" 
+            className="pet-icon" 
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              if (target.src.endsWith('/pet/Neutral.png')) {
+                // Already failed on default, prevent infinite loop
+                return;
+              }
+              // Fallback to neutral
+              target.src = '/pet/Neutral.png';
+            }}
+          />
         </div>
       )}
 

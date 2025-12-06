@@ -8,17 +8,6 @@ import Phraijump from "./pages/Phraijump";
 import PhraiCrush from "./pages/PhraiCrush";
 import InventoryPage from "./pages/InventoryPage";
 import DecorationPage from "./pages/DecorationPage";
-import Sunnybrook from "./pages/Sunnybrook";
-import SBAdoption from "./pages/Sunnybrook/SBAdoption"; 
-import SBClock from "./pages/Sunnybrook/SBClock";
-import SBClinic from "./pages/Sunnybrook/SBClinic";
-import SBFountain from "./pages/Sunnybrook/SBFountain";
-import SBFurniture from "./pages/Sunnybrook/SBFurniture";
-import SBMart from "./pages/Sunnybrook/SBMart";
-import SBStall from "./pages/Sunnybrook/SBStall";
-import SBToy from "./pages/Sunnybrook/SBToy";
-import SBToyStore from "./pages/Sunnybrook/SBToyStore";
-import SBFurnitureStore from "./pages/Sunnybrook/SBFurnitureStore";
 import RescuePals from "./pages/RescuePals";
 import Settings from "./pages/Settings";
 import LocationDummy from "./pages/LocationDummy";
@@ -93,50 +82,6 @@ export function createRoutes({
     {
       path: "/decorations",
       element: <DecorationPage />
-    },
-    {
-      path: "/sunnybrook",
-      element: <Sunnybrook />,
-    },
-    {
-      path: "/sunnybrook/SBAdoption",
-      element: <SBAdoption />,
-    },
-    {
-      path: "/sunnybrook/SBClock",
-      element: <SBClock />,
-    },
-    {
-      path: "/sunnybrook/SBClinic",
-      element: <SBClinic />,
-    },
-    {
-      path: "/sunnybrook/SBFountain",
-      element: <SBFountain />,
-    },
-    {
-      path: "/sunnybrook/SBFurniture",
-      element: <SBFurniture />,
-    },
-    {
-      path: "/sunnybrook/SBMart",
-      element: <SBMart />,
-    },
-    {
-      path: "/sunnybrook/SBStall",
-      element: <SBStall />,
-    },
-    {
-      path: "/sunnybrook/SBToy",
-      element: <SBToy />,
-    },
-    {
-      path: "/sunnybrook/SBToyStore",
-      element: <SBToyStore />,
-    },
-    {
-      path: "/sunnybrook/SBFurnitureStore",
-      element: <SBFurnitureStore />,
     },
     { path: "/explore/amethyst-spires", element: <World.AmethystSpires /> },
     { path: "/explore/amethyst-woods-entrance", element: <World.AmethystWoodsEntrance /> },
