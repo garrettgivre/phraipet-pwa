@@ -51,7 +51,9 @@ const STATIC_LOCATIONS: GridLocation[] = [
   { name: "Mütlich Peak", grids: ["C15", "C16", "D15", "D16", "E15", "E16"], route: "/explore/mutlich-peak" },
   { name: "Ashenroot Ridge", grids: ["F16", "G16", "G17", "F17"], route: "/explore/ashenroot-ridge" },
   { name: "Revelrid Town", grids: ["L16", "M16", "M17", "L17", "K17", "J17", "K16"], route: "/explore/revelrid-town" },
-  { name: "Creykenp City", grids: ["O16", "P16", "P17", "Q15", "Q16", "Q17", "R15", "R16", "R17", "S15", "S16", "S17", "T15", "T16", "T17", "U15", "U16"], route: "/explore/creykenp-city" },
+  { name: "Creykenp Downtown", grids: ["V14", "U14", "T14", "R14", "W14", "W15", "V15", "U15", "T15", "S15", "R15", "Q15"], route: "/explore/creykenp-downtown" },
+  { name: "Creykenp HQ", grids: ["Q16", "R16", "P16"], route: "/explore/creykenp-hq" },
+  { name: "Creykenp Stadium", grids: ["O17", "P17", "Q17"], route: "/explore/creykenp-stadium" },
   { name: "Prism Sanctum", grids: ["A17", "A18", "B17", "B18", "B19", "C17", "C18", "C19", "D17", "D18", "D19", "E17", "E18"], route: "/explore/prism-sanctum" },
   { name: "Everfall Perch", grids: ["G19", "G20", "H19", "H20", "I19", "I20", "J19"], route: "/explore/everfall-perch" },
   { name: "Mistblossom Village", grids: ["K19", "K18", "K20", "L19"], route: "/explore/mistblossom-village" },
@@ -73,9 +75,13 @@ export default function Explore() {
     return saved === 'true';
   });
 
-  const [zoomLevel, setZoomLevel] = useState(1);
+  const [zoomLevel, setZoomLevel] = useState(() => {
+    const saved = sessionStorage.getItem('explore_map_zoom');
+    return saved ? parseFloat(saved) : 1;
+  });
   const mapGridRef = useRef<HTMLDivElement>(null);
   const [windowSize, setWindowSize] = useState({ width: window.innerWidth, height: window.innerHeight });
+  const hasRestoredPositionRef = useRef(false);
 
   // Calculate map dimensions directly from state to ensure sync updates
   const baseMapHeight = windowSize.height;
@@ -107,6 +113,8 @@ export default function Explore() {
   const initialPinchCenterRef = useRef<{ x: number; y: number } | null>(null);
   const initialTouchCenterRef = useRef<{ x: number; y: number } | null>(null);
   const initialScrollRef = useRef<{ left: number; top: number } | null>(null);
+  // Track scroll position continuously so we have it even if ref is detached on unmount
+  const lastKnownScrollRef = useRef<{ left: number, top: number } | null>(null);
 
   // Handle Window Resize
   useEffect(() => {
@@ -330,6 +338,9 @@ export default function Explore() {
         newScrollTop = scrollTop - mapHeight;
       }
 
+      // Update our tracker
+      lastKnownScrollRef.current = { left: newScrollLeft, top: newScrollTop };
+
       if (Math.abs(newScrollLeft - scrollLeft) > 1 || Math.abs(newScrollTop - scrollTop) > 1) {
         container.scrollTo({ left: newScrollLeft, top: newScrollTop, behavior: 'auto' });
       }
@@ -338,19 +349,75 @@ export default function Explore() {
     };
 
     container.addEventListener('scroll', handleScroll, { passive: true });
+    // Initialize tracker
+    lastKnownScrollRef.current = { left: container.scrollLeft, top: container.scrollTop };
+    
     return () => container.removeEventListener('scroll', handleScroll);
   }, [mapDimensions]);
 
-  // Set initial scroll position to center
+  // Restore scroll position or center
   useEffect(() => {
     const container = containerRef.current;
     if (!container || !mapDimensions.width || !mapDimensions.height) return;
-    if (container.scrollLeft === 0 && container.scrollTop === 0) {
-      requestAnimationFrame(() => {
-        container.scrollTo({ left: mapDimensions.width, top: mapDimensions.height, behavior: 'auto' });
-      });
+
+    if (!hasRestoredPositionRef.current) {
+      const savedLeft = sessionStorage.getItem('explore_map_scroll_left');
+      const savedTop = sessionStorage.getItem('explore_map_scroll_top');
+
+      if (savedLeft !== null && savedTop !== null) {
+        requestAnimationFrame(() => {
+          container.scrollTo({ 
+            left: parseFloat(savedLeft), 
+            top: parseFloat(savedTop), 
+            behavior: 'auto' 
+          });
+          // Update tracker immediately to match restored state
+          lastKnownScrollRef.current = { left: parseFloat(savedLeft), top: parseFloat(savedTop) };
+        });
+      } else {
+        // Default center only if no saved state
+        if (container.scrollLeft === 0 && container.scrollTop === 0) {
+          requestAnimationFrame(() => {
+            const startX = mapDimensions.width;
+            const startY = mapDimensions.height;
+            container.scrollTo({ left: startX, top: startY, behavior: 'auto' });
+            lastKnownScrollRef.current = { left: startX, top: startY };
+          });
+        }
+      }
+      hasRestoredPositionRef.current = true;
     }
   }, [mapDimensions]);
+
+  // Save state on unmount or before unload
+  useEffect(() => {
+    const handleSaveState = () => {
+      // Prefer the tracked ref value, fallback to container current, fallback to 0
+      const scrollPos = lastKnownScrollRef.current || (containerRef.current ? { 
+        left: containerRef.current.scrollLeft, 
+        top: containerRef.current.scrollTop 
+      } : { left: 0, top: 0 });
+
+      // Only save if we have valid dimensions (avoid saving 0,0 on initial render if it hasn't positioned yet)
+      // BUT if the user actually scrolled to 0,0 we want to save it.
+      // We'll assume that if zoomLevel > 0 it's valid to save.
+      
+      sessionStorage.setItem('explore_map_scroll_left', scrollPos.left.toString());
+      sessionStorage.setItem('explore_map_scroll_top', scrollPos.top.toString());
+      sessionStorage.setItem('explore_map_zoom', zoomLevel.toString());
+    };
+
+    const handleBeforeUnload = () => {
+      handleSaveState();
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      handleSaveState();
+    };
+  }, [zoomLevel]);
 
   // Effect to fetch and process Tiled map data for hotspots
   useEffect(() => {
