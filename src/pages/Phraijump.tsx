@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useCoins } from '../contexts/CoinsContext';
 import { petService } from '../services/firebase';
 import { getPetEmotionImage } from "../utils/petImageSelector";
 import './Phraijump.css';
@@ -147,6 +148,7 @@ export default function Phraijump() {
   const gameLoopRef = useRef<number | undefined>(undefined);
   const keysRef = useRef<Set<string>>(new Set());
   const navigate = useNavigate();
+  const { updateCoins: updateGlobalCoins } = useCoins();
 
   // Add body class for full-screen game
   useEffect(() => {
@@ -294,6 +296,7 @@ export default function Phraijump() {
               const coinAmount = parseInt(achievement.reward.match(/\d+/)?.[0] || '0');
               setTotalCoins(current => current + coinAmount);
               setCoins(current => current + coinAmount);
+              void updateGlobalCoins(coinAmount);
             }
             
             return { ...achievement, current: newCurrent, completed: true };
@@ -306,7 +309,7 @@ export default function Phraijump() {
       
       return updated;
     });
-  }, [gameStats.zonesReached]);
+  }, [gameStats.zonesReached, updateGlobalCoins]);
 
   // Display new achievements
   useEffect(() => {
@@ -2089,6 +2092,7 @@ export default function Phraijump() {
     
     if (collectible.type === 'coin') {
       setCoins(prev => prev + 1);
+      void updateGlobalCoins(1);
       setCurrentStreak(prev => prev + 1);
       setScore(prev => prev + 10);
       
@@ -2100,6 +2104,7 @@ export default function Phraijump() {
       
     } else if (collectible.type === 'crystal') {
       setCoins(prev => prev + 5);
+      void updateGlobalCoins(5);
       setCurrentStreak(prev => prev + 3);
       setScore(prev => prev + 50);
       
@@ -2111,6 +2116,7 @@ export default function Phraijump() {
       
     } else if (collectible.type === 'powerup' && collectible.powerUpType) {
       setCoins(prev => prev + 10);
+      void updateGlobalCoins(10);
       setScore(prev => prev + 100);
       
       // Apply the power-up to the player

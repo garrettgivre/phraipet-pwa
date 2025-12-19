@@ -6,6 +6,11 @@ import { petService, withErrorHandling } from '../services/firebase';
 import { getDefaultPet } from '../utils/pet';
 import { useCoins } from '../contexts/CoinsContext';
 import { useInventory } from '../contexts/InventoryContext';
+import { useDecoration } from '../contexts/DecorationContext';
+import { defaultFoodItems } from '../data/inventory/foodItems';
+import { defaultGroomingItems } from '../data/inventory/groomingItems';
+import { defaultToyItems } from '../data/inventory/toyItems';
+import { enhanceFoodItemsWithDescriptions } from '../utils/foodUtils';
 import './Settings.css';
 
 const isDev = import.meta.env.DEV;
@@ -14,7 +19,8 @@ export default function Settings() {
   const navigate = useNavigate();
   const { hueRotation, setHueRotation } = useTheme();
   const { addCoins } = useCoins();
-  const { inventory, addToInventory, removeFromInventory } = useInventory();
+  const { addItems, clearInventory } = useInventory();
+  const { resetDecorations } = useDecoration();
 
   const [showGrid, setShowGrid] = React.useState(() => {
     const saved = localStorage.getItem('show_map_grid');
@@ -69,10 +75,37 @@ export default function Settings() {
 
   const handleClearInventory = () => {
     if (confirm('Clear all items from inventory?')) {
-      // Logic to clear inventory would go here if exposed by context
-      // Currently context only supports add/remove single items
-      // This is a placeholder for now
-      alert('Inventory clearing not fully implemented in context yet.');
+      clearInventory();
+      alert('Inventory cleared!');
+    }
+  };
+
+  const handleReplenishFood = () => {
+    if (confirm('Add all food items to inventory?')) {
+      const enhancedFood = enhanceFoodItemsWithDescriptions(defaultFoodItems);
+      addItems(enhancedFood);
+      alert('Added all food items!');
+    }
+  };
+
+  const handleReplenishGrooming = () => {
+    if (confirm('Add all grooming items to inventory?')) {
+      addItems(defaultGroomingItems);
+      alert('Added all grooming items!');
+    }
+  };
+
+  const handleReplenishToys = () => {
+    if (confirm('Add all toys to inventory?')) {
+      addItems(defaultToyItems);
+      alert('Added all toys!');
+    }
+  };
+
+  const handleResetDecorations = () => {
+    if (confirm('Reset decorations to default catalog?')) {
+      resetDecorations();
+      alert('Reset decorations!');
     }
   };
 
@@ -132,6 +165,46 @@ export default function Settings() {
               >
                 Add 1000 Coins
               </button>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                <button 
+                  onClick={handleReplenishFood}
+                  className="action-button"
+                  style={{ padding: '10px', background: '#2196f3', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}
+                >
+                  Replenish Food
+                </button>
+                <button 
+                  onClick={handleReplenishGrooming}
+                  className="action-button"
+                  style={{ padding: '10px', background: '#9c27b0', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}
+                >
+                  Replenish Grooming
+                </button>
+                <button 
+                  onClick={handleReplenishToys}
+                  className="action-button"
+                  style={{ padding: '10px', background: '#ff9800', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}
+                >
+                  Replenish Toys
+                </button>
+                <button 
+                  onClick={handleResetDecorations}
+                  className="action-button"
+                  style={{ padding: '10px', background: '#00bcd4', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}
+                >
+                  Reset Decorations
+                </button>
+              </div>
+
+              <button 
+                onClick={handleClearInventory}
+                className="action-button danger"
+                style={{ padding: '10px', background: '#f44336', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}
+              >
+                Clear Inventory
+              </button>
+
               <button 
                 onClick={handleResetPet}
                 className="action-button danger"

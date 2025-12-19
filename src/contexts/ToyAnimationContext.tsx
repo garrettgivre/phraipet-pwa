@@ -32,7 +32,7 @@ export function ToyAnimationProvider({ children }: { children: React.ReactNode }
       window.setTimeout(() => {
         setIsPlaying(false);
         setActiveToy(null);
-      }, 5000);
+      }, 8000);
     }
   };
 

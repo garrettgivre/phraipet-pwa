@@ -8,6 +8,7 @@ import "./Header.css";
 
 interface HeaderProps {
   coins?: number;
+  crystals?: number;
   needs?: NeedInfo[];
   compact?: boolean; // New prop for compact mode on Pet Page
   onSettingsClick?: () => void; // Optional setting click handler
@@ -15,6 +16,7 @@ interface HeaderProps {
 
 export default function Header({
   coins = 100,
+  crystals = 0,
   needs = [],
   compact = false,
   onSettingsClick
@@ -114,6 +116,11 @@ export default function Header({
       <div className="coin-counter" onClick={goInventory}>
         <img src="/assets/icons/coin.png" alt="Coins" className="coin-icon" />
         <span>{coins}</span>
+      </div>
+      
+      <div className="coin-counter crystal-counter" style={{ marginLeft: '8px' }}>
+        <img src="/pet/phraibits.png" alt="Phraibits" className="coin-icon" />
+        <span>{crystals}</span>
       </div>
     </header>
   );

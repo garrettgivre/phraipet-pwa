@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { Pet } from "../types";
 
 interface PetMovementState {
@@ -10,7 +10,7 @@ interface PetMovementState {
   isSquashing: boolean;
 }
 
-export const usePetMovement = (pet: Pet | null): PetMovementState => {
+export const usePetMovement = (pet: Pet | null, isPlaying: boolean = false): PetMovementState => {
   const [position, setPosition] = useState(50);
   const [isWalking, setIsWalking] = useState(false);
   const [isTurning, setIsTurning] = useState(false); // New turning state
@@ -21,7 +21,7 @@ export const usePetMovement = (pet: Pet | null): PetMovementState => {
   const [targetPosition, setTargetPosition] = useState<number | null>(null);
   
   // Keep track of when we last changed the walking step for consistent animation
-  const [lastStepTime, setLastStepTime] = useState(0);
+  const lastStepTimeRef = useRef(0);
 
   // Constants for screen boundaries
   const MIN_POSITION = 10;
@@ -33,6 +33,12 @@ export const usePetMovement = (pet: Pet | null): PetMovementState => {
 
   useEffect(() => {
     if (!pet) return;
+
+    // If playing, we modify behavior slightly but don't completely stop movement
+    if (isPlaying) {
+      // Allow movement but perhaps with different frequency or behavior if desired
+      // For now, we'll just let the standard random movement logic proceed
+    }
 
     // Decision to start walking happens every 6-12 seconds
     const moveInterval = setInterval(() => {
@@ -48,16 +54,16 @@ export const usePetMovement = (pet: Pet | null): PetMovementState => {
           return;
         }
 
-      setPosition(prevPos => {
+        setPosition(prevPos => {
           // Determine direction based on current position and random choice
-        let direction;
+          let direction;
           if (prevPos <= MIN_POSITION + 5) {
             direction = 1; // Force move right if near left edge
           } else if (prevPos >= MAX_POSITION - 5) {
             direction = -1; // Force move left if near right edge
-        } else {
-          direction = Math.random() > 0.5 ? 1 : -1;
-        }
+          } else {
+            direction = Math.random() > 0.5 ? 1 : -1;
+          }
 
           // Calculate new target position
           const movementAmount = 10 + (Math.random() * 15); 
@@ -76,7 +82,10 @@ export const usePetMovement = (pet: Pet | null): PetMovementState => {
           }
 
           // Determine if we need to turn before walking
-          const newFacingRight = direction > 0;
+          // We determine facing direction based on the actual destination relative to current position
+          // This ensures that even if we bounce off a wall but net movement is still in original direction,
+          // we face the correct way.
+          const newFacingRight = boundedTarget > prevPos;
           const needsToTurn = newFacingRight !== isFacingRight;
 
           if (needsToTurn) {
@@ -88,7 +97,7 @@ export const usePetMovement = (pet: Pet | null): PetMovementState => {
                  setTargetPosition(boundedTarget);
                  setIsWalking(true);
                  setWalkingStep(0);
-                 setLastStepTime(Date.now());
+                 lastStepTimeRef.current = Date.now();
              }, TURN_DURATION);
           } else {
             // No turn needed, start walking immediately
@@ -96,7 +105,7 @@ export const usePetMovement = (pet: Pet | null): PetMovementState => {
             setTargetPosition(boundedTarget);
             setIsWalking(true);
             setWalkingStep(0);
-            setLastStepTime(Date.now());
+            lastStepTimeRef.current = Date.now();
           }
 
           return prevPos; // Current position doesn't change yet
@@ -107,7 +116,7 @@ export const usePetMovement = (pet: Pet | null): PetMovementState => {
     // Position update interval - updates position continuously
     const positionInterval = setInterval(() => {
       if (isWalking && targetPosition !== null && !isTurning) {
-            setPosition(prevPos => {
+        setPosition(prevPos => {
           const distanceToTarget = targetPosition - prevPos;
           const absDistance = Math.abs(distanceToTarget);
           
@@ -147,10 +156,10 @@ export const usePetMovement = (pet: Pet | null): PetMovementState => {
         const now = Date.now();
         
         // Only update step if enough time has passed
-        if (now - lastStepTime >= STEP_INTERVAL) {
+        if (now - lastStepTimeRef.current >= STEP_INTERVAL) {
           // Toggle between 0 and 1 (A and B images)
           setWalkingStep(prev => (prev === 0 ? 1 : 0));
-          setLastStepTime(now);
+          lastStepTimeRef.current = now;
         }
       }
     }, 50); // Check frequently but only update when STEP_INTERVAL has passed
@@ -160,7 +169,7 @@ export const usePetMovement = (pet: Pet | null): PetMovementState => {
       clearInterval(positionInterval);
       clearInterval(steppingInterval);
     };
-  }, [pet, isWalking, targetPosition, lastStepTime, isTurning, isFacingRight, isSquashing]); // Added dependencies
+  }, [pet, isWalking, targetPosition, isTurning, isFacingRight, isSquashing, isPlaying]); // Removed lastStepTime dependence
 
   return { position, isWalking, walkingStep, isFacingRight, isTurning, isSquashing };
 }; 

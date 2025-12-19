@@ -30,6 +30,8 @@ const defaultAllItems: InventoryItem[] = [
 interface InventoryContextType {
   items: InventoryItem[];
   consumeItem: (itemId: string) => void;
+  addItems: (newItems: InventoryItem[]) => void;
+  clearInventory: () => void;
   getFilteredItems: (mainCategory: string, subCategory: string) => InventoryItem[];
 }
 
@@ -105,14 +107,35 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
               return;
             }
 
-            // Ensure price property is set
+            // Ensure price property is set and validate categories against defaults
             const fixedData: InventoryItem[] = inventoryData.map(item => {
+              const defaultItem = defaultAllItems.find(d => d.id === item.id);
+              
+              if (defaultItem) {
+                // Create a new object to avoid mutating the original if it's frozen/proxied
+                const fixedItem = { ...item };
+                
+                // Fix missing price
+                if (fixedItem.price === undefined || fixedItem.price === null) {
+                  fixedItem.price = defaultItem.price;
+                }
+
+                // Fix mismatched categories/types (e.g. from legacy data)
+                // We use 'as any' here because TS unions make it hard to assign specific types generically
+                // but we know defaultItem is the source of truth for this ID
+                if (fixedItem.itemCategory !== defaultItem.itemCategory) {
+                  (fixedItem as any).itemCategory = defaultItem.itemCategory;
+                }
+                if (fixedItem.type !== defaultItem.type) {
+                  (fixedItem as any).type = defaultItem.type;
+                }
+
+                return fixedItem;
+              }
+              
+              // Fallback for items not in default list (custom items?)
               if (item.price === undefined || item.price === null) {
-                const def = defaultAllItems.find(d => d.id === item.id);
-                return {
-                  ...item,
-                  price: def?.price ?? 0
-                };
+                return { ...item, price: 0 };
               }
               return item;
             });
@@ -140,10 +163,28 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const consumeItem = (itemId: string) => {
-    const updatedItems = items.filter(item => item.id !== itemId);
+    const index = items.findIndex(item => item.id === itemId);
+    if (index > -1) {
+      const updatedItems = [...items];
+      updatedItems.splice(index, 1);
+      setItems(updatedItems);
+      const inventoryRef = ref(db, "inventory");
+      set(inventoryRef, updatedItems).catch(error => console.error("Error updating inventory:", error));
+    }
+  };
+
+  const addItems = (newItems: InventoryItem[]) => {
+    const updatedItems = [...items, ...newItems];
     setItems(updatedItems);
     const inventoryRef = ref(db, "inventory");
     set(inventoryRef, updatedItems).catch(error => console.error("Error updating inventory:", error));
+  };
+
+  const clearInventory = () => {
+    const updatedItems: InventoryItem[] = [];
+    setItems(updatedItems);
+    const inventoryRef = ref(db, "inventory");
+    set(inventoryRef, updatedItems).catch(error => console.error("Error clearing inventory:", error));
   };
 
   const getFilteredItems = useCallback(
@@ -166,8 +207,10 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
   return (
     <InventoryContext.Provider
       value={{
-      items,
-      consumeItem,
+        items,
+        consumeItem,
+        addItems,
+        clearInventory,
         getFilteredItems,
       }}
     >

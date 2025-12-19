@@ -11,6 +11,7 @@ interface FoodItemProps {
 
 export default function FoodItem({ src, position, onEaten, hungerRestored = 15, onBite }: FoodItemProps) {
   const [biteStage, setBiteStage] = useState(0);
+  const [bitePattern] = useState(() => Math.floor(Math.random() * 3)); // 0, 1, or 2
   // Use refs to track animation state instead of relying on state updates
   const animationRef = useRef({ isAnimating: false, mounted: true });
   const propsRef = useRef({ onEaten, onBite, hungerRestored });
@@ -22,20 +23,6 @@ export default function FoodItem({ src, position, onEaten, hungerRestored = 15, 
   
   // Add a class to the pet when a bite happens - memoized to avoid recreation
   const triggerPetChomp = useCallback((biteNumber: number) => {
-    // Find the pet element
-    const petElement = document.querySelector('.pet-layer');
-    if (petElement) {
-      // Add the chomping class
-      petElement.classList.add('pet-eating');
-      
-      // Remove the class after the animation completes
-      setTimeout(() => {
-        if (animationRef.current.mounted) {
-          petElement.classList.remove('pet-eating');
-        }
-      }, 500);
-    }
-    
     // Trigger the onBite callback if provided - use the ref version
     if (propsRef.current.onBite) {
       propsRef.current.onBite(biteNumber, Math.ceil(propsRef.current.hungerRestored / 3));
@@ -91,7 +78,7 @@ export default function FoodItem({ src, position, onEaten, hungerRestored = 15, 
 
   return (
     <div 
-      className={`food-item bite-stage-${biteStage}`}
+      className={`food-item bite-stage-${biteStage} pattern-${bitePattern}`}
       style={{ left: `${position}%` }}
     >
       <img src={src} alt="Food" />

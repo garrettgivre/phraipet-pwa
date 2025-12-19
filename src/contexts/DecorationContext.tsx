@@ -49,6 +49,7 @@ interface DecorationContextType {
   updateDecorItem: (originalLayer: "front" | "back", originalIndex: number, newItem: RoomDecorItem, newLayer: "front" | "back") => void; // New method
   reorderDecorItem: (layer: "front" | "back", fromIndex: number, toIndex: number) => void; // Move within a layer
   getFilteredDecorations: (subCategory: DecorationItemType) => DecorationInventoryItem[];
+  resetDecorations: () => void;
 }
 
 const DecorationContext = createContext<DecorationContextType | null>(null);
@@ -187,11 +188,11 @@ export function DecorationProvider({ children }: { children: ReactNode }) {
             
             // Ensure all arrays exist and are distinct arrays (not references)
             cleanedRoomData.frontDecor = Array.isArray(cleanedRoomData.frontDecor) 
-              ? [...cleanedRoomData.frontDecor] 
+              ? cleanedRoomData.frontDecor.filter(item => item !== null && item !== undefined)
               : [];
               
             cleanedRoomData.backDecor = Array.isArray(cleanedRoomData.backDecor) 
-              ? [...cleanedRoomData.backDecor] 
+              ? cleanedRoomData.backDecor.filter(item => item !== null && item !== undefined)
               : [];
             
             // Regenerate the combined decor array from scratch to avoid duplicates
@@ -397,6 +398,12 @@ export function DecorationProvider({ children }: { children: ReactNode }) {
     [decorations]
   );
 
+  const resetDecorations = useCallback(() => {
+    setDecorations(defaultDecorationItems);
+    const decorationsRef = ref(db, "decorations");
+    set(decorationsRef, defaultDecorationItems).catch(error => console.error("Error resetting decorations:", error));
+  }, []);
+
   return (
     <DecorationContext.Provider
       value={{
@@ -409,6 +416,7 @@ export function DecorationProvider({ children }: { children: ReactNode }) {
         updateDecorItem,
         reorderDecorItem,
         getFilteredDecorations,
+        resetDecorations,
       }}
     >
       {children}

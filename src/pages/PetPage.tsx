@@ -27,11 +27,17 @@ interface PetPageProps {
   onPlayWithToy: (item: ToyInventoryItem) => Promise<void> | void;
 }
 
+interface DustParticle {
+  id: string;
+  x: number;
+  y: number;
+}
+
 export default function PetPage({ pet, needInfo, onIncreaseAffection, onFeedPet, onGroomPet, onPlayWithToy }: PetPageProps) {
   const { roomLayers, roomLayersLoading } = useDecoration();
   const { activeToy, isPlaying } = useToyAnimation();
-  const { coins } = useCoins();
-  const { position, isWalking, walkingStep, isFacingRight, isTurning, isSquashing } = usePetMovement(pet);
+  const { coins, crystals, updateCrystals } = useCoins();
+  const { position, isWalking, walkingStep, isFacingRight, isTurning, isSquashing } = usePetMovement(pet, isPlaying);
   const [foodItem, setFoodItem] = useState<{ src: string; position: number; hungerRestored?: number } | null>(null);
   const [groomingItem, setGroomingItem] = useState<{ src: string; position: number; cleanlinessBoost?: number } | null>(null);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
@@ -45,6 +51,80 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection, onFeedPet,
   const [isInventoryOpen, setIsInventoryOpen] = useState(false);
   const [inventoryCategory, setInventoryCategory] = useState<"Food" | "Grooming" | "Toys">("Food");
   const [inventorySubCategory, setInventorySubCategory] = useState<string | undefined>(undefined);
+
+  // Crystal Dust Mechanic
+  const [dustParticles, setDustParticles] = useState<DustParticle[]>(() => {
+    try {
+      const saved = localStorage.getItem('crystalDustParticles');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem('crystalDustParticles', JSON.stringify(dustParticles));
+  }, [dustParticles]);
+
+  useEffect(() => {
+    // Check for dust drop based on happiness level
+    // Calculate interval based on pet's happiness (if available)
+    // 0 happiness = 10 minutes (600000ms)
+    // 50 happiness = 3 minutes (180000ms)
+    // 100 happiness = 1 minute (60000ms)
+    // Formula: Linear interpolation or steps
+    
+    // Using a simpler mapping for robustness:
+    // High happiness (>80): 60s
+    // Good happiness (50-80): 180s (3 mins)
+    // Low happiness (<50): 600s (10 mins)
+    const currentHappiness = pet?.happiness || 50; // Default to average if unknown
+    
+    let dropIntervalTime = 180000; // Default 3 mins
+    if (currentHappiness > 80) {
+      dropIntervalTime = 60000; // 1 min for very happy pets
+    } else if (currentHappiness < 50) {
+      dropIntervalTime = 600000; // 10 mins for unhappy pets
+    }
+
+    const dustInterval = setInterval(() => {
+      // 100% chance to drop dust if less than 10 particles
+      if (dustParticles.length < 10) {
+        const newParticle: DustParticle = {
+          id: Date.now().toString() + Math.random().toString(),
+          x: 20 + Math.random() * 60, // 20% to 80% width (keep away from edges)
+          y: 15 + Math.random() * 15, // 15% to 30% from bottom (keep on floor)
+        };
+        setDustParticles(prev => [...prev, newParticle]);
+      }
+    }, dropIntervalTime);
+
+    return () => clearInterval(dustInterval);
+  }, [dustParticles.length, pet?.happiness]);
+
+  // Debug/Test: Ensure at least one particle spawns if none exist on load (so you can see it)
+  useEffect(() => {
+    if (dustParticles.length === 0) {
+      const timer = setTimeout(() => {
+        setDustParticles(prev => {
+          if (prev.length === 0) {
+            return [{
+              id: "initial-" + Date.now(),
+              x: 50,
+              y: 20
+            }];
+          }
+          return prev;
+        });
+      }, 1000); // 1 second delay after load
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  const handleCollectDust = (id: string) => {
+    setDustParticles(prev => prev.filter(p => p.id !== id));
+    void updateCrystals(1);
+  };
   
   useEffect(() => {
     if (pet && typeof pet.hunger === 'number') { setLocalHungerValue(pet.hunger); }
@@ -90,31 +170,45 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection, onFeedPet,
   };
 
   useEffect(() => {
-    const storedFoodItem = localStorage.getItem('pendingFoodItem');
-    if (storedFoodItem) {
-      try {
-        const parsedItem = JSON.parse(storedFoodItem) as { src: string; hungerRestored?: number };
-        setFoodItem({ ...parsedItem, position: position + (isFacingRight ? -5 : 5) });
-        localStorage.removeItem('pendingFoodItem');
-      } catch (error) {
-        console.error('Error parsing pending food item:', error);
-        localStorage.removeItem('pendingFoodItem');
+    const checkPendingItems = () => {
+      const storedFoodItem = localStorage.getItem('pendingFoodItem');
+      if (storedFoodItem) {
+        try {
+          const parsedItem = JSON.parse(storedFoodItem) as { src: string; hungerRestored?: number; position?: number };
+          // Prefer the position saved in the item, fall back to current calculated position
+          const targetPos = parsedItem.position || ((position || 50) + (isFacingRight ? -5 : 5));
+          setFoodItem({ ...parsedItem, position: targetPos });
+          localStorage.removeItem('pendingFoodItem');
+        } catch (error) {
+          console.error('Error parsing pending food item:', error);
+          localStorage.removeItem('pendingFoodItem');
+        }
       }
-    }
-  }, [position, isFacingRight]);
 
-  useEffect(() => {
-    const storedGroomingItem = localStorage.getItem('pendingGroomingItem');
-    if (storedGroomingItem) {
-      try {
-        const parsedItem = JSON.parse(storedGroomingItem) as { src: string; cleanlinessBoost?: number };
-        setGroomingItem({ ...parsedItem, position: position + (isFacingRight ? -3 : 3) });
-        localStorage.removeItem('pendingGroomingItem');
-      } catch (error) {
-        console.error('Error parsing pending grooming item:', error);
-        localStorage.removeItem('pendingGroomingItem');
+      const storedGroomingItem = localStorage.getItem('pendingGroomingItem');
+      if (storedGroomingItem) {
+        try {
+          const parsedItem = JSON.parse(storedGroomingItem) as { src: string; cleanlinessBoost?: number; position?: number };
+           // Prefer the position saved in the item, fall back to current calculated position
+          const targetPos = parsedItem.position || ((position || 50) + (isFacingRight ? -3 : 3));
+          setGroomingItem({ ...parsedItem, position: targetPos });
+          localStorage.removeItem('pendingGroomingItem');
+        } catch (error) {
+          console.error('Error parsing pending grooming item:', error);
+          localStorage.removeItem('pendingGroomingItem');
+        }
       }
-    }
+    };
+
+    // Check immediately
+    checkPendingItems();
+
+    // Listen for custom event from App.tsx
+    window.addEventListener('pending-item-updated', checkPendingItems);
+    
+    return () => {
+      window.removeEventListener('pending-item-updated', checkPendingItems);
+    };
   }, [position, isFacingRight]);
 
   useEffect(() => {
@@ -170,6 +264,19 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection, onFeedPet,
     }
   };
 
+  const handlePetClick = () => {
+    void onIncreaseAffection(1);
+    
+    // Optional: show mood phrase randomly
+    if (Math.random() < 0.3) {
+      const phrases = ["<3", "Purr...", "Happy!", "Love you!"];
+      const phrase = phrases[Math.floor(Math.random() * phrases.length)];
+      setCurrentMoodPhrase(phrase);
+      setShowSpeechBubble(true);
+      window.setTimeout(() => setShowSpeechBubble(false), 2000);
+    }
+  };
+
   const handleFoodEaten = () => { setLocalHungerValue(null); setFoodItem(null); };
   const handleGroomingComplete = () => { setLocalCleanlinessValue(null); setGroomingItem(null); };
 
@@ -209,7 +316,7 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection, onFeedPet,
 
   return (
     <div className={`pet-page ${isEditMode ? 'edit-mode' : ''}`}>
-      <Header coins={coins} compact={true} onSettingsClick={goToSettings} />
+      <Header coins={coins} crystals={crystals} compact={true} onSettingsClick={goToSettings} />
       <div className="pet-room-bordered-container">
         <div className="pet-room-inner-container">
           {pet && !roomLayersLoading && (
@@ -233,6 +340,9 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection, onFeedPet,
               onFoodEaten={handleFoodEaten}
               onFoodBite={handleFoodBite}
               constrainToRoom={true}
+              crystals={dustParticles}
+              onCollectCrystal={handleCollectDust}
+              onPetClick={handlePetClick}
             />
           )}
           {groomingItem && (

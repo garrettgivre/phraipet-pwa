@@ -21,8 +21,12 @@
   clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
 }
 
+/* =========================================
+   Pattern 0: Right Side Bites (Original)
+   ========================================= */
+
 /* First bite - top right with curved "bite" shape */
-.food-item.bite-stage-1 img {
+.food-item.pattern-0.bite-stage-1 img {
   clip-path: 
     polygon(
       0 0, 65% 0, 55% 10%, 65% 20%, 70% 30%, 
@@ -33,7 +37,7 @@
 }
 
 /* Second bite - middle with curved "bite" shape */
-.food-item.bite-stage-2 img {
+.food-item.pattern-0.bite-stage-2 img {
   clip-path: 
     polygon(
       0 0, 35% 0, 40% 10%, 30% 20%, 35% 30%,
@@ -44,7 +48,7 @@
 }
 
 /* Third bite - mostly gone with just a jagged edge */
-.food-item.bite-stage-3 img {
+.food-item.pattern-0.bite-stage-3 img {
   clip-path: 
     polygon(
       0 0, 15% 0, 10% 15%, 15% 30%,
@@ -55,10 +59,80 @@
   opacity: 0.8;
 }
 
+/* =========================================
+   Pattern 1: Left Side Bites (Mirroredish)
+   ========================================= */
+
+.food-item.pattern-1.bite-stage-1 img {
+  clip-path: 
+    polygon(
+      35% 0, 100% 0, 100% 100%, 40% 100%, 
+      30% 90%, 35% 80%, 25% 70%, 30% 60%, 
+      25% 50%, 35% 40%, 30% 30%, 35% 20%, 45% 10%
+    );
+  animation: takeBite 0.3s ease-in-out;
+}
+
+.food-item.pattern-1.bite-stage-2 img {
+  clip-path: 
+    polygon(
+      65% 0, 100% 0, 100% 100%, 65% 100%, 
+      75% 90%, 70% 80%, 65% 70%, 75% 60%, 
+      70% 50%, 65% 40%, 70% 30%, 60% 20%, 70% 10%
+    );
+  animation: takeBite 0.3s ease-in-out;
+}
+
+.food-item.pattern-1.bite-stage-3 img {
+  clip-path: 
+    polygon(
+      85% 0, 100% 0, 100% 100%, 85% 100%, 
+      90% 90%, 85% 75%, 90% 60%, 85% 45%, 
+      85% 30%, 90% 15%
+    );
+  animation: takeBite 0.3s ease-in-out;
+  opacity: 0.8;
+}
+
+/* =========================================
+   Pattern 2: Top Down Bites
+   ========================================= */
+
+.food-item.pattern-2.bite-stage-1 img {
+  clip-path: 
+    polygon(
+      0 35%, 10% 45%, 20% 35%, 30% 45%, 40% 35%, 
+      50% 45%, 60% 35%, 70% 45%, 80% 35%, 90% 45%, 
+      100% 35%, 100% 100%, 0 100%
+    );
+  animation: takeBite 0.3s ease-in-out;
+}
+
+.food-item.pattern-2.bite-stage-2 img {
+  clip-path: 
+    polygon(
+      0 65%, 10% 75%, 20% 65%, 30% 75%, 40% 65%, 
+      50% 75%, 60% 65%, 70% 75%, 80% 65%, 90% 75%, 
+      100% 65%, 100% 100%, 0 100%
+    );
+  animation: takeBite 0.3s ease-in-out;
+}
+
+.food-item.pattern-2.bite-stage-3 img {
+  clip-path: 
+    polygon(
+      0 85%, 15% 90%, 30% 85%, 45% 90%, 
+      60% 85%, 75% 90%, 90% 85%, 100% 85%, 
+      100% 100%, 0 100%
+    );
+  animation: takeBite 0.3s ease-in-out;
+  opacity: 0.8;
+}
+
 @keyframes takeBite {
   0% {
     transform: rotate(0deg);
-}
+  }
   25% {
     transform: rotate(-5deg) scale(1.05);
   }
@@ -73,13 +147,13 @@
 @keyframes petEatingMotion {
   0% {
     transform: translateY(0) translateX(-50%) scale(1, 1);
-}
+  }
   25% {
     transform: translateY(-3px) translateX(-52%) scale(1.1, 0.9);
-}
+  }
   50% {
     transform: translateY(-2px) translateX(-50%) scale(1.05, 0.95);
-}
+  }
   75% {
     transform: translateY(-1px) translateX(-48%) scale(1.08, 0.92);
   }
@@ -90,4 +164,4 @@
 
 .pet-eating {
   animation: petEatingMotion 0.5s ease-in-out;
-} 
+}

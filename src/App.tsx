@@ -43,7 +43,7 @@ interface AppShellProps {
 function AppShell({ pet, handleFeedPet, handleGroomPet, handlePlayWithToy, handleIncreaseAffection, needInfo }: AppShellProps) {
   const location = useLocation();
   const isPetPage = location.pathname === "/";
-  const { coins } = useCoins();
+  const { coins, crystals } = useCoins();
 
   if (isDev) {
     console.log("AppShell - Current location:", location.pathname);
@@ -68,7 +68,7 @@ function AppShell({ pet, handleFeedPet, handleGroomPet, handlePlayWithToy, handl
   return (
     <>
       <ScrollToTop />
-      {!isPetPage && ( <Header coins={coins} needs={needInfo} /> )}
+      {!isPetPage && ( <Header coins={coins} crystals={crystals} needs={needInfo} /> )}
       <main style={{
         paddingTop: isPetPage ? "0px" : "0px",
         paddingBottom: "var(--nav-height)",
@@ -142,10 +142,27 @@ function AppContent() {
     setPet(updatedPet);
     localStorage.setItem('pendingFoodItem', JSON.stringify({
       src: foodItem.src,
-      position: 50,
+      position: pet.xPosition || 50, // Use current position immediately
       hungerRestored: foodItem.hungerBoost
     }));
-    void navigate('/');
+    // Don't navigate if we are already on home (prevents remounting/flashing)
+    if (window.location.pathname !== '/') {
+      void navigate('/');
+    } else {
+      // If already on home, we might need to manually trigger the storage event check or state update
+      // Since we are in the same context, we can't easily force the other component to re-render 
+      // via local storage event in the same window.
+      // However, PetPage reads on mount/update. 
+      // If PetPage is already mounted, it won't see this unless we trigger it.
+      // But AppShell handles routing.
+      
+      // Force a "soft reload" of PetPage state if possible, or just let the user see it.
+      // Actually, since we are setting state in AppShell, PetPage might re-render if it receives props.
+      // But pendingFoodItem is read from localStorage in useEffect.
+      
+      // Dispatch a custom event to notify PetPage
+      window.dispatchEvent(new Event('pending-item-updated'));
+    }
     await withErrorHandling(
       () => petService.updatePetNeeds(updatedPet),
       "Failed to update pet hunger"
@@ -164,10 +181,15 @@ function AppContent() {
     setPet(updatedPet);
     localStorage.setItem('pendingGroomingItem', JSON.stringify({
       src: groomingItem.src,
-      position: 50,
+      position: pet.xPosition || 50,
       cleanlinessBoost: groomingItem.cleanlinessBoost
     }));
-    void navigate('/');
+    
+    if (window.location.pathname !== '/') {
+      void navigate('/');
+    } else {
+      window.dispatchEvent(new Event('pending-item-updated'));
+    }
     await withErrorHandling(
       () => petService.updatePetNeeds(updatedPet),
       "Failed to update pet cleanliness"

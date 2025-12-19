@@ -55,7 +55,7 @@ export const EssicTown = () => <LocationTemplate name="Essic Town" image="/maps/
 export const TideglassDepths = () => <LocationTemplate name="Tideglass Depths" image="/maps/citycloseups/tideglass.jpg" />;
 export const FrostemberPeak = () => <LocationTemplate name="Frostember Peak" />;
 export const SmolderfumeTown = () => <LocationTemplate name="Smolderfume Town" />;
-export const MutlichPeak = () => <LocationTemplate name="Mütlich Peak" image="/maps/citycloseups/mütlich.jpg" />;
+export const MutlichPeak = () => <LocationTemplate name="Mütlich Peak" image="/maps/citycloseups/m%C3%BCtlich.jpg" />;
 export const AshenrootRidge = () => <LocationTemplate name="Ashenroot Ridge" image="/maps/citycloseups/ashenrootridge.jpg" />;
 export const RevelridTown = () => <LocationTemplate name="Revelrid Town" image="/maps/citycloseups/revelrid.jpg" />;
 export const CreykenpCity = () => <LocationTemplate name="Creykenp City" />;

@@ -3,6 +3,7 @@ import "./PetRoom.css";
 import { useEffect, useState, useRef } from "react";
 import type { ToyInventoryItem, RoomDecorItem } from "../types";
 import FoodItem from "./FoodItem";
+import CrystalDust from "./CrystalDust";
 
 interface PetRoomProps {
   floor: string;
@@ -25,6 +26,15 @@ interface PetRoomProps {
   onFoodEaten?: () => void;
   onFoodBite?: (biteNumber: number, hungerAmount: number) => void;
   constrainToRoom?: boolean;
+  crystals?: { id: string; x: number; y: number }[];
+  onCollectCrystal?: (id: string) => void;
+  onPetClick?: () => void;
+}
+
+interface FloatingHeart {
+  id: number;
+  x: number;
+  y: number;
 }
 
 const ROOM_ZONES = {
@@ -41,9 +51,10 @@ const ROOM_BOUNDARIES = {
 export default function PetRoom({ 
   floor, wall, ceiling, trim, decor = [], frontDecor = [], backDecor = [],   overlay, 
   petImage, petPosition, moodPhrase, activeToy, isPlaying, isWalking, isFacingRight = false, isSquashing = false,
-  foodItem, onFoodEaten, onFoodBite, constrainToRoom = false
+  foodItem, onFoodEaten, onFoodBite, constrainToRoom = false, crystals, onCollectCrystal, onPetClick
 }: PetRoomProps) {
-  const [isEating, setIsEating] = useState(false);
+  const [isChomping, setIsChomping] = useState(false);
+  const [floatingHearts, setFloatingHearts] = useState<FloatingHeart[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Check if the pet image is the turning image to apply special flipping logic
@@ -53,7 +64,36 @@ export default function PetRoom({
     ? Math.max(ROOM_BOUNDARIES.LEFT, Math.min(ROOM_BOUNDARIES.RIGHT, petPosition))
     : petPosition;
 
-  useEffect(() => { setIsEating(!!foodItem); }, [foodItem]);
+  const handleInternalBite = (biteNumber: number, hungerAmount: number) => {
+    setIsChomping(true);
+    setTimeout(() => setIsChomping(false), 500);
+    if (onFoodBite) {
+      onFoodBite(biteNumber, hungerAmount);
+    }
+  };
+
+  const handlePetClick = (e: React.MouseEvent) => {
+    if (onPetClick) {
+      onPetClick();
+    }
+    
+    // Calculate click position relative to the container
+    if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        // Get relative coordinates
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        // Add a floating heart
+        const newHeart = { id: Date.now() + Math.random(), x, y };
+        setFloatingHearts(prev => [...prev, newHeart]);
+
+        // Cleanup heart after animation (1s)
+        setTimeout(() => {
+            setFloatingHearts(prev => prev.filter(h => h.id !== newHeart.id));
+        }, 1000);
+    }
+  };
 
   // Prefer explicit front/back arrays; only fall back to legacy `decor` if both are empty
   const itemsBehindPet = [...backDecor];
@@ -137,15 +177,34 @@ export default function PetRoom({
         );
       })}
 
+      {crystals && crystals.map(crystal => (
+        <div key={crystal.id} style={{ position: 'absolute', left: 0, top: 0, width: '100%', height: '100%', zIndex: 25, pointerEvents: 'none' }}>
+           <CrystalDust
+            id={crystal.id}
+            x={crystal.x}
+            y={crystal.y}
+            onCollect={onCollectCrystal || (() => {})}
+          />
+        </div>
+      ))}
+
       {activeToy && isPlaying && (
         <img className="toy playing" src={typeof activeToy === 'string' ? activeToy : activeToy.src || '/assets/toys/ball.png'} alt="Toy" style={{ left: `${constrainedPetPosition + (isFacingRight ? -12 : 12)}%` }} />
       )}
 
       {foodItem && (
-        <FoodItem key={`food-${foodItem.src}`} src={foodItem.src} position={constrainToRoom ? Math.max(ROOM_BOUNDARIES.LEFT, Math.min(ROOM_BOUNDARIES.RIGHT, foodItem.position)) : foodItem.position} hungerRestored={foodItem.hungerRestored || 15} onEaten={() => { if (onFoodEaten) onFoodEaten(); }} onBite={onFoodBite} />
+        <FoodItem key={`food-${foodItem.src}`} src={foodItem.src} position={constrainToRoom ? Math.max(ROOM_BOUNDARIES.LEFT, Math.min(ROOM_BOUNDARIES.RIGHT, foodItem.position)) : foodItem.position} hungerRestored={foodItem.hungerRestored || 15} onEaten={() => { if (onFoodEaten) onFoodEaten(); }} onBite={handleInternalBite} />
       )}
 
-      <img className={`pet-layer ${isPlaying ? 'playing' : ''} ${isWalking ? 'waddling' : ''} ${isFacingRight ? 'flip' : ''} ${isEating ? 'pet-eating' : ''} ${isTurning && isFacingRight ? 'flip-turning' : ''} ${isSquashing ? 'squashing' : ''}`} src={petImage} style={{ left: `${constrainedPetPosition}%` }} alt="Pet" />
+      <div className={`pet-shadow ${isPlaying ? 'playing' : ''} ${isWalking ? 'waddling' : ''} ${isSquashing ? 'squashing' : ''}`} style={{ left: `${constrainedPetPosition}%` }} />
+
+      <img 
+        className={`pet-layer ${isPlaying ? 'playing' : ''} ${isWalking ? 'waddling' : ''} ${isFacingRight ? 'flip' : ''} ${isChomping ? 'pet-eating' : ''} ${isTurning && isFacingRight ? 'flip-turning' : ''} ${isSquashing ? 'squashing' : ''}`} 
+        src={petImage} 
+        style={{ left: `${constrainedPetPosition}%`, cursor: onPetClick ? 'pointer' : 'default' }} 
+        alt="Pet"
+        onClick={handlePetClick}
+      />
 
       {moodPhrase && (
         <div className="pet-mood-bubble" style={{ left: `${constrainedPetPosition}%` }}>
@@ -160,6 +219,20 @@ export default function PetRoom({
           <img key={`front-decor-${idx}`} className="decor" src={item.src} style={{ position: 'absolute', left: position.left, top: position.top, width: position.width, height: position.height, zIndex: 40 + idx, objectFit: "contain", transform: `${position.transform}${item.rotation ? ` rotate(${item.rotation}deg)` : ''}${item.flipped ? ' scaleX(-1)' : ''}${item.flippedV ? ' scaleY(-1)' : ''}` }} alt="" />
         );
       })}
+
+      {floatingHearts.map((heart) => (
+        <img
+          key={heart.id}
+          className="floating-heart"
+          src="/assets/icons/needs/affection.png"
+          alt="Heart"
+          style={{
+            left: `${heart.x}px`,
+            top: `${heart.y}px`,
+            position: 'absolute',
+          }}
+        />
+      ))}
 
       {overlay && (
         <img className="overlay" src={overlay} alt="Overlay" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 60 }} />

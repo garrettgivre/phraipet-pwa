@@ -33,9 +33,10 @@ export class ErrorBoundary extends Component<Props, State> {
           <h2>Something went wrong</h2>
           <p>We're sorry, but there was an error loading this page.</p>
           <button onClick={() => window.location.reload()}>Retry</button>
-          {process.env.NODE_ENV === 'development' && this.state.error && (
+          {this.state.error && (
             <div className="error-details">
               <pre>{this.state.error.toString()}</pre>
+              <pre>{this.state.error.stack}</pre>
             </div>
           )}
         </div>
