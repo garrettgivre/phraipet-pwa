@@ -27,7 +27,8 @@ export function CoinsProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!user) return;
 
-    const coinsRef = ref(db, `users/${user.uid}/playerStats/coins`);
+    // Use shared currency path so all users see the same coins and crystals
+    const coinsRef = ref(db, `playerStats/coins`);
     const unsubscribeCoins = onValue(coinsRef, (snapshot: DataSnapshot) => {
       const valueUnknown: unknown = snapshot.val();
       if (typeof valueUnknown === 'number') {
@@ -37,7 +38,7 @@ export function CoinsProvider({ children }: { children: React.ReactNode }) {
       }
     });
 
-    const crystalsRef = ref(db, `users/${user.uid}/playerStats/crystals`);
+    const crystalsRef = ref(db, `playerStats/crystals`);
     const unsubscribeCrystals = onValue(crystalsRef, (snapshot: DataSnapshot) => {
       const valueUnknown: unknown = snapshot.val();
       if (typeof valueUnknown === 'number') {
@@ -56,7 +57,8 @@ export function CoinsProvider({ children }: { children: React.ReactNode }) {
   const updateCoins = async (amount: number) => {
     if (!user) return;
     try {
-      const coinsRef = ref(db, `users/${user.uid}/playerStats/coins`);
+      // Use shared currency path so all users share the same coins
+      const coinsRef = ref(db, `playerStats/coins`);
       await runTransaction(coinsRef, (current) => {
         const currentNum = typeof current === 'number' ? current : 0;
         return currentNum + amount;
@@ -70,7 +72,8 @@ export function CoinsProvider({ children }: { children: React.ReactNode }) {
   const updateCrystals = async (amount: number) => {
     if (!user) return;
     try {
-      const crystalsRef = ref(db, `users/${user.uid}/playerStats/crystals`);
+      // Use shared currency path so all users share the same crystals
+      const crystalsRef = ref(db, `playerStats/crystals`);
       await runTransaction(crystalsRef, (current) => {
         const currentNum = typeof current === 'number' ? current : 0;
         return currentNum + amount;

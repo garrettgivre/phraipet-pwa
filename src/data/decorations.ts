@@ -173,4 +173,78 @@ export const defaultDecorationItems: DecorationInventoryItem[] = [
   { id: "deco-furniture-stone-shelf", name: "Stone Shelf", itemCategory: "decoration", type: "furniture", src: "/assets/furniture/furniture-stone-shelf.png", price: 100, description: "Heavy duty shelving." },
   { id: "deco-furniture-stone-tablelamp", name: "Stone Table Lamp", itemCategory: "decoration", type: "furniture", src: "/assets/furniture/furniture-stone-tablelamp.png", price: 90, description: "A lamp made of glowing crystals." },
   { id: "deco-furniture-stone-wallart", name: "Stone Wall Art", itemCategory: "decoration", type: "furniture", src: "/assets/furniture/furniture-stone-wallart.png", price: 100, description: "Cave paintings." },
+
+  // Furniture - Toybox Theme
+  { id: "deco-furniture-toybox-armchair", name: "Toybox Armchair", itemCategory: "decoration", type: "furniture", src: "/assets/furniture/furniture-toybox-armchair.png", price: 125, description: "A playful armchair that looks like a giant toy." },
+  { id: "deco-furniture-toybox-diningtable", name: "Toybox Dining Table", itemCategory: "decoration", type: "furniture", src: "/assets/furniture/furniture-toybox-diningtable.png", price: 165, description: "A colorful table perfect for playtime meals." },
+  { id: "deco-furniture-toybox-endtable", name: "Toybox End Table", itemCategory: "decoration", type: "furniture", src: "/assets/furniture/furniture-toybox-endtable.png", price: 90, description: "A fun side table with toy-like design." },
+  { id: "deco-furniture-toybox-floorlamp", name: "Toybox Floor Lamp", itemCategory: "decoration", type: "furniture", src: "/assets/furniture/furniture-toybox-floorlamp.png", price: 115, description: "Bright lighting that brings joy to the room." },
+  { id: "deco-furniture-toybox-plant", name: "Toybox Plant", itemCategory: "decoration", type: "furniture", src: "/assets/furniture/furniture-toybox-plant.png", price: 75, description: "A whimsical plant that looks like a toy." },
+  { id: "deco-furniture-toybox-sculpture", name: "Toybox Sculpture", itemCategory: "decoration", type: "furniture", src: "/assets/furniture/furniture-toybox-sculpture.png", price: 110, description: "A playful sculpture that sparks imagination." },
+  { id: "deco-furniture-toybox-shelf", name: "Toybox Shelf", itemCategory: "decoration", type: "furniture", src: "/assets/furniture/furniture-toybox-shelf.png", price: 100, description: "Perfect for storing toys and treasures." },
+  { id: "deco-furniture-toybox-tablelamp", name: "Toybox Table Lamp", itemCategory: "decoration", type: "furniture", src: "/assets/furniture/furniture-toybox-tablelamp.png", price: 95, description: "A cheerful lamp that brightens any room." },
+  { id: "deco-furniture-toybox-wallart", name: "Toybox Wall Art", itemCategory: "decoration", type: "furniture", src: "/assets/furniture/furniture-toybox-wallart.png", price: 105, description: "Colorful artwork that celebrates playfulness." },
+
+  // Build Themes - Toybox
+  { id: "deco-toybox-floor", name: "Toybox Floor", itemCategory: "decoration", type: "floor", src: "/assets/floors/toybox-floor.png", price: 240 },
+  { id: "deco-toybox-wall", name: "Toybox Wall", itemCategory: "decoration", type: "wall", src: "/assets/walls/toybox-wall.png", price: 240 },
+  { id: "deco-toybox-ceiling", name: "Toybox Ceiling", itemCategory: "decoration", type: "ceiling", src: "/assets/ceilings/toybox-ceiling.png", price: 240 },
+  { id: "deco-toybox-trim", name: "Toybox Trim", itemCategory: "decoration", type: "trim", src: "/assets/trim/toybox-trim.png", price: 140 },
+
+  // Build Themes - Stone
+  { id: "deco-stone-floor", name: "Stone Floor", itemCategory: "decoration", type: "floor", src: "/assets/floors/stone-floor.png", price: 260 },
+  { id: "deco-stone-wall", name: "Stone Wall", itemCategory: "decoration", type: "wall", src: "/assets/walls/prehistoric-wall.png", price: 260 },
+  { id: "deco-stone-ceiling", name: "Stone Ceiling", itemCategory: "decoration", type: "ceiling", src: "/assets/ceilings/prehistoric-ceiling.png", price: 260 },
+  { id: "deco-stone-trim", name: "Stone Trim", itemCategory: "decoration", type: "trim", src: "/assets/trim/prehistoric-trim.png", price: 150 },
+
+  // Build Themes - Interstellar
+  { id: "deco-interstellar-floor", name: "Interstellar Floor", itemCategory: "decoration", type: "floor", src: "/assets/floors/interstellar=floor.png", price: 270 },
+  { id: "deco-interstellar-wall", name: "Interstellar Wall", itemCategory: "decoration", type: "wall", src: "/assets/walls/interstellar-wall.png", price: 270 },
+  { id: "deco-interstellar-ceiling", name: "Interstellar Ceiling", itemCategory: "decoration", type: "ceiling", src: "/assets/ceilings/interstellar-ceiling.png", price: 270 },
+  { id: "deco-interstellar-trim", name: "Interstellar Trim", itemCategory: "decoration", type: "trim", src: "/assets/trim/interstellar-trim.png", price: 155 },
+
+  // Build Themes - Neon Industrial
+  { id: "deco-neonindustrial-floor", name: "Neon Industrial Floor", itemCategory: "decoration", type: "floor", src: "/assets/floors/neonindustrial-floor.png", price: 285 },
+  { id: "deco-neonindustrial-wall", name: "Neon Industrial Wall", itemCategory: "decoration", type: "wall", src: "/assets/walls/neonindustrial-wall.png", price: 285 },
+  { id: "deco-neonindustrial-ceiling", name: "Neon Industrial Ceiling", itemCategory: "decoration", type: "ceiling", src: "/assets/ceilings/neonindustrial-ceiling.png", price: 285 },
+  { id: "deco-neonindustrial-trim", name: "Neon Industrial Trim", itemCategory: "decoration", type: "trim", src: "/assets/trim/neonindustrial-trim.png", price: 160 },
+
+  // Build Themes - Jet
+  { id: "deco-jet-floor", name: "Jet Floor", itemCategory: "decoration", type: "floor", src: "/assets/floors/jet-floor.png", price: 265 },
+  { id: "deco-jet-wall", name: "Jet Wall", itemCategory: "decoration", type: "wall", src: "/assets/walls/jet-wall.png", price: 265 },
+  { id: "deco-jet-ceiling", name: "Jet Ceiling", itemCategory: "decoration", type: "ceiling", src: "/assets/ceilings/jet-ceiling.png", price: 265 },
+  { id: "deco-jet-trim", name: "Jet Trim", itemCategory: "decoration", type: "trim", src: "/assets/trim/jet-trim.png", price: 152 },
+
+  // Build Themes - Basic Variants (Wood Types)
+  { id: "deco-basic-floor-ash", name: "Basic Floor (Ash)", itemCategory: "decoration", type: "floor", src: "/assets/floors/basic-floor-ash.png", price: 50 },
+  { id: "deco-basic-floor-walnut", name: "Basic Floor (Walnut)", itemCategory: "decoration", type: "floor", src: "/assets/floors/basic-floor-walnut.png", price: 50 },
+  { id: "deco-basic-floor-birch", name: "Basic Floor (Birch)", itemCategory: "decoration", type: "floor", src: "/assets/floors/basic-floor-birch.png", price: 50 },
+  { id: "deco-basic-floor-cherry", name: "Basic Floor (Cherry)", itemCategory: "decoration", type: "floor", src: "/assets/floors/basic-floor-cherry.png", price: 50 },
+  { id: "deco-basic-floor-mahogany", name: "Basic Floor (Mahogany)", itemCategory: "decoration", type: "floor", src: "/assets/floors/basic-floor-mahogany.png", price: 50 },
+  { id: "deco-basic-wall-teal", name: "Basic Wall (Teal)", itemCategory: "decoration", type: "wall", src: "/assets/walls/basic-wall-teal.png", price: 50 },
+  { id: "deco-basic-wall-green", name: "Basic Wall (Green)", itemCategory: "decoration", type: "wall", src: "/assets/walls/basic-wall-green.png", price: 50 },
+  { id: "deco-basic-wall-lime", name: "Basic Wall (Lime)", itemCategory: "decoration", type: "wall", src: "/assets/walls/basic-wall-lime.png", price: 50 },
+  { id: "deco-basic-wall-yellow", name: "Basic Wall (Yellow)", itemCategory: "decoration", type: "wall", src: "/assets/walls/basic-wall-yellow.png", price: 50 },
+  { id: "deco-basic-wall-orange", name: "Basic Wall (Orange)", itemCategory: "decoration", type: "wall", src: "/assets/walls/basic-wall-orange.png", price: 50 },
+  { id: "deco-basic-wall-red", name: "Basic Wall (Red)", itemCategory: "decoration", type: "wall", src: "/assets/walls/basic-wall-red.png", price: 50 },
+  { id: "deco-basic-wall-pink", name: "Basic Wall (Pink)", itemCategory: "decoration", type: "wall", src: "/assets/walls/basic-wall-pink.png", price: 50 },
+  { id: "deco-basic-wall-purple", name: "Basic Wall (Purple)", itemCategory: "decoration", type: "wall", src: "/assets/walls/basic-wall-purple.png", price: 50 },
+  { id: "deco-basic-ceiling-ash", name: "Basic Ceiling (Ash)", itemCategory: "decoration", type: "ceiling", src: "/assets/ceilings/basic-ceiling-ash.png", price: 50 },
+  { id: "deco-basic-ceiling-walnut", name: "Basic Ceiling (Walnut)", itemCategory: "decoration", type: "ceiling", src: "/assets/ceilings/basic-ceiling-walnut.png", price: 50 },
+  { id: "deco-basic-ceiling-birch", name: "Basic Ceiling (Birch)", itemCategory: "decoration", type: "ceiling", src: "/assets/ceilings/basic-ceiling-birch.png", price: 50 },
+  { id: "deco-basic-ceiling-cherry", name: "Basic Ceiling (Cherry)", itemCategory: "decoration", type: "ceiling", src: "/assets/ceilings/basic-ceiling-cherry.png", price: 50 },
+  { id: "deco-basic-ceiling-mahogany", name: "Basic Ceiling (Mahogany)", itemCategory: "decoration", type: "ceiling", src: "/assets/ceilings/basic-ceiling-mahogany.png", price: 50 },
+  { id: "deco-basic-trim-ash", name: "Basic Trim (Ash)", itemCategory: "decoration", type: "trim", src: "/assets/trim/basic-trim-ash.png", price: 30 },
+  { id: "deco-basic-trim-walnut", name: "Basic Trim (Walnut)", itemCategory: "decoration", type: "trim", src: "/assets/trim/basic-trim-walnut.png", price: 30 },
+  { id: "deco-basic-trim-birch", name: "Basic Trim (Birch)", itemCategory: "decoration", type: "trim", src: "/assets/trim/basic-trim-birch.png", price: 30 },
+  { id: "deco-basic-trim-cherry", name: "Basic Trim (Cherry)", itemCategory: "decoration", type: "trim", src: "/assets/trim/basic-trim-cherry.png", price: 30 },
+  { id: "deco-basic-trim-mahogany", name: "Basic Trim (Mahogany)", itemCategory: "decoration", type: "trim", src: "/assets/trim/basic-trim-mahogany.png", price: 30 },
+
+  // Build Themes - Classic Variants
+  { id: "deco-classic-wall-sunset", name: "Classic Wall (Sunset)", itemCategory: "decoration", type: "wall", src: "/assets/walls/classic-wall-sunset.png", price: 100 },
+  { id: "deco-classic-wall-slushie", name: "Classic Wall (Slushie)", itemCategory: "decoration", type: "wall", src: "/assets/walls/classic-wall-slushie.png", price: 100 },
+  { id: "deco-classic-wall-lemonlime", name: "Classic Wall (Lemon Lime)", itemCategory: "decoration", type: "wall", src: "/assets/walls/classic-wall-lemonlime.png", price: 100 },
+  { id: "deco-classic-ceiling-sunset", name: "Classic Ceiling (Sunset)", itemCategory: "decoration", type: "ceiling", src: "/assets/ceilings/classic-ceiling-sunset.png", price: 100 },
+  { id: "deco-classic-ceiling-slushie", name: "Classic Ceiling (Slushie)", itemCategory: "decoration", type: "ceiling", src: "/assets/ceilings/classic-ceiling-slushie.png", price: 100 },
+  { id: "deco-classic-ceiling-lemonlime", name: "Classic Ceiling (Lemon Lime)", itemCategory: "decoration", type: "ceiling", src: "/assets/ceilings/classic-ceiling-lemonlime.png", price: 100 },
 ]
