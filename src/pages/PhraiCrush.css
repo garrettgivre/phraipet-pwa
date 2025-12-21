@@ -6,8 +6,7 @@
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: radial-gradient(1200px 800px at 50% -20%, #ffe6f2 0%, #ffd1e6 25%, #f6c9ff 50%, #b6a6ff 85%, #90a8ff 100%),
-              linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0));
+  background: #444444;
   overflow: hidden;
   user-select: none;
   touch-action: none;
@@ -57,9 +56,9 @@
 }
 
 .crush-grid-cell {
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: none;
   border-radius: 8px;
-  background: rgba(255,255,255,0.05);
+  background: transparent;
 }
 
 .tile {
@@ -571,6 +570,14 @@ body.phraicrush-active {
   font-size: 18px;
   color: rgba(0,0,0,0.85);
   text-shadow: 0 1px 1px rgba(255,255,255,0.6), 0 1px 8px rgba(255,255,255,0.5);
+  pointer-events: none;
+}
+
+.piece-badge img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
 }
 
 .piece-emoji { pointer-events: none; }
@@ -656,7 +663,7 @@ body.phraicrush-active {
 /* Dark mode support */
 @media (prefers-color-scheme: dark) {
   .phraicrush-container {
-    background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+    background: #444444;
   }
 }
 

@@ -1,5 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { useTheme } from '../contexts/ThemeContext';
 
 interface BackButtonProps {
   size?: number;        // Size in pixels
@@ -19,6 +20,7 @@ const BackButton: React.FC<BackButtonProps> = ({
   position = { left: 15, bottom: 85 } // Position above navbar but below tabs
 }) => {
   const navigate = useNavigate();
+  const { hueRotation } = useTheme();
 
   const handleClick = (): void => {
     void navigate(-1); // Go back one page in history
@@ -33,7 +35,7 @@ const BackButton: React.FC<BackButtonProps> = ({
 
   return (
     <div
-      className="back-button"
+      className="standard-back-button"
       onClick={handleClick}
       style={{
         position: 'fixed',
@@ -45,7 +47,7 @@ const BackButton: React.FC<BackButtonProps> = ({
         backgroundRepeat: 'no-repeat',
         cursor: 'pointer',
         zIndex: 100,
-        filter: 'drop-shadow(0px 0px 3px rgba(0,0,0,0.7))',
+        filter: `hue-rotate(${hueRotation}deg)`,
         ...positionStyle
       }}
       title="Go Back"
@@ -53,4 +55,4 @@ const BackButton: React.FC<BackButtonProps> = ({
   );
 };
 
-export default BackButton; 
+export default BackButton;

@@ -50,6 +50,7 @@ interface Player {
   velocityX: number;
   velocityY: number;
   grounded: boolean;
+  facing: number; // 1 for right, -1 for left
   // Power-up effects
   activePowerUps: PowerUp[];
   jumpMultiplier: number;
@@ -64,6 +65,7 @@ interface Player {
   lastJumpInput: number; // Timestamp of last jump input
   isJumpHeld: boolean; // Whether jump is currently held
   framesSinceGrounded: number; // Frames since leaving ground
+  facingDirection: 'left' | 'right';
 }
 
 interface Enemy {
@@ -150,13 +152,16 @@ export default function Phraijump() {
   const navigate = useNavigate();
   const { updateCoins: updateGlobalCoins } = useCoins();
 
-  // Add body class for full-screen game
   useEffect(() => {
+    // Start game immediately when component mounts
+    startGame();
+    
+    // Add body class for full-screen game
     document.body.classList.add('phraijump-active');
     return () => {
       document.body.classList.remove('phraijump-active');
     };
-  }, []);
+  }, []); // Remove startGame from dependency to avoid loop if it changes reference
   
   const [score, setScore] = useState(0);
   const [gameOver, setGameOver] = useState(false);
@@ -203,9 +208,9 @@ export default function Phraijump() {
   const BASE_WIDTH = 400;
   const BASE_HEIGHT = 600;
   const GRAVITY = 0.45; // Slightly reduced again for better float
-  const JUMP_FORCE = -13.5; // Matched to gravity
-  const BOUNCE_MULTIPLIER = 0.8; // dampen platform bounce to feel less springy
-  const PLAYER_SPEED = 4.5; // Reduced from 5.5 for better control
+  const JUMP_FORCE = -14.5; // Increased for better reach
+  const BOUNCE_MULTIPLIER = 0.9; // dampen platform bounce to feel less springy
+  const PLAYER_SPEED = 5.0; // Increased for better control
   const PLATFORM_WIDTH = 100; // wider default platforms
   const PLATFORM_HEIGHT = 15;
   
@@ -1564,6 +1569,7 @@ export default function Phraijump() {
     velocityX: 0,
     velocityY: 0,
     grounded: false,
+    facing: 1, // Default facing right
     activePowerUps: [],
     jumpMultiplier: 1,
     speedMultiplier: 1,
@@ -1576,7 +1582,8 @@ export default function Phraijump() {
     jumpBufferTime: 0,
     lastJumpInput: 0,
     isJumpHeld: false,
-    framesSinceGrounded: 0
+    framesSinceGrounded: 0,
+    facingDirection: 'left'
   });
   
   const platformsRef = useRef<Platform[]>([]);
@@ -2598,7 +2605,7 @@ export default function Phraijump() {
     
     // Generate initial batch of platforms with variety
     for (let i = 1; i < 220; i++) {
-      const platformY = BASE_HEIGHT - 100 - (i * 135); // Consistent spacing with ensurePlatforms
+      const platformY = BASE_HEIGHT - 100 - (i * 120); // Consistent spacing with ensurePlatforms
       const { currentZone } = getZoneInfo(platformY);
       
       // Zone-specific platform generation
@@ -2705,10 +2712,9 @@ export default function Phraijump() {
       // Add 50 more platforms with variety
       for (let i = 0; i < 60; i++) {
         // Adjusted vertical spacing based on new jump height and physics
-        // JUMP_FORCE -13.5 & GRAVITY 0.45 gives max height approx 200px
-        // 105px was too dense, but also safer. Let's increase slightly to challenge but keep safe.
-        // 135px allows for comfortable jumps without being pixel perfect max height
-        const platformY = highestPlatform - (i + 1) * 135; 
+        // JUMP_FORCE -14.5 & GRAVITY 0.45 gives max height approx 200px (with bounce)
+        // 120px allows for comfortable jumps
+        const platformY = highestPlatform - (i + 1) * 120; 
         const { currentZone } = getZoneInfo(platformY);
         
         // Zone-specific platform generation
@@ -3650,10 +3656,11 @@ export default function Phraijump() {
       y: BASE_HEIGHT - 150,
       width: 30,
       height: 30,
-      velocityX: 0,
-      velocityY: 0,
-      grounded: false,
-      activePowerUps: [],
+    velocityX: 0,
+    velocityY: 0,
+    grounded: false,
+    facing: 1, // Default facing right
+    activePowerUps: [],
       jumpMultiplier: 1,
       speedMultiplier: 1,
       magnetRange: 100,
@@ -4210,16 +4217,26 @@ export default function Phraijump() {
       {gameStarted && !gameOver && (
         <div className="game-ui">
           <div className="top-bar">
-        <div className="score">Score: {score}</div>
-            <div className="coins">
-              <span className="coin-icon">💰</span>
-              <span className="coin-count">{coins}</span>
+            {/* Left: Score/Coins */}
+            <div className="score-container">
+              <div className="score">Score: {score}</div>
+              <div className="coins">
+                <span className="coin-icon">💰</span>
+                <span className="coin-count">{coins}</span>
+              </div>
             </div>
+
+            {/* Center: Game Header Logo */}
+            <div className="game-header-logo-container">
+              <img src="/assets/TextHeaders/Phraijump.png" alt="Phraijump" className="game-header-logo" />
+            </div>
+
+            {/* Right: Height */}
             <div className="height">
               <span className="height-icon">📏</span>
               <span className="height-value">{Math.floor(score / 10)}m</span>
             </div>
-      </div>
+          </div>
           
           {/* Current streak indicator */}
           {currentStreak > 0 && (
@@ -4272,55 +4289,9 @@ export default function Phraijump() {
           onTouchMove={handleTouchMove}
         />
         
-        {!gameStarted && (
+        {!gameStarted && !gameOver && (
           <div className="game-overlay">
-            <div className="start-screen">
-              <h2>🎮 Phraijump 🚀</h2>
-              <p>Jump through the dimensions!</p>
-              <p>Use ← → to move, SPACE to jump</p>
-              
-              {/* Player stats display */}
-              <div className="player-stats">
-                <div className="stat-card">
-                  <span className="stat-icon">💰</span>
-                  <span className="stat-value">{totalCoins}</span>
-                  <span className="stat-label">Total Coins</span>
-                </div>
-                <div className="stat-card">
-                  <span className="stat-icon">📏</span>
-                  <span className="stat-value">{Math.floor(gameStats.maxHeight / 10)}m</span>
-                  <span className="stat-label">Max Height</span>
-                </div>
-                <div className="stat-card">
-                  <span className="stat-icon">🎯</span>
-                  <span className="stat-value">{achievements.filter(a => a.completed).length}</span>
-                  <span className="stat-label">Achievements</span>
-                </div>
-              </div>
-              
-              <button className="start-button" onClick={startGame}>
-                Start Game
-              </button>
-              <div style={{ marginTop: 10, color: 'rgba(255,255,255,0.9)', fontSize: 14 }}>
-                High Score: {highScore}
-              </div>
-              <button className="menu-button" onClick={togglePause}>
-                {isPaused ? 'Resume (P/Esc)' : 'Pause (P/Esc)'}
-              </button>
-              
-              {/* Show some recent achievements */}
-              {achievements.filter(a => a.completed).length > 0 && (
-                <div className="recent-achievements">
-                  <h3>Recent Achievements</h3>
-                  {achievements.filter(a => a.completed).slice(-3).map(achievement => (
-                    <div key={achievement.id} className="mini-achievement">
-                      <span>🏆</span>
-                      <span>{achievement.name}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+             {/* Loading... */}
           </div>
         )}
         

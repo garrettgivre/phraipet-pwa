@@ -1,5 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { useTheme } from '../contexts/ThemeContext';
 
 interface MapBackButtonProps {
   destination?: string; // Where to navigate to
@@ -21,6 +22,7 @@ const MapBackButton: React.FC<MapBackButtonProps> = ({
   position = { left: 20, bottom: 20 }
 }) => {
   const navigate = useNavigate();
+  const { hueRotation } = useTheme();
 
   const handleClick = (): void => {
     if (import.meta.env.DEV) console.log(`Navigating to ${destination}`);
@@ -48,7 +50,7 @@ const MapBackButton: React.FC<MapBackButtonProps> = ({
         backgroundRepeat: 'no-repeat',
         cursor: 'pointer',
         zIndex: 9999,
-        filter: 'drop-shadow(0px 0px 3px rgba(0,0,0,0.7))',
+        filter: `hue-rotate(${hueRotation}deg)`,
         ...positionStyle
       }}
       title="Back to Map"
@@ -56,4 +58,4 @@ const MapBackButton: React.FC<MapBackButtonProps> = ({
   );
 };
 
-export default MapBackButton; 
+export default MapBackButton;

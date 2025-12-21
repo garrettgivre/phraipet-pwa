@@ -20,6 +20,27 @@ type TileColor = (typeof COLORS)[number];
 type Special = 'stripedH' | 'stripedV' | 'wrapped' | 'colorBomb' | 'butterfly';
 type PieceType = 'bottledButterfly' | 'toyBoxBlue' | 'toyBoxPink' | 'fortuneCookie' | 'fortuneSlip' | 'cookie' | 'acorn';
 
+const TILE_IMAGES: Record<TileColor, string> = {
+  '#e74c3c': '/assets/games/phraicrush/redcrystal.png',
+  '#27ae60': '/assets/games/phraicrush/greencrystal.png',
+  '#3498db': '/assets/games/phraicrush/bluecrystal.png',
+  '#f1c40f': '/assets/games/phraicrush/yellowcrystal.png',
+  '#9b59b6': '/assets/games/phraicrush/purplecrystal.png',
+  '#e67e22': '/assets/games/phraicrush/orangecrystal.png',
+};
+
+const SPECIAL_IMAGES: Record<Special, string> = {
+  stripedH: '/assets/games/phraicrush/striped-horizontal.png',
+  stripedV: '/assets/games/phraicrush/striped-vertical.png',
+  wrapped: '/assets/games/phraicrush/wrapped.png',
+  colorBomb: '/assets/games/phraicrush/color-bomb.png',
+  butterfly: '/assets/games/phraicrush/butterfly.png',
+};
+
+const PIECE_IMAGES: Partial<Record<PieceType, string>> = {
+  bottledButterfly: '/assets/games/phraicrush/bottled-butterfly.png',
+};
+
 interface Tile {
   id: number;
   color: TileColor;
@@ -1512,42 +1533,72 @@ export default function PhraiCrush() {
             ].filter(Boolean).join(' ');
 
             const isFallingOrSpawn = fallingIds.has(cell.id) || spawnOffsets.has(cell.id);
+            const pieceTypeVal = cell.pieceType ?? null;
+            const hasCrystalImage = !pieceTypeVal && TILE_IMAGES[cell.color];
+            const hasSpecialImage = cell.special && SPECIAL_IMAGES[cell.special];
+            const hasPieceImage = pieceTypeVal && PIECE_IMAGES[pieceTypeVal];
+            const useImage = hasCrystalImage || hasPieceImage;
+            
             const style: React.CSSProperties = {
               width: tileSize,
               height: tileSize,
               transform: `translate3d(${x}px, ${y}px, 0)`,
-              outline: isSelected ? '3px solid #FFD700' : '2px solid rgba(255,255,255,0.15)',
+              outline: isSelected ? '3px solid #FFD700' : (useImage ? 'none' : '2px solid rgba(255,255,255,0.15)'),
               transitionDuration: `${tileDurations.get(cell.id) ?? (fallingIds.has(cell.id) || spawnOffsets.has(cell.id) ? 520 : 300)}ms`,
               transitionTimingFunction: isFallingOrSpawn ? 'cubic-bezier(0.2, 0.8, 0.2, 1)' : undefined,
+              background: 'transparent',
+              border: 'none',
+              padding: 0,
+              boxShadow: useImage ? 'none' : undefined,
             };
-            const pieceType = cell.pieceType ?? null;
+            
             let nonmatchBg: string | undefined;
             let pieceEmoji: string | null = null;
             let pieceLabel: string | null = null;
-            if (cell.matchable === false && pieceType) {
-              if (pieceType === 'fortuneCookie') {
+            if (cell.matchable === false && pieceTypeVal) {
+              if (pieceTypeVal === 'fortuneCookie') {
                 nonmatchBg = 'linear-gradient(135deg, #c97b2d 0%, #e0a96d 50%, #c97b2d 100%)';
                 pieceEmoji = '🥠'; pieceLabel = 'Cookie';
-              } else if (pieceType === 'fortuneSlip') {
+              } else if (pieceTypeVal === 'fortuneSlip') {
                 nonmatchBg = 'linear-gradient(135deg, #ffffff 0%, #e9eef5 100%)';
                 pieceEmoji = '🧾'; pieceLabel = 'Slip';
-              } else if (pieceType === 'bottledButterfly') {
-                nonmatchBg = 'linear-gradient(135deg, rgba(135,206,235,0.8) 0%, rgba(173,216,230,0.95) 100%)';
-                pieceEmoji = '🦋'; pieceLabel = 'Bottle';
-              } else if (pieceType === 'toyBoxBlue') {
+              } else if (pieceTypeVal === 'bottledButterfly') {
+                // Use image instead of emoji
+                nonmatchBg = undefined;
+                pieceEmoji = null; pieceLabel = 'Bottle';
+              } else if (pieceTypeVal === 'toyBoxBlue') {
                 nonmatchBg = 'repeating-linear-gradient(45deg, #2d6cdf, #2d6cdf 10px, #1e4fb7 10px, #1e4fb7 20px)';
                 pieceEmoji = '📦'; pieceLabel = 'Toy';
-              } else if (pieceType === 'toyBoxPink') {
+              } else if (pieceTypeVal === 'toyBoxPink') {
                 nonmatchBg = 'repeating-linear-gradient(45deg, #d164c1, #d164c1 10px, #b244a1 10px, #b244a1 20px)';
                 pieceEmoji = '📦'; pieceLabel = 'Toy';
-              } else if (pieceType === 'cookie') {
+              } else if (pieceTypeVal === 'cookie') {
                 nonmatchBg = 'radial-gradient(circle at 30% 30%, #7a4b2a, #5b371f 70%)';
                 pieceEmoji = '⛔'; pieceLabel = 'Block';
-              } else if (pieceType === 'acorn') {
+              } else if (pieceTypeVal === 'acorn') {
                 nonmatchBg = 'linear-gradient(135deg, #6ab04c 0%, #2ecc71 100%)';
                 pieceEmoji = '🌰'; pieceLabel = 'Acorn';
               }
             }
+
+            const innerStyle: React.CSSProperties = {
+              width: '100%',
+              height: '100%',
+              borderRadius: 10,
+              position: 'relative',
+            };
+
+            if (hasPieceImage) {
+              innerStyle.background = `url(${PIECE_IMAGES[pieceTypeVal!]}) no-repeat center / contain`;
+              innerStyle.boxShadow = 'none';
+            } else if (hasCrystalImage) {
+              innerStyle.background = `url(${TILE_IMAGES[cell.color]}) no-repeat center / contain`;
+              innerStyle.boxShadow = 'none';
+            } else {
+              innerStyle.background = nonmatchBg ?? (cell.color as string);
+              innerStyle.boxShadow = 'inset 0 2px 6px rgba(255,255,255,0.15), inset 0 -2px 6px rgba(0,0,0,0.25)';
+            }
+
             return (
               <button
                 key={cell.id}
@@ -1563,17 +1614,28 @@ export default function PhraiCrush() {
               >
                 <div
                   className={innerClasses}
-                  style={{
-                    background: nonmatchBg ?? (cell.color as string),
-                    width: '100%',
-                    height: '100%',
-                    borderRadius: 10,
-                    boxShadow: 'inset 0 2px 6px rgba(255,255,255,0.15), inset 0 -2px 6px rgba(0,0,0,0.25)'
-                  }}
+                  style={innerStyle}
                 >
-                  {pieceType && (
-                    <div className={`piece-badge piece-${pieceType}`} title={pieceLabel ?? pieceType}>
-                      <span className="piece-emoji">{pieceEmoji}</span>
+                  {hasSpecialImage && (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        inset: 0,
+                        background: `url(${SPECIAL_IMAGES[cell.special!]}) no-repeat center / contain`,
+                        pointerEvents: 'none',
+                      }}
+                    />
+                  )}
+                  {pieceTypeVal && (
+                    <div className={`piece-badge piece-${pieceTypeVal}`} title={pieceLabel ?? pieceTypeVal}>
+                      {hasPieceImage ? (
+                        <img
+                          src={PIECE_IMAGES[pieceTypeVal]!}
+                          alt={pieceLabel ?? pieceTypeVal}
+                        />
+                      ) : (
+                        <span className="piece-emoji">{pieceEmoji}</span>
+                      )}
                     </div>
                   )}
                 </div>

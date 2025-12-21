@@ -142,21 +142,37 @@
   */
 }
 
-.coin-counter {
+.currency-container {
   display: flex;
   align-items: center;
   background: #fff;
-  padding: 4px 10px; /* Reduced padding */
+  padding: 4px 10px;
   border-radius: 20px;
   cursor: pointer;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
   transition: background-color 0.2s;
-  position: relative; /* Ensure stacking context */
-  z-index: 1; /* Place above the ::before and ::after elements */
+  position: relative;
+  z-index: 1;
+  gap: 8px;
 }
 
-.coin-counter:hover {
+.currency-container:hover {
   background-color: #f7f7f7;
+}
+
+.coin-counter {
+  display: flex;
+  align-items: center;
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.divider {
+  width: 1px;
+  height: 16px;
+  background-color: #ddd;
 }
 
 .coin-icon {

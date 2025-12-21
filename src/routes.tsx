@@ -8,8 +8,8 @@ import Phraijump from "./pages/Phraijump";
 import PhraiCrush from "./pages/PhraiCrush";
 import InventoryPage from "./pages/InventoryPage";
 import DecorationPage from "./pages/DecorationPage";
-import RescuePals from "./pages/RescuePals";
 import Settings from "./pages/Settings";
+import Bank from "./pages/Bank";
 import LocationDummy from "./pages/LocationDummy";
 import * as World from "./pages/World/Locations";
 
@@ -63,12 +63,12 @@ export function createRoutes({
       element: <PhraiCrush />,
     },
     {
-      path: "/rescuepals",
-      element: <RescuePals />,
-    },
-    {
       path: "/settings",
       element: <Settings />,
+    },
+    {
+      path: "/bank",
+      element: <Bank />,
     },
     {
       path: "/inventory",

@@ -57,6 +57,7 @@ export default function Header({
 
   const goHome = (): void => { void navigate("/"); };
   const goInventory = (): void => { void navigate("/inventory"); };
+  const goBank = (): void => { void navigate("/bank"); };
 
   return (
     <header className="app-header">
@@ -113,14 +114,18 @@ export default function Header({
         ))}
       </div>
 
-      <div className="coin-counter" onClick={goInventory}>
-        <img src="/assets/icons/coin.png" alt="Coins" className="coin-icon" />
-        <span>{coins}</span>
-      </div>
-      
-      <div className="coin-counter crystal-counter" style={{ marginLeft: '8px' }}>
-        <img src="/pet/phraibits.png" alt="Phraibits" className="coin-icon" />
-        <span>{crystals}</span>
+      <div className="currency-container" onClick={goBank}>
+        <div className="coin-counter">
+          <img src="/assets/icons/coin.png" alt="Coins" className="coin-icon" />
+          <span>{coins}</span>
+        </div>
+        
+        <div className="divider"></div>
+
+        <div className="coin-counter crystal-counter">
+          <img src="/pet/phraibits.png" alt="Phraibits" className="coin-icon" />
+          <span>{crystals}</span>
+        </div>
       </div>
     </header>
   );

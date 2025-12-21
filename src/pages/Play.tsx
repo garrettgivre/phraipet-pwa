@@ -17,21 +17,16 @@ export default function Play() {
     void navigate('/phraicrush');
   };
 
-  const handleRescuePals = () => {
-    void navigate('/rescuepals');
-  };
-
   return (
     <div className="play-page-container">
-      <h1 className="play-page-title">Game Center</h1>
-      <p className="play-page-subtitle">Choose your adventure!</p>
+      <img src="/assets/TextHeaders/GameRoom.png" alt="Game Room" className="play-header-image" />
       
       <div className="games-grid">
         <button 
           className="game-button phraijump-button"
           onClick={handlePhraiJump}
         >
-          <div className="game-icon">🦘</div>
+          <img src="/assets/icons/phraijump.png" alt="Phraijump" className="game-icon-img" />
           <div className="game-title">Phraijump</div>
         </button>
         
@@ -39,27 +34,19 @@ export default function Play() {
           className="game-button phraicrush-button"
           onClick={handlePhraiCrush}
         >
-          <div className="game-icon">🍭</div>
+          <img src="/assets/icons/phraicrush.png" alt="PhraiCrush" className="game-icon-img" />
           <div className="game-title">PhraiCrush</div>
-          <div className="game-subtitle">Advanced Match-3</div>
-        </button>
-        
-        <button 
-          className="game-button rescuepals-button"
-          onClick={handleRescuePals}
-        >
-          <div className="game-icon">🦆🐈</div>
-          <div className="game-title">Rescue Pals</div>
-          <div className="game-subtitle">Duck & Cat Puzzle</div>
         </button>
       </div>
       
-      <button 
-        onClick={handleRefresh}
-        className="refresh-button"
-      >
-        Refresh App
-      </button>
+      <div className="bottom-controls">
+        <button 
+          onClick={handleRefresh}
+          className="refresh-button"
+        >
+          Refresh App
+        </button>
+      </div>
     </div>
   );
 }

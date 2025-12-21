@@ -4,23 +4,18 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 20px;
+  padding: 80px 20px 20px 20px; /* Increased top padding to account for fixed header */
   min-height: 100vh;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
 }
 
-.play-page-title {
-  font-size: 2.5rem;
-  font-weight: bold;
-  margin-bottom: 10px;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-}
-
-.play-page-subtitle {
-  font-size: 1.2rem;
-  margin-bottom: 40px;
-  opacity: 0.9;
+.play-header-image {
+  max-width: 300px;
+  width: 80%;
+  height: auto;
+  margin-bottom: 30px;
+  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
 }
 
 .games-grid {
@@ -37,104 +32,89 @@
   align-items: center;
   justify-content: center;
   width: 150px;
-  height: 150px;
-  border-radius: 50%;
+  height: auto;
+  min-height: 150px;
+  background: none;
   border: none;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   margin: 0 auto;
 }
 
 .game-button:hover {
   transform: translateY(-5px) scale(1.05);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
 }
 
 .game-button:active {
   transform: translateY(-2px) scale(1.02);
 }
 
+/* Remove button backgrounds */
 .phraijump-button {
-  background: linear-gradient(45deg, #ff6b6b, #ffa500);
+  background: none;
+  box-shadow: none;
 }
 
 .phraijump-button::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transform: rotate(45deg);
-  transition: all 0.6s ease;
-  opacity: 0;
+  display: none;
 }
 
 .phraijump-button:hover::before {
-  opacity: 1;
-  transform: rotate(45deg) translate(50%, 50%);
+  display: none;
 }
 
-.game-icon {
-  font-size: 3rem;
-  margin-bottom: 8px;
+.phraicrush-button {
+  background: none;
+  animation: none;
+  box-shadow: none;
+}
+
+.phraicrush-button::before {
+  display: none;
+}
+
+.phraicrush-button:hover::before {
+  display: none;
+}
+
+.game-icon-img {
+  width: 100px;
+  height: 100px;
+  object-fit: contain;
+  margin-bottom: 12px;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+  transition: filter 0.3s ease;
+}
+
+.game-button:hover .game-icon-img {
+  filter: drop-shadow(0 8px 16px rgba(0,0,0,0.4));
 }
 
 .game-title {
-  font-size: 1.1rem;
-  font-weight: 600;
+  font-size: 1.2rem;
+  font-weight: 700;
   text-align: center;
   color: white;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4);
 }
 
 .game-subtitle {
   font-size: 0.9rem;
-  font-weight: 400;
+  font-weight: 500;
   text-align: center;
-  color: rgba(255, 255, 255, 0.8);
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
-  margin-top: 2px;
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);
+  margin-top: 4px;
 }
 
-.phraicrush-button {
-  background: linear-gradient(45deg, #667eea, #764ba2, #f093fb);
-  background-size: 200% 200%;
-  animation: gradientShift 3s ease infinite;
-}
-
-@keyframes gradientShift {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
-}
-
-.phraicrush-button::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-  transform: rotate(45deg);
-  transition: all 0.6s ease;
-  opacity: 0;
-}
-
-.phraicrush-button:hover::before {
-  opacity: 1;
-  transform: rotate(45deg) translate(50%, 50%);
+.bottom-controls {
+  margin-top: auto;
+  margin-bottom: 90px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
 }
 
 .refresh-button {
@@ -145,7 +125,6 @@
   border: 2px solid rgba(255, 255, 255, 0.3);
   border-radius: 25px;
   cursor: pointer;
-  margin-top: 40px;
   transition: all 0.3s ease;
   backdrop-filter: blur(10px);
 }
@@ -158,6 +137,9 @@
 
 /* Mobile responsive */
 @media (max-width: 768px) {
+  .play-page-container {
+    padding-bottom: 80px; /* Make space for navbar */
+  }
   .play-page-title {
     font-size: 2rem;
   }
@@ -169,14 +151,20 @@
   
   .game-button {
     width: 120px;
-    height: 120px;
+    height: auto;
+    min-height: 120px;
   }
   
   .game-icon {
     font-size: 2.5rem;
   }
+
+  .game-icon-img {
+    width: 80px;
+    height: 80px;
+  }
   
   .game-title {
     font-size: 1rem;
   }
-} 
+}
