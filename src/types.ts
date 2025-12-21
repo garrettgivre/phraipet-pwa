@@ -84,7 +84,6 @@ interface BaseInventoryItem {
 export interface DecorationInventoryItem extends BaseInventoryItem {
   itemCategory: "decoration";
   type: DecorationItemType;
-  colorOptions?: { label: string; src: string }[];
 }
 
 // Interface for food items as they appear in the inventory.

@@ -13,7 +13,7 @@ import { defaultToyItems } from '../data/inventory/toyItems';
 import { enhanceFoodItemsWithDescriptions } from '../utils/foodUtils';
 import './Settings.css';
 
-const isDev = import.meta.env.DEV;
+const isDev = true; // Enabled debug menu in live version
 
 export default function Settings() {
   const navigate = useNavigate();

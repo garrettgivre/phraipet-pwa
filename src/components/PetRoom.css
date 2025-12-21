@@ -48,7 +48,7 @@
   position: absolute;
   transition: left 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   will-change: left, transform;
-  bottom: 25%; /* Adjusted for portrait mode */
+  bottom: calc(20% + 60px); /* Adjusted for portrait mode + 60px offset */
   height: auto;
   max-height: 30%; /* Smaller in portrait mode */
   transform: translateX(-50%);
@@ -82,7 +82,7 @@
 /* Food position - adjusted for portrait mode */
 .food-item {
   position: absolute;
-  bottom: 35%; /* Raised to be at mouth level/above feet */
+  bottom: calc(35% + 60px); /* Raised to be at mouth level/above feet + 60px offset */
   z-index: 50; /* Ensure it is in front of pet */
   transform: translateX(-50%);
   max-height: 15%; /* Smaller in portrait mode */
@@ -91,7 +91,7 @@
 /* Toy position - adjusted for portrait mode */
 .toy.playing {
   position: absolute;
-  bottom: 18%; /* Adjusted position */
+  bottom: calc(18% + 60px); /* Adjusted position + 60px offset */
   z-index: 35; /* Increased from 20 to 35 to be in front of pet */
   max-height: 15%; /* Smaller in portrait mode */
   animation: toyActivePlay 1.2s infinite ease-in-out;
@@ -100,7 +100,7 @@
 /* Mood bubble - adjusted for portrait mode */
 .pet-mood-bubble {
   position: absolute;
-  bottom: calc(42% + 10px);
+  bottom: calc(42% + 10px + 60px); /* + 60px offset */
   transform: translateX(-50%);
   z-index: 50;
   background: white;
@@ -282,7 +282,7 @@
 
 .pet-layer {
   position: absolute;
-  bottom: 20%;
+  bottom: 20%; /* Base position - overridden in specific block above, but ensuring consistency */
   transform: translateX(-50%);
   transition: left 0.3s ease-in-out;
   z-index: 30;
@@ -300,7 +300,7 @@
 
 .toy {
   position: absolute;
-  bottom: 20%;
+  bottom: calc(20% + 60px); /* + 60px offset */
   z-index: 20;
   pointer-events: none;
   transition: left 0.5s ease-in-out;
@@ -458,7 +458,7 @@
 /* Dynamic Shadow */
 .pet-shadow {
   position: absolute;
-  bottom: calc(25% - 55px); /* Adjusted position */
+  bottom: calc(25% - 55px + 60px); /* Adjusted position: original - 55px + 60px offset */
   transform: translateX(-50%);
   width: 32%; /* Slightly less wide */
   height: 3%;

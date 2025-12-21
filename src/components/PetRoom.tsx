@@ -166,8 +166,9 @@ export default function PetRoom({
       <div className="room-background-layers">
         <img src={floor} alt="Floor" style={{ zIndex: 1 }} />
         <img src={wall} alt="Wall" style={{ zIndex: 2 }} />
-        <img src={ceiling} alt="Ceiling" style={{ zIndex: 3 }} />
-        {trim && <img src={trim} alt="Trim" style={{ zIndex: 4 }} />}
+        {overlay && <img src={overlay} alt="Overlay" style={{ zIndex: 3 }} />}
+        <img src={ceiling} alt="Ceiling" style={{ zIndex: 4 }} />
+        {trim && <img src={trim} alt="Trim" style={{ zIndex: 5 }} />}
       </div>
 
       {itemsBehindPet.map((item, idx) => {
@@ -233,10 +234,6 @@ export default function PetRoom({
           }}
         />
       ))}
-
-      {overlay && (
-        <img className="overlay" src={overlay} alt="Overlay" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 60 }} />
-      )}
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { useDecoration, decorImageCache, decorZoomStylesCache } from "../contexts/DecorationContext";
 import { defaultDecorationItems } from "../data/decorations";
+import { getItemVariants, getVariantSrc, type ColorVariant } from "../data/itemVariants";
 import type {
   DecorationInventoryItem,
   DecorationItemType,
@@ -17,24 +18,20 @@ import { ref, set } from "firebase/database";
 // Add function to force update furniture items in Firebase
 const forceUpdateFurnitureItems = async (decorations: DecorationInventoryItem[]) => {
   try {
-    // First get the default items from hardcoded values
-    const defaultFurnitureFromContext = getHardcodedFurnitureItems();
-    if (import.meta.env.DEV) console.log("Default furniture items:", defaultFurnitureFromContext);
-    
     // Make sure we include all default decoration items as well
     // Filter out any item types that are both in the existing decorations and in the defaults
     // This ensures we keep user-purchased decorations but get the latest defaults too
     const existingItemTypes = new Set(decorations.map(item => item.id));
     const newDefaultItems = defaultDecorationItems.filter((item: DecorationInventoryItem) => !existingItemTypes.has(item.id));
     
-    // Combine existing decorations with new default items and furniture items
-    const updatedDecorations = [...decorations, ...newDefaultItems, ...defaultFurnitureFromContext];
+    // Combine existing decorations with new default items
+    const updatedDecorations = [...decorations, ...newDefaultItems];
     if (import.meta.env.DEV) console.log("Updated decorations to save:", updatedDecorations);
     
     // Save to Firebase
     const decorationsRef = ref(db, "decorations");
     await set(decorationsRef, updatedDecorations);
-    if (import.meta.env.DEV) console.log("Force updated decorations in Firebase with furniture items and latest defaults");
+    if (import.meta.env.DEV) console.log("Force updated decorations in Firebase with latest defaults");
     return true;
   } catch (error) {
     console.error("Error force updating decorations:", error);
@@ -42,17 +39,6 @@ const forceUpdateFurnitureItems = async (decorations: DecorationInventoryItem[])
   }
 };
 
-// Function to get hardcoded furniture items
-const getHardcodedFurnitureItems = (): DecorationInventoryItem[] => {
-  return [
-    { id: "deco-furniture-basic-armchair", name: "Basic Armchair", itemCategory: "decoration", type: "furniture", src: "/assets/furniture/furniture-basic-armchair.png", price: 120, description: "A comfortable armchair for your pet to lounge in." },
-    { id: "deco-furniture-basic-endtable", name: "Basic End Table", itemCategory: "decoration", type: "furniture", src: "/assets/furniture/furniture-basic-endtable.png", price: 85, description: "A stylish end table for your pet's room." },
-    { id: "deco-furniture-basic-plant", name: "Basic Plant", itemCategory: "decoration", type: "furniture", src: "/assets/furniture/furniture-basic-plant.png", price: 65, description: "A decorative plant that adds a touch of nature." },
-    { id: "deco-furniture-basic-wallart", name: "Wall Art", itemCategory: "decoration", type: "furniture", src: "/assets/furniture/furniture-basic-wallart.png", price: 90, description: "Beautiful wall art to brighten up the room." },
-    { id: "deco-furniture-woodland-floorlamp", name: "Woodland Floor Lamp", itemCategory: "decoration", type: "furniture", src: "/assets/furniture/furniture-woodland-floorlamp.png", price: 110, description: "A cozy floor lamp that adds warm lighting." },
-    { id: "deco-furniture-woodland-shelf", name: "Woodland Shelf", itemCategory: "decoration", type: "furniture", src: "/assets/furniture/furniture-woodland-shelf.png", price: 95, description: "A rustic shelf for displaying your pet's treasures." },
-  ];
-};
 
 const decorationSubCategories: DecorationItemType[] = ["wall", "floor", "ceiling", "trim", "furniture", "overlay"];
 
@@ -75,6 +61,8 @@ const ROOM_ZONES = {
 } as const;
 
 type ZoneKey = keyof typeof ROOM_ZONES;
+
+
 
 function FurniturePlacementOverlay({
   selectedItem,
@@ -197,8 +185,17 @@ function FurniturePlacementOverlay({
 
   const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
     setIsDragging(true);
-    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    let clientX = 0;
+    let clientY = 0;
+    
+    if ('touches' in e && e.touches.length > 0) {
+      clientX = e.touches[0]?.clientX || 0;
+      clientY = e.touches[0]?.clientY || 0;
+    } else if ('clientX' in e) {
+      clientX = e.clientX;
+      clientY = e.clientY;
+    }
+    
     setStartDragPos({ x: clientX, y: clientY });
     e.preventDefault();
   };
@@ -206,8 +203,17 @@ function FurniturePlacementOverlay({
   const handleDragMove = useCallback(
     (e: MouseEvent | TouchEvent) => {
       if (!isDragging || !overlayRef.current || !selectedItem) return;
-      const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-      const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+      let clientX = 0;
+      let clientY = 0;
+      
+      if ('touches' in e && e.touches.length > 0) {
+        clientX = e.touches[0]?.clientX || 0;
+        clientY = e.touches[0]?.clientY || 0;
+      } else if ('clientX' in e) {
+        clientX = (e as MouseEvent).clientX;
+        clientY = (e as MouseEvent).clientY;
+      }
+
       const deltaX = clientX - startDragPos.x;
       const deltaY = clientY - startDragPos.y;
       const overlayRect = overlayRef.current.getBoundingClientRect();
@@ -362,7 +368,43 @@ function PlacedFurnitureList({
   );
 }
 
-function ZoomedImage({ src, alt }: { src: string; alt: string }) {
+function VariantSelectionOverlay({
+  item,
+  variants,
+  onSelect,
+  onClose
+}: {
+  item: DecorationInventoryItem;
+  variants: ColorVariant[];
+  onSelect: (variant: ColorVariant) => void;
+  onClose: () => void;
+}) {
+  return (
+    <div className="color-variant-overlay" onClick={onClose}>
+      <div className="color-variant-modal" onClick={e => e.stopPropagation()}>
+        <h3>Select Color for {item.name}</h3>
+        <div className="color-variant-grid">
+          {variants.map(variant => (
+            <div key={variant.name} className="color-swatch-container">
+              <button
+                className="color-swatch-button"
+                style={{ backgroundColor: variant.value }}
+                onClick={() => onSelect(variant)}
+                title={variant.name}
+              />
+              <span className="color-swatch-name">{variant.name}</span>
+            </div>
+          ))}
+        </div>
+        <div className="color-variant-actions">
+          <button className="close-variant-button" onClick={onClose}>Cancel</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ZoomedImage({ src, alt, fit = 'contain' }: { src: string; alt: string; fit?: 'contain' | 'cover' }) {
   const containerSize = 64;
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
@@ -376,8 +418,8 @@ function ZoomedImage({ src, alt }: { src: string; alt: string }) {
 
     const handleComplexLoading = async () => {
       if (!isMounted) return;
-      if (decorZoomStylesCache.has(src)) {
-        setImageStyle(decorZoomStylesCache.get(src)!);
+      if (decorZoomStylesCache.has(src + fit)) {
+        setImageStyle(decorZoomStylesCache.get(src + fit)!);
         setLoaded(true);
         return;
       }
@@ -389,20 +431,31 @@ function ZoomedImage({ src, alt }: { src: string; alt: string }) {
           handleSimpleLoading();
           return;
         }
-        const scale = Math.min(containerSize / bounds.width, containerSize / bounds.height);
+        
+        // Calculate scale to fit the cropped content into the container
+        // If fit is 'cover', use Math.max to fill the container (cropping excess)
+        // If fit is 'contain', use Math.min to fit entirely within container
+        const scaleFn = fit === 'cover' ? Math.max : Math.min;
+        const scale = scaleFn(containerSize / bounds.width, containerSize / bounds.height);
+        
         const scaledNaturalWidth = bounds.naturalWidth * scale;
         const scaledNaturalHeight = bounds.naturalHeight * scale;
+        
+        // Center the cropped area within the 64x64 container
         const offsetX = (containerSize - (bounds.width * scale)) / 2 - (bounds.x * scale);
         const offsetY = (containerSize - (bounds.height * scale)) / 2 - (bounds.y * scale);
+        
         const zoomedStyle: React.CSSProperties = {
           position: 'absolute',
           left: `${offsetX}px`,
           top: `${offsetY}px`,
           width: `${scaledNaturalWidth}px`,
           height: `${scaledNaturalHeight}px`,
-          visibility: 'visible'
+          visibility: 'visible',
+          maxWidth: 'none', // Override any max-width constraints
+          maxHeight: 'none' // Override any max-height constraints
         };
-        decorZoomStylesCache.set(src, zoomedStyle);
+        decorZoomStylesCache.set(src + fit, zoomedStyle);
         setImageStyle(zoomedStyle);
         setLoaded(true);
       } catch (error) {
@@ -417,9 +470,9 @@ function ZoomedImage({ src, alt }: { src: string; alt: string }) {
         display: 'block',
         maxWidth: '100%',
         maxHeight: '100%',
-        width: 'auto',
-        height: 'auto',
-        objectFit: 'contain',
+        width: fit === 'cover' ? '100%' : 'auto',
+        height: fit === 'cover' ? '100%' : 'auto',
+        objectFit: fit,
         visibility: 'visible'
       };
       setImageStyle(simpleStyle);
@@ -454,7 +507,7 @@ function ZoomedImage({ src, alt }: { src: string; alt: string }) {
     }
 
     return () => { isMounted = false; };
-  }, [src, containerSize]);
+  }, [src, containerSize, fit]);
 
   return (
     <div className="sq-decor-item-image-wrapper">
@@ -488,56 +541,14 @@ export default function DecorationPage() {
   const [selectedFurniture, setSelectedFurniture] = useState<DecorationInventoryItem | null>(null);
   const [showPlacementOverlay, setShowPlacementOverlay] = useState(false);
   const [showPlacedFurniture, setShowPlacedFurniture] = useState(false);
+  const [furnitureSubCategory, setFurnitureSubCategory] = useState<string>("All");
   const [replaceCoords, setReplaceCoords] = useState<{
     x: number; y: number; width: number; height: number; position: "front" | "back"; originalLayer: "front" | "back"; originalIndex: number;
   } | null>(null);
+  
+  // State for color variant selection
+  const [selectedVariantItem, setSelectedVariantItem] = useState<{ item: DecorationInventoryItem, variants: ColorVariant[] } | null>(null);
 
-  // Auto-refresh missing themes
-  useEffect(() => {
-    const hasIglooTheme = decorations.some(item => item.id === "deco-igloo-floor");
-    const hasKrazyTrim = decorations.some(item => item.id === "deco-krazy-trim");
-    const hasAeroTrim = decorations.some(item => item.id === "deco-aero-trim");
-    if (!hasIglooTheme || !hasKrazyTrim || !hasAeroTrim) {
-      if (import.meta.env.DEV) console.log("Missing new theme items, triggering auto-refresh");
-      void handleRefreshFurniture();
-    }
-  }, [decorations, handleRefreshFurniture]);
-
-  const handleSelectFurniture = (item: DecorationInventoryItem) => {
-    if (item.type === "furniture") {
-      setSelectedFurniture(item);
-      setShowPlacementOverlay(true);
-    } else {
-      setRoomLayer(item.type, item.src);
-    }
-  };
-
-  const handlePlaceFurniture = (item: RoomDecorItem, position: "front" | "back") => {
-    if (replaceCoords && replaceCoords.originalIndex !== undefined && replaceCoords.originalLayer) {
-      updateDecorItem(replaceCoords.originalLayer, replaceCoords.originalIndex, item, position);
-      setReplaceCoords(null);
-    } else {
-      addDecorItem(item, position);
-    }
-    setShowPlacedFurniture(true);
-  };
-
-  const filteredItems = useMemo(() => {
-    const items = getFilteredDecorations(selectedSubCategory);
-    if (selectedSubCategory === "furniture") {
-      const itemCounts = countItemQuantities(items);
-      const uniqueItems = Array.from(new Map(items.map(item => [item.id, item])).values());
-      return uniqueItems.map(item => ({ ...item, quantity: itemCounts.get(item.id) || 1 })) as DecorationInventoryItemWithQuantity[];
-    }
-    return items;
-  }, [getFilteredDecorations, selectedSubCategory]);
-
-  const handleSubCategoryChange = (category: DecorationItemType) => {
-    if (category === selectedSubCategory) return;
-    setIsTransitioning(true);
-    setSelectedSubCategory(category);
-    window.setTimeout(() => setIsTransitioning(false), 150);
-  };
 
   const handleRefreshFurniture = useCallback(async () => {
     setIsRefreshing(true);
@@ -550,12 +561,82 @@ export default function DecorationPage() {
     }
   }, [decorations]);
 
+  // Auto-refresh missing themes
+  useEffect(() => {
+    const hasIglooTheme = decorations.some(item => item.id === "deco-igloo-floor");
+    const hasKrazyTrim = decorations.some(item => item.id === "deco-krazy-trim");
+    const hasAeroTrim = decorations.some(item => item.id === "deco-aero-trim");
+    if (!hasIglooTheme || !hasKrazyTrim || !hasAeroTrim) {
+      if (import.meta.env.DEV) console.log("Missing new theme items, triggering auto-refresh");
+      void handleRefreshFurniture();
+    }
+  }, [decorations, handleRefreshFurniture]);
+
+  const handleItemClick = (item: DecorationInventoryItem) => {
+    if (item.type === "furniture") {
+      setSelectedFurniture(item);
+      setShowPlacementOverlay(true);
+    } else {
+      // Check for color variants
+      const variants = getItemVariants(item.id);
+      if (variants) {
+        setSelectedVariantItem({ item, variants });
+      } else {
+        setRoomLayer(item.type, item.src);
+      }
+    }
+  };
+
+  const handleVariantSelect = (variant: ColorVariant) => {
+    if (!selectedVariantItem) return;
+    const { item } = selectedVariantItem;
+    if (item.type === 'furniture') return;
+    const newSrc = getVariantSrc(item.src, variant.fileSuffix);
+    setRoomLayer(item.type, newSrc);
+    setSelectedVariantItem(null);
+  };
+
+
+  const handlePlaceFurniture = (item: RoomDecorItem, position: "front" | "back") => {
+    if (replaceCoords && replaceCoords.originalIndex !== undefined && replaceCoords.originalLayer) {
+      updateDecorItem(replaceCoords.originalLayer, replaceCoords.originalIndex, item, position);
+      setReplaceCoords(null);
+    } else {
+      addDecorItem(item, position);
+    }
+    setShowPlacedFurniture(true);
+  };
+
+  const filteredItems = useMemo(() => {
+    let items = getFilteredDecorations(selectedSubCategory);
+
+    // Filter by furniture sub-category if applicable
+    if (selectedSubCategory === "furniture" && furnitureSubCategory !== "All") {
+      items = items.filter(item => item.id.includes(`-${furnitureSubCategory.toLowerCase()}-`));
+    }
+
+    if (selectedSubCategory === "furniture") {
+      const itemCounts = countItemQuantities(items);
+      const uniqueItems = Array.from(new Map(items.map(item => [item.id, item])).values());
+      return uniqueItems.map(item => ({ ...item, quantity: itemCounts.get(item.id) || 1 })) as DecorationInventoryItemWithQuantity[];
+    }
+    return items;
+  }, [getFilteredDecorations, selectedSubCategory, furnitureSubCategory]);
+
+  const handleSubCategoryChange = (category: DecorationItemType) => {
+    if (category === selectedSubCategory) return;
+    setIsTransitioning(true);
+    setSelectedSubCategory(category);
+    window.setTimeout(() => setIsTransitioning(false), 150);
+  };
+
   const furnitureItemsExist = useMemo(() => decorations.some(item => item.type === "furniture"), [decorations]);
 
   const handleReplaceFurniture = (position: "front" | "back", index: number) => {
     const itemsArray = position === "front" ? roomLayers.frontDecor : roomLayers.backDecor;
     if (index < 0 || index >= itemsArray.length) return;
     const itemToReplace = itemsArray[index];
+    if (!itemToReplace) return;
     setSelectedFurniture({
       ...(decorations.find(item => item.src === itemToReplace.src) || {
         id: `temp-${Date.now()}`, name: "Furniture Item", itemCategory: "decoration" as const, type: "furniture" as const, src: itemToReplace.src, price: 0
@@ -580,14 +661,29 @@ export default function DecorationPage() {
       </div>
 
       {selectedSubCategory === "furniture" && (
-        <div className="furniture-management-bar">
-          <button className={`furniture-view-toggle ${showPlacedFurniture ? 'active' : ''}`} onClick={() => setShowPlacedFurniture(!showPlacedFurniture)}>
-            {showPlacedFurniture ? "Select Furniture" : "Manage Placed Furniture"}
-          </button>
-          <button className={`furniture-refresh-button ${!furnitureItemsExist ? 'important' : ''} ${isRefreshing ? 'loading' : ''}`} onClick={() => void handleRefreshFurniture()} disabled={isRefreshing}>
-            {isRefreshing ? 'Loading...' : (!furnitureItemsExist ? 'Click to Load Furniture!' : 'Refresh Furniture')}
-          </button>
-        </div>
+        <>
+          <div className="furniture-management-bar">
+            <button className={`furniture-view-toggle ${showPlacedFurniture ? 'active' : ''}`} onClick={() => setShowPlacedFurniture(!showPlacedFurniture)}>
+              {showPlacedFurniture ? "Select Furniture" : "Manage Placed Furniture"}
+            </button>
+            <button className={`furniture-refresh-button ${!furnitureItemsExist ? 'important' : ''} ${isRefreshing ? 'loading' : ''}`} onClick={() => void handleRefreshFurniture()} disabled={isRefreshing}>
+              {isRefreshing ? 'Loading...' : (!furnitureItemsExist ? 'Click to Load Furniture!' : 'Refresh Furniture')}
+            </button>
+          </div>
+          {!showPlacedFurniture && (
+            <div className="furniture-sub-category-bar">
+              {["All", "Basic", "Interstellar", "Jet", "NeonIndustrial", "Pastel", "Stone", "Wacky", "Woodland"].map(category => (
+                <button 
+                  key={category} 
+                  className={`furniture-tab-button ${furnitureSubCategory === category ? 'active' : ''}`} 
+                  onClick={() => setFurnitureSubCategory(category)}
+                >
+                  {category}
+                </button>
+              ))}
+            </div>
+          )}
+        </>
       )}
 
       {selectedSubCategory === "furniture" && !furnitureItemsExist && (
@@ -609,18 +705,25 @@ export default function DecorationPage() {
             {filteredItems.length === 0 ? (
               <div className="sq-decor-empty-message">No {selectedSubCategory} items available</div>
             ) : (
-              filteredItems.map(item => (
-                <button key={item.id} className="sq-decor-item-slot" onClick={() => handleSelectFurniture(item)}>
-                  <ZoomedImage src={item.src} alt={item.name} />
-                  <div className="sq-decor-item-info">
-                    <span className="sq-decor-item-name-text">{item.name}</span>
-                    <span className="sq-decor-item-price-text">{item.price} coins</span>
-                    {selectedSubCategory === "furniture" && 'quantity' in item && (item as DecorationInventoryItemWithQuantity).quantity > 1 && (
-                      <span className="sq-decor-item-quantity-badge">x{(item as DecorationInventoryItemWithQuantity).quantity}</span>
-                    )}
-                  </div>
-                </button>
-              ))
+              filteredItems.map(item => {
+                return (
+                  <button key={item.id} className="sq-decor-item-slot" onClick={() => handleItemClick(item)}>
+                    <ZoomedImage 
+                      src={item.src} 
+                      alt={item.name} 
+                      fit={['wall', 'floor', 'ceiling', 'trim', 'overlay'].includes(item.type) ? 'cover' : 'contain'}
+                    />
+  
+                    <div className="sq-decor-item-info">
+                      <span className="sq-decor-item-name-text">{item.name}</span>
+                      <span className="sq-decor-item-price-text">{item.price} coins</span>
+                      {selectedSubCategory === "furniture" && 'quantity' in item && (item as DecorationInventoryItemWithQuantity).quantity > 1 && (
+                        <span className="sq-decor-item-quantity-badge">x{(item as DecorationInventoryItemWithQuantity).quantity}</span>
+                      )}
+                    </div>
+                  </button>
+                );
+              })
             )}
           </div>
         )}
@@ -647,6 +750,15 @@ export default function DecorationPage() {
           initialPosition={replaceCoords}
         />
       )}
+
+      {selectedVariantItem && (
+        <VariantSelectionOverlay
+          item={selectedVariantItem.item}
+          variants={selectedVariantItem.variants}
+          onSelect={handleVariantSelect}
+          onClose={() => setSelectedVariantItem(null)}
+        />
+      )}
     </div>
   );
-} 
+}

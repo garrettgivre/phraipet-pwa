@@ -1,8 +1,14 @@
 export async function calculateVisibleBounds(imageSrc: string): Promise<{ x: number; y: number; width: number; height: number; naturalWidth: number; naturalHeight: number }> {
   return new Promise((resolve, reject) => { // reject is now used
     const img = new Image();
+    
+    // Only use crossOrigin if it's likely needed (not for data URIs or relative paths)
+    // Actually for local development with Vite, "anonymous" is usually fine, but 
+    // for some file serving setups it can cause issues. 
+    // We'll keep it but be aware.
+    img.crossOrigin = "anonymous"; 
+
     img.src = imageSrc;
-    img.crossOrigin = "anonymous"; // Important for canvas operations if images are from different origins
 
     img.onload = () => {
       const naturalWidth = img.naturalWidth;
@@ -18,7 +24,7 @@ export async function calculateVisibleBounds(imageSrc: string): Promise<{ x: num
       }
 
       const canvas = document.createElement("canvas");
-      const ctx = canvas.getContext("2d");
+      const ctx = canvas.getContext("2d", { willReadFrequently: true });
       
       if (!ctx) {
         // Fallback if context cannot be obtained (should be rare)
@@ -37,12 +43,15 @@ export async function calculateVisibleBounds(imageSrc: string): Promise<{ x: num
         const data = imageData.data;
         let top = naturalHeight, left = naturalWidth, right = 0, bottom = 0;
         let foundPixel = false;
+        
+        // Increased threshold to ignore compression artifacts or very faint shadows
+        const ALPHA_THRESHOLD = 15;
 
         for (let yPos = 0; yPos < naturalHeight; yPos++) {
           for (let xPos = 0; xPos < naturalWidth; xPos++) {
             const index = (yPos * naturalWidth + xPos) * 4;
             const alpha = data[index + 3];
-            if (alpha > 5) { // Consider a pixel visible if alpha is slightly above 0
+            if (alpha > ALPHA_THRESHOLD) { 
               foundPixel = true;
               if (xPos < left) left = xPos;
               if (xPos > right) right = xPos;

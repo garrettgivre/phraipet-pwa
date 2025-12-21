@@ -47,7 +47,8 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection, onFeedPet,
   const [localHungerValue, setLocalHungerValue] = useState<number | null>(null);
   const [localCleanlinessValue, setLocalCleanlinessValue] = useState<number | null>(null);
   
-  const [isEditMode, setIsEditMode] = useState(false);
+  const [editMode, setEditMode] = useState<'none' | 'build' | 'decorate'>('none');
+  const isEditMode = editMode !== 'none';
   const [isInventoryOpen, setIsInventoryOpen] = useState(false);
   const [inventoryCategory, setInventoryCategory] = useState<"Food" | "Grooming" | "Toys">("Food");
   const [inventorySubCategory, setInventorySubCategory] = useState<string | undefined>(undefined);
@@ -288,7 +289,13 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection, onFeedPet,
     }
   };
   const cancelUseFood = () => { setShowConfirmDialog(false); setPendingFoodItem(null); };
-  const toggleEditMode = () => { setIsEditMode(!isEditMode); };
+  const toggleEditMode = (mode: 'build' | 'decorate') => { 
+    if (editMode === mode) {
+      setEditMode('none');
+    } else {
+      setEditMode(mode);
+    }
+  };
   const navigate = useNavigate();
   const goToSettings = () => { navigate('/settings'); };
   
@@ -308,7 +315,7 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection, onFeedPet,
   useEffect(() => {
     if (location.pathname === '/' && location.state && (location.state as any).reset) {
       setIsInventoryOpen(false);
-      setIsEditMode(false);
+      setEditMode('none');
       // Clear the state to prevent repeated resets if we stay on the page
       window.history.replaceState({}, document.title);
     }
@@ -358,18 +365,21 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection, onFeedPet,
           {roomLayersLoading && <div className="loading-spinner">Loading...</div>}
         </div>
         <div className="pet-room-border-ui">
-          <button className="decoration-button" onClick={toggleEditMode}>
-            <img src="/assets/icons/paintbrush.png" alt="Decorate Room" />
+          <button className="decoration-button build-mode" onClick={() => toggleEditMode('build')}>
+            <img src="/assets/icons/build.png" alt="Build Mode" />
           </button>
-          <div className="need-indicators">
+          <div className="need-indicators" style={{ display: isEditMode ? 'none' : 'flex' }}>
             <PetNeedsDisplay needInfo={modifiedNeedInfo} onNeedClick={handleNeedClick} />
           </div>
+          <button className="decoration-button decorate-mode" onClick={() => toggleEditMode('decorate')}>
+            <img src="/assets/icons/buy.png" alt="Decorate Mode" />
+          </button>
         </div>
       </div>
       {showConfirmDialog && (
         <ConfirmationDialog isOpen={showConfirmDialog} title="Feed Pet?" message="Would you like to feed this to your pet?" onConfirm={confirmUseFood} onCancel={cancelUseFood} />
       )}
-      <DecorStudio isOpen={isEditMode} onClose={() => setIsEditMode(false)} />
+      <DecorStudio isOpen={isEditMode} onClose={() => setEditMode('none')} mode={editMode === 'none' ? 'build' : editMode} />
       <InlineInventoryPanel isOpen={isInventoryOpen} onClose={() => setIsInventoryOpen(false)} pet={pet} onFeedPet={(i) => { void onFeedPet(i); }} onGroomPet={(i) => { void onGroomPet(i); }} onPlayWithToy={(i) => { void onPlayWithToy(i); }} initialCategory={inventoryCategory} initialSubCategory={inventorySubCategory} />
     </div>
   );

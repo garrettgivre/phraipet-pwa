@@ -1,33 +1,53 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useDecoration } from '../contexts/DecorationContext'
 import type { DecorationInventoryItem, DecorationItemType, RoomDecorItem } from '../types'
+import { getItemVariants, getVariantSrc, type ColorVariant } from '../data/itemVariants'
 import './DecorStudio.css'
 
 type EditMode = 'move' | 'rotate' | 'resize'
 const ZONES = { FLOOR: { startY: 70, endY: 100 }, WALL: { startY: 15, endY: 70 }, CEILING: { startY: 0, endY: 15 } } as const
 
-interface DecorStudioProps { isOpen: boolean; onClose: () => void }
+interface DecorStudioProps { isOpen: boolean; onClose: () => void; mode?: 'build' | 'decorate' }
 
-  interface EditableItem {
-  src: string
-  x: number
-  y: number
-  width: number
-  height: number
-  rotation: number
-    flipped?: boolean
-  layer: 'front' | 'back'
-  originalIndex?: number
-  originalLayer?: 'front' | 'back'
+interface EditableItem {
+  src: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  rotation: number;
+  flipped?: boolean;
+  flippedV?: boolean;
+  layer: 'front' | 'back';
+  originalIndex?: number | undefined;
+  originalLayer?: 'front' | 'back' | undefined;
 }
 
-export default function DecorStudio({ isOpen, onClose }: DecorStudioProps) {
+const FURNITURE_CATEGORIES = ['Comfort', 'Surface', 'Plants', 'Sculptures', 'Shelf', 'Lamps', 'Clutter', 'Art', 'Other'];
+
+const getFurnitureCategory = (item: DecorationInventoryItem): string => {
+  const name = item.name.toLowerCase();
+  
+  if (name.includes('lamp') || name.includes('light')) return 'Lamps';
+  if (name.includes('armchair') || name.includes('chair') || name.includes('bed') || name.includes('sofa')) return 'Comfort';
+  if (name.includes('dining table') || name.includes('end table') || name.includes('desk') || name.includes('table')) return 'Surface';
+  if (name.includes('plant') || name.includes('flower') || name.includes('fern')) return 'Plants';
+  if (name.includes('sculpture') || name.includes('statue')) return 'Sculptures';
+  if (name.includes('shelf') || name.includes('shelving')) return 'Shelf';
+  if (name.includes('clutter') || name.includes('gadget') || name.includes('gizmo')) return 'Clutter';
+  if (name.includes('art') || name.includes('painting') || name.includes('poster') || name.includes('hanging')) return 'Art';
+  
+  return 'Other';
+}
+
+export default function DecorStudio({ isOpen, onClose, mode = 'build' }: DecorStudioProps) {
   const { roomLayers, getFilteredDecorations, addDecorItem, updateDecorItem, removeDecorItem, reorderDecorItem, setRoomLayer } = useDecoration()
 
   const canvasRef = useRef<HTMLDivElement>(null)
   const [bounds, setBounds] = useState({ top: 0, left: 0, width: 0, height: 0 })
-  const [mode, setMode] = useState<EditMode>('move')
-  const [category, setCategory] = useState<DecorationItemType>('furniture')
+  const [dsMode, setDsMode] = useState<EditMode>('move')
+  const [category, setCategory] = useState<DecorationItemType>(mode === 'decorate' ? 'furniture' : 'wall')
+  const [furnitureSubCategory, setFurnitureSubCategory] = useState<string>('Comfort')
   const [query, setQuery] = useState('')
   const [items, setItems] = useState<DecorationInventoryItem[]>([])
   const gridRef = useRef<HTMLDivElement | null>(null)
@@ -38,6 +58,7 @@ export default function DecorStudio({ isOpen, onClose }: DecorStudioProps) {
   const start = useRef({ x: 0, y: 0 })
   const initial = useRef({ x: 0, y: 0, rot: 0, w: 0, h: 0 })
   const [snapZones, setSnapZones] = useState(true)
+  const [colorSelection, setColorSelection] = useState<{ item: DecorationInventoryItem, variants: ColorVariant[] } | null>(null)
 
   // Bottom sheet height
   const [sheetPct, setSheetPct] = useState(38)
@@ -96,7 +117,27 @@ export default function DecorStudio({ isOpen, onClose }: DecorStudioProps) {
     update(); window.addEventListener('resize', update); return () => window.removeEventListener('resize', update)
   }, [isOpen])
 
-  useEffect(() => { if (isOpen) setItems(getFilteredDecorations(category)) }, [isOpen, category, getFilteredDecorations])
+  useEffect(() => { 
+    if (!isOpen) return
+    let baseItems = getFilteredDecorations(category)
+    
+    if (mode === 'decorate' && category === 'furniture') {
+      baseItems = baseItems.filter(item => getFurnitureCategory(item) === furnitureSubCategory)
+    }
+    
+    setItems(baseItems)
+  }, [isOpen, category, getFilteredDecorations, mode, furnitureSubCategory])
+
+  // Reset category when mode changes
+  useEffect(() => {
+    if (isOpen) {
+      if (mode === 'decorate') {
+        setCategory('furniture')
+      } else {
+        setCategory('wall')
+      }
+    }
+  }, [mode, isOpen])
 
   // Ensure grid scrolls to top when switching categories
   useEffect(() => { gridRef.current?.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior }) }, [category])
@@ -149,7 +190,7 @@ export default function DecorStudio({ isOpen, onClose }: DecorStudioProps) {
   const snap = useCallback((v: number) => (snapGrid && gridPct > 0 ? Math.round(v / gridPct) * gridPct : v), [snapGrid, gridPct])
 
   const beginEdit = (e: React.PointerEvent, m: EditMode) => {
-    if (!sel) return; setMode(m); setDragging(true)
+    if (!sel) return; setDsMode(m); setDragging(true)
     e.preventDefault(); e.stopPropagation()
     // Use pointer capture to keep receiving events smoothly during drag
     try { (e.currentTarget as any).setPointerCapture?.((e as any).pointerId); pointerIdRef.current = (e as any).pointerId } catch {}
@@ -164,7 +205,7 @@ export default function DecorStudio({ isOpen, onClose }: DecorStudioProps) {
   useEffect(() => {
     const move = (e: PointerEvent) => {
       if (!dragging || !sel) return
-      if (mode === 'move') {
+      if (dsMode === 'move') {
         const r = canvasRectRef.current; if (!r) return
         const dx = e.clientX - start.current.x; const dy = e.clientY - start.current.y
         let x = initial.current.x + (dx / r.width) * 100
@@ -178,7 +219,7 @@ export default function DecorStudio({ isOpen, onClose }: DecorStudioProps) {
           selNodeRef.current.style.top = `${y}%`
         }
         updateEdgeDock()
-      } else if (mode === 'rotate') {
+      } else if (dsMode === 'rotate') {
         const r = canvasRectRef.current!; const cx0 = r.left + (r.width * initial.current.x) / 100; const cy0 = r.top + (r.height * initial.current.y) / 100
         const ang = Math.atan2(e.clientY - cy0, e.clientX - cx0) * (180 / Math.PI)
         const ang0 = Math.atan2(start.current.y - cy0, start.current.x - cx0) * (180 / Math.PI)
@@ -222,14 +263,14 @@ export default function DecorStudio({ isOpen, onClose }: DecorStudioProps) {
       }
       setSel(p => (p ? { ...p, x, y, width, height, rotation } : p))
       setDragging(false)
-      setMode('move')
+      setDsMode('move')
       try { if (pointerIdRef.current != null) selNodeRef.current?.releasePointerCapture?.(pointerIdRef.current as any) } catch {}
       pointerIdRef.current = null
       // Final dock recompute
       updateEdgeDock()
     }
     if (dragging) { document.addEventListener('pointermove', move, { passive: false }); document.addEventListener('pointerup', up, { passive: true } as any); return () => { document.removeEventListener('pointermove', move as any); document.removeEventListener('pointerup', up as any) } }
-  }, [dragging, mode, sel, snap, toPct, canvasScale])
+  }, [dragging, dsMode, sel, snap, toPct, canvasScale])
 
   const place = () => {
     if (!sel) return
@@ -243,7 +284,19 @@ export default function DecorStudio({ isOpen, onClose }: DecorStudioProps) {
   const pickExisting = (layer: 'front' | 'back', index: number) => {
     const arr = layer === 'front' ? roomLayers.frontDecor : roomLayers.backDecor
     const it = arr[index]
-    setSel({ src: it.src, x: it.x, y: it.y, width: Math.max(24, it.width || 240), height: Math.max(24, it.height || 240), rotation: it.rotation || 0, flipped: !!(it as any).flipped, layer, originalIndex: index, originalLayer: layer })
+    if (!it) return;
+    setSel({ 
+      src: it.src, 
+      x: it.x, 
+      y: it.y, 
+      width: Math.max(24, it.width || 240), 
+      height: Math.max(24, it.height || 240), 
+      rotation: it.rotation || 0, 
+      flipped: !!(it as any).flipped, 
+      layer, 
+      originalIndex: index, 
+      originalLayer: layer 
+    })
   }
 
   const nudge = (dx: number, dy: number) => setSel(p => (p ? { ...p, x: Math.max(-12, Math.min(112, (p.x + dx))), y: Math.max(-12, Math.min(112, (p.y + dy))) } : p))
@@ -251,15 +304,19 @@ export default function DecorStudio({ isOpen, onClose }: DecorStudioProps) {
   const sendForward = () => {
     if (!sel || sel.originalIndex === undefined || !sel.originalLayer) return
     const len = sel.originalLayer === 'front' ? roomLayers.frontDecor.length : roomLayers.backDecor.length
-    const nextIndex = Math.min(len - 1, sel.originalIndex + 1)
-    if (nextIndex === sel.originalIndex) return
+    // If we are already at the top, do nothing
+    if (sel.originalIndex >= len - 1) return
+    
+    const nextIndex = sel.originalIndex + 1
     reorderDecorItem(sel.originalLayer, sel.originalIndex, nextIndex)
     setSel(p => (p ? { ...p, originalIndex: nextIndex } : p))
   }
   const sendBackward = () => {
     if (!sel || sel.originalIndex === undefined || !sel.originalLayer) return
-    const nextIndex = Math.max(0, sel.originalIndex - 1)
-    if (nextIndex === sel.originalIndex) return
+    // If we are already at the bottom, do nothing
+    if (sel.originalIndex <= 0) return
+    
+    const nextIndex = sel.originalIndex - 1
     reorderDecorItem(sel.originalLayer, sel.originalIndex, nextIndex)
     setSel(p => (p ? { ...p, originalIndex: nextIndex } : p))
   }
@@ -282,7 +339,7 @@ export default function DecorStudio({ isOpen, onClose }: DecorStudioProps) {
   useEffect(() => {
     if (!isOpen) return
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') { setSel(null); return }
+      if (e.key === 'Escape') { setSel(null); setColorSelection(null); return }
       if (!sel) return
       const step = e.shiftKey ? 2 : 1
       if (['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)) e.preventDefault()
@@ -290,7 +347,7 @@ export default function DecorStudio({ isOpen, onClose }: DecorStudioProps) {
       if (e.key === 'ArrowRight') setSel(p => p ? { ...p, x: snap((p.x + step)) } : p)
       if (e.key === 'ArrowUp') setSel(p => p ? { ...p, y: snap((p.y - step)) } : p)
       if (e.key === 'ArrowDown') setSel(p => p ? { ...p, y: snap((p.y + step)) } : p)
-      if (e.key.toLowerCase() === 'r') setMode('rotate')
+      if (e.key.toLowerCase() === 'r') setDsMode('rotate')
       if (e.key === 'Enter') { e.preventDefault(); place() }
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'd') {
         e.preventDefault();
@@ -313,11 +370,74 @@ export default function DecorStudio({ isOpen, onClose }: DecorStudioProps) {
     <div className="ds-root">
       {/* Top toolbar removed; all actions via on-item handles */}
 
-      {/* Floating exit (paintbrush) positioned above the sheet */}
+      {/* Floating exit (Red X) positioned above the sheet */}
       {isOpen && (
-        <button ref={exitRef} className={`ds-exit ${draggingSheet ? 'dragging' : ''}`} style={{ bottom: `calc(${sheetPct}vh + 12px)` }} onClick={onClose} title="Exit Edit Mode">
-          <img src="/assets/icons/paintbrush.png" alt="Exit Edit Mode" />
+        <button 
+          ref={exitRef} 
+          className={`ds-exit ${draggingSheet ? 'dragging' : ''}`} 
+          style={{ bottom: `calc(${sheetPct}vh + 12px)` }} 
+          onPointerDown={(e) => e.stopPropagation()} /* Prevent dragging start */
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log("Exit clicked. Sel:", !!sel);
+            if (sel) {
+              setSel(null);
+            } else if (colorSelection) {
+              setColorSelection(null);
+            } else {
+              onClose();
+            }
+          }} 
+          title={sel ? "Cancel Selection" : "Exit Edit Mode"}
+        >
+          <div style={{ 
+            width: '36px', 
+            height: '36px', 
+            background: '#ff4444', 
+            borderRadius: '50%', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+            color: 'white',
+            fontWeight: 'bold',
+            fontSize: '18px'
+          }}>
+            ✕
+          </div>
         </button>
+      )}
+
+      {/* Color Selection Overlay */}
+      {colorSelection && (
+        <div className="ds-color-overlay" onClick={(e) => {
+          if (e.target === e.currentTarget) setColorSelection(null);
+        }}>
+          <div className="ds-color-modal">
+            <h3>Choose Color for {colorSelection.item.name}</h3>
+            <div className="ds-color-grid">
+              {colorSelection.variants.map((variant) => {
+                const variantSrc = getVariantSrc(colorSelection.item.src, variant.fileSuffix);
+                return (
+                  <button 
+                    key={variant.name}
+                    className="ds-color-option has-image"
+                    onClick={() => {
+                      setRoomLayer(colorSelection.item.type as any, variantSrc);
+                      setColorSelection(null);
+                    }}
+                    title={variant.name}
+                  >
+                    <img src={variantSrc} alt={variant.name} />
+                    <span className="ds-color-name">{variant.name}</span>
+                  </button>
+                );
+              })}
+            </div>
+            <button className="ds-btn" onClick={() => setColorSelection(null)}>Cancel</button>
+          </div>
+        </div>
       )}
 
       <div
@@ -339,15 +459,33 @@ export default function DecorStudio({ isOpen, onClose }: DecorStudioProps) {
               key={`b-${i}`}
               className="ds-item"
               src={d.src}
-              style={{ left: `${d.x}%`, top: `${d.y}%`, width: d.width ? d.width * sc : undefined, height: d.height ? d.height * sc : undefined, transform: `translate(-50%, -50%)${d.rotation ? ` rotate(${d.rotation}deg)` : ''}${(d as any).flipped ? ' scaleX(-1)' : ''}`, zIndex: 10 + i }}
-              onClick={(e) => { e.stopPropagation(); if (sel) return; pickExisting('back', i) }}
+              style={{ 
+                left: `${d.x}%`, 
+                top: `${d.y}%`, 
+                width: d.width ? d.width * sc : undefined, 
+                height: d.height ? d.height * sc : undefined, 
+                transform: `translate(-50%, -50%)${d.rotation ? ` rotate(${d.rotation}deg)` : ''}${(d as any).flipped ? ' scaleX(-1)' : ''}`, 
+                zIndex: 10 + i,
+                pointerEvents: mode === 'build' ? 'none' : 'auto' 
+              }}
+              onClick={(e) => { 
+                e.stopPropagation(); 
+                if (mode === 'build') return; 
+                if (sel) return; 
+                pickExisting('back', i) 
+              }}
               alt=""
             />
           )
         ))}
 
         {sel && (
-          <div ref={selNodeRef} className="ds-selected" style={{ left: `${sel.x}%`, top: `${sel.y}%`, width: sel.width * sc, height: sel.height * sc, transform: `translate(-50%, -50%) rotate(${sel.rotation}deg)` }} onPointerDown={(e) => { e.stopPropagation(); beginEdit(e, 'move') }}>
+          <div 
+            ref={selNodeRef} 
+            className={`ds-selected ${edgeDock.left ? 'dock-left' : ''} ${edgeDock.right ? 'dock-right' : ''} ${edgeDock.top ? 'dock-top' : ''} ${edgeDock.bottom ? 'dock-bottom' : ''}`}
+            style={{ left: `${sel.x}%`, top: `${sel.y}%`, width: sel.width * sc, height: sel.height * sc, transform: `translate(-50%, -50%) rotate(${sel.rotation}deg)` }} 
+            onPointerDown={(e) => { e.stopPropagation(); beginEdit(e, 'move') }}
+          >
             <img src={sel.src} alt="" draggable={false} style={{ transform: `${sel.flipped ? 'scaleX(-1) ' : ''}${(sel as any).flippedV ? 'scaleY(-1)' : ''}` }} />
             <button className="ds-handle confirm" title={sel.originalIndex !== undefined ? 'Update' : 'Place'} onClick={(e) => { e.preventDefault(); e.stopPropagation(); place() }}>✓</button>
             <button className="ds-handle delete" title="Delete" onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (sel.originalIndex !== undefined && sel.originalLayer) { removeDecorItem(sel.originalLayer, sel.originalIndex); setSel(null) } }}>✕</button>
@@ -355,8 +493,8 @@ export default function DecorStudio({ isOpen, onClose }: DecorStudioProps) {
             <button className="ds-handle flipH" title="Flip Horizontal" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSel(p => p ? { ...p, flipped: !p.flipped } : p) }}>↔</button>
             <button className="ds-handle rotate" title="Rotate" onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); beginEdit(e as any, 'rotate') }}>↻</button>
             <button className="ds-handle flipV" title="Flip Vertical" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSel(p => p ? { ...p, flippedV: !(p as any).flippedV } : p) }}>↕</button>
-            <button className="ds-handle zdown" title="Send Backward" onClick={(e) => { e.preventDefault(); e.stopPropagation(); sendBackward() }}>−</button>
-            <button className="ds-handle zup" title="Bring Forward" onClick={(e) => { e.preventDefault(); e.stopPropagation(); sendForward() }}>+</button>
+            <button className="ds-handle zdown" title="Send Backward" onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); sendBackward() }}>−</button>
+            <button className="ds-handle zup" title="Bring Forward" onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); sendForward() }}>+</button>
           </div>
         )}
 
@@ -367,8 +505,21 @@ export default function DecorStudio({ isOpen, onClose }: DecorStudioProps) {
               key={`f-${i}`}
               className="ds-item"
               src={d.src}
-              style={{ left: `${d.x}%`, top: `${d.y}%`, width: d.width ? d.width * sc : undefined, height: d.height ? d.height * sc : undefined, transform: `translate(-50%, -50%)${d.rotation ? ` rotate(${d.rotation}deg)` : ''}${(d as any).flipped ? ' scaleX(-1)' : ''}`, zIndex: 40 + i }}
-              onClick={(e) => { e.stopPropagation(); if (sel) return; pickExisting('front', i) }}
+              style={{ 
+                left: `${d.x}%`, 
+                top: `${d.y}%`, 
+                width: d.width ? d.width * sc : undefined, 
+                height: d.height ? d.height * sc : undefined, 
+                transform: `translate(-50%, -50%)${d.rotation ? ` rotate(${d.rotation}deg)` : ''}${(d as any).flipped ? ' scaleX(-1)' : ''}`, 
+                zIndex: 40 + i,
+                pointerEvents: mode === 'build' ? 'none' : 'auto'
+              }}
+              onClick={(e) => { 
+                e.stopPropagation(); 
+                if (mode === 'build') return; 
+                if (sel) return; 
+                pickExisting('front', i) 
+              }}
               alt=""
             />
           )
@@ -382,8 +533,8 @@ export default function DecorStudio({ isOpen, onClose }: DecorStudioProps) {
           <button className="ds-btn" onClick={() => nudge(1, 0)}>▶</button>
           <button className="ds-btn" onClick={() => nudge(0, -1)}>▲</button>
           <button className="ds-btn" onClick={() => nudge(0, 1)}>▼</button>
-          <button className="ds-btn" onClick={sendBackward}>Send back</button>
-          <button className="ds-btn" onClick={sendForward}>Bring forward</button>
+          <button className="ds-btn" onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); sendBackward(); }}>Send back</button>
+          <button className="ds-btn" onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); sendForward(); }}>Bring forward</button>
           <button className="ds-btn" onClick={() => setSel(p => p ? { ...p, originalIndex: undefined, originalLayer: p.layer, x: Math.min(100, p.x + 4), y: Math.min(100, p.y + 4) } : p)}>Duplicate</button>
           <button className="ds-btn" onClick={sendToBack}>To back</button>
           <button className="ds-btn" onClick={sendToFront}>To front</button>
@@ -428,29 +579,70 @@ export default function DecorStudio({ isOpen, onClose }: DecorStudioProps) {
 
         <div className="ds-header">
           <div className="ds-tabs">
-            {(['furniture','wall','floor','ceiling','trim','overlay'] as DecorationItemType[]).map(cat => (
-              <button key={cat} className={`ds-tab ${category === cat ? 'active' : ''}`} onClick={() => setCategory(cat)}>{cat.charAt(0).toUpperCase() + cat.slice(1)}</button>
-            ))}
+            {mode === 'build' ? (
+              (['wall','floor','ceiling','trim','overlay'] as DecorationItemType[]).map(cat => (
+                <button key={cat} className={`ds-tab ${category === cat ? 'active' : ''}`} onClick={() => setCategory(cat)}>{cat.charAt(0).toUpperCase() + cat.slice(1)}</button>
+              ))
+            ) : (
+              FURNITURE_CATEGORIES.map(subCat => (
+                <button key={subCat} className={`ds-tab ${furnitureSubCategory === subCat ? 'active' : ''}`} onClick={() => setFurnitureSubCategory(subCat)}>{subCat}</button>
+              ))
+            )}
           </div>
         </div>
         <div className="ds-find">
           <input placeholder="Search items" value={query} onChange={(e) => setQuery(e.target.value)} />
         </div>
-        <div className="ds-grid" ref={gridRef}>
+        
+        {/* Remove All Overlays Button */}
+        {category === 'overlay' && (
+          <div style={{ padding: '0 8px' }}>
+            <button className="ds-remove-all-btn" onClick={() => setRoomLayer('overlay', '')}>
+              Remove All Overlays
+            </button>
+          </div>
+        )}
+
+        <div 
+          className="ds-grid" 
+          ref={gridRef}
+          style={mode === 'decorate' ? { gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))' } : undefined}
+        >
           {visibleItems.map(({ item: it, remaining }) => (
             <button
               key={it.id}
               className="ds-slot"
+              style={mode === 'decorate' ? { padding: '8px', gap: '4px' } : undefined}
               onClick={() => {
-                if (it.type !== 'furniture') { setRoomLayer(it.type, it.src); return }
+                if (it.type !== 'furniture') { 
+                  // Check for variants first
+                  const variants = getItemVariants(it.id);
+                  if (variants && variants.length > 0) {
+                    setColorSelection({ item: it, variants });
+                  } else {
+                    setRoomLayer(it.type as any, it.src);
+                  }
+                  return;
+                }
                 setSel({ src: it.src, x: 50, y: 58, width: 240, height: 240, rotation: 0, layer: 'back' })
                 setSheetPct(32)
               }}
             >
-              <img src={it.src} alt={it.name} />
-              <div>{it.name}</div>
+              <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, minHeight: 0 }}>
+                <img 
+                  src={it.src} 
+                  alt={it.name} 
+                  style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                />
+              </div>
+              <div style={mode === 'decorate' ? { fontSize: '11px', lineHeight: '1.2', textAlign: 'center', width: '100%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } : undefined}>{it.name}</div>
               {category === 'furniture' && remaining > 1 && (
-                <span className="ds-badge">{remaining}</span>
+                <span className="ds-badge" style={mode === 'decorate' ? { fontSize: '10px', padding: '1px 4px', position: 'absolute', top: '4px', right: '4px' } : undefined}>{remaining}</span>
+              )}
+              
+              {/* Swatch Indicator - Moved to end for stacking context */}
+              {getItemVariants(it.id) && getItemVariants(it.id)!.length > 0 && (
+                <img src="/assets/icons/swatch.png" className="ds-swatch-indicator" alt="Has variants" title="Has color options" />
               )}
             </button>
           ))}
@@ -459,5 +651,3 @@ export default function DecorStudio({ isOpen, onClose }: DecorStudioProps) {
     </div>
   )
 }
-
-

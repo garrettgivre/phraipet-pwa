@@ -126,18 +126,41 @@ export function DecorationProvider({ children }: { children: ReactNode }) {
           const decorationsData = snapshot.val() as DecorationInventoryItem[] | null;
           
           if (decorationsData && Array.isArray(decorationsData)) {
-            // Make sure price property is correctly converted to number
+            // Ensure price property is correctly converted to number and sync with latest definitions
             const fixedData = decorationsData.map(item => {
-              if (item.price === undefined || item.price === null) {
-                // Look up the default price from our hardcoded decorations
-                const defaultItem = defaultDecorationItems.find(defaultItem => defaultItem.id === item.id);
+              const defaultItem = defaultDecorationItems.find(def => def.id === item.id);
+              
+              // If we have a default definition, sync important properties to ensure 
+              // the user has the latest assets (src, colorOptions) and metadata
+              if (defaultItem) {
                 return {
                   ...item,
-                  price: defaultItem?.price || 0
+                  src: defaultItem.src, // Update src in case it changed (e.g. basic-wall.png -> basic-wall-blue.png)
+                  name: defaultItem.name, // Update name
+                  colorOptions: defaultItem.colorOptions, // Sync color options
+                  price: defaultItem.price, // Sync price
+                  itemCategory: defaultItem.itemCategory, // Sync category
+                  type: defaultItem.type // Sync type
+                };
+              }
+              
+              // Fallback for items not in default list (custom or legacy)
+              if (item.price === undefined || item.price === null) {
+                return {
+                  ...item,
+                  price: 0
                 };
               }
               return item;
             });
+            
+            // Check if we need to save the updates back to Firebase
+            // (if data changed during the fix/sync process)
+            if (JSON.stringify(fixedData) !== JSON.stringify(decorationsData)) {
+              if (import.meta.env.DEV) console.log("Syncing decorations with latest definitions...");
+              set(decorationsRef, fixedData).catch(err => console.error("Error syncing decorations:", err));
+            }
+
             setDecorations(fixedData);
           } else {
             // If no data in Firebase, use defaults immediately without saving
@@ -340,27 +363,46 @@ export function DecorationProvider({ children }: { children: ReactNode }) {
     setRoomLayers(prevLayers => {
       const updatedLayers = { ...prevLayers };
       
-      // Remove from original layer
-      if (originalLayer === "front") {
-        const newFrontDecor = [...updatedLayers.frontDecor];
-        if (originalIndex < newFrontDecor.length) {
-          newFrontDecor.splice(originalIndex, 1);
-          updatedLayers.frontDecor = newFrontDecor;
+      // If the layer is changing, we must remove from old and add to new (at the end)
+      if (originalLayer !== newLayer) {
+        // Remove from original layer
+        if (originalLayer === "front") {
+          const newFrontDecor = [...updatedLayers.frontDecor];
+          if (originalIndex < newFrontDecor.length) {
+            newFrontDecor.splice(originalIndex, 1);
+            updatedLayers.frontDecor = newFrontDecor;
+          }
+        } else {
+          const newBackDecor = [...updatedLayers.backDecor];
+          if (originalIndex < newBackDecor.length) {
+            newBackDecor.splice(originalIndex, 1);
+            updatedLayers.backDecor = newBackDecor;
+          }
+        }
+        
+        // Add to new layer (append to end)
+        const itemWithPosition = { ...newItem, position: newLayer };
+        if (newLayer === "front") {
+          updatedLayers.frontDecor = [...updatedLayers.frontDecor, itemWithPosition];
+        } else {
+          updatedLayers.backDecor = [...updatedLayers.backDecor, itemWithPosition];
         }
       } else {
-        const newBackDecor = [...updatedLayers.backDecor];
-        if (originalIndex < newBackDecor.length) {
-          newBackDecor.splice(originalIndex, 1);
-          updatedLayers.backDecor = newBackDecor;
+        // Same layer: Update in place to preserve Z-index
+        const itemWithPosition = { ...newItem, position: newLayer };
+        if (newLayer === "front") {
+          const newFrontDecor = [...updatedLayers.frontDecor];
+          if (originalIndex < newFrontDecor.length) {
+            newFrontDecor[originalIndex] = itemWithPosition;
+            updatedLayers.frontDecor = newFrontDecor;
+          }
+        } else {
+          const newBackDecor = [...updatedLayers.backDecor];
+          if (originalIndex < newBackDecor.length) {
+            newBackDecor[originalIndex] = itemWithPosition;
+            updatedLayers.backDecor = newBackDecor;
+          }
         }
-      }
-      
-      // Add to new layer
-      const itemWithPosition = { ...newItem, position: newLayer };
-      if (newLayer === "front") {
-        updatedLayers.frontDecor = [...updatedLayers.frontDecor, itemWithPosition];
-      } else {
-        updatedLayers.backDecor = [...updatedLayers.backDecor, itemWithPosition];
       }
       
       // Update the combined decor array
