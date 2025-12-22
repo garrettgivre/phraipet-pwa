@@ -39,10 +39,37 @@
 /* Furniture management bar */
 .furniture-management-bar {
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
+  align-items: center;
   padding: 10px;
   background-color: #f5f5f5;
   border-bottom: 1px solid #dde1e6;
+  gap: 10px;
+}
+
+.buy-mode-switch {
+  display: flex;
+  background-color: #e0e0e0;
+  border-radius: 20px;
+  padding: 2px;
+}
+
+.mode-button {
+  padding: 6px 12px;
+  background: transparent;
+  border: none;
+  border-radius: 18px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mode-button.active {
+  background-color: #3498db;
+  color: white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .furniture-view-toggle {

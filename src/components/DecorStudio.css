@@ -228,3 +228,7 @@
 .ds-selected.dock-bottom .ds-handle.rotate {
     transform: translateX(-50%);
 }
+
+.ds-room-nav-container {
+  display: none; /* Hide internal room navigator as we use the header one */
+}

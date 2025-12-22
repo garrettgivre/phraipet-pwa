@@ -51,13 +51,13 @@ export default function DecorStudio({ isOpen, onClose, mode = 'build' }: DecorSt
   const [query, setQuery] = useState('')
   const [items, setItems] = useState<DecorationInventoryItem[]>([])
   const gridRef = useRef<HTMLDivElement | null>(null)
-  const [snapGrid, setSnapGrid] = useState(true)
-  const [gridPct, setGridPct] = useState(5)
+  const [snapGrid] = useState(true)
+  const [gridPct] = useState(5)
   const [dragging, setDragging] = useState(false)
   const [sel, setSel] = useState<EditableItem | null>(null)
   const start = useRef({ x: 0, y: 0 })
   const initial = useRef({ x: 0, y: 0, rot: 0, w: 0, h: 0 })
-  const [snapZones, setSnapZones] = useState(true)
+  const [snapZones] = useState(true)
   const [colorSelection, setColorSelection] = useState<{ item: DecorationInventoryItem, variants: ColorVariant[] } | null>(null)
 
   // Bottom sheet height

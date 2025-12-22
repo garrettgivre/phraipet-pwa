@@ -1,4 +1,3 @@
-/* src/components/Header.css */
 .app-header {
   position: fixed;
   top: 0;
@@ -132,16 +131,6 @@
   transition: stroke-dasharray 0.3s;
 }
 
-.app-header .need-icon-image { /* Class for the <image> tag if used */
-  /* Styling for the icon image within the SVG */
-  /* For example:
-  width: 60%;
-  height: 60%;
-  transform-origin: center;
-  transform: translate(20%, 20%); / Adjust if icons are not centered /
-  */
-}
-
 .currency-container {
   display: flex;
   align-items: center;
@@ -173,6 +162,37 @@
   width: 1px;
   height: 16px;
   background-color: #ddd;
+}
+
+.header-room-nav {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 85px; /* Match wavy background height */
+  top: 0;
+  z-index: 2147483647; /* Ensure it's always on top, matching header */
+  overflow: visible;
+}
+
+.header-room-nav .room-navigator-overlay {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 0;
+  width: 68px;
+  height: 68px;
+}
+
+.header-room-nav .room-menu-trigger {
+  margin-top: 0;
+}
+
+.header-room-nav .current-room-icon {
+  width: 68px;
+  height: 68px;
 }
 
 .coin-icon {

@@ -61,6 +61,71 @@ export interface RoomDecorItem {
 // Defines the types of decoration items available in the inventory.
 export type DecorationItemType = "floor" | "wall" | "ceiling" | "trim" | "furniture" | "overlay";
 
+export type FurnitureType = 
+  | "armchair" 
+  | "bed" 
+  | "diningchair" 
+  | "diningtable" 
+  | "endtable" 
+  | "floorlamp" 
+  | "fridge" 
+  | "oven" 
+  | "plant" 
+  | "sculpture" 
+  | "shelf" 
+  | "shower" 
+  | "sink" 
+  | "tablelamp" 
+  | "toilet" 
+  | "wallart" 
+  | "clutter" 
+  | "hanging";
+
+export type DecorationTheme = 
+  | "basic" 
+  | "classic" 
+  | "neosteel" 
+  | "science" 
+  | "aero" 
+  | "igloo" 
+  | "candy" 
+  | "krazy" 
+  | "wacky" 
+  | "artdeco" 
+  | "tugi" 
+  | "zany" 
+  | "toybox" 
+  | "stone" 
+  | "interstellar" 
+  | "neonindustrial" 
+  | "jet" 
+  | "pastel" 
+  | "woodland"
+  | "caledo";
+
+export type RoomId = 
+  | "living-room" 
+  | "bathroom" 
+  | "bedroom" 
+  | "study" 
+  | "backyard" 
+  | "frontyard" 
+  | "dining-room" 
+  | "kitchen";
+
+export interface RoomLayers {
+  floor: string;
+  wall: string;
+  ceiling: string;
+  trim: string;
+  frontDecor: RoomDecorItem[];
+  backDecor: RoomDecorItem[];
+  decor: RoomDecorItem[];
+  overlay: string;
+}
+
+export type AllRoomsLayers = Record<string, RoomLayers>;
+
 // Defines the categories for food items.
 export type FoodCategory = "Treat" | "Snack" | "LightMeal" | "HeartyMeal" | "Feast";
 
@@ -84,6 +149,8 @@ interface BaseInventoryItem {
 export interface DecorationInventoryItem extends BaseInventoryItem {
   itemCategory: "decoration";
   type: DecorationItemType;
+  furnitureType?: FurnitureType | undefined;
+  theme?: DecorationTheme | undefined;
 }
 
 // Interface for food items as they appear in the inventory.
@@ -183,15 +250,4 @@ export interface AppHotspot {
   height?: number;   // Original height from Tiled
   origX?: number;    // Original X position from Tiled
   origY?: number;    // Original Y position from Tiled
-}
-
-export interface RoomLayers {
-  floor: string;
-  wall: string;
-  ceiling: string;
-  trim: string;
-  frontDecor: RoomDecorItem[];
-  backDecor: RoomDecorItem[];
-  decor: RoomDecorItem[];
-  overlay: string;
 }

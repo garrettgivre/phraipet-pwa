@@ -537,6 +537,10 @@ export default function DecorationPage() {
   const [selectedSubCategory, setSelectedSubCategory] = useState<DecorationItemType>("wall");
   const [isRefreshing, setIsRefreshing] = useState(false);
   
+  // New states for buy mode and filtering
+  const [buyMode, setBuyMode] = useState<"type" | "theme">("type");
+  const [selectedTheme, setSelectedTheme] = useState<string>("All");
+  
   // New states for furniture placement
   const [selectedFurniture, setSelectedFurniture] = useState<DecorationInventoryItem | null>(null);
   const [showPlacementOverlay, setShowPlacementOverlay] = useState(false);
@@ -610,9 +614,22 @@ export default function DecorationPage() {
   const filteredItems = useMemo(() => {
     let items = getFilteredDecorations(selectedSubCategory);
 
-    // Filter by furniture sub-category if applicable
-    if (selectedSubCategory === "furniture" && furnitureSubCategory !== "All") {
-      items = items.filter(item => item.id.includes(`-${furnitureSubCategory.toLowerCase()}-`));
+    // Apply filters based on buy mode
+    if (selectedSubCategory === "furniture") {
+      if (buyMode === "type") {
+        if (furnitureSubCategory !== "All") {
+          items = items.filter(item => item.furnitureType === furnitureSubCategory.toLowerCase());
+        }
+      } else {
+        if (selectedTheme !== "All") {
+          items = items.filter(item => item.theme === selectedTheme.toLowerCase());
+        }
+      }
+    } else {
+      // For non-furniture items, we can still filter by theme if in theme mode
+      if (buyMode === "theme" && selectedTheme !== "All") {
+        items = items.filter(item => item.theme === selectedTheme.toLowerCase());
+      }
     }
 
     if (selectedSubCategory === "furniture") {
@@ -621,7 +638,7 @@ export default function DecorationPage() {
       return uniqueItems.map(item => ({ ...item, quantity: itemCounts.get(item.id) || 1 })) as DecorationInventoryItemWithQuantity[];
     }
     return items;
-  }, [getFilteredDecorations, selectedSubCategory, furnitureSubCategory]);
+  }, [getFilteredDecorations, selectedSubCategory, furnitureSubCategory, buyMode, selectedTheme]);
 
   const handleSubCategoryChange = (category: DecorationItemType) => {
     if (category === selectedSubCategory) return;
@@ -660,30 +677,59 @@ export default function DecorationPage() {
         {selectedSubCategory === "furniture" ? "Furniture & Decorations" : `${capitalizeFirstLetter(selectedSubCategory)} Decorations`}
       </div>
 
-      {selectedSubCategory === "furniture" && (
-        <>
-          <div className="furniture-management-bar">
-            <button className={`furniture-view-toggle ${showPlacedFurniture ? 'active' : ''}`} onClick={() => setShowPlacedFurniture(!showPlacedFurniture)}>
-              {showPlacedFurniture ? "Select Furniture" : "Manage Placed Furniture"}
-            </button>
-            <button className={`furniture-refresh-button ${!furnitureItemsExist ? 'important' : ''} ${isRefreshing ? 'loading' : ''}`} onClick={() => void handleRefreshFurniture()} disabled={isRefreshing}>
-              {isRefreshing ? 'Loading...' : (!furnitureItemsExist ? 'Click to Load Furniture!' : 'Refresh Furniture')}
-            </button>
-          </div>
-          {!showPlacedFurniture && (
-            <div className="furniture-sub-category-bar">
-              {["All", "Basic", "Interstellar", "Jet", "NeonIndustrial", "Pastel", "Stone", "Wacky", "Woodland"].map(category => (
+      <div className="furniture-management-bar">
+        {selectedSubCategory === "furniture" && (
+          <button className={`furniture-view-toggle ${showPlacedFurniture ? 'active' : ''}`} onClick={() => setShowPlacedFurniture(!showPlacedFurniture)}>
+            {showPlacedFurniture ? "Select Furniture" : "Manage Placed Furniture"}
+          </button>
+        )}
+        <div className="buy-mode-switch">
+          <button 
+            className={`mode-button ${buyMode === 'type' ? 'active' : ''}`} 
+            onClick={() => setBuyMode('type')}
+          >
+            By Type
+          </button>
+          <button 
+            className={`mode-button ${buyMode === 'theme' ? 'active' : ''}`} 
+            onClick={() => setBuyMode('theme')}
+          >
+            By Theme
+          </button>
+        </div>
+        {selectedSubCategory === "furniture" && (
+          <button className={`furniture-refresh-button ${!furnitureItemsExist ? 'important' : ''} ${isRefreshing ? 'loading' : ''}`} onClick={() => void handleRefreshFurniture()} disabled={isRefreshing}>
+            {isRefreshing ? 'Loading...' : (!furnitureItemsExist ? 'Click to Load Furniture!' : 'Refresh Furniture')}
+          </button>
+        )}
+      </div>
+
+      {!showPlacedFurniture && (
+        <div className="furniture-sub-category-bar">
+          {buyMode === "type" ? (
+            selectedSubCategory === "furniture" ? (
+              ["All", "Armchair", "Bed", "DiningChair", "DiningTable", "EndTable", "FloorLamp", "Fridge", "Oven", "Plant", "Sculpture", "Shelf", "Shower", "Sink", "TableLamp", "Toilet", "WallArt", "Clutter", "Hanging"].map(type => (
                 <button 
-                  key={category} 
-                  className={`furniture-tab-button ${furnitureSubCategory === category ? 'active' : ''}`} 
-                  onClick={() => setFurnitureSubCategory(category)}
+                  key={type} 
+                  className={`furniture-tab-button ${furnitureSubCategory === type ? 'active' : ''}`} 
+                  onClick={() => setFurnitureSubCategory(type)}
                 >
-                  {category}
+                  {capitalizeFirstLetter(type)}
                 </button>
-              ))}
-            </div>
+              ))
+            ) : null
+          ) : (
+            ["All", "Basic", "Classic", "NeoSteel", "Science", "Aero", "Igloo", "Candy", "Krazy", "Wacky", "ArtDeco", "Tugi", "Zany", "Toybox", "Stone", "Interstellar", "NeonIndustrial", "Jet", "Pastel", "Woodland", "Caledo"].map(theme => (
+              <button 
+                key={theme} 
+                className={`furniture-tab-button ${selectedTheme === theme ? 'active' : ''}`} 
+                onClick={() => setSelectedTheme(theme)}
+              >
+                {theme}
+              </button>
+            ))
           )}
-        </>
+        </div>
       )}
 
       {selectedSubCategory === "furniture" && !furnitureItemsExist && (

@@ -35,7 +35,7 @@ interface InlineInventoryPanelProps {
   onGroomPet: (item: GroomingInventoryItem) => void;
   onPlayWithToy: (item: ToyInventoryItem) => void;
   initialCategory?: MainCategory;
-  initialSubCategory?: string;
+  initialSubCategory?: string | undefined;
 }
 
 export default function InlineInventoryPanel({ 

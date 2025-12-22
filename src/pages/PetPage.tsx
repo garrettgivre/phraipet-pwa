@@ -1,6 +1,6 @@
 // src/pages/PetPage.tsx
-import React, { useState, useEffect } from "react";
-import { BrowserRouter, Routes, Route, useLocation, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import type { Pet, Need, NeedInfo, FoodInventoryItem, GroomingInventoryItem, ToyInventoryItem } from "../types.ts";
 import { useToyAnimation } from "../contexts/ToyAnimationContext";
 import { useDecoration } from "../contexts/DecorationContext";
@@ -34,7 +34,7 @@ interface DustParticle {
 }
 
 export default function PetPage({ pet, needInfo, onIncreaseAffection, onFeedPet, onGroomPet, onPlayWithToy }: PetPageProps) {
-  const { roomLayers, roomLayersLoading } = useDecoration();
+  const { roomLayers, roomLayersLoading, setCurrentRoomId } = useDecoration();
   const { activeToy, isPlaying } = useToyAnimation();
   const { coins, crystals, updateCrystals } = useCoins();
   const { position, isWalking, walkingStep, isFacingRight, isTurning, isSquashing } = usePetMovement(pet, isPlaying);
@@ -241,19 +241,23 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection, onFeedPet,
   const handleNeedClick = (needType: Need) => {
     switch (needType) {
       case "affection":
+        setCurrentRoomId("backyard");
         void onIncreaseAffection(5);
         break;
       case "hunger":
+        setCurrentRoomId("kitchen");
         setInventoryCategory("Food");
         setInventorySubCategory("Snack");
         setIsInventoryOpen(true);
         break;
       case "cleanliness":
+        setCurrentRoomId("bathroom");
         setInventoryCategory("Grooming");
         setInventorySubCategory("BasicKit");
         setIsInventoryOpen(true);
         break;
       case "happiness":
+        setCurrentRoomId("living-room");
         setInventoryCategory("Toys");
         setInventorySubCategory("Classic");
         setIsInventoryOpen(true);
@@ -299,17 +303,6 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection, onFeedPet,
   const navigate = useNavigate();
   const goToSettings = () => { navigate('/settings'); };
   
-  // Decide which editor to render to avoid double overlays on mobile
-  const [isMobile, setIsMobile] = React.useState<boolean>(() =>
-    typeof window !== 'undefined' ? window.matchMedia('(max-width: 600px)').matches : false
-  );
-  React.useEffect(() => {
-    const mq = window.matchMedia('(max-width: 600px)');
-    const onChange = () => setIsMobile(mq.matches);
-    mq.addEventListener('change', onChange);
-    return () => mq.removeEventListener('change', onChange);
-  }, []);
-
   // Effect to handle navigation from NavBar to reset state
   const location = useLocation();
   useEffect(() => {
@@ -323,7 +316,14 @@ export default function PetPage({ pet, needInfo, onIncreaseAffection, onFeedPet,
 
   return (
     <div className={`pet-page ${isEditMode ? 'edit-mode' : ''}`}>
-      <Header coins={coins} crystals={crystals} compact={true} onSettingsClick={goToSettings} />
+      <Header 
+        coins={coins} 
+        crystals={crystals} 
+        compact={true} 
+        onSettingsClick={goToSettings} 
+        showRoomNav={!isEditMode}
+      />
+      
       <div className="pet-room-bordered-container">
         <div className="pet-room-inner-container">
           {pet && !roomLayersLoading && (

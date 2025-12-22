@@ -16,7 +16,7 @@ interface PetRoomProps {
   overlay?: string;
   petImage: string;
   petPosition: number;
-  moodPhrase?: string;
+  moodPhrase?: string | undefined;
   activeToy?: ToyInventoryItem | string | null;
   isPlaying?: boolean;
   isWalking?: boolean;

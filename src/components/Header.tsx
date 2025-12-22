@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from "react-router-dom";
 import { petService } from '../services/firebase';
 import type { NeedInfo } from "../types";
 import { getNeedBarColor } from "../utils/colorUtils";
 import { getPetEmotionImage } from "../utils/petImageSelector";
+import RoomNavigator from "./RoomNavigator";
 import "./Header.css";
 
 interface HeaderProps {
@@ -12,6 +13,7 @@ interface HeaderProps {
   needs?: NeedInfo[];
   compact?: boolean; // New prop for compact mode on Pet Page
   onSettingsClick?: () => void; // Optional setting click handler
+  showRoomNav?: boolean; // New prop to show room navigator
 }
 
 export default function Header({
@@ -19,44 +21,26 @@ export default function Header({
   crystals = 0,
   needs = [],
   compact = false,
-  onSettingsClick
+  onSettingsClick,
+  showRoomNav = false
 }: HeaderProps) {
   const navigate = useNavigate();
   const iconSize = 20; // Desired display size for icons in the header circles
   const [petImage, setPetImage] = useState<string>('/pet/Neutral.png');
 
   useEffect(() => {
-    // Initial load
-    if (import.meta.env.DEV) console.log("Header - Setting up pet subscription");
-    
-    // Try to get local pet data immediately to avoid flash
-    try {
-       // We don't have direct access to App's state here, but we can try default if needed
-       // or wait for firebase.
-    } catch (e) {
-      console.error("Header - error reading local state", e);
-    }
-
     const unsubscribe = petService.subscribeToPet((pet) => {
       if (pet) {
         const image = getPetEmotionImage(pet);
-        if (import.meta.env.DEV) console.log("Header - Updating pet image:", image);
         setPetImage(image);
       } else {
-         if (import.meta.env.DEV) console.log("Header - No pet image found, using default");
          setPetImage('/pet/Neutral.png');
       }
     });
     return () => unsubscribe();
   }, []);
 
-  if (import.meta.env.DEV) {
-    console.log("Header - Received needs:", needs);
-    console.log("Header - Needs length:", needs.length);
-  }
-
   const goHome = (): void => { void navigate("/"); };
-  const goInventory = (): void => { void navigate("/inventory"); };
   const goBank = (): void => { void navigate("/bank"); };
 
   return (
@@ -75,44 +59,48 @@ export default function Header({
             className="pet-icon" 
             onError={(e) => {
               const target = e.target as HTMLImageElement;
-              if (target.src.endsWith('/pet/Neutral.png')) {
-                // Already failed on default, prevent infinite loop
-                return;
-              }
-              // Fallback to neutral
+              if (target.src.endsWith('/pet/Neutral.png')) return;
               target.src = '/pet/Neutral.png';
             }}
           />
         </div>
       )}
 
-      <div className="needs-wrapper">
-        {!compact && needs && needs.map((n) => (
-          <div key={n.need} className="need-circle" title={`${n.need}: ${n.desc} (${n.value})`}>
-            <svg viewBox="0 0 36 36" className="circular-chart" preserveAspectRatio="xMidYMid meet">
-              <path
-                className="circle-bg"
-                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-              />
-              <path
-                className="circle"
-                strokeDasharray={`${n.value}, 100`}
-                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                style={{ stroke: getNeedBarColor(n.value) }}
-                transform="rotate(-90 18 18)"
-              />
-              <image
-                href={n.iconSrc}
-                x={(36 - iconSize) / 2}
-                y={(36 - iconSize) / 2}
-                height={iconSize}
-                width={iconSize}
-                className="need-icon-image"
-              />
-            </svg>
-          </div>
-        ))}
-      </div>
+      {showRoomNav && (
+        <div className="header-room-nav">
+          <RoomNavigator />
+        </div>
+      )}
+
+      {!showRoomNav && (
+        <div className="needs-wrapper">
+          {!compact && needs && needs.map((n) => (
+            <div key={n.need} className="need-circle" title={`${n.need}: ${n.desc} (${n.value})`}>
+              <svg viewBox="0 0 36 36" className="circular-chart" preserveAspectRatio="xMidYMid meet">
+                <path
+                  className="circle-bg"
+                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                />
+                <path
+                  className="circle"
+                  strokeDasharray={`${n.value}, 100`}
+                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                  style={{ stroke: getNeedBarColor(n.value) }}
+                  transform="rotate(-90 18 18)"
+                />
+                <image
+                  href={n.iconSrc}
+                  x={(36 - iconSize) / 2}
+                  y={(36 - iconSize) / 2}
+                  height={iconSize}
+                  width={iconSize}
+                  className="need-icon-image"
+                />
+              </svg>
+            </div>
+          ))}
+        </div>
+      )}
 
       <div className="currency-container" onClick={goBank}>
         <div className="coin-counter">
