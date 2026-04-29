@@ -26,6 +26,7 @@ export interface Pet {
   spirit: number;
   lastNeedsUpdateTime: number;
   image: string;
+  xPosition?: number;
   affectionGainedToday?: number;
   lastAffectionGainDate?: string;
 }
@@ -124,7 +125,7 @@ export interface RoomLayers {
   overlay: string;
 }
 
-export type AllRoomsLayers = Record<string, RoomLayers>;
+export type AllRoomsLayers = Record<RoomId, RoomLayers>;
 
 // Defines the categories for food items.
 export type FoodCategory = "Treat" | "Snack" | "LightMeal" | "HeartyMeal" | "Feast";

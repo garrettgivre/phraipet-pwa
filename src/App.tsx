@@ -1,5 +1,4 @@
-// src/App.tsx
-import React, { useState, useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import './App.css';
 import { BrowserRouter, Routes, Route, useLocation, useNavigate } from "react-router-dom";
 import type { Pet, NeedInfo, FoodInventoryItem, GroomingInventoryItem, ToyInventoryItem } from "./types";
@@ -13,15 +12,14 @@ import { createRoutes } from "./routes";
 import Header from "./components/Header";
 import NavBar from "./components/NavBar";
 import { CoinsProvider, useCoins } from './contexts/CoinsContext';
-import { clampNeed, computeSpirit, describeNeed, applyNeedsDecay, MAX_NEED_VALUE, getTodayDateString, defaultPetData, validatePet, getDefaultPet } from './utils/pet'
+import { clampNeed, computeSpirit, describeNeed, applyNeedsDecay, MAX_NEED_VALUE, getTodayDateString, validatePet, getDefaultPet } from './utils/pet'
 
 const AFFECTION_DAILY_GAIN_CAP = 20;
 const HUNGER_DECAY_PER_DAY = 100;
 const HAPPINESS_DECAY_PER_DAY = 50;
 const CLEANLINESS_DECAY_PER_DAY = 100;
 const AFFECTION_DECAY_PER_DAY = 10;
-
-const isDev = import.meta.env.DEV;
+const HOME_ROUTE = '/';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -42,15 +40,8 @@ interface AppShellProps {
 
 function AppShell({ pet, handleFeedPet, handleGroomPet, handlePlayWithToy, handleIncreaseAffection, needInfo }: AppShellProps) {
   const location = useLocation();
-  const isPetPage = location.pathname === "/";
+  const isPetPage = location.pathname === HOME_ROUTE;
   const { coins, crystals } = useCoins();
-
-  if (isDev) {
-    console.log("AppShell - Current location:", location.pathname);
-    console.log("AppShell - isPetPage:", isPetPage);
-    console.log("AppShell - needInfo:", needInfo);
-    console.log("AppShell - needInfo length:", needInfo.length);
-  }
 
   const routes = createRoutes({
     pet,
@@ -61,16 +52,12 @@ function AppShell({ pet, handleFeedPet, handleGroomPet, handlePlayWithToy, handl
     needInfo
   });
 
-  if (isDev) {
-    console.log("Available routes:", routes.map(r => r.path));
-  }
-
   return (
     <>
       <ScrollToTop />
-      {!isPetPage && ( <Header coins={coins} crystals={crystals} needs={needInfo} /> )}
+      {!isPetPage && <Header coins={coins} crystals={crystals} needs={needInfo} />}
       <main style={{
-        paddingTop: isPetPage ? "0px" : "0px",
+        paddingTop: "0px",
         paddingBottom: "var(--nav-height)",
         height: "100vh",
         width: "100%",
@@ -97,7 +84,7 @@ function AppShell({ pet, handleFeedPet, handleGroomPet, handlePlayWithToy, handl
                   ))}
                 </Route>
               ) : (
-              <Route key={index} path={route.path} element={route.element} />
+                <Route key={index} path={route.path} element={route.element} />
               )
             ))}
           </Routes>
@@ -108,27 +95,27 @@ function AppShell({ pet, handleFeedPet, handleGroomPet, handlePlayWithToy, handl
   );
 }
 
+function buildNeedInfo(pet: Pet | null): NeedInfo[] {
+  if (!pet) return [];
+
+  return [
+    { need: "hunger", name: "Hunger", maxValue: MAX_NEED_VALUE, color: "", iconSrc: "/assets/icons/needs/hunger.png", value: pet.hunger, desc: describeNeed("hunger", pet.hunger) },
+    { need: "cleanliness", name: "Cleanliness", maxValue: MAX_NEED_VALUE, color: "", iconSrc: "/assets/icons/needs/cleanliness.png", value: pet.cleanliness, desc: describeNeed("cleanliness", pet.cleanliness) },
+    { need: "happiness", name: "Happiness", maxValue: MAX_NEED_VALUE, color: "", iconSrc: "/assets/icons/needs/happiness.png", value: pet.happiness, desc: describeNeed("happiness", pet.happiness) },
+    { need: "affection", name: "Affection", maxValue: MAX_NEED_VALUE, color: "", iconSrc: "/assets/icons/needs/affection.png", value: pet.affection, desc: describeNeed("affection", pet.affection) },
+    { need: "spirit", name: "Spirit", maxValue: MAX_NEED_VALUE, color: "", iconSrc: "/assets/icons/needs/spirit.png", value: pet.spirit, desc: describeNeed("happiness", pet.spirit) },
+  ];
+}
+
+function notifyPendingItemUpdated() {
+  window.dispatchEvent(new Event('pending-item-updated'));
+}
 
 function AppContent() {
   const [pet, setPet] = useState<Pet | null>(getDefaultPet);
   const { setActiveToy, setIsPlaying } = useToyAnimation();
   const navigate = useNavigate();
-
-  const needInfo: NeedInfo[] = pet && typeof pet.hunger === 'number' && typeof pet.cleanliness === 'number' && typeof pet.happiness === 'number' && typeof pet.affection === 'number' && typeof pet.spirit === 'number'
-    ? [
-        { need: "hunger", name: "Hunger", maxValue: MAX_NEED_VALUE, color: "", iconSrc: "/assets/icons/needs/hunger.png", value: pet.hunger, desc: describeNeed("hunger", pet.hunger) },
-        { need: "cleanliness", name: "Cleanliness", maxValue: MAX_NEED_VALUE, color: "", iconSrc: "/assets/icons/needs/cleanliness.png", value: pet.cleanliness, desc: describeNeed("cleanliness", pet.cleanliness) },
-        { need: "happiness", name: "Happiness", maxValue: MAX_NEED_VALUE, color: "", iconSrc: "/assets/icons/needs/happiness.png", value: pet.happiness, desc: describeNeed("happiness", pet.happiness) },
-        { need: "affection", name: "Affection", maxValue: MAX_NEED_VALUE, color: "", iconSrc: "/assets/icons/needs/affection.png", value: pet.affection, desc: describeNeed("affection", pet.affection) },
-        { need: "spirit", name: "Spirit", maxValue: MAX_NEED_VALUE, color: "", iconSrc: "/assets/icons/needs/spirit.png", value: pet.spirit, desc: describeNeed("happiness", pet.spirit) },
-      ]
-    : [];
-
-  if (isDev) {
-    console.log("Pet data:", pet);
-    console.log("Need info:", needInfo);
-    console.log("Need info length:", needInfo.length);
-  }
+  const needInfo = useMemo(() => buildNeedInfo(pet), [pet]);
 
   const handleFeedPet = async (foodItem: FoodInventoryItem) => {
     if (!pet || typeof pet.hunger !== 'number') return;
@@ -142,26 +129,13 @@ function AppContent() {
     setPet(updatedPet);
     localStorage.setItem('pendingFoodItem', JSON.stringify({
       src: foodItem.src,
-      position: pet.xPosition || 50, // Use current position immediately
+      position: pet.xPosition || 50,
       hungerRestored: foodItem.hungerBoost
     }));
-    // Don't navigate if we are already on home (prevents remounting/flashing)
-    if (window.location.pathname !== '/') {
-      void navigate('/');
+    if (window.location.pathname !== HOME_ROUTE) {
+      void navigate(HOME_ROUTE);
     } else {
-      // If already on home, we might need to manually trigger the storage event check or state update
-      // Since we are in the same context, we can't easily force the other component to re-render 
-      // via local storage event in the same window.
-      // However, PetPage reads on mount/update. 
-      // If PetPage is already mounted, it won't see this unless we trigger it.
-      // But AppShell handles routing.
-      
-      // Force a "soft reload" of PetPage state if possible, or just let the user see it.
-      // Actually, since we are setting state in AppShell, PetPage might re-render if it receives props.
-      // But pendingFoodItem is read from localStorage in useEffect.
-      
-      // Dispatch a custom event to notify PetPage
-      window.dispatchEvent(new Event('pending-item-updated'));
+      notifyPendingItemUpdated();
     }
     await withErrorHandling(
       () => petService.updatePetNeeds(updatedPet),
@@ -185,10 +159,10 @@ function AppContent() {
       cleanlinessBoost: groomingItem.cleanlinessBoost
     }));
     
-    if (window.location.pathname !== '/') {
-      void navigate('/');
+    if (window.location.pathname !== HOME_ROUTE) {
+      void navigate(HOME_ROUTE);
     } else {
-      window.dispatchEvent(new Event('pending-item-updated'));
+      notifyPendingItemUpdated();
     }
     await withErrorHandling(
       () => petService.updatePetNeeds(updatedPet),
@@ -207,7 +181,7 @@ function AppContent() {
     };
     setActiveToy(toyItem);
     setIsPlaying(true);
-    void navigate('/');
+    void navigate(HOME_ROUTE);
     setTimeout(() => {
       setIsPlaying(false);
       setActiveToy(null);
@@ -228,7 +202,6 @@ function AppContent() {
     }
     const currentGainedToday = currentPetData.affectionGainedToday || 0;
     if (currentGainedToday >= AFFECTION_DAILY_GAIN_CAP) {
-      if (isDev) console.log("Affection daily cap reached.");
       await withErrorHandling(
         () => petService.updatePetNeeds({ lastNeedsUpdateTime: Date.now() }),
         "Failed to update pet affection"
@@ -260,27 +233,19 @@ function AppContent() {
   const hasInitialPetRef = useRef<boolean>(false);
 
   useEffect(() => {
-    if (isDev) console.log("Setting up pet subscription...");
     const fallbackTimeout = setTimeout(() => {
       if (!hasInitialPetRef.current) {
-        if (isDev) console.log("Pet loading timeout, using default pet data");
         setPet(getDefaultPet());
       }
     }, 1500);
 
     const unsubscribe = petService.subscribeToPet((petData) => {
-      if (isDev) console.log("Pet data received from Firebase:", petData);
       clearTimeout(fallbackTimeout);
       hasInitialPetRef.current = true;
       const currentTime = Date.now();
       let needsFirebaseUpdate = false;
       if (petData) {
-        if (isDev) console.log("Processing pet data...");
-        
-        // Validate and normalize pet data using utility
         const processedPetData = validatePet(petData);
-        
-        // Check for day change to reset daily limits
         const todayStr = getTodayDateString();
         if (processedPetData.lastAffectionGainDate !== todayStr) {
           processedPetData.affectionGainedToday = 0;
@@ -353,15 +318,15 @@ export default function App() {
     <ErrorBoundary>
       <InventoryProvider>
         <CoinsProvider>
-      <ToyAnimationProvider>
-        <DecorationProvider>
-          <ThemeProvider>
-            <BrowserRouter>
-              <AppContent />
-            </BrowserRouter>
-          </ThemeProvider>
-        </DecorationProvider>
-      </ToyAnimationProvider>
+          <ToyAnimationProvider>
+            <DecorationProvider>
+              <ThemeProvider>
+                <BrowserRouter>
+                  <AppContent />
+                </BrowserRouter>
+              </ThemeProvider>
+            </DecorationProvider>
+          </ToyAnimationProvider>
         </CoinsProvider>
       </InventoryProvider>
     </ErrorBoundary>
